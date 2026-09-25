@@ -6,12 +6,18 @@
 TYPES='feat|fix|docs|refactor|test|chore|build|ci'
 SUBJECT_RE="^(${TYPES})(\\([a-z0-9-]+\\))?: [a-z0-9].*[^.]\$"
 BRANCH_RE="^(${TYPES})/[0-9]+-[a-z0-9]+(-[a-z0-9]+)*\$"
+# The branch GitHub creates when someone presses Revert on a merged pull request.
+REVERT_BRANCH_RE='^revert-[0-9]+-'
 
 # A name or e-mail that identifies an AI tool or a bot. Matched against author and committer identities only.
 IDENT_RE='claude|anthropic|gemini|antigravity|copilot|codex|openai|chatgpt|windsurf|devin|aider|\[bot\]|-bot@|^bot$'
 
+# AI tool names, for recognising a byline such as "Generated with Claude Code". A plain mention of a tool
+# ("update the claude code settings") is allowed; a byline that credits one is not.
+AI_RE='claude|anthropic|gemini|antigravity|copilot|codex|openai|chatgpt|gpt-[0-9]|windsurf|devin|aider'
+
 # An AI byline or any co-author trailer inside a commit message or a pull request text.
-BYLINE_RE='^[[:space:]]*co-authored-by[[:space:]]*:|generated (with|by)|claude code|noreply@anthropic\.com|\[bot\]|🤖'
+BYLINE_RE="^[[:space:]]*co-authored-by[[:space:]]*:|(generated|created|written|made|authored|assisted)( [a-z]+)? (with|by|using) .*(${AI_RE})|noreply@anthropic\\.com|\\[bot\\]|🤖"
 
 # GitHub itself commits as web-flow when someone uses the web UI (Update branch button).
 WEB_COMMITTER='web-flow'
@@ -27,7 +33,7 @@ subject_ok() {
 
 # branch_ok <branch name>
 branch_ok() {
-    printf '%s\n' "$1" | grep -Eq "$BRANCH_RE"
+    printf '%s\n' "$1" | grep -Eq "$BRANCH_RE|$REVERT_BRANCH_RE"
 }
 
 # ident_bad <text>: true when the text names an AI tool or a bot.
