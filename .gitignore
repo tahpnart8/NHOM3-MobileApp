@@ -36,3 +36,6 @@ tmp/
 .antigravity/
 .agents/tmp/
 .serena/
+
+# Personal working files of the team, never pushed.
+/local/
