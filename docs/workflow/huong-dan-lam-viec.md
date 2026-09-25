@@ -36,19 +36,23 @@ Issue  ->  nhận task  ->  branch từ main mới nhất  ->  commit nhỏ
 | Push thẳng lên `main` | Mọi thay đổi phải qua Pull Request |
 | Commit có dòng `Co-authored-by` hoặc "Generated with" | Chỉ 5 thành viên được xuất hiện trong danh sách contributor |
 | Tên branch hoặc tiêu đề commit sai định dạng | Để lịch sử nhất quán |
-| PR xóa file code mà không có `Removal-Issue: #N` | Bảo vệ chức năng đã thiết kế |
+| PR xóa hoặc đổi tên file code mà không có `Removal-Issue: #N` | Bảo vệ chức năng đã thiết kế |
+| PR sửa file Gradle hoặc thư viện mà tiêu đề không phải `build(...)` hay `chore(...)` | Thư viện chỉ được thêm qua issue riêng |
+| PR có tác giả commit không thuộc 5 thành viên | Chỉ 5 thành viên được đóng góp |
 | Xóa hoặc sửa dòng cũ trong `memory/decisions.md` | Sổ quyết định chỉ được ghi thêm |
 | Commit `local.properties`, keystore, khóa bí mật | Bí mật và cấu hình riêng từng máy |
 
 ## 4. Dùng AI đúng cách (Antigravity, Claude Code, Codex)
 
 - AI đọc `AGENTS.md` ở gốc repo. Đừng dán luật riêng của bạn vào prompt; nếu luật thiếu, nhờ leader sửa `AGENTS.md`.
-- Lệnh có sẵn: `/new-issue`, `/start-task`, `/open-pr`, `/record-decision`, `/doc-check`. `/review-pr` dành cho leader.
+- Lệnh có sẵn: `/new-issue`, `/start-task`, `/sync-branch`, `/open-pr`, `/record-decision`, `/doc-check`. `/review-pr` dành cho leader.
 - Hãy yêu cầu AI **báo đúng lệnh đã chạy và kết quả thật**. Nếu nó nói "đã test trên emulator", hỏi lại xem nó đã chạy thật chưa.
 - Tra API Firebase và AndroidX bằng MCP `context7` (đã cấu hình trong `.mcp.json` cho Claude Code; với Antigravity thêm server này trong phần MCP của ứng dụng: URL `https://mcp.context7.com/mcp`).
 
 ## 5. Khi gặp xung đột
 
-- Cập nhật `main` vào branch của bạn trước khi mở PR: `git fetch origin` rồi `git merge origin/main`.
-- Không giải quyết xung đột bằng cách xóa code của người khác. Không chắc thì hỏi leader.
+- Dùng lệnh `/sync-branch` để đưa `main` mới nhất vào branch của bạn. Nó merge (không rebase), giữ code của cả hai bên, rồi build lại.
+- Không giải quyết xung đột bằng cách xóa code của người khác hay chọn nguyên cả file của một bên. Nếu hai bên mâu thuẫn thật, hỏi leader.
+- Nút **Update branch** trên trang PR cũng được, nhưng chỉ khi GitHub báo không có xung đột.
+- Leader có thể đề xuất sửa trực tiếp trong review ("suggestion"). Bấm **Commit suggestion** là hợp lệ: dòng `Co-authored-by` mà GitHub tự thêm vào khi đó chỉ ghi tên người trong nhóm, và CI chấp nhận.
 - Các file dễ xung đột và luật riêng nằm ở [conventions/android-java.md](../conventions/android-java.md).

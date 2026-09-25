@@ -144,3 +144,25 @@ All authors.
 
 ### Owner
 tahpnart8
+
+## 2026-09-25 - Repository settings as code, and a stricter pull request policy
+
+### Decision
+The GitHub settings that back the contributor policy live in the repository: `.github/rulesets/*.json` and `scripts/apply-github-settings.sh`, which the leader runs and which prints back what GitHub reports. `main` gets two rulesets: `main-checks` (no deletion, no force push, linear history, `build` and `policy` green and up to date; no bypass for anyone) and `main-review` (pull request, one code owner approval, squash only; the admin role may bypass it inside a pull request, because the leader cannot approve their own). The `policy` check also fails a rename under `PUBGApp/app/src/main` without a removal issue, and a change to a Gradle file in a pull request whose title is not `build(...)` or `chore(...)`; it warns when a file there loses more than 40 lines. A co-author trailer is accepted only for a team member's GitHub noreply address, which is what "Commit suggestion" writes. A `pubg-sync-branch` skill resolves merge conflicts by keeping both sides.
+
+### Context
+The review before the first merge found that settings applied by hand are invisible and unrepeatable, that one ruleset with an admin bypass would also let the leader merge with red CI, that the byline pattern refused innocent messages such as "update the claude code settings", and that merge conflict resolution is where AI tools most often drop a teammate's code.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Configure the settings by hand in the web UI | Not reviewable, not repeatable, easy to drift |
+| One ruleset with an admin bypass | The bypass would skip the status checks too |
+| Reject every co-author trailer | Blocks GitHub's own review suggestions between team members |
+| Metadata rulesets (commit message and branch name patterns) | Redundant with the empty squash body and the `policy` check, and may not be offered for a personal repository |
+
+### Impact
+`.github/rulesets/`, `scripts/apply-github-settings.sh`, `scripts/ci-policy.sh`, `scripts/lib/policy.sh`, `AGENTS.md` R4 and R5, `.agents/skills/pubg-sync-branch`.
+
+### Owner
+tahpnart8
