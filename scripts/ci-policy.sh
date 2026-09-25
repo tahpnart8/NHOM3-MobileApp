@@ -139,6 +139,18 @@ $raw_body"; then
     body_links_issue "$body" ||
         note "the pull request body must say 'Closes #N' (or 'Refs #N', or 'Closes: none') outside the template comments."
 
+    # Issues and pull requests are read by people, so they are written in Vietnamese (AGENTS.md R14). The
+    # type and scope of the title and the keywords Closes, Refs, Removal-Issue and Deviation stay English.
+    case "$title" in
+        Revert\ * | Merge\ *) ;;
+        *)
+            vi_text_ok "${title#*: }" 1 ||
+                note "tiêu đề PR phải viết bằng tiếng Việt có dấu (type và scope giữ tiếng Anh): '$title'"
+            vi_text_ok "$body" 12 ||
+                note "mô tả PR phải viết bằng tiếng Việt có dấu (các từ khóa Closes, Removal-Issue, Deviation giữ nguyên)."
+            ;;
+    esac
+
     tmp=$(mktemp)
     trap 'rm -f "$tmp"' EXIT
 
