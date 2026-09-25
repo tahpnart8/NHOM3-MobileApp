@@ -1,0 +1,47 @@
+name: Tính năng
+description: Hành vi mới mà người dùng nhìn thấy được
+title: "Thêm "
+labels: ["type:feature"]
+body:
+  - type: input
+    id: feature_id
+    attributes:
+      label: Mã tính năng
+      description: Mã trong docs/product/features.md, ví dụ F-04. Nếu tính năng chưa được đăng ký ở đó thì mở issue docs trước và nhờ leader duyệt.
+      placeholder: F-04
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Làm gì và vì sao
+      description: Sau issue này người dùng làm được gì mà trước đó chưa làm được. Viết bằng tiếng Việt.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Tiêu chí nghiệm thu
+      description: Danh sách kiểm được. Mỗi dòng là một điều người review kiểm được trên thiết bị.
+      value: |
+        - [ ]
+        - [ ] Màn hình giữ nguyên trạng thái khi xoay
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Gói hoặc file được phép sửa
+      description: Nêu chính xác tên gói, ví dụ com.nhom3.pubgapp.feature.auth. Mọi thứ khác nằm ngoài phạm vi.
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Ngoài phạm vi
+      description: Những gì không được đụng tới hoặc không làm trong issue này.
+  - type: textarea
+    id: docs
+    attributes:
+      label: Tài liệu cần cập nhật
+      description: Ví dụ docs/data/firestore-schema.md, docs/product/features.md.

@@ -1,0 +1,28 @@
+name: Việc kỹ thuật
+description: Build, thư viện, công cụ, tài liệu hoặc dọn dẹp repo
+title: ""
+labels: ["type:chore"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Làm gì và vì sao
+      description: Viết bằng tiếng Việt.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Tiêu chí nghiệm thu
+      description: Danh sách mà người review kiểm được.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: File được phép sửa
+      description: Với issue thư viện, nêu tên thư viện, nguồn bạn tra phiên bản, và vì sao cần.
+    validations:
+      required: true

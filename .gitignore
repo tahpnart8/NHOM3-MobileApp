@@ -1,0 +1,38 @@
+# Android Studio and Gradle. The project lives in PUBGApp/, which also has its own .gitignore.
+.idea/
+*.iml
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+
+# Secrets and signing material. Never commit these.
+*.jks
+*.keystore
+*.p12
+*.pem
+.env
+.env.*
+
+# google-services.json is NOT ignored on purpose: it holds public identifiers, not secrets.
+# Protection comes from the Firebase Security Rules and the API key restrictions (docs/architecture/overview.md).
+
+# Operating system
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and scratch
+*.log
+tmp/
+.tmp/
+
+# Per person AI tool state. The shared rules, skills and agents ARE tracked.
+.claude/settings.local.json
+.claude/worktrees/
+.gemini/
+.antigravity/
+.agents/tmp/
+.serena/

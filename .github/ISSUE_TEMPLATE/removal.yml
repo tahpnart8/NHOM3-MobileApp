@@ -1,0 +1,35 @@
+name: Gỡ bỏ
+description: Chủ ý gỡ hoặc đổi tên chức năng đã có. Chỉ leader mở.
+title: "Gỡ "
+labels: ["type:removal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Chỉ leader mở issue này. Pull request nào xóa code trong PUBGApp/app/src/main phải dẫn tới nó bằng dòng `Removal-Issue: #N`.
+  - type: input
+    id: feature_id
+    attributes:
+      label: Mã tính năng
+      placeholder: F-04
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: Gỡ hoặc đổi tên cái gì
+      description: Nêu chính xác lớp, file hoặc màn hình.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Vì sao, và cái gì thay thế
+      description: Viết bằng tiếng Việt.
+    validations:
+      required: true
+  - type: textarea
+    id: docs
+    attributes:
+      label: Tài liệu cần cập nhật
+      description: features.md và mọi tài liệu schema nhắc tới nó.

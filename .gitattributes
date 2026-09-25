@@ -1,0 +1,19 @@
+# One line ending for everyone. A hook or shell script with CRLF fails on Linux and macOS, and
+# gradlew with CRLF fails on the CI runner, so text files are LF in every working copy.
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=lf
+*.sh  text eol=lf
+.githooks/* text eol=lf
+
+*.jar  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.pdf  binary
+*.ttf  binary
+*.otf  binary

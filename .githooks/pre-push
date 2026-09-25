@@ -1,0 +1,24 @@
+#!/bin/sh
+# Never push to main; only push branches named type/issue-slug; check every unpushed commit.
+here=$(cd "$(dirname "$0")/.." && pwd)
+. "$here/scripts/lib/policy.sh"
+zero=0000000000000000000000000000000000000000
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ "$local_sha" = "$zero" ] && continue
+    branch=${remote_ref#refs/heads/}
+    if [ "$branch" = "main" ]; then
+        echo "pre-push: refused. Nobody pushes to main. Push a branch and open a pull request." >&2
+        exit 1
+    fi
+    case "$remote_ref" in
+        refs/heads/*)
+            if ! branch_ok "$branch"; then
+                echo "pre-push: refused. Branch '$branch' must look like type/issue-slug, for example feat/12-google-sign-in." >&2
+                exit 1
+            fi
+            ;;
+    esac
+    sh "$here/scripts/check-contributors.sh" unpushed "$local_sha" || exit 1
+done
+exit 0

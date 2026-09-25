@@ -1,0 +1,8 @@
+# The only GitHub accounts allowed to author commits and pull requests in this repository.
+# One login per line; text after # is a comment. Read by scripts/ci-policy.sh and scripts/watch-contributors.sh.
+# Changing this file changes who may contribute: only the leader edits it (CODEOWNERS enforces the review).
+tahpnart8            # Tran Duc Phat, team leader
+Contest451           # Nguyen Le Hai Long
+thngan0512           # Nguyen Thuy Ngan
+tranannhtu21012006   # Tran Anh Tu
+PmSubin              # Nguyen Hoang Phuc
