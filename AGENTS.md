@@ -28,6 +28,8 @@ People are not bound by this file; it exists because a tool can change many file
 | --- | --- |
 | `PUBGApp/` | The Android project |
 | `docs/` | What the system is: product, architecture, data schemas, conventions, workflow. Vietnamese |
+| `plan/` | Delivery plan: phases and work items. Empty until the leader loads the requirements |
+| `guide/` | Advice for people using AI on this repository: prompts for the explore, plan, implement and review loop and for ending a task. Vietnamese. Not a rulebook |
 | `memory/` | Why it is that way: decisions (append only), preferences, people |
 | `.agents/` | Source of rules, workflows and skills for Antigravity and Codex |
 | `.claude/` | Claude Code settings, sub-agents and the mirror of the skills |
@@ -93,7 +95,10 @@ Issue, then branch, then pull request, then the leader reviews and squash merges
 | `pubg-review-pr` | Leader only: judge a pull request against its issue on the merged tree |
 | `pubg-record-decision` | Append a decision to `memory/decisions.md` |
 | `pubg-doc-check` | Find where documents and code disagree |
+| `pubg-guide` | Point the person to the right page of `guide/` when they are stuck or something was refused |
+
+**The guide is advice, not law.** `guide/` teaches people how to direct you well. Only the rules in section 6 bind you. When a person is stuck, or a hook, a CI check or a rule refuses something, use `pubg-guide` to point them to the right page in one or two lines. If they choose to skip a step of the guide, say once what it costs and let them; do not treat it as an error and do not repeat the reminder. The exceptions are the things tooling rejects anyway (R8, R9, R11 and the naming, removal and dependency checks): those you never help bypass.
 
 ## 9. Language
 
-Talk to people in the language they use (the team writes Vietnamese). Files for AI tools, code, commits, issues and pull requests are English. `docs/` and `README.md` are Vietnamese. Do not use emoji in any written artifact.
+Talk to people in the language they use (the team writes Vietnamese). Files for AI tools, code, commits, issues and pull requests are English. `docs/`, `guide/`, `plan/` and `README.md` are Vietnamese. Do not use emoji in any written artifact.
