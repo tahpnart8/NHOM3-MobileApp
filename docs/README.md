@@ -14,6 +14,6 @@ Thư mục này mô tả **hệ thống là gì**. Lý do đằng sau các lựa
 | Cài đặt Firebase | [workflow/firebase-setup.md](workflow/firebase-setup.md) | Tạo project, gói Blaze, SHA-1 từng máy, `google-services.json` |
 | Kế hoạch giao việc | [../plan/README.md](../plan/README.md) | Giai đoạn và việc; **chưa có, chờ tài liệu yêu cầu** |
 
-Luật cho AI nằm ở [`AGENTS.md`](../AGENTS.md) (tiếng Anh). Quy tắc đặt tên nằm ở [`.github/NAMING.md`](../.github/NAMING.md).
+Cách nói chuyện với AI (prompt, vòng lặp Explore, Plan, Implement, Review) nằm ở [`guide/`](../guide/README.md). Luật cho AI nằm ở [`AGENTS.md`](../AGENTS.md) (tiếng Anh). Quy tắc đặt tên nằm ở [`.github/NAMING.md`](../.github/NAMING.md).
 
 **Quy tắc:** đổi cấu trúc dữ liệu hoặc hành vi một tính năng thì sửa tài liệu tương ứng **trong cùng Pull Request**. Không sửa tài liệu cho khớp với code sai; nếu hai bên lệch nhau, nói ra và để người quyết định xử lý.

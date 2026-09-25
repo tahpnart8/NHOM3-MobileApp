@@ -186,3 +186,24 @@ From 2026-02-03 Cloud Storage for Firebase requires the Blaze plan; on the Spark
 
 ### Owner
 tahpnart8
+
+## 2026-09-25 - A flexible human guide in guide/, and a skill that points to it
+
+### Decision
+A `guide/` folder, in Vietnamese and addressed to the person coding, holds the prompts and practices for working with AI: starting a session, the explore, plan, implement and review loop with a checkpoint for the person after each stage, ending a task (pull request, cross-check by a second AI, asking the leader), a table of common situations, and a page on what may be skipped and what may not. The `pubg-guide` skill and the `/guide` workflow point a person to the right page when they are stuck or something is refused. The guide is advice: only what tooling rejects anyway (AI attribution, pushing to `main`, secrets, naming, removal and dependency checks) is treated as a boundary, and a person may skip any other step, noting a `Deviation:` line in the pull request summary. Cross-checks by a second AI happen on the person's machine and reach GitHub only as the person's own comment; no review bot or GitHub App is installed.
+
+### Context
+The team will write most code through AI tools and needs the same, controllable way of directing them. The repository rules in `AGENTS.md` bind tools; people needed something that shows them how to direct the tools without turning into another set of hard rules.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Put the prompts in `AGENTS.md` | It is loaded into every AI session, so prompts written for people cost tokens each time and blur who the file is addressed to |
+| Make the guide mandatory, with CI checks on each step | The leader asked for a flexible guide; most steps cannot be checked by a machine and forcing them produces box ticking |
+| Ask a review bot such as Copilot or Codex to cross-check on GitHub | It would appear as a contributor, which decision "Only the five team members are contributors" rules out |
+
+### Impact
+`guide/`, `.agents/skills/pubg-guide`, `.agents/workflows/guide.md` and its mirror in `.claude/skills`, `AGENTS.md` sections 4, 8 and 9, links from `README.md`, `docs/`, `.github/CONTRIBUTING.md`.
+
+### Owner
+tahpnart8

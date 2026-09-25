@@ -44,6 +44,8 @@ Issue  ->  nhận task  ->  branch từ main mới nhất  ->  commit nhỏ
 
 ## 4. Dùng AI đúng cách (Antigravity, Claude Code, Codex)
 
+Prompt mẫu và cách làm từng bước nằm ở [guide/](../../guide/README.md). Gặp lỗi hoặc không biết làm gì: gõ `/guide`.
+
 - AI đọc `AGENTS.md` ở gốc repo. Đừng dán luật riêng của bạn vào prompt; nếu luật thiếu, nhờ leader sửa `AGENTS.md`.
 - Lệnh có sẵn: `/new-issue`, `/start-task`, `/sync-branch`, `/open-pr`, `/record-decision`, `/doc-check`. `/review-pr` dành cho leader.
 - Hãy yêu cầu AI **báo đúng lệnh đã chạy và kết quả thật**. Nếu nó nói "đã test trên emulator", hỏi lại xem nó đã chạy thật chưa.
