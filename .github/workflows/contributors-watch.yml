@@ -1,0 +1,26 @@
+name: contributors-watch
+
+# Detects, after the fact, a contributor who is not on .github/team.txt. It cannot prevent one.
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Contributors match the team list
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: sh scripts/watch-contributors.sh

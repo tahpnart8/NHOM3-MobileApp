@@ -1,0 +1,11 @@
+# Every pull request needs the leader's review. Files that decide the rules of the game are listed
+# separately so that a change to them is an explicit act, not a side effect.
+*                       @tahpnart8
+/.github/               @tahpnart8
+/.githooks/             @tahpnart8
+/scripts/               @tahpnart8
+/.agents/               @tahpnart8
+/.claude/               @tahpnart8
+/AGENTS.md              @tahpnart8
+/CLAUDE.md              @tahpnart8
+/memory/                @tahpnart8

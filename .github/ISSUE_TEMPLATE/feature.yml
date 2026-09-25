@@ -1,0 +1,47 @@
+name: Feature
+description: New behaviour a user can see
+title: "Add "
+labels: ["type:feature"]
+body:
+  - type: input
+    id: feature_id
+    attributes:
+      label: Feature ID
+      description: The ID from docs/product/features.md, for example F-04. If the feature is not registered there, open a docs issue and get the leader to register it first.
+      placeholder: F-04
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What and why
+      description: What the user can do after this issue that they cannot do now.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: A checklist. Each line is something a reviewer can check on a device.
+      value: |
+        - [ ]
+        - [ ] The screen keeps its state when rotated
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Packages or files allowed to change
+      description: Name the exact packages, for example com.nhom3.pubgapp.feature.auth. Anything else is out of scope.
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: What must not be touched or built in this issue.
+  - type: textarea
+    id: docs
+    attributes:
+      label: Documents to update
+      description: For example docs/data/firestore-schema.md, docs/product/features.md.

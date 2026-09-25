@@ -1,0 +1,42 @@
+name: Bug
+description: Behaviour that is wrong
+title: "Fix "
+labels: ["type:bug"]
+body:
+  - type: input
+    id: feature_id
+    attributes:
+      label: Feature ID
+      description: The feature the bug belongs to, from docs/product/features.md.
+      placeholder: F-04
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behaviour
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: Pixel 5 emulator, API 30
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Packages or files allowed to change
+      description: Where you think the fix belongs. Anything else is out of scope.
+    validations:
+      required: true
