@@ -8,9 +8,24 @@ Hướng dẫn tạo và cấu hình Firebase project cho cả nhóm. **Trạng 
 
 Từ **03/02/2026**, Cloud Storage for Firebase chỉ dùng được khi project ở gói **Blaze** (trả theo mức dùng, phải gắn tài khoản thanh toán). Với gói Spark, mọi lời gọi Storage trả lỗi 402 hoặc 403. Blaze vẫn có mức miễn phí: bucket mới dạng `PROJECT_ID.firebasestorage.app` hưởng mức "Always Free" của Google Cloud Storage nếu đặt ở vùng `us-central1`, `us-east1` hoặc `us-west1`. Nguồn: [Firebase FAQ về thay đổi Storage](https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024).
 
-Việc cần làm khi nâng gói: **đặt cảnh báo ngân sách (budget alert)** ở mức thấp, và chỉ một người (nên là leader) gắn thẻ. Chưa xác minh: hạn mức miễn phí chính xác của Firestore và Authentication theo vùng; leader đọc trang giá của Firebase trước khi chọn vùng.
+Chỉ một người (nên là leader) gắn thẻ. Quyết định dùng Cloud Storage nằm ở `memory/decisions.md`.
 
-Quyết định dùng Cloud Storage cho ảnh nằm ở `memory/decisions.md`.
+**Leader đã xác nhận: giữ Cloud Storage cho mọi tệp media, gồm cả ảnh và video.** Chi phí bằng 0 khi dùng trong hạn mức miễn phí "Always Free" của Google Cloud Storage ([nguồn](https://docs.cloud.google.com/free/docs/free-cloud-features), kiểm ngày 2026-09-25), **nhưng vẫn phải gắn thẻ** vào tài khoản thanh toán, kể cả khi không mất đồng nào:
+
+| Hạn mức mỗi tháng | Con số | Điều kiện |
+| --- | --- | --- |
+| Dung lượng lưu | 5 GB-tháng | Chỉ tính ở `us-central1`, `us-east1`, `us-west1`; các vùng khác **không** được miễn phí |
+| Thao tác ghi, liệt kê (Class A), gồm mỗi lần tải một tệp lên | 5.000 | |
+| Thao tác đọc (Class B), gồm mỗi lần tải một tệp xuống | 50.000 | |
+| Dữ liệu ra ngoài | 100 GB | Tính từ Bắc Mỹ tới nơi nhận (trừ Trung Quốc và Úc) |
+
+Vượt hạn mức nào thì phần vượt tính tiền theo bảng giá của Google Cloud. Vì vậy:
+
+- **Chọn vùng của bucket là một trong ba vùng Mỹ ở trên** khi tạo Storage. Vùng không đổi được sau khi tạo.
+- **Đặt cảnh báo ngân sách thấp** (ví dụ vài đô). Cảnh báo chỉ nhắn tin cho bạn, **không tự chặn** chi tiêu.
+- **Luật Storage phải giới hạn kích thước và loại tệp** (ảnh nhỏ, video có trần dung lượng) và bắt buộc đăng nhập. Ai cũng tự đăng ký được tài khoản trong ứng dụng và `google-services.json` nằm công khai trong repo, nên luật là thứ duy nhất ngăn một người lạ đẩy đầy 5 GB.
+- Video tốn nhiều hơn ảnh: mỗi lần xem là một lần tải xuống (tính vào 50.000 thao tác đọc và 100 GB dữ liệu ra). Với đồ án và buổi demo thì rất dư, nhưng nên giới hạn thời lượng hoặc dung lượng mỗi video khi thiết kế tính năng.
+- Chưa xác minh: hạn mức miễn phí chính xác của Firestore và Authentication theo vùng.
 
 ## 2. Tạo project và mời thành viên
 

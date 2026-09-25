@@ -16,6 +16,6 @@
 - **Source:** https://firebase.google.com/docs/android/learn-more. **Checked:** 2026-09-25.
 
 ### Cloud Storage needs the Blaze plan
-- **Fact:** Since 2026-02-03 Cloud Storage for Firebase works only on the Blaze plan. On the Spark plan every call returns 402 or 403. No-cost usage remains on Blaze within the Always Free limits, for buckets in `us-central1`, `us-east1` or `us-west1`.
+- **Fact:** Since 2026-02-03 Cloud Storage for Firebase works only on the Blaze plan. On the Spark plan every call returns 402 or 403. No-cost usage remains on Blaze within the Always Free limits: 5 GB-months of storage, 5,000 Class A and 50,000 Class B operations, 100 GB egress from North America per month, only for buckets in `us-central1`, `us-east1` or `us-west1`, and a billing account is still required.
 - **Why it matters here:** a Storage error in a member's build with a fresh project is usually billing, not code. The project owner set this up (`docs/workflow/firebase-setup.md`, step 1).
-- **Source:** https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024. **Checked:** 2026-09-25.
+- **Source:** https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024 and https://docs.cloud.google.com/free/docs/free-cloud-features. **Checked:** 2026-09-25.

@@ -254,3 +254,23 @@ The leader wants code a student can read on the first pass and found AI-written 
 
 ### Owner
 tahpnart8
+
+## 2026-09-25 - Media files, images and videos, stay in Cloud Storage within the free tier
+
+### Decision
+All media files, images and videos, are stored in Cloud Storage for Firebase, as decided for images in the entry "Product images are stored in Cloud Storage on the Blaze plan". The leader confirmed this after raising a $0 budget and accepts attaching a card to the Blaze plan. The project stays inside the Cloud Storage Always Free tier: 5 GB-months of storage in `us-central1`, `us-east1` or `us-west1`, 5,000 Class A and 50,000 Class B operations, and 100 GB of egress from North America each month. The bucket is created in one of those three regions. Storage security rules cap the size and type of every file and require sign-in. A low budget alert is set; it warns and does not cap spending.
+
+### Context
+The leader asked whether media under 5 GB is free. It is, but only in those regions and only with a billing account attached (Google Cloud free tier page, checked 2026-09-25). Video was not covered by the earlier entry.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Compressed images as Base64 in Firestore | Avoids the card, but the 1 MiB document limit makes it unusable for video and awkward for images; offered on 2026-09-25 and declined by the leader |
+| An outside media host | Adds a second service and an SDK for no gain within the free tier |
+
+### Impact
+`docs/workflow/firebase-setup.md` section 1. When media features are designed: size and duration caps, and the Storage rules in `firebase/storage.rules`. Anyone can register an account in the app and the API key is public in the repository, so the rules are the only protection against filling the 5 GB.
+
+### Owner
+tahpnart8
