@@ -63,8 +63,8 @@ Trả lời "duyệt" hoặc nêu chỗ sửa. Nếu AI đưa ra chọn lựa �
 Lặp lại cho từng bước `<k>` của kế hoạch:
 
 ```
-Duyệt. Làm BƯỚC <k> trong .agents/tmp/plan-<N>.md và chỉ bước đó.
-Khi xong: chạy build (nói đúng lệnh bạn chạy, từ thư mục PUBGApp), cho tôi xem git diff --stat, rồi nêu ngắn gọn: đã sửa gì, và điều gì bạn CHƯA kiểm chứng. Nếu build xanh, commit với subject theo .github/NAMING.md. Sau đó dừng.
+Duyệt. Làm BƯỚC <k> trong .agents/tmp/plan-<N>.md và chỉ bước đó. Viết code theo skill pubg-code: kiểu ghi rõ, không lambda, không stream, không var, hàm ngắn, chú thích tối đa 2 dòng và chỉ nói vì sao; điều đáng nhớ ghi vào memory/code/ thay vì chú thích dài.
+Khi xong: chạy sh scripts/check-java-style.sh và sửa các dòng nó báo; chạy build (nói đúng lệnh bạn chạy, từ thư mục PUBGApp), cho tôi xem git diff --stat, rồi nêu ngắn gọn: đã sửa gì, và điều gì bạn CHƯA kiểm chứng. Nếu build xanh, commit với subject theo .github/NAMING.md. Sau đó dừng.
 ```
 
 **Bạn kiểm sau mỗi bước (1 đến 2 phút):**
@@ -102,7 +102,8 @@ Tự review toàn bộ thay đổi của issue #<N> như một reviewer khó tí
 3. Thư viện mới; thay đổi cấu trúc Firestore hoặc Room đã có.
 4. Nhánh lỗi: mất mạng, chưa đăng nhập, dữ liệu rỗng, người dùng bấm hai lần.
 5. Xoay màn hình có mất trạng thái không; chuỗi hard-code trong layout; việc nặng trên luồng chính.
-6. Tài liệu cần sửa cùng PR chưa.
+6. Phong cách: chạy sh scripts/check-java-style.sh; tìm tên khó hiểu, hàm hoặc lớp quá dài, chú thích dài hơn 2 dòng hoặc chỉ nhắc lại code.
+7. Tài liệu cần sửa cùng PR chưa.
 Liệt kê vấn đề theo mức blocking, major, minor. Tôi sẽ quyết định sửa gì.
 ```
 

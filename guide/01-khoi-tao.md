@@ -25,7 +25,7 @@ Mục đích: AI đọc đúng tài liệu và nói lại hiểu gì, để bạ
 
 ```
 Bạn đang làm việc trong repo PUBGApp (Android, Java 17, XML Views, Firebase). Trước khi làm gì, hãy đọc:
-AGENTS.md, memory/people.md, memory/preferences.md, các mục cuối của memory/decisions.md, docs/product/features.md.
+AGENTS.md, memory/people.md, memory/preferences.md, các mục cuối của memory/decisions.md, memory/code/README.md, docs/product/features.md.
 Chưa sửa file nào. Sau khi đọc, trả lời ngắn gọn:
 1. Dự án là gì, và chức năng nào đã được duyệt để làm (trạng thái khác proposed)?
 2. Ba luật bạn dễ vi phạm nhất khi làm việc ở đây là gì? Nêu số R.

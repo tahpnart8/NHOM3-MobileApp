@@ -2,7 +2,7 @@
 
 Tra theo dấu hiệu bạn nhìn thấy. Mỗi mục nói nguyên nhân thường gặp và cách xử lý; nếu bạn dùng AI để sửa, có prompt kèm theo. Không thấy tình huống của mình: gõ `/guide` và mô tả, hoặc hỏi leader.
 
-Mục lục: [AI bịa API](#ai-bịa-api-hoặc-lớp) · [AI xóa code cũ](#ai-xóa-hoặc-đổi-tên-code-cũ) · [Xung đột merge](#xung-đột-merge) · [Hook từ chối commit](#hook-từ-chối-commit-hoặc-push) · [CI policy đỏ](#ci-policy-đỏ) · [CI build đỏ](#ci-build-đỏ-nhưng-máy-bạn-xanh) · [Co-authored-by](#ai-thêm-co-authored-by-hoặc-generated-with) · [Task quá lớn](#task-quá-lớn-hoặc-ai-làm-lan-man) · [Issue mơ hồ](#issue-mơ-hồ) · [AI lặp vòng lỗi](#ai-lặp-vòng-sửa-lỗi-không-dứt) · [Cần thư viện mới](#cần-thêm-thư-viện) · [Đổi cấu trúc dữ liệu](#cần-đổi-cấu-trúc-firestore-hoặc-room-đã-có) · [AI quên luật](#ai-quên-luật-giữa-chừng) · [Lỡ commit lên main](#lỡ-commit-trên-main-hoặc-đặt-sai-tên-branch) · [Google sign-in lỗi](#đăng-nhập-google-báo-developer_error) · [Xoay màn hình, offline](#xoay-màn-hình-mất-trạng-thái-hoặc-offline-không-chạy)
+Mục lục: [AI bịa API](#ai-bịa-api-hoặc-lớp) · [AI xóa code cũ](#ai-xóa-hoặc-đổi-tên-code-cũ) · [Xung đột merge](#xung-đột-merge) · [Hook từ chối commit](#hook-từ-chối-commit-hoặc-push) · [CI policy đỏ](#ci-policy-đỏ) · [CI build đỏ](#ci-build-đỏ-nhưng-máy-bạn-xanh) · [Co-authored-by](#ai-thêm-co-authored-by-hoặc-generated-with) · [Task quá lớn](#task-quá-lớn-hoặc-ai-làm-lan-man) · [Issue mơ hồ](#issue-mơ-hồ) · [AI lặp vòng lỗi](#ai-lặp-vòng-sửa-lỗi-không-dứt) · [Cần thư viện mới](#cần-thêm-thư-viện) · [Đổi cấu trúc dữ liệu](#cần-đổi-cấu-trúc-firestore-hoặc-room-đã-có) · [AI quên luật](#ai-quên-luật-giữa-chừng) · [Lỡ commit lên main](#lỡ-commit-trên-main-hoặc-đặt-sai-tên-branch) · [Google sign-in lỗi](#đăng-nhập-google-báo-developer_error) · [Xoay màn hình, offline](#xoay-màn-hình-mất-trạng-thái-hoặc-offline-không-chạy) · [Code rườm rà](#ai-viết-code-rườm-rà-lambda-hoặc-chú-thích-dài)
 
 ## AI bịa API hoặc lớp
 
@@ -165,3 +165,15 @@ Offline: màn hình phải hiển thị dữ liệu từ Room trước rồi m�
 ```
 Màn hình <tên> mất <trạng thái gì> khi xoay ngang. Đọc lớp UI và ViewModel của nó, chỉ ra trạng thái nào đang nằm ở Activity hoặc Fragment thay vì ViewModel, và đề xuất sửa nhỏ nhất. Không dùng android:configChanges.
 ```
+
+## AI viết code rườm rà, lambda hoặc chú thích dài
+
+**Dấu hiệu:** có `->`, `stream()`, `var`, hàm dài hàng chục dòng, hoặc mỗi hàm kèm một khối chú thích dài. Chạy `sh scripts/check-java-style.sh` sẽ liệt kê các dòng như vậy (chỉ những dòng bạn thêm hoặc sửa).
+
+**Nguyên nhân:** model mặc định viết Java "hiện đại" và giải thích nhiều. Skill `pubg-code` cần được nhắc lại nếu phiên dài.
+
+```
+Viết lại phần code bạn vừa thêm theo skill pubg-code. Không thay đổi hành vi. Ghi rõ kiểu, không lambda, không method reference, không stream, không var; listener là lớp ẩn danh hoặc gọi một hàm có tên; dùng vòng for; tách hàm dài; mỗi chú thích tối đa 2 dòng và chỉ nói vì sao. Điều đáng nhớ (bẫy của thư viện, lý do một cách làm) chuyển vào memory/code/ thay vì để trong chú thích. Sau đó chạy sh scripts/check-java-style.sh và build, rồi cho tôi xem git diff --stat.
+```
+
+Chỉ viết lại **dòng của issue hiện tại**. Đừng để AI "dọn" code của người khác cho đẹp: đó là ngoài phạm vi (`AGENTS.md` R3).

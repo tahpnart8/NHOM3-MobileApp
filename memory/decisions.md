@@ -232,3 +232,25 @@ People read issues and pull requests, not only tools; the leader asked for Vietn
 
 ### Owner
 tahpnart8
+
+## 2026-09-25 - Plain explicit Java, and code knowledge kept in memory/code/
+
+### Decision
+Java is written plainly: explicit types, one statement per line, anonymous classes or named methods for listeners, `for` loops, small methods and classes, and comments of one or two lines that say why. No lambdas, method references, streams, `var`, records, text blocks or pattern `instanceof`, although the toolchain stays Java 17. Anything a future reader needs that the code cannot say (a library trap, why a query has an odd condition, an approach that failed) is written in `memory/code/<area>.md` and not in comments. The `pubg-code` skill carries the rules for AI tools, rule R15 in `AGENTS.md` binds them, `docs/conventions/android-java.md` states them for people, and `scripts/check-java-style.sh` reports violations on the lines a change adds. The checker is advisory: skills read its output, CI only runs its tests. The style applies to lines written or changed, never to a rewrite of old code.
+
+### Context
+The leader wants code a student can read on the first pass and found AI-written code wordy, lambda-heavy and heavily commented. Comments go stale and cannot be searched by area, while a small memory file per area can be kept true.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Fail CI on any style finding | A pattern checker cannot judge names or method length and would flag the wizard-generated `MainActivity`; the leader asked for guidance that can be relaxed |
+| Store code knowledge in `decisions.md` | It is append only and holds choices between alternatives; code knowledge must be corrected and deleted when it stops being true |
+| One file for all code notes | Five people would edit it at once; one file per area avoids that |
+| Lower the language level to Java 8 to forbid lambdas | Android still builds Java 17 sources; the style is a choice of the team and the toolchain does not need to enforce it |
+
+### Impact
+`.agents/skills/pubg-code`, `.agents/workflows/code.md` and their mirror, `.agents/rules/android-java.md`, `AGENTS.md` (R15, sections 3, 4, 7, 8), `memory/code/`, `memory/README.md`, `scripts/check-java-style.sh` and its test (run by `build.yml`), `pubg-start-task`, `pubg-open-pr`, `pubg-review-pr` and `pubg-guide`, `docs/conventions/android-java.md`, `guide/`.
+
+### Owner
+tahpnart8

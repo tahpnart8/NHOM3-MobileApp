@@ -8,6 +8,7 @@ This folder records **why** the project is the way it is and what the leader has
 | `preferences.md` | Standing instructions from the leader that outlive one task | The leader states a rule that should stay |
 | `decisions.md` | Architecture and delivery decisions, in the order they were made | A decision sets or changes a technology, a data shape, a rule or the workflow |
 | `decision-template.md` | The shape of one decision entry | Only when the template itself changes |
+| `code/` | What people and tools learn about the code and the libraries that the code cannot say: traps, why something has its shape, patterns. One file per area. Not append only, kept true | You learn something a future reader needs (rules in `code/README.md`) |
 
 ## Rules
 
