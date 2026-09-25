@@ -73,6 +73,8 @@ sh scripts/tests/policy-test.sh                          # after touching script
 
 **R13. Smallest change that does the job.** Reuse what exists before writing new code. Non-trivial logic leaves one runnable check behind, the smallest test that fails if the logic breaks.
 
+**R14. Issues and pull requests are written in Vietnamese.** Title and body, because people read them, not only tools. Fill the issue forms and the pull request template as they are (their headings are Vietnamese). Keep in English: the `type(scope):` prefix of a title, the keywords `Closes`, `Refs`, `Removal-Issue` and `Deviation`, and anything quoted verbatim (code names, paths, commands, error messages). Write plain, correct Vietnamese with accents; do not translate identifiers. CI rejects a pull request whose title or body has no Vietnamese in it; nothing checks issues, so this rule is yours to keep. Commit messages may be English or Vietnamese.
+
 ## 7. Code conventions (short form)
 
 Details are in `docs/conventions/android-java.md`.
@@ -101,4 +103,12 @@ Issue, then branch, then pull request, then the leader reviews and squash merges
 
 ## 9. Language
 
-Talk to people in the language they use (the team writes Vietnamese). Files for AI tools, code, commits, issues and pull requests are English. `docs/`, `guide/`, `plan/` and `README.md` are Vietnamese. Do not use emoji in any written artifact.
+Talk to people in the language they use (the team writes Vietnamese).
+
+| Written in | What |
+| --- | --- |
+| Vietnamese | **Issues and pull requests** (title and body, rule R14), `docs/`, `guide/`, `plan/`, `README.md`, comments you post for a person to read, and every message to the person you work with |
+| English | Files for AI tools (`AGENTS.md`, `.agents/`, `.claude/`), `memory/`, code identifiers and code comments, and the `type(scope):` prefix of a title |
+| Either | Commit messages |
+
+Do not use emoji in any written artifact.

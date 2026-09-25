@@ -16,7 +16,7 @@ The question a review answers: **if this merges right now, is `main` still corre
 7. **Check documents.** `docs/data/*` and `docs/product/features.md` match the change (R7). Use the `pubg-doc-check` skill if unsure.
 8. **Check contributors.** Commits authored only by the team, no `Co-authored-by`, no AI byline (R8).
 9. **Return to the original branch** and delete the local `pr-N` branch.
-10. **Report** in this order: recommendation, then findings with file and line, each labelled `blocking`, `major`, `minor` or `question`, then the exact commands you ran and their results, then what you could not check.
+10. **Report, in Vietnamese,** in this order: recommendation, then findings with file and line, each labelled `blocking`, `major`, `minor` or `question`, then the exact commands you ran and their results, then what you could not check. A finding that the pull request title or body is not in Vietnamese is a `major` one (AGENTS.md R14). Any comment the leader asks you to draft for the pull request is also Vietnamese, without the name of any AI tool.
 
 ## Recommendation values
 

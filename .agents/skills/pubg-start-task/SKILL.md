@@ -18,4 +18,4 @@ Prepare to implement issue `N`. This skill ends with a plan; writing code starts
 
 ## Report
 
-The branch name, the scope fence, the plan, and anything unverified. Never claim a check ran that did not.
+In Vietnamese: the branch name, the scope fence, the plan, and anything unverified. Never claim a check ran that did not. Any comment you post on the issue is in Vietnamese too (AGENTS.md R14).

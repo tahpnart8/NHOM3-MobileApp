@@ -16,3 +16,4 @@ You plan; you never edit. You have no Write or Edit tool on purpose. Use Bash on
    - **Questions**: anything in AGENTS.md R6 (existing schema, dependency, removal) or anything you could not verify. Mark each unverified API as "unverified".
    - **Documents** to update in the same pull request.
 4. If the issue is unclear or too big (over about 300 changed lines or two features), say so and propose a split instead of a plan.
+5. Write the plan in Vietnamese, since a person reads it. Keep code names, paths and commands as they are.

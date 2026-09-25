@@ -14,9 +14,13 @@ Open exactly one pull request for the current branch. Verify first; opening is t
 5. **Check for deletions.** `git diff --diff-filter=DR --name-status origin/main...HEAD`. Any deleted or renamed file under `PUBGApp/app/src/main` needs an approved `type:removal` issue and a `Removal-Issue: #N` line in the body. Without one, restore the file.
 6. **Check documents.** If a schema or a feature's behaviour changed, `docs/data/*` and `docs/product/features.md` are changed in this branch (AGENTS.md R7).
 7. **Check the commits.** `git log --format=%s origin/main..HEAD` must be conventional subjects. `git log --format=%B origin/main..HEAD` must contain no `Co-authored-by` and no AI byline. If they do, stop and tell the user; do not rewrite history yourself.
-8. **Open it.** Push the branch (`git push -u origin HEAD`), then `gh pr create --title "<primary commit subject>" --body-file <file>`. The body follows `.github/PULL_REQUEST_TEMPLATE.md`: summary, `Closes #N`, feature ID, packages changed, the issue's acceptance checklist with only the truly done boxes ticked, the exact commands and results from step 3, screenshots in portrait and landscape for a screen change.
-9. **Report** the pull request URL, the verification results, what you could not run (for example the emulator), and any acceptance criterion not met.
+8. **Open it, in Vietnamese.** The title and the body are written in Vietnamese (AGENTS.md R14); CI rejects a pull request whose title or body is not. Push the branch (`git push -u origin HEAD`), then `gh pr create --title "<title>" --body-file <file>`.
+   - Title: `type(scope): tóm tắt bằng tiếng Việt`, for example `feat(auth): thêm nút đăng nhập bằng Google`. The type and scope stay English, the summary does not start with a capital and has no trailing period, 100 bytes at most.
+   - Body: fill `.github/PULL_REQUEST_TEMPLATE.md` as it is, headings included. It has: `Tóm tắt`, `Issue liên quan` with `Closes #N`, `Tính năng và phạm vi`, `Tiêu chí nghiệm thu` (the issue's checklist with only the truly done boxes ticked), `Code cũ`, `Đã kiểm tra thế nào` (the exact commands and results from step 3, and what the person ran on the emulator), `Tài liệu`, and screenshots in portrait and landscape for a screen change.
+   - Keep in English: the keywords `Closes`, `Refs`, `Removal-Issue`, `Deviation`; and anything quoted verbatim (commands, paths, error messages). Do not translate identifiers.
+   - Remove the `<!-- ... -->` hints you have used. `Closes #N` must carry a real number, or `Closes: none`.
+9. **Report**, in Vietnamese, the pull request URL, the verification results, what you could not run (for example the emulator), and any acceptance criterion not met.
 
 ## Not allowed
 
-No push to `main`, no force push, no `--no-verify`, no attribution lines in the title or body, no merging the pull request, no claim of emulator testing you did not do.
+No push to `main`, no force push, no `--no-verify`, no attribution lines in the title or body, no title or body in English, no merging the pull request, no claim of emulator testing you did not do.
