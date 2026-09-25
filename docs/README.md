@@ -11,6 +11,7 @@ Thư mục này mô tả **hệ thống là gì**. Lý do đằng sau các lựa
 | Dữ liệu cục bộ Room | [data/room-schema.md](data/room-schema.md) | Bảng SQLite, phiên bản |
 | Quy ước viết code | [conventions/android-java.md](conventions/android-java.md) | Đặt tên, tài nguyên, luồng |
 | Cách làm việc nhóm | [workflow/huong-dan-lam-viec.md](workflow/huong-dan-lam-viec.md) | Cài đặt, Issue, Branch, PR |
+| Cấu hình GitHub | [workflow/cau-hinh-github.md](workflow/cau-hinh-github.md) | Ruleset của `main`, cách gỡ khi check chặn mọi PR, chi phí |
 | Cài đặt Firebase | [workflow/firebase-setup.md](workflow/firebase-setup.md) | Tạo project, gói Blaze, SHA-1 từng máy, `google-services.json` |
 | Kế hoạch giao việc | [../plan/README.md](../plan/README.md) | Giai đoạn và việc; **chưa có, chờ tài liệu yêu cầu** |
 
