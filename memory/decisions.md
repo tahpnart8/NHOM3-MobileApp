@@ -166,3 +166,23 @@ The review before the first merge found that settings applied by hand are invisi
 
 ### Owner
 tahpnart8
+
+## 2026-09-25 - Product images are stored in Cloud Storage on the Blaze plan
+
+### Decision
+Product and avatar images will be stored in Cloud Storage for Firebase. The Firebase project therefore runs on the Blaze plan, with one billing account owned by the leader, a low budget alert, and the bucket placed in an Always Free region (`us-central1`, `us-east1` or `us-west1`).
+
+### Context
+From 2026-02-03 Cloud Storage for Firebase requires the Blaze plan; on the Spark plan every Storage call fails with 402 or 403 (Firebase FAQ on Storage changes). The team had to choose between paying attention to billing and avoiding Storage.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Compressed images as Base64 inside Firestore | Needs no card, but works against the 1 MiB document limit and is not how a real product stores images; the leader preferred the standard service |
+| Base64 first, move to Storage later | Costs a second round of image code |
+
+### Impact
+`docs/workflow/firebase-setup.md` (steps 1 and 5). No app code exists yet; the image feature is not designed until the requirements are loaded.
+
+### Owner
+tahpnart8
