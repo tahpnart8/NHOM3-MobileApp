@@ -1,0 +1,6 @@
+#!/bin/sh
+# Refuse a commit whose identity or message would put an AI tool or a co-author on the contributor list.
+# Install once per clone: sh scripts/setup-dev.sh   (or scripts/setup-dev.ps1 on Windows)
+here=$(cd "$(dirname "$0")/.." && pwd)
+sh "$here/scripts/check-contributors.sh" identity || exit 1
+sh "$here/scripts/check-contributors.sh" message "$1" || exit 1
