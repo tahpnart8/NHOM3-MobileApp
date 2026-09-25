@@ -21,6 +21,7 @@ People are not bound by this file; it exists because a tool can change many file
 2. `docs/product/features.md`: the register of features. Work only on a feature that has an ID and a status other than `proposed`.
 3. The issue you are working on, and every document it names.
 4. The topic document you need, and no more: `docs/architecture/`, `docs/data/`, `docs/conventions/`.
+5. Before you write Java: the `pubg-code` skill, and `memory/code/README.md` with the file for the area you are about to touch.
 
 ## 4. Where things are
 
@@ -30,7 +31,7 @@ People are not bound by this file; it exists because a tool can change many file
 | `docs/` | What the system is: product, architecture, data schemas, conventions, workflow. Vietnamese |
 | `plan/` | Delivery plan: phases and work items. Empty until the leader loads the requirements |
 | `guide/` | Advice for people using AI on this repository: prompts for the explore, plan, implement and review loop and for ending a task. Vietnamese. Not a rulebook |
-| `memory/` | Why it is that way: decisions (append only), preferences, people |
+| `memory/` | Why it is that way: decisions (append only), preferences, people. `memory/code/` holds what people and tools learn about the code and the libraries, so it stays out of code comments |
 | `.agents/` | Source of rules, workflows and skills for Antigravity and Codex |
 | `.claude/` | Claude Code settings, sub-agents and the mirror of the skills |
 | `.github/` | Issue and pull request templates, naming rules, CI, code owners, team list |
@@ -75,6 +76,8 @@ sh scripts/tests/policy-test.sh                          # after touching script
 
 **R14. Issues and pull requests are written in Vietnamese.** Title and body, because people read them, not only tools. Fill the issue forms and the pull request template as they are (their headings are Vietnamese). Keep in English: the `type(scope):` prefix of a title, the keywords `Closes`, `Refs`, `Removal-Issue` and `Deviation`, and anything quoted verbatim (code names, paths, commands, error messages). Write plain, correct Vietnamese with accents; do not translate identifiers. CI rejects a pull request whose title or body has no Vietnamese in it; nothing checks issues, so this rule is yours to keep. Commit messages may be English or Vietnamese.
 
+**R15. Write plain, explicit Java, and keep knowledge out of comments.** Follow the `pubg-code` skill for every line you write or change: explicit types, no lambdas, method references, streams or `var`, small methods, comments of one or two lines that say why. Run `sh scripts/check-java-style.sh` before you finish. What you learn about the code or a library that the code cannot say goes in `memory/code/`, not in comments. The style applies to the lines you write or change; do not rewrite old code for it (R3).
+
 ## 7. Code conventions (short form)
 
 Details are in `docs/conventions/android-java.md`.
@@ -82,6 +85,7 @@ Details are in `docs/conventions/android-java.md`.
 - Code lives in `com.nhom3.pubgapp.feature.<name>.{ui,data,model}`; shared code in `com.nhom3.pubgapp.common`.
 - Use ViewBinding, not `findViewById`. Every user visible string is a resource; a feature's strings go in its own `strings_<feature>.xml`.
 - No network or disk work on the main thread. Every screen must survive rotation without losing its state.
+- Plain, explicit Java (R15): no lambdas, streams or `var`; comments of one or two lines; lasting knowledge in `memory/code/`. Detail in the `pubg-code` skill and `docs/conventions/android-java.md`.
 - Identifiers and comments in English. The user interface language is Vietnamese by default.
 
 ## 8. Workflow and skills
@@ -92,6 +96,7 @@ Issue, then branch, then pull request, then the leader reviews and squash merges
 | --- | --- |
 | `pubg-new-issue` | Turn an idea into a correctly formed issue |
 | `pubg-start-task` | Begin an issue: read it, create the branch, state the scope fence |
+| `pubg-code` | Write Java the PUBGApp way: plain, explicit, short comments, notes in `memory/code/` |
 | `pubg-sync-branch` | Merge the latest `main` into your branch and resolve conflicts without dropping anyone's code |
 | `pubg-open-pr` | Verify, then open the pull request from the template |
 | `pubg-review-pr` | Leader only: judge a pull request against its issue on the merged tree |

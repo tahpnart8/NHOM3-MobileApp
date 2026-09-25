@@ -26,6 +26,7 @@ The guide in `guide/` is written for the person coding, in Vietnamese. It is adv
 | Finished code: opening the PR, asking another AI to cross-check, asking the leader, answering review comments | `guide/03-ket-thuc-task.md` |
 | Build or CI red, hook refusal, merge conflict, AI invented an API, AI deleted code, `Co-authored-by`, `DEVELOPER_ERROR`, lost state on rotation, AI forgot the rules | `guide/04-tinh-huong.md` |
 | Wants to skip a step, or a rule seems to block a reasonable thing | `guide/05-khi-nao-duoc-pha-le.md` |
+| AI wrote wordy, lambda-heavy or over-commented code, or the person asks how the code should look | `guide/04-tinh-huong.md` (section on code style) and the `pubg-code` skill |
 | The person is the leader: reviewing, merging, opening work | `guide/06-danh-cho-leader.md` |
 
 ## The guide is flexible
