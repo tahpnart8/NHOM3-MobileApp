@@ -51,9 +51,9 @@ sh scripts/tests/policy-test.sh                          # after touching script
 
 **R3. Stay inside the issue.** Change only what the issue asks, inside the files or packages it allows. No drive-by refactor, no formatting churn, no renamed identifiers. Report dead code you notice; do not delete it.
 
-**R4. Never delete or rename existing feature code.** A feature in `docs/product/features.md` is protected. Removing or renaming its files, classes or methods needs an issue labelled `type:removal` opened by the leader, and the pull request must contain the line `Removal-Issue: #N`. CI fails a deletion under `PUBGApp/app/src/main` without it.
+**R4. Never delete or rename existing feature code.** A feature in `docs/product/features.md` is protected. Removing or renaming its files, classes or methods needs an issue labelled `type:removal` opened by the leader, and the pull request must contain the line `Removal-Issue: #N`. CI fails a deletion or rename under `PUBGApp/app/src/main` without it, and flags any file there that loses more than 40 lines. When resolving a merge conflict, keep both sides; use the `pubg-sync-branch` skill.
 
-**R5. No new dependency without an issue.** Add nothing to `libs.versions.toml` or a Gradle script unless the issue is a `chore(deps)` issue that names it. Look the current version up; do not recall it from memory.
+**R5. No new dependency without an issue.** Add nothing to `libs.versions.toml` or a Gradle script unless the issue is a `chore(deps)` or `build` issue that names it. Look the current version up; do not recall it from memory. CI fails a pull request that changes a Gradle file unless its title starts with `build(` or `chore(`.
 
 **R6. Ask first, in three cases.** (a) Changing a Firestore collection or Room table that already exists. (b) Adding or changing a dependency. (c) Removing or renaming a feature. Everything else that is undecided is not a stop: choose the reasonable option, record one line with the `pubg-record-decision` skill, and continue.
 
@@ -88,6 +88,7 @@ Issue, then branch, then pull request, then the leader reviews and squash merges
 | --- | --- |
 | `pubg-new-issue` | Turn an idea into a correctly formed issue |
 | `pubg-start-task` | Begin an issue: read it, create the branch, state the scope fence |
+| `pubg-sync-branch` | Merge the latest `main` into your branch and resolve conflicts without dropping anyone's code |
 | `pubg-open-pr` | Verify, then open the pull request from the template |
 | `pubg-review-pr` | Leader only: judge a pull request against its issue on the merged tree |
 | `pubg-record-decision` | Append a decision to `memory/decisions.md` |

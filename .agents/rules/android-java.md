@@ -1,4 +1,10 @@
-# Java code in PUBGApp (apply when editing `**/*.java`)
+---
+trigger: glob
+globs: "**/*.java"
+description: Java conventions for the PUBGApp Android code
+---
+
+# Java code in PUBGApp
 
 Detail: `docs/conventions/android-java.md`. Architecture: `docs/architecture/overview.md`.
 

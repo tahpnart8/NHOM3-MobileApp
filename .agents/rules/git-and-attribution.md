@@ -1,4 +1,9 @@
-# Git, contributors and attribution (always on)
+---
+trigger: always_on
+description: Git workflow and the ban on AI attribution; applies to every task
+---
+
+# Git, contributors and attribution
 
 The full rulebook is `AGENTS.md`. These points are repeated here because they are the ones tools most often break.
 

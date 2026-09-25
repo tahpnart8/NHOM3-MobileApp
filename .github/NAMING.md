@@ -16,7 +16,7 @@ fix/31-listing-photo-rotation
 chore/1-bootstrap-repo
 ```
 
-Branch from the latest `main`. One issue, one branch, one pull request.
+Branch from the latest `main`. One issue, one branch, one pull request. The only other accepted shape is `revert-<n>-...`, which GitHub creates when someone presses Revert on a merged pull request.
 
 ## Commit subjects
 

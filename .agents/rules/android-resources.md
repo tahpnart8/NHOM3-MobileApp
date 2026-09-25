@@ -1,4 +1,10 @@
-# Android resources in PUBGApp (apply when editing `**/res/**/*.xml`)
+---
+trigger: glob
+globs: "**/res/**/*.xml, **/AndroidManifest.xml"
+description: Layout, string and resource conventions for PUBGApp
+---
+
+# Android resources in PUBGApp
 
 Detail: `docs/conventions/android-java.md`.
 
