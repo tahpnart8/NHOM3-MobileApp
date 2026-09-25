@@ -1,47 +1,47 @@
-name: Feature
-description: New behaviour a user can see
-title: "Add "
+name: Tính năng
+description: Hành vi mới mà người dùng nhìn thấy được
+title: "Thêm "
 labels: ["type:feature"]
 body:
   - type: input
     id: feature_id
     attributes:
-      label: Feature ID
-      description: The ID from docs/product/features.md, for example F-04. If the feature is not registered there, open a docs issue and get the leader to register it first.
+      label: Mã tính năng
+      description: Mã trong docs/product/features.md, ví dụ F-04. Nếu tính năng chưa được đăng ký ở đó thì mở issue docs trước và nhờ leader duyệt.
       placeholder: F-04
     validations:
       required: true
   - type: textarea
     id: summary
     attributes:
-      label: What and why
-      description: What the user can do after this issue that they cannot do now.
+      label: Làm gì và vì sao
+      description: Sau issue này người dùng làm được gì mà trước đó chưa làm được. Viết bằng tiếng Việt.
     validations:
       required: true
   - type: textarea
     id: acceptance
     attributes:
-      label: Acceptance criteria
-      description: A checklist. Each line is something a reviewer can check on a device.
+      label: Tiêu chí nghiệm thu
+      description: Danh sách kiểm được. Mỗi dòng là một điều người review kiểm được trên thiết bị.
       value: |
         - [ ]
-        - [ ] The screen keeps its state when rotated
+        - [ ] Màn hình giữ nguyên trạng thái khi xoay
     validations:
       required: true
   - type: textarea
     id: scope
     attributes:
-      label: Packages or files allowed to change
-      description: Name the exact packages, for example com.nhom3.pubgapp.feature.auth. Anything else is out of scope.
+      label: Gói hoặc file được phép sửa
+      description: Nêu chính xác tên gói, ví dụ com.nhom3.pubgapp.feature.auth. Mọi thứ khác nằm ngoài phạm vi.
     validations:
       required: true
   - type: textarea
     id: out_of_scope
     attributes:
-      label: Out of scope
-      description: What must not be touched or built in this issue.
+      label: Ngoài phạm vi
+      description: Những gì không được đụng tới hoặc không làm trong issue này.
   - type: textarea
     id: docs
     attributes:
-      label: Documents to update
-      description: For example docs/data/firestore-schema.md, docs/product/features.md.
+      label: Tài liệu cần cập nhật
+      description: Ví dụ docs/data/firestore-schema.md, docs/product/features.md.

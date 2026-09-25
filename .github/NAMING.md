@@ -24,7 +24,12 @@ Branch from the latest `main`. One issue, one branch, one pull request. The only
 <type>(<scope>): <imperative summary>
 ```
 
-Lowercase, imperative, 72 characters at most, no trailing period. The scope is optional and names an area: `auth`, `listing`, `feed`, `chat`, `order`, `profile`, `admin`, `offline`, `ui`, `build`, `docs`, `repo`. The type list is closed.
+The `type` and `scope` stay English. The summary may be English or Vietnamese (a pull request title must be Vietnamese, see below). It does not start with a capital letter, has no trailing period, and the whole subject is at most 100 bytes: about 72 English characters or 55 Vietnamese ones. The scope is optional and names an area: `auth`, `listing`, `feed`, `chat`, `order`, `profile`, `admin`, `offline`, `ui`, `build`, `docs`, `repo`. The type list is closed.
+
+```text
+feat(auth): thêm nút đăng nhập bằng Google
+fix(offline): sửa lỗi mất dữ liệu đã lưu khi xoay màn hình
+```
 
 | Type | Use for |
 | --- | --- |
@@ -41,13 +46,15 @@ The body, when there is one, says why. It never contains a `Co-authored-by` line
 
 ## Pull requests
 
-- The title is the primary commit subject, word for word. It becomes the commit on `main` (squash merge).
+- **The title and the body are written in Vietnamese**, because people read them. The `type(scope):` prefix stays English. The title has the same shape as a commit subject and becomes the commit on `main` (squash merge). CI checks that the title and the body contain Vietnamese accented letters. It cannot check that the Vietnamese is good; that is for the reviewer.
 - The body follows `.github/PULL_REQUEST_TEMPLATE.md` and contains `Closes #N` (repeat the keyword before every number: `Closes #1, closes #2`), or `Closes: none`.
 - A pull request that deletes code under `PUBGApp/app/src/main` also contains `Removal-Issue: #N`.
+- These keywords stay English because tools read them: `Closes`, `Refs`, `Removal-Issue`, `Deviation`. Code names, file paths, commands and error messages are quoted as they are.
+- A pull request GitHub generates itself (`Revert ...`, `Merge ...`) is exempt.
 
 ## Issues
 
-An imperative sentence in sentence case, no prefix and no identifier: `Add Google sign-in to the login screen`. Use a form: `feature`, `bug`, `chore`, or `removal` (leader only).
+**Written in Vietnamese**, title and body, using a form: `feature`, `bug`, `chore`, or `removal` (leader only). The title is an imperative sentence, no prefix and no identifier: `Thêm đăng nhập bằng Google vào màn hình đăng nhập`. The form fields are already in Vietnamese; fill them in as they are. Code names, paths and quoted error messages stay as they are. This is a rule for the person and the AI that writes the issue; no automatic check reads issues.
 
 ## Labels
 

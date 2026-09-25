@@ -1,33 +1,33 @@
-## Summary
-<!-- What changed and why, in 2 to 4 sentences. -->
+## Tóm tắt
+<!-- Viết bằng tiếng Việt. Đã thay đổi gì và vì sao, trong 2 đến 4 câu. Nếu bạn bỏ một bước của guide/, thêm một dòng bắt đầu bằng "Deviation:" và nói lý do. -->
 
-## Issue
+## Issue liên quan
 Closes #
-<!-- Put the issue number after the keyword. With several issues, repeat the keyword before EVERY number, because GitHub closes only the issue right after a keyword. Write "Closes: none" if no issue is closed. -->
+<!-- Điền số issue sau từ khóa. Nếu đóng nhiều issue, lặp từ khóa trước MỖI số, vì GitHub chỉ đóng issue đứng ngay sau từ khóa. Nếu không đóng issue nào, viết "Closes: none". Giữ từ khóa Closes bằng tiếng Anh. -->
 
-## Feature and scope
-- Feature ID (docs/product/features.md):
-- Packages or files changed:
-- Out of scope, deliberately not touched:
+## Tính năng và phạm vi
+- Mã tính năng (docs/product/features.md):
+- Gói hoặc file đã thay đổi:
+- Cố ý không đụng tới:
 
-## Acceptance criteria
-<!-- Copy the checklist from the issue and tick what is done. Leave an unticked box for anything that is not. -->
+## Tiêu chí nghiệm thu
+<!-- Chép danh sách từ issue. Chỉ đánh dấu ô nào đã thật sự kiểm. Để trống ô chưa làm xong. -->
 - [ ]
 
-## Existing code
-- [ ] I did not delete or rename existing feature code
-<!-- If you did, add the line below with an issue labelled type:removal, otherwise delete this comment:
+## Code cũ
+- [ ] Tôi không xóa hoặc đổi tên code của tính năng đã có
+<!-- Nếu có xóa hoặc đổi tên, thêm dòng dưới đây kèm issue mang nhãn type:removal, nếu không thì xóa comment này:
 Removal-Issue: #N -->
 
-## How it was tested
-<!-- Exact commands and their real results. Say what you could not run. Device or emulator and API level if you ran the app. -->
+## Đã kiểm tra thế nào
+<!-- Lệnh đã chạy và kết quả thật. Nói rõ phần nào chưa chạy được. Ghi thiết bị hoặc emulator và bản API nếu bạn đã chạy ứng dụng. -->
 ```text
-./gradlew assembleDebug testDebugUnitTest lintDebug - <result>
+./gradlew assembleDebug testDebugUnitTest lintDebug - <kết quả>
 ```
 
-## Documents
-- [ ] `docs/data/*` and `docs/product/features.md` are updated, or this change does not affect them
-- [ ] A decision worth remembering is added to `memory/decisions.md`, or there is none
+## Tài liệu
+- [ ] `docs/data/*` và `docs/product/features.md` đã cập nhật, hoặc thay đổi này không ảnh hưởng tới chúng
+- [ ] Quyết định đáng nhớ đã ghi vào `memory/decisions.md`, hoặc không có
 
-## Screenshots
-<!-- For a screen change: portrait and landscape. -->
+## Ảnh chụp màn hình
+<!-- Với thay đổi giao diện: chụp cả dọc và ngang. -->

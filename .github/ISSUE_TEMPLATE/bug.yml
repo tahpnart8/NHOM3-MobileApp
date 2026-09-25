@@ -1,20 +1,21 @@
-name: Bug
-description: Behaviour that is wrong
-title: "Fix "
+name: Lỗi
+description: Hành vi đang sai
+title: "Sửa lỗi "
 labels: ["type:bug"]
 body:
   - type: input
     id: feature_id
     attributes:
-      label: Feature ID
-      description: The feature the bug belongs to, from docs/product/features.md.
+      label: Mã tính năng
+      description: Tính năng mà lỗi thuộc về, trong docs/product/features.md.
       placeholder: F-04
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
-      label: Steps to reproduce
+      label: Các bước tái hiện
+      description: Viết bằng tiếng Việt.
       value: |
         1.
         2.
@@ -23,20 +24,20 @@ body:
   - type: textarea
     id: expected
     attributes:
-      label: Expected and actual behaviour
+      label: Kết quả mong đợi và kết quả thực tế
     validations:
       required: true
   - type: input
     id: device
     attributes:
-      label: Device and Android version
-      placeholder: Pixel 5 emulator, API 30
+      label: Thiết bị và bản Android
+      placeholder: Emulator Pixel 5, API 30
     validations:
       required: true
   - type: textarea
     id: scope
     attributes:
-      label: Packages or files allowed to change
-      description: Where you think the fix belongs. Anything else is out of scope.
+      label: Gói hoặc file được phép sửa
+      description: Nơi bạn nghĩ chỗ sửa nằm ở. Mọi thứ khác nằm ngoài phạm vi.
     validations:
       required: true

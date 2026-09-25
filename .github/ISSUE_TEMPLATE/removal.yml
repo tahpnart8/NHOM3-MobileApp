@@ -1,33 +1,35 @@
-name: Removal
-description: Deliberate removal or rename of existing functionality. Leader only.
-title: "Remove "
+name: Gỡ bỏ
+description: Chủ ý gỡ hoặc đổi tên chức năng đã có. Chỉ leader mở.
+title: "Gỡ "
 labels: ["type:removal"]
 body:
   - type: markdown
     attributes:
-      value: Only the leader opens this issue. A pull request that deletes code under PUBGApp/app/src/main must cite it with `Removal-Issue: #N`.
+      value: |
+        Chỉ leader mở issue này. Pull request nào xóa code trong PUBGApp/app/src/main phải dẫn tới nó bằng dòng `Removal-Issue: #N`.
   - type: input
     id: feature_id
     attributes:
-      label: Feature ID
+      label: Mã tính năng
       placeholder: F-04
     validations:
       required: true
   - type: textarea
     id: what
     attributes:
-      label: What is removed or renamed
-      description: Exact classes, files or screens.
+      label: Gỡ hoặc đổi tên cái gì
+      description: Nêu chính xác lớp, file hoặc màn hình.
     validations:
       required: true
   - type: textarea
     id: why
     attributes:
-      label: Why, and what replaces it
+      label: Vì sao, và cái gì thay thế
+      description: Viết bằng tiếng Việt.
     validations:
       required: true
   - type: textarea
     id: docs
     attributes:
-      label: Documents to update
-      description: features.md and any schema document that mentions it.
+      label: Tài liệu cần cập nhật
+      description: features.md và mọi tài liệu schema nhắc tới nó.
