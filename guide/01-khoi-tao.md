@@ -42,11 +42,12 @@ Mọi việc code bắt đầu từ một issue. Dùng workflow có sẵn:
 
 ```
 /new-issue Tôi muốn: <mô tả ý tưởng bằng lời của bạn>.
-Hãy: tìm issue trùng (gh issue list --search), lấy mã tính năng F-xx từ docs/product/features.md (đừng tự bịa mã), hỏi tôi tối đa 3 câu nếu còn thiếu, rồi soạn nội dung theo form trong .github/ISSUE_TEMPLATE và CHO TÔI XEM TRƯỚC. Chỉ tạo issue khi tôi nói "tạo".
+Hãy: tìm issue trùng (gh issue list --search), lấy mã tính năng F-xx từ docs/product/features.md (đừng tự bịa mã), hỏi tôi tối đa 3 câu nếu còn thiếu, rồi soạn nội dung theo form trong .github/ISSUE_TEMPLATE và CHO TÔI XEM TRƯỚC. Issue (tiêu đề và nội dung) viết bằng TIẾNG VIỆT có dấu, giữ nguyên tên lớp, đường dẫn và lệnh. Chỉ tạo issue khi tôi nói "tạo".
 ```
 
 Bạn kiểm gì trong bản xem trước:
 
+- **Ngôn ngữ**: cả tiêu đề và nội dung là tiếng Việt, vì người đọc issue là người thật. Tên lớp, đường dẫn và lệnh giữ nguyên.
 - **Tiêu chí nghiệm thu** là danh sách kiểm được trên máy thật, không phải câu chung chung như "chạy tốt".
 - **Phạm vi**: nêu tên gói hoặc file cụ thể, và có mục "Ngoài phạm vi".
 - **Kích thước**: một lát cắt của một tính năng. Nếu AI đề xuất làm cả một tính năng lớn trong một issue, bảo nó tách.

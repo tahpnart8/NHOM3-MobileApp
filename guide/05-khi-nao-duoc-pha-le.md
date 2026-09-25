@@ -42,6 +42,7 @@ Những điều dưới đây có hook trên máy hoặc CI trên GitHub kiểm 
 | Không commit `local.properties`, khóa, mật khẩu, token | Repo công khai; lộ khóa không rút lại được |
 | Tên branch, tiêu đề PR, subject commit đúng khuôn (`.github/NAMING.md`) | Lịch sử đọc được và máy kiểm được |
 | PR ghi `Closes #N` hoặc `Closes: none` | Mỗi PR gắn với một việc |
+| Tiêu đề và mô tả PR viết bằng tiếng Việt (issue cũng vậy, nhưng không có máy nào kiểm issue) | Người đọc là người thật, không chỉ AI |
 | Xóa hoặc đổi tên code trong `PUBGApp/app/src/main` cần issue `type:removal` do leader mở | Bảo vệ tính năng đã thiết kế khỏi bị AI xóa nhầm |
 | Sửa Gradle hoặc thêm thư viện chỉ trong PR `build(...)` hoặc `chore(...)` | Mọi người dùng chung một bộ thư viện |
 | Không sửa hay xóa dòng cũ trong `memory/decisions.md` | Sổ quyết định là lịch sử |
@@ -53,7 +54,7 @@ Những điều dưới đây có hook trên máy hoặc CI trên GitHub kiểm 
 Bỏ qua một bước "nên giữ" là quyền của bạn. Làm như sau:
 
 1. **Hiểu vì sao bước đó tồn tại** (bảng trên).
-2. **Nếu bạn vẫn thấy phá là hợp lý, cứ phá**, rồi ghi một dòng trong phần Summary của PR bắt đầu bằng `Deviation:`. Ví dụ:
+2. **Nếu bạn vẫn thấy phá là hợp lý, cứ phá**, rồi ghi một dòng trong phần "Tóm tắt" của PR bắt đầu bằng `Deviation:`. Ví dụ:
    `Deviation: bỏ bước cross-check bằng AI vì PR chỉ đổi 12 dòng chữ trong strings_auth.xml.`
    Một dòng là đủ. Nó không phải đơn xin phép; nó giúp leader biết đọc PR ở đâu.
 3. **Nếu bạn phá cùng một chỗ nhiều lần**, có thể bước đó không hợp với dự án. Mở issue `chore` gắn nhãn `area:docs` đề xuất sửa guide hoặc `AGENTS.md`. Chỉ leader sửa các file đó.

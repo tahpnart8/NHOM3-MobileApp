@@ -8,7 +8,7 @@ Code xong  ->  /sync-branch  ->  /open-pr  ->  Cross-check (AI khác)  ->  Nhắ
 
 ## 1. Trước khi mở PR
 
-Bạn đã chạy app trên emulator (xem cuối [02-vong-lap-lam-task.md](02-vong-lap-lam-task.md))? Nếu chưa, làm trước; mục "How it was tested" của PR phải nói thật phần nào bạn đã chạy.
+Bạn đã chạy app trên emulator (xem cuối [02-vong-lap-lam-task.md](02-vong-lap-lam-task.md))? Nếu chưa, làm trước; mục "Đã kiểm tra thế nào" của PR phải nói thật phần nào bạn đã chạy.
 
 Nếu `main` đã có commit mới (leader vừa merge PR khác), đưa nó vào branch của bạn:
 
@@ -22,12 +22,12 @@ Workflow này merge `main` (không rebase), giữ code của cả hai bên khi c
 
 ```
 /open-pr
-Bổ sung cho phần "How it was tested": tôi đã tự chạy trên <emulator/thiết bị, API mấy>: <những gì bạn đã thử, ví dụ luồng chính, xoay màn hình, chế độ máy bay>. Phần tôi chưa chạy: <...>. Đừng ghi bất cứ điều gì tôi chưa nói là đã chạy.
+Tiêu đề và mô tả PR viết bằng TIẾNG VIỆT có dấu (type và scope trong tiêu đề, cùng các từ khóa Closes và Removal-Issue, giữ tiếng Anh). Bổ sung cho phần "Đã kiểm tra thế nào": tôi đã tự chạy trên <emulator/thiết bị, API mấy>: <những gì bạn đã thử, ví dụ luồng chính, xoay màn hình, chế độ máy bay>. Phần tôi chưa chạy: <...>. Đừng ghi bất cứ điều gì tôi chưa nói là đã chạy.
 ```
 
-Workflow này merge `main`, build, kiểm phạm vi, kiểm file bị xóa, kiểm commit, rồi mở PR theo template và ghi `Closes #<N>`. Kiểm kết quả:
+Workflow này merge `main`, build, kiểm phạm vi, kiểm file bị xóa, kiểm commit, rồi mở PR bằng tiếng Việt theo template và ghi `Closes #<N>`. Kiểm kết quả:
 
-- Tiêu đề PR đúng là subject của commit chính, ví dụ `feat(auth): add google sign-in button`.
+- **Tiêu đề và mô tả PR bằng tiếng Việt.** Tiêu đề dạng `feat(auth): thêm nút đăng nhập bằng Google`: `feat(auth):` giữ tiếng Anh, phần tóm tắt là tiếng Việt. CI từ chối PR không có tiếng Việt.
 - Danh sách tiêu chí nghiệm thu: chỉ đánh dấu ô nào bạn thật sự đã kiểm.
 - Đợi CI chạy (khoảng 2 đến 3 phút). Xanh thì sang bước tiếp; đỏ thì xem [04-tinh-huong.md](04-tinh-huong.md).
 
@@ -59,7 +59,7 @@ Trả lời: khuyến nghị (ổn / cần sửa / chặn), rồi danh sách v�
 **Tóm tắt lên PR.** Nhờ AI soạn, bạn đọc rồi tự đăng:
 
 ```
-Soạn một bình luận ngắn cho PR #<N> tóm tắt kết quả cross-check: những vấn đề đã sửa, những vấn đề tôi quyết định không sửa và lý do, và những điều chưa kiểm chứng. Viết bằng ngôn ngữ trung tính, như chính tôi viết. KHÔNG nêu tên công cụ AI hay model nào, KHÔNG có dòng "reviewed by", KHÔNG @ ai. Chỉ đưa nội dung cho tôi xem, đừng đăng.
+Soạn một bình luận ngắn cho PR #<N> tóm tắt kết quả cross-check: những vấn đề đã sửa, những vấn đề tôi quyết định không sửa và lý do, và những điều chưa kiểm chứng. Viết bằng tiếng Việt, giọng trung tính, như chính tôi viết. KHÔNG nêu tên công cụ AI hay model nào, KHÔNG có dòng "reviewed by", KHÔNG @ ai. Chỉ đưa nội dung cho tôi xem, đừng đăng.
 ```
 
 Bạn đăng bằng `gh pr comment <N> --body-file <file>` hoặc dán vào trang PR.

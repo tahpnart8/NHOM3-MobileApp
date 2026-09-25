@@ -42,7 +42,7 @@ Hook chạy trên máy bạn và in lý do. Các lời từ chối thường g�
 
 | Thông báo | Ý nghĩa và cách sửa |
 | --- | --- |
-| `bad subject: ...` | Subject không đúng `type(scope): mô tả`. Type thuộc `feat fix docs refactor test chore build ci`, viết thường, tối đa 72 ký tự, không dấu chấm cuối. Sửa rồi commit lại. |
+| `bad subject: ...` | Subject không đúng `type(scope): mô tả`. Type thuộc `feat fix docs refactor test chore build ci`, phần mô tả không bắt đầu bằng chữ hoa và không có dấu chấm cuối, tối đa 100 byte (khoảng 55 chữ tiếng Việt). Phần mô tả viết tiếng Việt hoặc tiếng Anh đều được. Sửa rồi commit lại. |
 | `the message carries a Co-authored-by trailer or an AI byline` | Có dòng đồng tác giả hoặc chữ "Generated with ..." trong message. Xóa dòng đó. |
 | `the git identity in use is not allowed` | Tên hoặc email Git trông giống công cụ AI. Bạn tự đặt lại bằng `git config --global user.name` và `user.email`. |
 | `pre-commit: refused. These files hold secrets or machine specific settings` | Bạn đang commit `local.properties`, khóa `.jks` hoặc `.env`. Bỏ ra khỏi commit: `git restore --staged <file>`. |
@@ -63,6 +63,8 @@ Job `policy` đọc PR và từng commit qua API. Đọc dòng lỗi màu đỏ 
 | `author login '...' is not on the team list ... login shows as NONE` | Email trong commit chưa gắn với tài khoản GitHub của bạn. Thêm email đó vào GitHub, Settings, Emails, hoặc đặt `user.email` là địa chỉ noreply của bạn (`<id>+<tên>@users.noreply.github.com`). Commit cũ giữ nguyên email; xem cách xử lý ở mục "Lỡ commit". |
 | `branch '...' must look like type/issue-slug` | Tên branch sai. Tạo branch mới đúng tên từ commit hiện tại và mở PR mới; đóng PR cũ. |
 | `pull request title '...' must be a conventional commit subject` | Sửa tiêu đề PR trên GitHub (nút Edit). Check tự chạy lại. |
+| `tiêu đề PR phải viết bằng tiếng Việt có dấu` | Tiêu đề PR không có chữ tiếng Việt nào. Viết lại phần sau `type(scope):` bằng tiếng Việt có dấu. Máy đếm chữ cái có dấu, nên gõ không dấu cũng bị từ chối. |
+| `mô tả PR phải viết bằng tiếng Việt có dấu` | Phần mô tả PR (ngoài comment `<!-- -->`) viết bằng tiếng Anh. Viết lại bằng tiếng Việt; tên lớp, đường dẫn và lệnh giữ nguyên. Nhờ AI: "Viết lại mô tả PR bằng tiếng Việt có dấu, giữ nguyên từ khóa Closes và tên code". |
 | `the pull request body must say 'Closes #N'` | Sửa mô tả PR, thêm dòng `Closes #<N>` (hoặc `Closes: none`). Chữ nằm trong comment `<!-- -->` của template không tính. |
 | `add a line 'Removal-Issue: #N'` (file bị xóa hoặc đổi tên) | Bạn xóa hoặc đổi tên code trong `PUBGApp/app/src/main`. Nếu là chủ ý, cần issue `type:removal` do leader mở, rồi thêm dòng đó vào PR. Nếu không phải chủ ý, phục hồi file. |
 | `... changes the build or its dependencies` | Bạn sửa file Gradle trong PR không đặt tên `build(...)` hoặc `chore(...)`. Đổi tiêu đề nếu đây thật sự là việc build, nếu không thì bỏ thay đổi Gradle. |
@@ -108,7 +110,7 @@ Sau đó dùng `/new-issue` cho từng phần, nói với leader để đóng is
 Không tự chọn cách hiểu rồi làm cả issue. Hỏi ở chính issue (comment) hoặc nhóm chat. Nhờ AI soạn câu hỏi:
 
 ```
-Issue #<N> có chỗ chưa rõ: <chỗ đó>. Soạn cho tôi một bình luận ngắn gửi leader, nêu rõ 2 cách hiểu khả dĩ và cách bạn nghiêng về, để leader chỉ cần chọn.
+Issue #<N> có chỗ chưa rõ: <chỗ đó>. Soạn cho tôi một bình luận ngắn bằng tiếng Việt gửi leader, nêu rõ 2 cách hiểu khả dĩ và cách bạn nghiêng về, để leader chỉ cần chọn.
 ```
 
 Trong lúc chờ, làm phần không phụ thuộc chỗ đó.
@@ -126,7 +128,7 @@ Không tự thêm vào Gradle. Mở một issue `chore` (dùng `/new-issue`) nê
 Hỏi leader trước (luật R6). Room còn cần tăng phiên bản cơ sở dữ liệu và viết migration.
 
 ```
-Issue #<N> có thể cần đổi <collection hoặc bảng> đã có trong docs/data. Trước khi sửa, hãy đọc docs/data/*, nêu chính xác trường nào đổi, những màn hình và dữ liệu nào bị ảnh hưởng (tìm trong code, không đoán), và soạn một tin ngắn để tôi gửi leader xin quyết định. Chưa sửa code.
+Issue #<N> có thể cần đổi <collection hoặc bảng> đã có trong docs/data. Trước khi sửa, hãy đọc docs/data/*, nêu chính xác trường nào đổi, những màn hình và dữ liệu nào bị ảnh hưởng (tìm trong code, không đoán), và soạn một tin ngắn bằng tiếng Việt để tôi gửi leader xin quyết định. Chưa sửa code.
 ```
 
 ## AI quên luật giữa chừng

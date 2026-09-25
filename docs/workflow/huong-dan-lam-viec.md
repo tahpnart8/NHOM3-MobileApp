@@ -29,6 +29,8 @@ Issue  ->  nhận task  ->  branch từ main mới nhất  ->  commit nhỏ
 5. **Mở Pull Request.** Dùng `/open-pr`. Nó chạy build, kiểm tra phạm vi, rồi mở PR theo mẫu.
 6. **Review.** Chỉ leader duyệt và merge. Sửa theo góp ý bằng commit mới trên cùng branch.
 
+**Issue và Pull Request viết bằng tiếng Việt** (tiêu đề và nội dung), vì người đọc là người thật. Phần `feat(auth):` ở đầu tiêu đề PR và các từ khóa `Closes`, `Removal-Issue` giữ tiếng Anh; tên lớp, đường dẫn, lệnh giữ nguyên. Tiêu đề PR có dạng `feat(auth): thêm nút đăng nhập bằng Google`. CI từ chối PR không viết bằng tiếng Việt. Commit thì viết tiếng Việt hoặc tiếng Anh đều được.
+
 ## 3. Những điều bị từ chối tự động
 
 | Bị từ chối | Vì sao |

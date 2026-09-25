@@ -12,14 +12,14 @@ Skill `pubg-review-pr` checkout PR, merge `origin/main` vào một branch tạm,
 
 Điều nên đọc thêm bằng mắt của bạn:
 
-- Dòng `Deviation:` trong Summary (nếu có): thành viên bỏ bước nào và vì sao, có hợp lý không.
+- Dòng `Deviation:` trong phần "Tóm tắt" (nếu có): thành viên bỏ bước nào và vì sao, có hợp lý không.
 - Bình luận cross-check của thành viên: có đúng là kết quả của một lượt review độc lập không, hay chỉ là câu xác nhận.
-- Mục "How it was tested": phần nào đã chạy trên máy thật.
+- Mục "Đã kiểm tra thế nào": phần nào đã chạy trên máy thật.
 
 ## Yêu cầu sửa
 
 ```
-Viết bình luận review cho PR #<N> từ các phát hiện blocking và major ở trên. Mỗi ý gồm: file và dòng, vấn đề, cách sửa đề xuất. Giọng lịch sự, ngắn, không nêu tên công cụ AI. Cho tôi xem trước, tôi sẽ đăng.
+Viết bình luận review cho PR #<N> từ các phát hiện blocking và major ở trên. Mỗi ý gồm: file và dòng, vấn đề, cách sửa đề xuất. Viết bằng tiếng Việt, giọng lịch sự, ngắn, không nêu tên công cụ AI. Cho tôi xem trước, tôi sẽ đăng.
 ```
 
 ## Merge

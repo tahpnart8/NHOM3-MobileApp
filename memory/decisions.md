@@ -145,6 +145,9 @@ All authors.
 ### Owner
 tahpnart8
 
+### Status
+Superseded in part by the entry "Issues and pull requests are written in Vietnamese" below: issues and pull requests are now Vietnamese. The rest of this entry stands.
+
 ## 2026-09-25 - Repository settings as code, and a stricter pull request policy
 
 ### Decision
@@ -204,6 +207,28 @@ The team will write most code through AI tools and needs the same, controllable 
 
 ### Impact
 `guide/`, `.agents/skills/pubg-guide`, `.agents/workflows/guide.md` and its mirror in `.claude/skills`, `AGENTS.md` sections 4, 8 and 9, links from `README.md`, `docs/`, `.github/CONTRIBUTING.md`.
+
+### Owner
+tahpnart8
+
+## 2026-09-25 - Issues and pull requests are written in Vietnamese
+
+### Decision
+The title and the body of every issue and every pull request are written in Vietnamese. What stays English: the `type(scope):` prefix of a title, the keywords `Closes`, `Refs`, `Removal-Issue` and `Deviation`, and anything quoted verbatim (code names, paths, commands, error messages). The issue forms and the pull request template are in Vietnamese. Commit messages may be English or Vietnamese: the subject rule now accepts both, with a limit of 100 bytes instead of 72 characters, because dash counts bytes and bash counts characters. CI rejects a pull request whose title or body contains no Vietnamese accented letters; nothing checks issues, so that half of the rule rests on the person and on the `pubg-new-issue` skill. Rule R14 in `AGENTS.md` carries it for AI tools.
+
+### Context
+People read issues and pull requests, not only tools; the leader asked for Vietnamese. The earlier language decision put issues and pull requests in English for the benefit of AI models.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep English and translate on request | Puts the burden on the reader every time |
+| Require Vietnamese commit messages too | Not asked for; the pull request title is what reaches `main` after a squash merge |
+| Detect the language with a model or a dictionary in CI | Heavy for a course project; counting accented letters catches text written in English, which is the failure that matters, and it is cheap and deterministic |
+| Also check issues in CI | Would need a workflow with write access to comment or close issues; not worth a bot for a five person team |
+
+### Impact
+`scripts/lib/policy.sh`, `scripts/ci-policy.sh` and its tests, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/ISSUE_TEMPLATE/`, `.github/NAMING.md`, `.agents/skills` (`pubg-new-issue`, `pubg-open-pr`, `pubg-review-pr`, `pubg-start-task`), `.claude/agents`, `AGENTS.md` R14 and section 9, `guide/`, `scripts/create-labels.sh`.
 
 ### Owner
 tahpnart8

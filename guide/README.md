@@ -41,6 +41,8 @@ Khi gặp lỗi hoặc không biết bước tiếp theo, gõ `/guide` (hoặc b
 
 ## Dùng với công cụ nào
 
-Prompt viết bằng tiếng Việt và chạy được ở Antigravity, Claude Code và Codex. Nếu model trả lời kém với tiếng Việt, dịch prompt sang tiếng Anh, ý không đổi. Các lệnh gạch chéo (`/start-task`, `/open-pr`, ...) chỉ có ở công cụ đọc `.agents/workflows/`; không có thì dán nguyên prompt dài đi kèm.
+Prompt viết bằng tiếng Việt và chạy được ở Antigravity, Claude Code và Codex. Nếu model trả lời kém với tiếng Việt, dịch prompt sang tiếng Anh, ý không đổi, nhưng **giữ nguyên yêu cầu viết issue và PR bằng tiếng Việt**. Các lệnh gạch chéo (`/start-task`, `/open-pr`, ...) chỉ có ở công cụ đọc `.agents/workflows/`; không có thì dán nguyên prompt dài đi kèm.
+
+**Issue và PR luôn viết bằng tiếng Việt** (tiêu đề và nội dung), vì người đọc là người thật. Prompt trong guide đã nhắc AI điều này; nếu AI viết tiếng Anh, bảo nó viết lại.
 
 Mỗi task nên dùng **một phiên chat mới**. Phiên dài thì AI quên luật; xem [04-tinh-huong.md](04-tinh-huong.md) mục "AI quên luật".
