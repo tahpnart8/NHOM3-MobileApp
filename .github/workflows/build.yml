@@ -35,6 +35,9 @@ jobs:
       - name: Policy scripts behave as documented
         run: sh scripts/tests/policy-test.sh
 
+      - name: Java style checker behaves as documented
+        run: sh scripts/tests/java-style-test.sh
+
       - name: Build, unit tests and lint
         working-directory: PUBGApp
         run: ./gradlew assembleDebug testDebugUnitTest lintDebug --console=plain
