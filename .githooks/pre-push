@@ -1,7 +1,7 @@
 #!/bin/sh
 # Never push to main; only push branches named type/issue-slug; check every unpushed commit.
 here=$(cd "$(dirname "$0")/.." && pwd)
-. "$here/scripts/lib/policy.sh"
+. "$here/workflow/scripts/lib/policy.sh"
 zero=0000000000000000000000000000000000000000
 
 while read -r local_ref local_sha remote_ref remote_sha; do
@@ -19,6 +19,6 @@ while read -r local_ref local_sha remote_ref remote_sha; do
             fi
             ;;
     esac
-    sh "$here/scripts/check-contributors.sh" unpushed "$local_sha" || exit 1
+    sh "$here/workflow/scripts/check-contributors.sh" unpushed "$local_sha" || exit 1
 done
 exit 0

@@ -7,7 +7,7 @@ body:
     id: feature_id
     attributes:
       label: Mã tính năng
-      description: Mã trong docs/product/features.md, ví dụ F-04. Nếu tính năng chưa được đăng ký ở đó thì mở issue docs trước và nhờ leader duyệt.
+      description: Mã trong workflow/docs/product/features.md, ví dụ F-04. Nếu tính năng chưa được đăng ký ở đó thì mở issue docs trước và nhờ leader duyệt.
       placeholder: F-04
     validations:
       required: true
@@ -44,4 +44,4 @@ body:
     id: docs
     attributes:
       label: Tài liệu cần cập nhật
-      description: Ví dụ docs/data/firestore-schema.md, docs/product/features.md.
+      description: Ví dụ workflow/docs/data/firestore-schema.md, workflow/docs/product/features.md.

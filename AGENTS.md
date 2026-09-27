@@ -13,37 +13,38 @@ People are not bound by this file; it exists because a tool can change many file
 - Java 17 only. **No Kotlin, no Jetpack Compose.** XML Views with ViewBinding. minSdk 30, compileSdk and targetSdk 37.
 - Project directory: `PUBGApp/`. Package: `com.nhom3.pubgapp`. Build: Gradle wrapper, Kotlin DSL scripts.
 - **Versions live in one place: `PUBGApp/gradle/libs.versions.toml`.** Never copy a version number into a document or another file.
-- Planned, **not yet in the build**: Firebase Authentication (email and Google), Cloud Firestore, Cloud Storage, Room for the offline cache. Do not write code that assumes they are configured until `docs/architecture/overview.md` says so.
+- Planned, **not yet in the build**: Firebase Authentication (email and Google), Cloud Firestore, Cloud Storage, Room for the offline cache. Do not write code that assumes they are configured until `workflow/docs/architecture/overview.md` says so.
 
 ## 3. Read this at the start of a session
 
-1. `memory/people.md`, `memory/preferences.md`, and the last entries of `memory/decisions.md`.
-2. `docs/product/features.md`: the register of features. Work only on a feature that has an ID and a status other than `proposed`.
+1. `workflow/memory/people.md`, `workflow/memory/preferences.md`, and the last entries of `workflow/memory/decisions.md`.
+2. `workflow/docs/product/features.md`: the register of features. Work only on a feature that has an ID and a status other than `proposed`.
 3. The issue you are working on, and every document it names.
-4. The topic document you need, and no more: `docs/architecture/`, `docs/data/`, `docs/conventions/`.
-5. Before you write Java: the `pubg-code` skill, and `memory/code/README.md` with the file for the area you are about to touch.
+4. The topic document you need, and no more: `workflow/docs/architecture/`, `workflow/docs/data/`, `workflow/docs/conventions/`.
+5. Before you write Java: the `pubg-code` skill, and `workflow/memory/code/README.md` with the file for the area you are about to touch.
 
 ## 4. Where things are
 
 | Path | Holds |
 | --- | --- |
 | `PUBGApp/` | The Android project |
-| `docs/` | What the system is: product, architecture, data schemas, conventions, workflow. Vietnamese |
-| `plan/` | Delivery plan: phases and work items. Empty until the leader loads the requirements |
-| `guide/` | Advice for people using AI on this repository: prompts for the explore, plan, implement and review loop and for ending a task. Vietnamese. Not a rulebook |
-| `memory/` | Why it is that way: decisions (append only), preferences, people. `memory/code/` holds what people and tools learn about the code and the libraries, so it stays out of code comments |
+| `workflow/` | Everything that is not app code, gathered under one folder: documents, plan, guide, memory, scripts |
+| `workflow/docs/` | What the system is: product, architecture, data schemas, conventions, workflow. Vietnamese |
+| `workflow/plan/` | Delivery plan: phases and work items. Empty until the leader loads the requirements |
+| `workflow/guide/` | Advice for people using AI on this repository: prompts for the explore, plan, implement and review loop and for ending a task. Vietnamese. Not a rulebook |
+| `workflow/memory/` | Why it is that way: decisions (append only), preferences, people. `workflow/memory/code/` holds what people and tools learn about the code and the libraries, so it stays out of code comments |
 | `.agents/` | Source of rules, workflows and skills for Antigravity and Codex |
 | `.claude/` | Claude Code settings, sub-agents and the mirror of the skills |
 | `.github/` | Issue and pull request templates, naming rules, CI, code owners, team list |
-| `.githooks/`, `scripts/` | Local guards and helper scripts |
+| `.githooks/`, `workflow/scripts/` | Local guards and helper scripts |
 
 ## 5. Commands
 
 ```
 cd PUBGApp
 ./gradlew assembleDebug testDebugUnitTest lintDebug     # Windows: gradlew.bat
-sh scripts/setup-dev.sh                                  # once per clone; Windows: scripts/setup-dev.ps1
-sh scripts/tests/policy-test.sh                          # after touching scripts/ or .githooks/
+sh workflow/scripts/setup-dev.sh                                  # once per clone; Windows: workflow/scripts/setup-dev.ps1
+sh workflow/scripts/tests/policy-test.sh                          # after touching workflow/scripts/ or .githooks/
 ```
 
 ## 6. The rules
@@ -54,13 +55,13 @@ sh scripts/tests/policy-test.sh                          # after touching script
 
 **R3. Stay inside the issue.** Change only what the issue asks, inside the files or packages it allows. No drive-by refactor, no formatting churn, no renamed identifiers. Report dead code you notice; do not delete it.
 
-**R4. Never delete or rename existing feature code.** A feature in `docs/product/features.md` is protected. Removing or renaming its files, classes or methods needs an issue labelled `type:removal` opened by the leader, and the pull request must contain the line `Removal-Issue: #N`. CI fails a deletion or rename under `PUBGApp/app/src/main` without it, and flags any file there that loses more than 40 lines. When resolving a merge conflict, keep both sides; use the `pubg-sync-branch` skill.
+**R4. Never delete or rename existing feature code.** A feature in `workflow/docs/product/features.md` is protected. Removing or renaming its files, classes or methods needs an issue labelled `type:removal` opened by the leader, and the pull request must contain the line `Removal-Issue: #N`. CI fails a deletion or rename under `PUBGApp/app/src/main` without it, and flags any file there that loses more than 40 lines. When resolving a merge conflict, keep both sides; use the `pubg-sync-branch` skill.
 
 **R5. No new dependency without an issue.** Add nothing to `libs.versions.toml` or a Gradle script unless the issue is a `chore(deps)` or `build` issue that names it. Look the current version up; do not recall it from memory. CI fails a pull request that changes a Gradle file unless its title starts with `build(` or `chore(`.
 
 **R6. Ask first, in three cases.** (a) Changing a Firestore collection or Room table that already exists. (b) Adding or changing a dependency. (c) Removing or renaming a feature. Everything else that is undecided is not a stop: choose the reasonable option, record one line with the `pubg-record-decision` skill, and continue.
 
-**R7. Documents change with the code.** A pull request that changes a data schema or the behaviour of a feature updates `docs/data/*` and `docs/product/features.md` in the same pull request. Do not edit a document to make it match code you could not get right; if code and document disagree, say so.
+**R7. Documents change with the code.** A pull request that changes a data schema or the behaviour of a feature updates `workflow/docs/data/*` and `workflow/docs/product/features.md` in the same pull request. Do not edit a document to make it match code you could not get right; if code and document disagree, say so.
 
 **R8. No AI attribution, ever.** Only the 5 collaborators may appear as contributors. Never add a `Co-authored-by` trailer, a "Generated with" or "Made with" line, a robot emoji byline, or any mention of an AI tool as author, in a commit message, pull request title or body, issue, or comment. Commits are authored by the human whose machine you are on. Never run `git config user.name` or `user.email`. The hooks, CI and the repository rules reject all of the above; do not look for a way around them.
 
@@ -76,16 +77,16 @@ sh scripts/tests/policy-test.sh                          # after touching script
 
 **R14. Issues and pull requests are written in Vietnamese.** Title and body, because people read them, not only tools. Fill the issue forms and the pull request template as they are (their headings are Vietnamese). Keep in English: the `type(scope):` prefix of a title, the keywords `Closes`, `Refs`, `Removal-Issue` and `Deviation`, and anything quoted verbatim (code names, paths, commands, error messages). Write plain, correct Vietnamese with accents; do not translate identifiers. CI rejects a pull request whose title or body has no Vietnamese in it; nothing checks issues, so this rule is yours to keep. Commit messages may be English or Vietnamese.
 
-**R15. Write plain, explicit Java, and keep knowledge out of comments.** Follow the `pubg-code` skill for every line you write or change: explicit types, no lambdas, method references, streams or `var`, small methods, comments of one or two lines that say why. Run `sh scripts/check-java-style.sh` before you finish. What you learn about the code or a library that the code cannot say goes in `memory/code/`, not in comments. The style applies to the lines you write or change; do not rewrite old code for it (R3).
+**R15. Write plain, explicit Java, and keep knowledge out of comments.** Follow the `pubg-code` skill for every line you write or change: explicit types, no lambdas, method references, streams or `var`, small methods, comments of one or two lines that say why. Run `sh workflow/scripts/check-java-style.sh` before you finish. What you learn about the code or a library that the code cannot say goes in `workflow/memory/code/`, not in comments. The style applies to the lines you write or change; do not rewrite old code for it (R3).
 
 ## 7. Code conventions (short form)
 
-Details are in `docs/conventions/android-java.md`.
+Details are in `workflow/docs/conventions/android-java.md`.
 
 - Code lives in `com.nhom3.pubgapp.feature.<name>.{ui,data,model}`; shared code in `com.nhom3.pubgapp.common`.
 - Use ViewBinding, not `findViewById`. Every user visible string is a resource; a feature's strings go in its own `strings_<feature>.xml`.
 - No network or disk work on the main thread. Every screen must survive rotation without losing its state.
-- Plain, explicit Java (R15): no lambdas, streams or `var`; comments of one or two lines; lasting knowledge in `memory/code/`. Detail in the `pubg-code` skill and `docs/conventions/android-java.md`.
+- Plain, explicit Java (R15): no lambdas, streams or `var`; comments of one or two lines; lasting knowledge in `workflow/memory/code/`. Detail in the `pubg-code` skill and `workflow/docs/conventions/android-java.md`.
 - Identifiers and comments in English. The user interface language is Vietnamese by default.
 
 ## 8. Workflow and skills
@@ -96,15 +97,15 @@ Issue, then branch, then pull request, then the leader reviews and squash merges
 | --- | --- |
 | `pubg-new-issue` | Turn an idea into a correctly formed issue |
 | `pubg-start-task` | Begin an issue: read it, create the branch, state the scope fence |
-| `pubg-code` | Write Java the PUBGApp way: plain, explicit, short comments, notes in `memory/code/` |
+| `pubg-code` | Write Java the PUBGApp way: plain, explicit, short comments, notes in `workflow/memory/code/` |
 | `pubg-sync-branch` | Merge the latest `main` into your branch and resolve conflicts without dropping anyone's code |
 | `pubg-open-pr` | Verify, then open the pull request from the template |
 | `pubg-review-pr` | Leader only: judge a pull request against its issue on the merged tree |
-| `pubg-record-decision` | Append a decision to `memory/decisions.md` |
+| `pubg-record-decision` | Append a decision to `workflow/memory/decisions.md` |
 | `pubg-doc-check` | Find where documents and code disagree |
-| `pubg-guide` | Point the person to the right page of `guide/` when they are stuck or something was refused |
+| `pubg-guide` | Point the person to the right page of `workflow/guide/` when they are stuck or something was refused |
 
-**The guide is advice, not law.** `guide/` teaches people how to direct you well. Only the rules in section 6 bind you. When a person is stuck, or a hook, a CI check or a rule refuses something, use `pubg-guide` to point them to the right page in one or two lines. If they choose to skip a step of the guide, say once what it costs and let them; do not treat it as an error and do not repeat the reminder. The exceptions are the things tooling rejects anyway (R8, R9, R11 and the naming, removal and dependency checks): those you never help bypass.
+**The guide is advice, not law.** `workflow/guide/` teaches people how to direct you well. Only the rules in section 6 bind you. When a person is stuck, or a hook, a CI check or a rule refuses something, use `pubg-guide` to point them to the right page in one or two lines. If they choose to skip a step of the guide, say once what it costs and let them; do not treat it as an error and do not repeat the reminder. The exceptions are the things tooling rejects anyway (R8, R9, R11 and the naming, removal and dependency checks): those you never help bypass.
 
 ## 9. Language
 
@@ -112,8 +113,8 @@ Talk to people in the language they use (the team writes Vietnamese).
 
 | Written in | What |
 | --- | --- |
-| Vietnamese | **Issues and pull requests** (title and body, rule R14), `docs/`, `guide/`, `plan/`, `README.md`, comments you post for a person to read, and every message to the person you work with |
-| English | Files for AI tools (`AGENTS.md`, `.agents/`, `.claude/`), `memory/`, code identifiers and code comments, and the `type(scope):` prefix of a title |
+| Vietnamese | **Issues and pull requests** (title and body, rule R14), `workflow/docs/`, `workflow/guide/`, `workflow/plan/`, `README.md`, comments you post for a person to read, and every message to the person you work with |
+| English | Files for AI tools (`AGENTS.md`, `.agents/`, `.claude/`), `workflow/memory/`, code identifiers and code comments, and the `type(scope):` prefix of a title |
 | Either | Commit messages |
 
 Do not use emoji in any written artifact.

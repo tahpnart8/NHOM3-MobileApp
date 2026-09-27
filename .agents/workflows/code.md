@@ -1,5 +1,5 @@
 ---
-description: Write or change Java the PUBGApp way: plain, explicit, short comments, notes in memory/code
+description: Write or change Java the PUBGApp way: plain, explicit, short comments, notes in workflow/memory/code
 ---
 
 Follow the skill in `.agents/skills/pubg-code/SKILL.md` for everything you write or change. Read `AGENTS.md` first if you have not in this session.

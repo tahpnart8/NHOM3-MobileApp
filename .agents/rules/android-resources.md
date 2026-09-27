@@ -6,7 +6,7 @@ description: Layout, string and resource conventions for PUBGApp
 
 # Android resources in PUBGApp
 
-Detail: `docs/conventions/android-java.md`.
+Detail: `workflow/docs/conventions/android-java.md`.
 
 - No hard-coded user visible text. Put strings in `res/values/strings_<feature>.xml` (one file per feature, to avoid merge conflicts). The default language is Vietnamese.
 - Layout files are named `<kind>_<feature>_<name>.xml`, for example `activity_auth_login.xml`, `fragment_listing_detail.xml`, `item_listing_card.xml`. View ids are `<type>_<name>` in lower snake case, for example `btn_sign_in`, `tv_price`.
