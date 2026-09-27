@@ -23,7 +23,7 @@ Những gì đã được áp dụng cho `tahpnart8/NHOM3-MobileApp`, để lead
 ## Việc định kỳ
 
 - **Trước 2027-03-25:** chạy lại `sh workflow/scripts/apply-github-settings.sh` để gia hạn giới hạn tương tác. Script chạy lại được nhiều lần.
-- Có thành viên mới: thêm vào `.github/team.txt` và `memory/people.md` bằng một PR, rồi mời họ làm collaborator.
+- Có thành viên mới: thêm vào `.github/team.txt` và `workflow/memory/people.md` bằng một PR, rồi mời họ làm collaborator.
 
 ## Khi một check bắt buộc chặn mọi PR
 
@@ -33,7 +33,7 @@ Ruleset `main-checks` không cho bỏ qua, nên nếu job `policy` (hoặc `buil
 2. Nếu chắc chắn là bug của check: vào **Settings, Rules, Rulesets, `main-checks`**, đổi **Enforcement status** sang **Disabled**. Việc này chỉ admin làm được.
 3. Merge PR sửa lỗi qua đường bình thường.
 4. Khóa lại: đặt lại **Active** trên giao diện, hoặc chạy `sh workflow/scripts/apply-github-settings.sh` (nó khôi phục ruleset đúng như trong file).
-5. Ghi một dòng vào `memory/decisions.md` nếu sự cố đổi cách bạn làm việc.
+5. Ghi một dòng vào `workflow/memory/decisions.md` nếu sự cố đổi cách bạn làm việc.
 
 ## Chi phí
 

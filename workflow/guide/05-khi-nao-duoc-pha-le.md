@@ -45,7 +45,7 @@ Những điều dưới đây có hook trên máy hoặc CI trên GitHub kiểm 
 | Tiêu đề và mô tả PR viết bằng tiếng Việt (issue cũng vậy, nhưng không có máy nào kiểm issue) | Người đọc là người thật, không chỉ AI |
 | Xóa hoặc đổi tên code trong `PUBGApp/app/src/main` cần issue `type:removal` do leader mở | Bảo vệ tính năng đã thiết kế khỏi bị AI xóa nhầm |
 | Sửa Gradle hoặc thêm thư viện chỉ trong PR `build(...)` hoặc `chore(...)` | Mọi người dùng chung một bộ thư viện |
-| Không sửa hay xóa dòng cũ trong `memory/decisions.md` | Sổ quyết định là lịch sử |
+| Không sửa hay xóa dòng cũ trong `workflow/memory/decisions.md` | Sổ quyết định là lịch sử |
 
 **Nếu bạn thấy một ranh giới ở trên đang cản một việc hợp lý:** đừng tìm cách lách, hãy nhắn leader. Leader có thể mở issue `type:removal`, đổi luật, hoặc giải thích. Đó là cách đúng để đổi ranh giới.
 

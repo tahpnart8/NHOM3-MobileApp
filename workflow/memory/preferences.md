@@ -15,7 +15,7 @@ Standing instructions from the team leader (`tahpnart8`) that outlive a single t
 ## Communication
 
 - Talk to the leader in Vietnamese.
-- **Issues and pull requests (title and body) are in Vietnamese**, because people read them (leader instruction, 2026-09-25). Files for AI tools, `memory/` and code are in English; commit messages may be either. `workflow/docs/`, `guide/`, `plan/` and `README.md` are in Vietnamese.
+- **Issues and pull requests (title and body) are in Vietnamese**, because people read them (leader instruction, 2026-09-25). Files for AI tools, `workflow/memory/` and code are in English; commit messages may be either. `workflow/docs/`, `workflow/guide/`, `workflow/plan/` and `README.md` are in Vietnamese.
 - No emoji in any written artifact.
 - The leader cares about the technical side only, not about the course report text.
 

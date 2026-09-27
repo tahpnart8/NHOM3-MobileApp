@@ -25,4 +25,4 @@ Ba yêu cầu đầu và đăng nhập Google được đăng ký thành tính n
 
 ## Ngoài phạm vi (chưa quyết định)
 
-Thanh toán thật, vận chuyển thật và phát hành lên Google Play chưa nằm trong phạm vi. Khi cần, leader quyết định và ghi vào `memory/decisions.md`.
+Thanh toán thật, vận chuyển thật và phát hành lên Google Play chưa nằm trong phạm vi. Khi cần, leader quyết định và ghi vào `workflow/memory/decisions.md`.

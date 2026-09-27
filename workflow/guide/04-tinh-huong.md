@@ -48,7 +48,7 @@ Hook chạy trên máy bạn và in lý do. Các lời từ chối thường g�
 | `pre-commit: refused. These files hold secrets or machine specific settings` | Bạn đang commit `local.properties`, khóa `.jks` hoặc `.env`. Bỏ ra khỏi commit: `git restore --staged <file>`. |
 | `Larger than 5 MB` | File quá lớn. Hỏi leader trước khi thêm. |
 | `A merge conflict marker is staged` | Còn dấu `<<<<<<<` trong file. Giải quyết xung đột xong mới commit. |
-| `memory/decisions.md is append-only` | Bạn đang xóa hoặc sửa dòng cũ trong sổ quyết định. Hoàn tác và chỉ thêm mục mới ở cuối (`/record-decision`). |
+| `workflow/memory/decisions.md is append-only` | Bạn đang xóa hoặc sửa dòng cũ trong sổ quyết định. Hoàn tác và chỉ thêm mục mới ở cuối (`/record-decision`). |
 | `pre-push: refused. Nobody pushes to main` | Bạn đang đứng ở `main`. Xem mục "Lỡ commit trên main". |
 | `pre-push: refused. Branch '...' must look like type/issue-slug` | Tên branch sai. Đổi tên: `git branch -m feat/<N>-<slug>`. |
 
@@ -68,7 +68,7 @@ Job `policy` đọc PR và từng commit qua API. Đọc dòng lỗi màu đỏ 
 | `the pull request body must say 'Closes #N'` | Sửa mô tả PR, thêm dòng `Closes #<N>` (hoặc `Closes: none`). Chữ nằm trong comment `<!-- -->` của template không tính. |
 | `add a line 'Removal-Issue: #N'` (file bị xóa hoặc đổi tên) | Bạn xóa hoặc đổi tên code trong `PUBGApp/app/src/main`. Nếu là chủ ý, cần issue `type:removal` do leader mở, rồi thêm dòng đó vào PR. Nếu không phải chủ ý, phục hồi file. |
 | `... changes the build or its dependencies` | Bạn sửa file Gradle trong PR không đặt tên `build(...)` hoặc `chore(...)`. Đổi tiêu đề nếu đây thật sự là việc build, nếu không thì bỏ thay đổi Gradle. |
-| `memory/decisions.md is append-only` | Xem bảng hook ở trên. |
+| `workflow/memory/decisions.md is append-only` | Xem bảng hook ở trên. |
 | `carries a Co-authored-by trailer or an AI byline` | Xem mục kế tiếp. |
 
 ## CI build đỏ nhưng máy bạn xanh
@@ -173,7 +173,7 @@ Màn hình <tên> mất <trạng thái gì> khi xoay ngang. Đọc lớp UI và 
 **Nguyên nhân:** model mặc định viết Java "hiện đại" và giải thích nhiều. Skill `pubg-code` cần được nhắc lại nếu phiên dài.
 
 ```
-Viết lại phần code bạn vừa thêm theo skill pubg-code. Không thay đổi hành vi. Ghi rõ kiểu, không lambda, không method reference, không stream, không var; listener là lớp ẩn danh hoặc gọi một hàm có tên; dùng vòng for; tách hàm dài; mỗi chú thích tối đa 2 dòng và chỉ nói vì sao. Điều đáng nhớ (bẫy của thư viện, lý do một cách làm) chuyển vào memory/code/ thay vì để trong chú thích. Sau đó chạy sh workflow/scripts/check-java-style.sh và build, rồi cho tôi xem git diff --stat.
+Viết lại phần code bạn vừa thêm theo skill pubg-code. Không thay đổi hành vi. Ghi rõ kiểu, không lambda, không method reference, không stream, không var; listener là lớp ẩn danh hoặc gọi một hàm có tên; dùng vòng for; tách hàm dài; mỗi chú thích tối đa 2 dòng và chỉ nói vì sao. Điều đáng nhớ (bẫy của thư viện, lý do một cách làm) chuyển vào workflow/memory/code/ thay vì để trong chú thích. Sau đó chạy sh workflow/scripts/check-java-style.sh và build, rồi cho tôi xem git diff --stat.
 ```
 
 Chỉ viết lại **dòng của issue hiện tại**. Đừng để AI "dọn" code của người khác cho đẹp: đó là ngoài phạm vi (`AGENTS.md` R3).

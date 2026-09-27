@@ -18,7 +18,7 @@ Create a new file per area when you have the first entry for it (`android.md`, `
 ## What does not
 
 - What the code or a document already says. Point to it instead.
-- A choice between real alternatives: that is a decision, in `memory/decisions.md` (skill `pubg-record-decision`).
+- A choice between real alternatives: that is a decision, in `workflow/memory/decisions.md` (skill `pubg-record-decision`).
 - Task progress, plans, or a description of a change: that is the pull request.
 - A secret, a key, a token, or personal data.
 
