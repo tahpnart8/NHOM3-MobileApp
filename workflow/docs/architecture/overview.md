@@ -1,6 +1,6 @@
 # Kiến trúc ứng dụng
 
-Trạng thái: **khung đề xuất, chờ leader duyệt**. Chỉ những gì ghi "đã có" mới có thật trong code. Khi leader chốt một mục, ghi quyết định vào `memory/decisions.md` và đổi chữ "đề xuất" thành "đã chốt" ở đây.
+Trạng thái: **khung đề xuất, chờ leader duyệt**. Chỉ những gì ghi "đã có" mới có thật trong code. Khi leader chốt một mục, ghi quyết định vào `workflow/memory/decisions.md` và đổi chữ "đề xuất" thành "đã chốt" ở đây.
 
 ## Đã có
 

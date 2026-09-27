@@ -41,12 +41,12 @@ Issue  ->  nhận task  ->  branch từ main mới nhất  ->  commit nhỏ
 | PR xóa hoặc đổi tên file code mà không có `Removal-Issue: #N` | Bảo vệ chức năng đã thiết kế |
 | PR sửa file Gradle hoặc thư viện mà tiêu đề không phải `build(...)` hay `chore(...)` | Thư viện chỉ được thêm qua issue riêng |
 | PR có tác giả commit không thuộc 5 thành viên | Chỉ 5 thành viên được đóng góp |
-| Xóa hoặc sửa dòng cũ trong `memory/decisions.md` | Sổ quyết định chỉ được ghi thêm |
+| Xóa hoặc sửa dòng cũ trong `workflow/memory/decisions.md` | Sổ quyết định chỉ được ghi thêm |
 | Commit `local.properties`, keystore, khóa bí mật | Bí mật và cấu hình riêng từng máy |
 
 ## 4. Dùng AI đúng cách (Antigravity, Claude Code, Codex)
 
-Prompt mẫu và cách làm từng bước nằm ở [guide/](../../guide/README.md). Gặp lỗi hoặc không biết làm gì: gõ `/guide`.
+Prompt mẫu và cách làm từng bước nằm ở [workflow/guide/](../../guide/README.md). Gặp lỗi hoặc không biết làm gì: gõ `/guide`.
 
 - AI đọc `AGENTS.md` ở gốc repo. Đừng dán luật riêng của bạn vào prompt; nếu luật thiếu, nhờ leader sửa `AGENTS.md`.
 - Lệnh có sẵn: `/new-issue`, `/start-task`, `/sync-branch`, `/open-pr`, `/record-decision`, `/doc-check`. `/review-pr` dành cho leader.

@@ -1,6 +1,6 @@
 # Kế hoạch dự án
 
-Thư mục này sẽ chứa **lộ trình giao việc**: làm gì, theo thứ tự nào, việc nào phụ thuộc việc nào. Nó không mô tả hệ thống (việc đó của `workflow/docs/`) và không ghi lý do (việc đó của `memory/`).
+Thư mục này sẽ chứa **lộ trình giao việc**: làm gì, theo thứ tự nào, việc nào phụ thuộc việc nào. Nó không mô tả hệ thống (việc đó của `workflow/docs/`) và không ghi lý do (việc đó của `workflow/memory/`).
 
 **Trạng thái: chưa có kế hoạch.** Leader chưa nạp tài liệu yêu cầu và danh sách chức năng của ứng dụng, nên chưa ai được tạo issue mã nguồn. `workflow/docs/product/features.md` hiện chỉ có các dòng gợi ý ở trạng thái `proposed`, và theo `AGENTS.md` không ai làm tính năng `proposed`.
 

@@ -39,7 +39,7 @@ Code phải đọc được ngay từ lần đầu bởi một sinh viên đã h
 
 **Chú thích tối đa 1 đến 2 dòng**, chỉ nói **vì sao** (một cách xử lý vòng, một cái bẫy của thư viện), không nhắc lại điều code đã nói. Không chú thích cho từng hàm, không viết khối chú thích dài, không để code bị comment, không để `TODO` trong code (mở issue), không ghi tác giả hay ngày.
 
-**Kiến thức nằm ở `memory/code/`, không nằm trong code.** Khi bạn (hoặc AI) học được điều mà code không tự nói được, như một cái bẫy của Firebase, lý do một câu truy vấn có điều kiện lạ, hay một cách làm đã thử và thất bại, ghi vào `memory/code/<khu-vực>.md` và để lại trong code tối đa một dòng chú thích. Cách viết một mục nằm ở `memory/code/README.md`. Việc chọn giữa các phương án thật sự thì ghi ở `memory/decisions.md`.
+**Kiến thức nằm ở `workflow/memory/code/`, không nằm trong code.** Khi bạn (hoặc AI) học được điều mà code không tự nói được, như một cái bẫy của Firebase, lý do một câu truy vấn có điều kiện lạ, hay một cách làm đã thử và thất bại, ghi vào `workflow/memory/code/<khu-vực>.md` và để lại trong code tối đa một dòng chú thích. Cách viết một mục nằm ở `workflow/memory/code/README.md`. Việc chọn giữa các phương án thật sự thì ghi ở `workflow/memory/decisions.md`.
 
 Ví dụ:
 

@@ -8,7 +8,7 @@ Hướng dẫn tạo và cấu hình Firebase project cho cả nhóm. **Trạng 
 
 Từ **03/02/2026**, Cloud Storage for Firebase chỉ dùng được khi project ở gói **Blaze** (trả theo mức dùng, phải gắn tài khoản thanh toán). Với gói Spark, mọi lời gọi Storage trả lỗi 402 hoặc 403. Blaze vẫn có mức miễn phí: bucket mới dạng `PROJECT_ID.firebasestorage.app` hưởng mức "Always Free" của Google Cloud Storage nếu đặt ở vùng `us-central1`, `us-east1` hoặc `us-west1`. Nguồn: [Firebase FAQ về thay đổi Storage](https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024).
 
-Chỉ một người (nên là leader) gắn thẻ. Quyết định dùng Cloud Storage nằm ở `memory/decisions.md`.
+Chỉ một người (nên là leader) gắn thẻ. Quyết định dùng Cloud Storage nằm ở `workflow/memory/decisions.md`.
 
 **Leader đã xác nhận: giữ Cloud Storage cho mọi tệp media, gồm cả ảnh và video.** Chi phí bằng 0 khi dùng trong hạn mức miễn phí "Always Free" của Google Cloud Storage ([nguồn](https://docs.cloud.google.com/free/docs/free-cloud-features), kiểm ngày 2026-09-25), **nhưng vẫn phải gắn thẻ** vào tài khoản thanh toán, kể cả khi không mất đồng nào:
 
@@ -38,7 +38,7 @@ Build, mục Authentication, tab Sign-in method: bật **Email/Password** và **
 
 ## 4. Tạo Firestore
 
-Build, mục Firestore Database, Create database. Chọn chế độ **production** (khóa hết; luật bảo mật sẽ nạp sau). **Vị trí (location) không đổi được sau khi tạo**: leader chọn và ghi vào `memory/decisions.md`.
+Build, mục Firestore Database, Create database. Chọn chế độ **production** (khóa hết; luật bảo mật sẽ nạp sau). **Vị trí (location) không đổi được sau khi tạo**: leader chọn và ghi vào `workflow/memory/decisions.md`.
 
 ## 5. Tạo Cloud Storage
 
