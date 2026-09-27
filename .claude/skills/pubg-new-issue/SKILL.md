@@ -11,7 +11,7 @@ Create one issue that another person or AI can pick up and finish without asking
 
 1. **Understand the request.** If what or why is unclear, ask at most three short questions, in Vietnamese. Do not guess the goal.
 2. **Check for duplicates.** Run `gh issue list --state open --search "<2 or 3 keywords>" --limit 10`. If an open issue already covers it, show it and stop.
-3. **Find the feature.** Read `docs/product/features.md`. A `feature` or `bug` issue needs an existing feature ID whose status is not `proposed`. If the feature is not registered, do not invent an ID: create a `chore` issue "Đăng ký tính năng <tên>" (label `area:docs`) and tell the requester that the leader must approve the entry first.
+3. **Find the feature.** Read `workflow/docs/product/features.md`. A `feature` or `bug` issue needs an existing feature ID whose status is not `proposed`. If the feature is not registered, do not invent an ID: create a `chore` issue "Đăng ký tính năng <tên>" (label `area:docs`) and tell the requester that the leader must approve the entry first.
 4. **Pick the form.** `feature` (new behaviour), `bug` (wrong behaviour), `chore` (build, dependency, tooling, docs). Never create a `removal` issue; only the leader does.
 5. **Fill the body with the same headings as the form** in `.github/ISSUE_TEMPLATE/<form>.yml` (the CLI cannot open the form). Each heading is written as a level 3 heading (`### Mã tính năng`):
    - `Mã tính năng` (feature and bug forms only)

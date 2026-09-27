@@ -17,7 +17,7 @@ local.properties
 .env.*
 
 # google-services.json is NOT ignored on purpose: it holds public identifiers, not secrets.
-# Protection comes from the Firebase Security Rules and the API key restrictions (docs/architecture/overview.md).
+# Protection comes from the Firebase Security Rules and the API key restrictions (workflow/docs/architecture/overview.md).
 
 # Operating system
 .DS_Store

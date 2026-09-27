@@ -1,12 +1,12 @@
 ## Tóm tắt
-<!-- Viết bằng tiếng Việt. Đã thay đổi gì và vì sao, trong 2 đến 4 câu. Nếu bạn bỏ một bước của guide/, thêm một dòng bắt đầu bằng "Deviation:" và nói lý do. -->
+<!-- Viết bằng tiếng Việt. Đã thay đổi gì và vì sao, trong 2 đến 4 câu. Nếu bạn bỏ một bước của workflow/guide/, thêm một dòng bắt đầu bằng "Deviation:" và nói lý do. -->
 
 ## Issue liên quan
 Closes #
 <!-- Điền số issue sau từ khóa. Nếu đóng nhiều issue, lặp từ khóa trước MỖI số, vì GitHub chỉ đóng issue đứng ngay sau từ khóa. Nếu không đóng issue nào, viết "Closes: none". Giữ từ khóa Closes bằng tiếng Anh. -->
 
 ## Tính năng và phạm vi
-- Mã tính năng (docs/product/features.md):
+- Mã tính năng (workflow/docs/product/features.md):
 - Gói hoặc file đã thay đổi:
 - Cố ý không đụng tới:
 
@@ -26,8 +26,8 @@ Removal-Issue: #N -->
 ```
 
 ## Tài liệu
-- [ ] `docs/data/*` và `docs/product/features.md` đã cập nhật, hoặc thay đổi này không ảnh hưởng tới chúng
-- [ ] Quyết định đáng nhớ đã ghi vào `memory/decisions.md`, hoặc không có
+- [ ] `workflow/docs/data/*` và `workflow/docs/product/features.md` đã cập nhật, hoặc thay đổi này không ảnh hưởng tới chúng
+- [ ] Quyết định đáng nhớ đã ghi vào `workflow/memory/decisions.md`, hoặc không có
 
 ## Ảnh chụp màn hình
 <!-- Với thay đổi giao diện: chụp cả dọc và ngang. -->

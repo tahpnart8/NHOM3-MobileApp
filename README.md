@@ -1,39 +1,74 @@
+<div align="center">
+
 # PUBGApp
 
-**Pre-owned Users' Bargain Grounds**: ứng dụng Android để mua, bán và chia sẻ đồ cũ, kết hợp mạng xã hội với thương mại điện tử. Đồ án môn Phát triển ứng dụng Mobile, nhóm 3.
+### Pre-owned Users' Bargain Grounds
 
-[![build](https://github.com/tahpnart8/NHOM3-MobileApp/actions/workflows/build.yml/badge.svg)](https://github.com/tahpnart8/NHOM3-MobileApp/actions/workflows/build.yml)
+Chợ đồ cũ kết hợp mạng xã hội cho Android — đăng bán, trao đổi, cho tặng, trò chuyện và giao dịch trong cùng một ứng dụng.
+
+[![Build](https://github.com/tahpnart8/NHOM3-MobileApp/actions/workflows/build.yml/badge.svg)](https://github.com/tahpnart8/NHOM3-MobileApp/actions/workflows/build.yml)
+![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)
+![minSdk](https://img.shields.io/badge/minSdk-30-3DDC84?logo=android&logoColor=white)
+![Status](https://img.shields.io/badge/Tr%E1%BA%A1ng%20th%C3%A1i-%C4%90ang%20ph%C3%A1t%20tri%E1%BB%83n-yellow)
+![License](https://img.shields.io/badge/Gi%E1%BA%A5y%20ph%C3%A9p-%C4%90%E1%BB%93%20%C3%A1n%20m%C3%B4n%20h%E1%BB%8Dc-lightgrey)
+
+</div>
+
+---
+
+## Giới thiệu
+
+**PUBGApp** là ứng dụng Android cho việc mua bán, trao đổi và cho tặng đồ cũ, nơi người dùng vừa kết nối và tương tác với nhau như trên một mạng xã hội, vừa đăng tin, thương lượng và hoàn tất giao dịch như trên một sàn thương mại điện tử thu nhỏ. Đây là đồ án môn **Phát triển ứng dụng Mobile**, thực hiện bởi nhóm 3.
+
+Phần mạng xã hội lo việc theo dõi, trò chuyện và đánh giá lẫn nhau; phần thương mại điện tử lo việc đăng tin, thương lượng giá, xử lý giao dịch và giao hàng. Cả hai gói gọn trong một trải nghiệm nhẹ nhàng, dễ dùng trên điện thoại.
+
+## Tính năng chính
+
+- **Tài khoản & hồ sơ** — đăng ký, đăng nhập, chỉnh sửa thông tin cá nhân, ảnh đại diện, địa chỉ.
+- **Đăng bán & quản lý tin** — tạo tin đăng với hình ảnh, tình trạng món đồ, hình thức giao dịch (bán / trao đổi / cho tặng, kết hợp được).
+- **Tìm kiếm & đề xuất** — lọc theo từ khóa, danh mục, khoảng giá, tình trạng, khu vực; gợi ý sản phẩm theo sở thích.
+- **Kết nối** — theo dõi người dùng, lưu tin yêu thích, trò chuyện trực tiếp, gửi đề nghị giá (offer một chạm).
+- **Giao dịch & thanh toán** — xác nhận giao dịch, thanh toán qua ký quỹ mô phỏng, tự động giải ngân cho người bán sau khi giao hàng thành công.
+- **Tin cậy & cộng đồng** — đánh giá đối tác giao dịch, báo cáo vi phạm, khiếu nại và tranh chấp.
+- **Quản trị** — kiểm duyệt nội dung, quản lý người dùng và danh mục, giám sát giao dịch ở mức cơ bản.
 
 ## Công nghệ
 
-Java 17, XML Views, ViewBinding, minSdk 30. Dự kiến: Firebase (Authentication, Firestore, Storage) và Room/SQLite cho offline. Chi tiết và trạng thái thật trong [docs/architecture/overview.md](docs/architecture/overview.md).
+| Thành phần | Lựa chọn |
+| --- | --- |
+| Ngôn ngữ | Java 17 |
+| Giao diện | XML Views + ViewBinding (không Kotlin, không Compose) |
+| Tương thích | minSdk 30 · compileSdk / targetSdk 37 |
+| Build | Gradle Kotlin DSL |
+| Backend (dự kiến) | Firebase Authentication, Cloud Firestore, Cloud Storage |
+| Offline (dự kiến) | Room (SQLite) |
 
 ## Chạy thử
 
 1. Cài Android Studio, mở thư mục `PUBGApp/`.
 2. Chờ Gradle sync (lần đầu tự tải JDK 25).
-3. Chạy trên emulator Pixel 5 (API 30 trở lên).
+3. Chạy trên emulator hoặc thiết bị thật, API 30 trở lên.
 
-Dòng lệnh: `cd PUBGApp` rồi `gradlew.bat assembleDebug testDebugUnitTest lintDebug`.
+Hoặc dùng dòng lệnh:
 
-## Nhóm
+```bash
+cd PUBGApp
+./gradlew assembleDebug testDebugUnitTest lintDebug   # Windows: gradlew.bat
+```
+
+## Nhóm thực hiện
 
 | Thành viên | GitHub | Vai trò |
 | --- | --- | --- |
-| Trần Đức Phát | [@tahpnart8](https://github.com/tahpnart8) | Nhóm trưởng, duyệt và merge mọi Pull Request |
+| Trần Đức Phát | [@tahpnart8](https://github.com/tahpnart8) | Nhóm trưởng |
 | Nguyễn Lê Hải Long | [@Contest451](https://github.com/Contest451) | Kỹ sư phần mềm |
 | Nguyễn Thúy Ngân | [@thngan0512](https://github.com/thngan0512) | Kỹ sư phần mềm |
 | Trần Anh Tú | [@tranannhtu21012006](https://github.com/tranannhtu21012006) | Kỹ sư phần mềm |
 | Nguyễn Hoàng Phúc | [@PmSubin](https://github.com/PmSubin) | Kỹ sư phần mềm |
 
-Chỉ năm tài khoản này được đóng góp vào repo.
+<div align="center">
 
-## Cách làm việc
+Đồ án môn học — không phải sản phẩm thương mại.
 
-Mọi việc đi theo một luồng: **Issue, Branch, Pull Request, review của nhóm trưởng, squash merge**. Đọc [docs/workflow/huong-dan-lam-viec.md](docs/workflow/huong-dan-lam-viec.md) trước khi viết dòng code đầu tiên, và chạy `scripts\setup-dev.ps1` một lần sau khi clone.
-
-## Làm việc với AI
-
-Cả nhóm dùng AI (Antigravity, Claude Code, Codex). **Người code bắt đầu từ [guide/](guide/README.md)**: bộ prompt để khởi tạo phiên, làm task theo vòng Explore, Plan, Implement, Review, mở PR và nhờ AI khác kiểm chéo. Guide chỉ là gợi ý, có thể bỏ bước khi hợp lý.
-
-Luật cho AI nằm ở [AGENTS.md](AGENTS.md); ngữ cảnh dự án ở [docs/](docs/README.md) và [memory/](memory/README.md). AI không bao giờ được xuất hiện như tác giả hay contributor.
+</div>

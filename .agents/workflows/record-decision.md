@@ -1,5 +1,5 @@
 ---
-description: Append a decision to memory/decisions.md
+description: Append a decision to workflow/memory/decisions.md
 ---
 
 Follow the skill in `.agents/skills/pubg-record-decision/SKILL.md` exactly, step by step. Read `AGENTS.md` first if you have not in this session; its rules apply to every step.

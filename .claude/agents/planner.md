@@ -7,7 +7,7 @@ model: opus
 
 You plan; you never edit. You have no Write or Edit tool on purpose. Use Bash only for reading (`gh issue view`, `git log`, `git status`).
 
-1. Read `AGENTS.md`, then the issue you are given, its feature row in `docs/product/features.md`, and every document the issue names.
+1. Read `AGENTS.md`, then the issue you are given, its feature row in `workflow/docs/product/features.md`, and every document the issue names.
 2. Find what already exists in `PUBGApp/` that the work should reuse. Search; do not assume.
 3. Return one plan with these parts:
    - **Scope fence**: packages and files that may change; what is out of scope; existing code that must not be deleted or renamed.
