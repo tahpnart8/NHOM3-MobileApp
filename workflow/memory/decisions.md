@@ -274,3 +274,23 @@ The leader asked whether media under 5 GB is free. It is, but only in those regi
 
 ### Owner
 tahpnart8
+
+## 2026-09-27 - Java packages are split by layer, not by feature
+
+### Decision
+Code under `PUBGApp/app/src/main/java/com/nhom3/pubgapp/` is organized by architectural layer: `model` (domain classes), `model.enums` (enum types), `data` (repositories), `data.local` (Room entities and DAOs), `util` (utility classes), `viewmodel` (ViewModel classes). This matches the 85 class names already fixed in the class diagram and ERD produced for the course submission.
+
+### Context
+`AGENTS.md` section 7 and `docs/conventions/android-java.md` said code lives in `com.nhom3.pubgapp.feature.<name>.{ui,data,model}`, one package per feature. The class diagram was drawn before code existed and grouped by layer instead, because that is how a small student team keeps track of which class does what kind of work. Starting code before resolving the mismatch would leave two contradicting sources of truth.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep feature based packages, redraw the class diagram | The diagram is already finished and cross checked against the 78 in scope rows of the functions description; redrawing it wastes the work already done |
+| Mixed: feature packages for UI, layer packages for everything else | Two different rules in one codebase, harder for a student team to remember than one rule |
+
+### Impact
+`AGENTS.md` section 7, `docs/conventions/android-java.md`. No code exists yet under `PUBGApp/app/src/main/java/`, so nothing is renamed.
+
+### Owner
+tahpnart8

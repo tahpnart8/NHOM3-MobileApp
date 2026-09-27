@@ -12,7 +12,7 @@
 
 | Thứ | Quy ước | Ví dụ |
 | --- | --- | --- |
-| Gói | `com.nhom3.pubgapp.feature.<tính-năng>.{ui,data,model}` | `...feature.listing.ui` |
+| Gói | Chia theo tầng: `com.nhom3.pubgapp.{model,model.enums,data,data.local,util,viewmodel}` | `...model.Listing`, `...viewmodel.ListingViewModel` |
 | Lớp | `PascalCase` | `ListingRepository` |
 | Hàm, biến | `camelCase` | `loadListings()` |
 | Hằng | `UPPER_SNAKE_CASE` | `MAX_PHOTOS` |
