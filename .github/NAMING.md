@@ -1,6 +1,6 @@
 # Naming
 
-The single authority for how branches, commits, pull requests, issues and labels are named. `scripts/lib/policy.sh` enforces the grammar of branches and commit subjects; keep the two in step.
+The single authority for how branches, commits, pull requests, issues and labels are named. `workflow/scripts/lib/policy.sh` enforces the grammar of branches and commit subjects; keep the two in step.
 
 ## Branches
 
@@ -58,8 +58,8 @@ The body, when there is one, says why. It never contains a `Co-authored-by` line
 
 ## Labels
 
-`type:feature type:bug type:chore type:docs type:removal`, `area:auth area:listing area:feed area:chat area:order area:profile area:admin area:offline area:ui area:build area:docs`, `priority:p0 p1 p2`, `needs-leader-decision`, `blocked`. Created by `scripts/create-labels.sh`.
+`type:feature type:bug type:chore type:docs type:removal`, `area:auth area:listing area:feed area:chat area:order area:profile area:admin area:offline area:ui area:build area:docs`, `priority:p0 p1 p2`, `needs-leader-decision`, `blocked`. Created by `workflow/scripts/create-labels.sh`.
 
 ## Code
 
-Java packages `com.nhom3.pubgapp.feature.<name>`. Layout files `<screen>_<feature>.xml` style is in `docs/conventions/android-java.md`.
+Java packages `com.nhom3.pubgapp.feature.<name>`. Layout files `<screen>_<feature>.xml` style is in `workflow/docs/conventions/android-java.md`.

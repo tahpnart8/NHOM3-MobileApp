@@ -2,7 +2,7 @@ name: policy
 
 # pull_request_target runs the workflow and the scripts of the DEFAULT branch, not the ones in the
 # pull request, so a pull request cannot weaken its own check. It must never execute pull request code:
-# scripts/ci-policy.sh only reads the pull request through the API.
+# workflow/scripts/ci-policy.sh only reads the pull request through the API.
 on:
   pull_request_target:
     types: [opened, edited, synchronize, reopened, ready_for_review]
@@ -27,4 +27,4 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
-        run: sh scripts/ci-policy.sh
+        run: sh workflow/scripts/ci-policy.sh

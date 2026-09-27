@@ -1,6 +1,6 @@
 ---
 name: pubg-code
-description: How to write Java for PUBGApp so a student can read it; plain, explicit, no lambdas, comments of one or two lines, and lasting knowledge kept in memory/code/ instead of in comments. Use whenever you write or change Java, before you write it and again before you finish.
+description: How to write Java for PUBGApp so a student can read it; plain, explicit, no lambdas, comments of one or two lines, and lasting knowledge kept in workflow/memory/code/ instead of in comments. Use whenever you write or change Java, before you write it and again before you finish.
 ---
 
 Write the code a student who finished the course lectures can read on the first pass. Plain Java, one idea per line, names that say what they mean. Short beats clever, and short does not mean cramped.
@@ -13,7 +13,7 @@ These rules apply to **the lines you write or change**. Do not rewrite existing 
 - **Listeners are anonymous classes or named methods.** For a click handler write `new View.OnClickListener() { @Override public void onClick(View view) { ... } }`, and move a long body into a private method the handler calls.
 - **Loops are `for` loops.** Use the enhanced `for (Listing listing : listings)`.
 - **Small methods that do one thing.** About 30 lines at most, at most two levels of nesting, and return early instead of nesting `else`. More than three parameters means you probably need a model object.
-- **Small classes with one job.** About 300 lines at most. A Fragment or Activity only shows things and forwards events; logic lives in the ViewModel and the Repository; Firebase and Room calls live in the `data` package. Follow `docs/architecture/overview.md` for the layers.
+- **Small classes with one job.** About 300 lines at most. A Fragment or Activity only shows things and forwards events; logic lives in the ViewModel and the Repository; Firebase and Room calls live in the `data` package. Follow `workflow/docs/architecture/overview.md` for the layers.
 - **Names are whole words.** Methods start with a verb (`loadListings`), booleans read as a question (`isSoldOut`, `hasPhotos`), no abbreviations except `id` and `url`.
 - **No magic values.** Numbers and Firestore field names are `private static final` constants (`MAX_PHOTOS = 5`), defined once.
 - **Handle errors where you can tell the user.** Pass a failure back to the caller (a callback or a result object), show a clear message, and never leave a `catch` empty (AGENTS.md R12). Check for `null` where it can happen, and mark it with `@Nullable` or `@NonNull`.
@@ -35,7 +35,7 @@ These rules apply to **the lines you write or change**. Do not rewrite existing 
 
 ## Where knowledge goes
 
-**Not in the code.** When you learn something that a future reader needs and the code cannot say (a trap in Firebase, why a query has a condition, a pattern you chose, an approach that failed), write it in `memory/code/<area>.md` and keep the code comment to one line at most. What belongs there and how to write an entry: `memory/code/README.md`. Choices between real alternatives go to `memory/decisions.md` with the `pubg-record-decision` skill.
+**Not in the code.** When you learn something that a future reader needs and the code cannot say (a trap in Firebase, why a query has a condition, a pattern you chose, an approach that failed), write it in `workflow/memory/code/<area>.md` and keep the code comment to one line at most. What belongs there and how to write an entry: `workflow/memory/code/README.md`. Choices between real alternatives go to `workflow/memory/decisions.md` with the `pubg-record-decision` skill.
 
 ## Example
 
@@ -68,6 +68,6 @@ private void saveListingsWithPrice() {
 
 ## Before you finish
 
-1. Run `sh scripts/check-java-style.sh`. It lists the lambdas, streams, long comments and the other patterns above on the lines you added. Fix each finding, or say in your report why a line is better as it is. It is a checker, not a judge: it cannot tell whether a name is good or a method too long, so read your own diff once with that in mind.
+1. Run `sh workflow/scripts/check-java-style.sh`. It lists the lambdas, streams, long comments and the other patterns above on the lines you added. Fix each finding, or say in your report why a line is better as it is. It is a checker, not a judge: it cannot tell whether a name is good or a method too long, so read your own diff once with that in mind.
 2. Run `./gradlew assembleDebug testDebugUnitTest lintDebug` from `PUBGApp/` (AGENTS.md R1).
-3. Write any lasting knowledge into `memory/code/` and tell the person you did.
+3. Write any lasting knowledge into `workflow/memory/code/` and tell the person you did.

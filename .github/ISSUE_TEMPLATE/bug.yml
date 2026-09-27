@@ -7,7 +7,7 @@ body:
     id: feature_id
     attributes:
       label: Mã tính năng
-      description: Tính năng mà lỗi thuộc về, trong docs/product/features.md.
+      description: Tính năng mà lỗi thuộc về, trong workflow/docs/product/features.md.
       placeholder: F-04
     validations:
       required: true

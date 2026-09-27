@@ -3,9 +3,9 @@
 *                       @tahpnart8
 /.github/               @tahpnart8
 /.githooks/             @tahpnart8
-/scripts/               @tahpnart8
+/workflow/scripts/      @tahpnart8
 /.agents/               @tahpnart8
 /.claude/               @tahpnart8
 /AGENTS.md              @tahpnart8
 /CLAUDE.md              @tahpnart8
-/memory/                @tahpnart8
+/workflow/memory/       @tahpnart8
