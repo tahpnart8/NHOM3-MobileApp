@@ -83,7 +83,7 @@ sh workflow/scripts/tests/policy-test.sh                          # after touchi
 
 Details are in `workflow/docs/conventions/android-java.md`.
 
-- Code lives in `com.nhom3.pubgapp.feature.<name>.{ui,data,model}`; shared code in `com.nhom3.pubgapp.common`.
+- Code is split by layer: `com.nhom3.pubgapp.model` (domain), `.model.enums`, `.data` (repositories), `.data.local` (Room), `.util`, `.viewmodel`. Matches the class diagram in `workflow/docs/diagrams/so-do-lop/`.
 - Use ViewBinding, not `findViewById`. Every user visible string is a resource; a feature's strings go in its own `strings_<feature>.xml`.
 - No network or disk work on the main thread. Every screen must survive rotation without losing its state.
 - Plain, explicit Java (R15): no lambdas, streams or `var`; comments of one or two lines; lasting knowledge in `workflow/memory/code/`. Detail in the `pubg-code` skill and `workflow/docs/conventions/android-java.md`.

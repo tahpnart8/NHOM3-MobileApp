@@ -15,6 +15,18 @@ Thư mục này mô tả **hệ thống là gì**. Lý do đằng sau các lựa
 | Cài đặt Firebase | [workflow/firebase-setup.md](workflow/firebase-setup.md) | Tạo project, gói Blaze, SHA-1 từng máy, `google-services.json` |
 | Kế hoạch giao việc | [../plan/README.md](../plan/README.md) | Giai đoạn và việc; **chưa có, chờ tài liệu yêu cầu** |
 
+## Phân tích và thiết kế sơ bộ
+
+Ba giai đoạn đầu của đồ án, trước khi vào giai đoạn code.
+
+| Chủ đề | Tài liệu sở hữu | Nội dung |
+| --- | --- | --- |
+| Phân tích đề bài | [analysis/README.md](analysis/README.md) | BACCM, nền tảng tương tự, nhu cầu người dùng, thuật ngữ, dự kiến lớp |
+| Đặc tả chức năng | [product/dac-ta-chuc-nang.md](product/dac-ta-chuc-nang.md) | Bảng chi tiết từng chức năng: STT, User, Module, Tên chức năng, Chức năng con, Đặc tả |
+| Sơ đồ chức năng, sơ đồ lớp, ERD | [diagrams/README.md](diagrams/README.md) | File `.drawio` và ảnh xuất của 3 sơ đồ |
+| Giao diện (mockup) | [ui/README.md](ui/README.md) | 30 màn hình, chia 5 nhóm theo luồng nghiệp vụ |
+| Cách nộp tài liệu ba giai đoạn trên | [workflow/nop-tai-lieu.md](workflow/nop-tai-lieu.md) | Quy trình nhánh, commit, Pull Request cho việc tài liệu |
+
 Cách nói chuyện với AI (prompt, vòng lặp Explore, Plan, Implement, Review) nằm ở [`workflow/guide/`](../guide/README.md). Luật cho AI nằm ở [`AGENTS.md`](../../AGENTS.md) (tiếng Anh). Quy tắc đặt tên nằm ở [`.github/NAMING.md`](../../.github/NAMING.md).
 
 **Quy tắc:** đổi cấu trúc dữ liệu hoặc hành vi một tính năng thì sửa tài liệu tương ứng **trong cùng Pull Request**. Không sửa tài liệu cho khớp với code sai; nếu hai bên lệch nhau, nói ra và để người quyết định xử lý.
