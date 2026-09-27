@@ -19,9 +19,9 @@ Chợ đồ cũ kết hợp mạng xã hội cho Android — đăng bán, trao �
 
 ## Giới thiệu
 
-**PUBGApp** là ứng dụng Android cho việc mua bán, trao đổi và cho tặng đồ cũ — kiểu Facebook Marketplace kết hợp thêm quản lý người bán, người mua và đơn hàng theo tinh thần Shopee. Đây là đồ án môn **Phát triển ứng dụng Mobile**, thực hiện bởi nhóm 3.
+**PUBGApp** là ứng dụng Android cho việc mua bán, trao đổi và cho tặng đồ cũ, nơi người dùng vừa kết nối và tương tác với nhau như trên một mạng xã hội, vừa đăng tin, thương lượng và hoàn tất giao dịch như trên một sàn thương mại điện tử thu nhỏ. Đây là đồ án môn **Phát triển ứng dụng Mobile**, thực hiện bởi nhóm 3.
 
-Ứng dụng vừa là mạng xã hội (theo dõi, trò chuyện, đánh giá) vừa là sàn thương mại điện tử thu nhỏ (đăng tin, offer, giao dịch, giao hàng), hướng tới trải nghiệm gọn nhẹ, dễ dùng trên điện thoại.
+Phần mạng xã hội lo việc theo dõi, trò chuyện và đánh giá lẫn nhau; phần thương mại điện tử lo việc đăng tin, thương lượng giá, xử lý giao dịch và giao hàng. Cả hai gói gọn trong một trải nghiệm nhẹ nhàng, dễ dùng trên điện thoại.
 
 ## Tính năng chính
 
