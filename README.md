@@ -63,7 +63,7 @@ cd PUBGApp
 | --- | --- | --- |
 | Trần Đức Phát | [@tahpnart8](https://github.com/tahpnart8) | Nhóm trưởng |
 | Nguyễn Lê Hải Long | [@Contest451](https://github.com/Contest451) | Kỹ sư phần mềm |
-| Nguyễn Thúy Ngân | [@thngan0512](https://github.com/thngan0512) | Kỹ sư phần mềm |
+| Nguyễn Thúy Ngân | [@loopy-tnw](https://github.com/loopy-tnw) | Kỹ sư phần mềm |
 | Trần Anh Tú | [@tranannhtu21012006](https://github.com/tranannhtu21012006) | Kỹ sư phần mềm |
 | Nguyễn Hoàng Phúc | [@PmSubin](https://github.com/PmSubin) | Kỹ sư phần mềm |
 
