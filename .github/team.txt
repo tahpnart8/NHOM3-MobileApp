@@ -3,6 +3,6 @@
 # Changing this file changes who may contribute: only the leader edits it (CODEOWNERS enforces the review).
 tahpnart8            # Tran Duc Phat, team leader
 Contest451           # Nguyen Le Hai Long
-thngan0512           # Nguyen Thuy Ngan
+loopy-tnw            # Nguyen Thuy Ngan
 tranannhtu21012006   # Tran Anh Tu
 PmSubin              # Nguyen Hoang Phuc

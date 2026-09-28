@@ -8,7 +8,7 @@ Facts only: name, GitHub login, role. Nothing about anyone's performance, availa
 | --- | --- | --- |
 | Tran Duc Phat | `tahpnart8` | Team leader. Directs the project, reviews and merges every pull request, owns the repository settings |
 | Nguyen Le Hai Long | `Contest451` | Software engineer |
-| Nguyen Thuy Ngan | `thngan0512` | Software engineer |
+| Nguyen Thuy Ngan | `loopy-tnw` | Software engineer |
 | Tran Anh Tu | `tranannhtu21012006` | Software engineer |
 | Nguyen Hoang Phuc | `PmSubin` | Software engineer |
 
