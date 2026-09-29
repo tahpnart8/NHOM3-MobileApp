@@ -34,37 +34,55 @@
 
 ## C02. Trò chuyện và đề nghị giá
 
-**Ảnh:** chưa nộp
+**Ảnh:** ![C02 Trò chuyện và đề nghị giá](c02-tro-chuyen-de-nghi-gia.png)
 
-**Mục đích:**
+**Mục đích:** Cho phép người dùng trao đổi chi tiết về sản phẩm và thực hiện thương lượng, chốt giá trực tiếp trong khung chat.
 
 **Thành phần chính:**
--
+- Thanh tiêu đề trên cùng: Nút quay lại, ảnh đại diện, tên người đối thoại, trạng thái hoạt động ("Đang hoạt động"), nút tùy chọn (3 chấm).
+- Banner sản phẩm đang trao đổi: Ảnh thu nhỏ, tên sản phẩm ("iPhone 13 128GB..."), mức giá.
+- Khung nội dung chat: Các bong bóng tin nhắn của mình và đối phương.
+- Thẻ "Đề nghị giá" đặc biệt trong luồng chat: Hiện mức giá đề nghị (ví dụ 6.800.000đ) kèm hai nút hành động "Từ chối" và "Chấp nhận".
+- Thanh nhập liệu dưới cùng: Nút đính kèm tệp (biểu tượng kẹp ghim), ô nhập tin nhắn, nút gửi.
 
 **Hành động và điều hướng:**
--
+- Bấm nút quay lại `<`: Về C01 Danh sách tin nhắn.
+- Bấm nút menu 3 chấm: Mở popup tùy chọn (chặn, báo cáo).
+- Bấm vào banner sản phẩm: Xem lại màn hình B03 Chi tiết tin đăng.
+- Bấm "Chấp nhận" trên thẻ đề nghị giá: Chốt giao dịch, có thể dẫn sang tạo hoặc xác nhận đơn (C03).
+- Bấm nút đính kèm: Mở menu chọn gửi ảnh/video từ máy.
+- Bấm nút gửi: Đẩy tin nhắn mới vào cuộc trò chuyện.
 
-**Chức năng liên quan:**
+**Chức năng liên quan:** dòng 37, 38, 39 (chat gửi chữ, ảnh, video), dòng 40, 41, 42 (offer một chạm).
 
 **Trạng thái đặc biệt:**
--
+- Nếu là người gửi đề nghị: Thẻ đề nghị giá chỉ hiện nội dung "Đang chờ phản hồi" hoặc nút "Hủy đề nghị", không có nút Chấp nhận/Từ chối.
+- Khi mất mạng: Nút gửi bị mờ hoặc tin nhắn vừa gửi hiện biểu tượng đang gửi (xoay vòng).
 
 ## C03. Chi tiết giao dịch
 
-**Ảnh:** chưa nộp
+**Ảnh:** ![C03 Chi tiết giao dịch](c03-chi-tiet-giao-dich.png)
 
-**Mục đích:**
+**Mục đích:** Quản lý và theo dõi tiến trình của một giao dịch cụ thể đã được chốt, cung cấp thông tin hẹn gặp và các hành động hoàn tất hay khiếu nại.
 
 **Thành phần chính:**
--
+- Thanh tiêu đề: Nút quay lại, mã giao dịch (ví dụ "#DL2049").
+- Thanh tiến trình giao dịch 5 bước: Chờ xác nhận, Đã xác nhận, Đang giao, Đã nhận, Hoàn tất. Trạng thái hiện tại được đánh dấu nổi bật.
+- Thẻ sản phẩm: Ảnh thu nhỏ, tên, giá chốt.
+- Khối "Thông tin giao dịch": Phương thức thanh toán (Ví trung gian), Phương thức giao nhận (Gặp trực tiếp), Địa điểm (Cà phê Highlands...), Thời gian hẹn.
+- Hộp cảnh báo an toàn: Nhắc nhở tiền được giữ an toàn tại ví trung gian.
+- Các nút hành động lớn ở dưới: "Xác nhận đã nhận hàng" (màu xanh), "Khiếu nại giao dịch" (viền đỏ).
 
 **Hành động và điều hướng:**
--
+- Bấm nút quay lại `<`: Về màn hình trước (ví dụ C02 Trò chuyện hoặc C04 Lịch sử giao dịch).
+- Bấm "Xác nhận đã nhận hàng": Đổi trạng thái giao dịch sang "Đã nhận", kích hoạt giải ngân tự động cho người bán.
+- Bấm "Khiếu nại giao dịch": Chuyển sang màn hình D05 Tạo khiếu nại.
 
-**Chức năng liên quan:**
+**Chức năng liên quan:** dòng 56 (Xem chi tiết giao dịch), dòng 57 (Cập nhật trạng thái / Xác nhận nhận hàng), dòng 71 (Tạo khiếu nại).
 
 **Trạng thái đặc biệt:**
--
+- Phụ thuộc vai trò: Nếu người xem là Người bán, nút hành động sẽ là "Xác nhận đã giao hàng" thay vì nhận hàng.
+- Thanh toán trực tiếp: Hộp cảnh báo về "ví trung gian" sẽ được ẩn đi.
 
 ## C04. Lịch sử giao dịch
 
