@@ -93,6 +93,8 @@ Details are in `workflow/docs/conventions/android-java.md`.
 
 Issue, then branch, then pull request, then the leader reviews and squash merges. The skills below carry out each step the same way for everyone; their source is `.agents/skills/`.
 
+**A pull request that changes no file under `PUBGApp/` takes the short path.** It uses the four heading template `.github/PULL_REQUEST_TEMPLATE/tai-lieu.md`, not the long one; nobody runs Gradle for it, on a machine or in CI, because a build proves nothing about a Markdown file; and the reviewer judges the document against the issue instead of building the merged tree. `pubg-open-pr` and `pubg-review-pr` both begin by deciding which path applies. What still holds: `Closes #N` in the body, Vietnamese title and body (R14), the branch and commit grammar (R9), and no AI attribution (R8).
+
 | Skill | Use it to |
 | --- | --- |
 | `pubg-new-issue` | Turn an idea into a correctly formed issue |

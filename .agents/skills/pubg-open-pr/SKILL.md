@@ -5,6 +5,14 @@ description: Verify finished work and open the pull request for a PUBGApp issue 
 
 Open exactly one pull request for the current branch. Verify first; opening is the last step.
 
+## First, which of the two paths
+
+Run `git diff --name-only origin/main...HEAD`. When **no** changed path starts with `PUBGApp/`, this is a
+documents pull request: there is no code to build, so **skip steps 3, 4, 6 and 7** and use the short
+template named in step 9. Say in the report that you skipped them and why. Otherwise take every step.
+
+Never run Gradle for a change that touches only Markdown or images. It proves nothing and costs a minute.
+
 ## Steps
 
 1. **Confirm the branch.** `git branch --show-current` must match `type/N-slug`. Read issue N again: `gh issue view N`.
@@ -17,7 +25,8 @@ Open exactly one pull request for the current branch. Verify first; opening is t
 8. **Check the commits.** `git log --format=%s origin/main..HEAD` must be conventional subjects. `git log --format=%B origin/main..HEAD` must contain no `Co-authored-by` and no AI byline. If they do, stop and tell the user; do not rewrite history yourself.
 9. **Open it, in Vietnamese.** The title and the body are written in Vietnamese (AGENTS.md R14); CI rejects a pull request whose title or body is not. Push the branch (`git push -u origin HEAD`), then `gh pr create --title "<title>" --body-file <file>`.
    - Title: `type(scope): tóm tắt bằng tiếng Việt`, for example `feat(auth): thêm nút đăng nhập bằng Google`. The type and scope stay English, the summary does not start with a capital and has no trailing period, 100 bytes at most.
-   - Body: fill `.github/PULL_REQUEST_TEMPLATE.md` as it is, headings included. It has: `Tóm tắt`, `Issue liên quan` with `Closes #N`, `Tính năng và phạm vi`, `Tiêu chí nghiệm thu` (the issue's checklist with only the truly done boxes ticked), `Code cũ`, `Đã kiểm tra thế nào` (the exact commands and results from step 3, and what the person ran on the emulator), `Tài liệu`, and screenshots in portrait and landscape for a screen change.
+   - Body, code path: fill `.github/PULL_REQUEST_TEMPLATE.md` as it is, headings included. It has: `Tóm tắt`, `Issue liên quan` with `Closes #N`, `Tính năng và phạm vi`, `Tiêu chí nghiệm thu` (the issue's checklist with only the truly done boxes ticked), `Code cũ`, `Đã kiểm tra thế nào` (the exact commands and results from step 3, and what the person ran on the emulator), `Tài liệu`, and screenshots in portrait and landscape for a screen change.
+   - Body, documents path: fill `.github/PULL_REQUEST_TEMPLATE/tai-lieu.md` instead. Four short headings: `Issue liên quan` with `Closes #N`, `Tóm tắt` (one or two sentences), `Tài liệu đã nộp` (one path per line), `Ghi chú cho người duyệt` (write "không có" when there is nothing). Do not add the code headings back; the reviewer reads the document itself.
    - Keep in English: the keywords `Closes`, `Refs`, `Removal-Issue`, `Deviation`; and anything quoted verbatim (commands, paths, error messages). Do not translate identifiers.
    - Remove the `<!-- ... -->` hints you have used. `Closes #N` must carry a real number, or `Closes: none`.
 10. **Report**, in Vietnamese, the pull request URL, the verification results, what you could not run (for example the emulator), and any acceptance criterion not met.

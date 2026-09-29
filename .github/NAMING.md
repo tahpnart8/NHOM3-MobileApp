@@ -47,7 +47,7 @@ The body, when there is one, says why. It never contains a `Co-authored-by` line
 ## Pull requests
 
 - **The title and the body are written in Vietnamese**, because people read them. The `type(scope):` prefix stays English. The title has the same shape as a commit subject and becomes the commit on `main` (squash merge). CI checks that the title and the body contain Vietnamese accented letters. It cannot check that the Vietnamese is good; that is for the reviewer.
-- The body follows `.github/PULL_REQUEST_TEMPLATE.md` and contains `Closes #N` (repeat the keyword before every number: `Closes #1, closes #2`), or `Closes: none`.
+- The body follows a template and contains `Closes #N` (repeat the keyword before every number: `Closes #1, closes #2`), or `Closes: none`. A pull request that changes anything under `PUBGApp/` uses `.github/PULL_REQUEST_TEMPLATE.md`. One that changes only documents uses the short `.github/PULL_REQUEST_TEMPLATE/tai-lieu.md`: four headings, no build result, no feature code checklist.
 - A pull request that deletes code under `PUBGApp/app/src/main` also contains `Removal-Issue: #N`.
 - These keywords stay English because tools read them: `Closes`, `Refs`, `Removal-Issue`, `Deviation`. Code names, file paths, commands and error messages are quoted as they are.
 - A pull request GitHub generates itself (`Revert ...`, `Merge ...`) is exempt.

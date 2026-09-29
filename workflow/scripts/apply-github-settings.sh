@@ -5,10 +5,14 @@
 #   sh workflow/scripts/apply-github-settings.sh --show    only print what GitHub reports
 #
 # Two rulesets on main, split on purpose:
-#   main-checks  no deletion, no force push, linear history, `build` and `policy` green and up to date.
-#                Nobody bypasses it, the leader included.
+#   main-checks  no deletion, no force push, linear history, `build` and `policy` green. Nobody bypasses
+#                it, the leader included. A branch does NOT have to be up to date with main to merge: with
+#                many document pull requests open at once, that turned every merge into an Update branch,
+#                a re-run of CI and a second review for everyone else. The reviewer builds the merged tree
+#                instead (skill pubg-review-pr), and `build` runs again on main after each merge.
 #   main-review  pull request required, 1 approval from a code owner, squash only. The admin role may
 #                bypass it inside a pull request only, because the leader cannot approve their own PR.
+#                An approval is NOT dismissed by a later push, so fixing a typo does not cost a review.
 # Squash merges use the pull request title and an EMPTY body, so no trailer from a branch commit can
 # reach main.
 set -eu
