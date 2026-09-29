@@ -1,4 +1,4 @@
-# Sơ đồ quan hệ thực thể (ERD)
+﻿# Sơ đồ quan hệ thực thể (ERD)
 
 Mô hình dữ liệu cho Cloud Firestore và Room (SQLite cục bộ), khớp với các lớp trong `diagrams/so-do-lop/`.
 
@@ -12,10 +12,10 @@ Cập nhật bảng dưới đây khi nộp:
 
 | Mục | Số lượng |
 | --- | --- |
-| Collection Firestore | |
-| Bảng Room | |
+| Collection Firestore | 21 |
+| Bảng Room | 6 |
 
-## Trang 3 đến 5
+$newPart## Trang 3 đến 5
 
 Ảnh xuất từ draw.io của trang 3, 4, 5. Hộp viền nét đứt ghi "(tham chiếu)" là collection của trang khác.
 
@@ -87,3 +87,4 @@ Cập nhật bảng dưới đây khi nộp:
 | `message_cache` bản sao của `messages` | |
 | `listing_cache` bản sao của `listings` | |
 | `deal_cache` bản sao của `deals` | |
+
