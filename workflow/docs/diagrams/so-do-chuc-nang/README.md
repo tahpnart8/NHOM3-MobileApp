@@ -12,6 +12,6 @@ Cập nhật bảng dưới đây khi nộp:
 
 | Mục | Giá trị |
 | --- | --- |
-| Số chức năng được vẽ | |
-| Số chức năng ngoài phạm vi, không vẽ | |
+| Số chức năng được vẽ | 78 |
+| Số chức năng ngoài phạm vi, không vẽ | 14 (dòng 75, 77, 78, 84 đến 94 của bảng đặc tả) |
 | Nguồn đối chiếu | `product/dac-ta-chuc-nang.md` |
