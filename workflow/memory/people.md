@@ -14,4 +14,6 @@ Facts only: name, GitHub login, role. Nothing about anyone's performance, availa
 
 Every engineer works across the whole stack: environment setup, interface design, database, backend logic and app screens. Feature ownership is assigned per issue, not fixed by person.
 
+Nguyen Le Hai Long is also a code owner for `workflow/docs/` (`.github/CODEOWNERS`), alongside the leader: either one's approval satisfies the review requirement for a pull request that changes only documents. See the decision of 2026-09-29.
+
 **Only these five accounts may appear as contributors.** No AI tool, bot or outside account. See `AGENTS.md` rule R8 and the decision of 2026-09-25.
