@@ -6,7 +6,7 @@ Giai đoạn 0 của đồ án. Mỗi tài liệu dưới đây do một hoặc 
 | --- | --- | --- |
 | [baccm.md](baccm.md) | Phân tích BACCM (Change, Need, Solution, Stakeholder, Value, Context) | @Contest451 |
 | [nen-tang-tuong-tu.md](nen-tang-tuong-tu.md) | Tổng hợp chức năng từ các nền tảng tương tự | @tahpnart8 |
-| [nhu-cau-nguoi-dung.md](nhu-cau-nguoi-dung.md) | Phân tích nhu cầu người dùng theo vai trò | |
+| [nhu-cau-nguoi-dung.md](nhu-cau-nguoi-dung.md) | Phân tích nhu cầu người dùng theo vai trò | @tranannhtu21012006 |
 | [thuat-ngu.md](thuat-ngu.md) | Bảng khái niệm và định nghĩa dùng trong dự án | Nguyễn Thúy Ngân |
 | [du-kien-lop.md](du-kien-lop.md) | Danh sách lớp dự kiến, rút ra từ các chức năng đã chốt | |
 
