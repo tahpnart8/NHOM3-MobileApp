@@ -17,56 +17,73 @@ Cập nhật bảng dưới đây khi nộp:
 
 ## Trang 3 đến 5
 
-Ảnh xuất từ draw.io của trang 3, 4, 5. File gốc `erd.drawio` và các trang còn lại sẽ nộp sau. Hộp viền nét đứt trong ảnh là collection đã vẽ ở trang khác, chỉ đặt vào để thể hiện quan hệ.
+Ảnh xuất từ draw.io của trang 3, 4, 5. Hộp viền nét đứt ghi "(tham chiếu)" là collection của trang khác.
 
 ### Trang 3. Giao dịch, thanh toán, đánh giá (Firestore)
 
 ![ERD trang 3](erd-3-giao-dich-thanh-toan-danh-gia.png)
 
-| Collection | Đường dẫn | Ghi chú |
-| --- | --- | --- |
-| `deals` | `deals/{id}` | Giao dịch giữa người mua và người bán, lưu bản chụp `itemTitle`, `itemImageUrl` của tin đăng |
-| `statusHistory` | `deals/{id}.statusHistory[]` | Mảng map nằm trong `deals`, không phải collection riêng |
-| `payments` | `payments/{dealId}` | Mỗi giao dịch có tối đa một thanh toán, id tài liệu chính là `dealId` |
-| `reviews` | `reviews/{id}` | Đánh giá sau giao dịch, có `reviewerId` và `revieweeId` |
+| Collection | Đường dẫn |
+| --- | --- |
+| `deals` | `deals/{id}` |
+| `statusHistory` | `deals/{id}.statusHistory[ ]` |
+| `payments` | `payments/{dealId}` |
+| `reviews` | `reviews/{id}` |
 
-Quan hệ chính:
-- `deals` tham chiếu `listings` (`listingId`), `offers` (`offerId`), `users` (`buyerId`, `sellerId`).
-- `deals` 1 - 0..1 `payments`; `deals` 1 - 0..n `reviews`.
-- `payments` và `reviews` tham chiếu `users` (`payerId`, `payeeId`; `reviewerId`, `revieweeId`).
+| Quan hệ | Trường |
+| --- | --- |
+| `offers` 1 - 0..1 `deals` | `offerId` |
+| `listings` 1 - 0..n `deals` | `listingId` |
+| `users` 1 - 0..n `deals` | `buyerId`, `sellerId` |
+| `deals` 1 - 1..n `statusHistory` | `statusHistory[ ]` |
+| `deals` 1 - 0..1 `payments` | `dealId` |
+| `deals` 1 - 0..n `reviews` | `dealId` |
+| `users` 1 - 0..n `payments` | `payerId`, `payeeId` |
+| `users` 1 - 0..n `reviews` | `reviewerId`, `revieweeId` |
 
 ### Trang 4. Tin cậy, quản trị (Firestore)
 
 ![ERD trang 4](erd-4-tin-cay-quan-tri.png)
 
-| Collection | Đường dẫn | Ghi chú |
-| --- | --- | --- |
-| `reports` | `reports/{id}` | Báo cáo vi phạm; `targetType` và `targetId` trỏ tới tin đăng, người dùng hoặc tin nhắn |
-| `complaints` | `complaints/{id}` | Khiếu nại về một giao dịch |
-| `adminNote` | `complaints/{id}/adminNote/note` | Subcollection, một ghi chú của admin cho mỗi khiếu nại |
-| `bannedKeywords` | `bannedKeywords/{id}` | Từ khóa bị cấm, do admin tạo |
-| `notifications` | `notifications/{id}` | Thông báo gửi tới người dùng |
-| `activityLogs` | `activityLogs/{id}` | Nhật ký hoạt động của người dùng |
+| Collection | Đường dẫn |
+| --- | --- |
+| `reports` | `reports/{id}` |
+| `complaints` | `complaints/{id}` |
+| `adminNote` | `complaints/{id}/adminNote/note` |
+| `bannedKeywords` | `bannedKeywords/{id}` |
+| `notifications` | `notifications/{id}` |
+| `activityLogs` | `activityLogs/{id}` |
 
-Quan hệ chính:
-- `users` 1 - 0..n `reports` (`reporterId`), `complaints` (`complainantId`), `notifications` (`recipientId`), `activityLogs` (`userId`), `bannedKeywords` (`createdBy`).
-- `complaints` tham chiếu `deals` (`dealId`); `complaints` 1 - 0..1 `adminNote`.
-- `reports` và `complaints` ghi người xử lý ở `handledBy`, tham chiếu `users`.
+| Quan hệ | Trường |
+| --- | --- |
+| `users` 1 - 0..n `reports` | `reporterId` |
+| `reports` tham chiếu `listings` (nét đứt) | `targetId` |
+| `users` 1 - 0..n `complaints` | `complainantId` |
+| `complaints` 1 - 0..1 `adminNote` | `complaintId` |
+| `deals` 1 - 0..n `complaints` | `dealId` |
+| `users` 1 - 0..n `bannedKeywords` | `createdBy` |
+| `users` 1 - 0..n `notifications` | `recipientId` |
+| `users` 1 - 0..n `activityLogs` | `userId` |
 
 ### Trang 5. Room (SQLite)
 
 ![ERD trang 5](erd-5-room-sqlite.png)
 
-| Bảng | Entity | Bản sao của |
-| --- | --- | --- |
-| `conversation_cache` | `ConversationEntity` | `conversations` |
-| `message_cache` | `MessageEntity` | `messages` |
-| `listing_cache` | `ListingEntity` | `listings` |
-| `recent_view` | `RecentViewEntity` | Không, chỉ lưu cục bộ |
-| `deal_cache` | `DealEntity` | `deals` |
-| `recent_search` | `RecentSearchEntity` | Không, chỉ lưu cục bộ |
+| Bảng | Entity |
+| --- | --- |
+| `conversation_cache` | `ConversationEntity` |
+| `message_cache` | `MessageEntity` |
+| `listing_cache` | `ListingEntity` |
+| `recent_view` | `RecentViewEntity` |
+| `deal_cache` | `DealEntity` |
+| `recent_search` | `RecentSearchEntity` |
 
-Quan hệ chính:
-- `conversation_cache` 1 - 0..n `message_cache` (khóa ngoại `conversationId`).
-- `recent_view` và `deal_cache` trỏ tới `listing_cache` qua `listingId`.
-- Các bảng `*_cache` là bộ nhớ đệm để xem lại khi mất mạng; Firestore vẫn là nguồn dữ liệu chính.
+| Quan hệ | Trường |
+| --- | --- |
+| `conversation_cache` 1 - 0..n `message_cache` | `conversationId` |
+| `recent_view` tham chiếu `listing_cache` (nét đứt) | `listingId` |
+| `deal_cache` tham chiếu `listing_cache` (nét đứt) | `listingId` |
+| `conversation_cache` bản sao của `conversations` | |
+| `message_cache` bản sao của `messages` | |
+| `listing_cache` bản sao của `listings` | |
+| `deal_cache` bản sao của `deals` | |
