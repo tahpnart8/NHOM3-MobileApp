@@ -1,6 +1,9 @@
-# Every pull request needs the leader's review. Files that decide the rules of the game are listed
-# separately so that a change to them is an explicit act, not a side effect.
+# Every pull request needs a review from an owner of the files it touches. Files that decide the rules of
+# the game stay leader only, listed separately so that a change to them is an explicit act, not a side
+# effect. Documents under workflow/docs/ have a second owner: either approval satisfies the ruleset, which
+# spreads the review load for the analysis, diagram and interface work of this phase (decision 2026-09-29).
 *                       @tahpnart8
+/workflow/docs/         @tahpnart8 @Contest451
 /.github/               @tahpnart8
 /.githooks/             @tahpnart8
 /workflow/scripts/      @tahpnart8
