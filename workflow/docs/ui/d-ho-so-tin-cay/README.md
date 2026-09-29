@@ -96,51 +96,80 @@
 
 ## D04. Báo cáo tin đăng
 
-**Ảnh:** chưa nộp
+**Ảnh:** ![D04 Báo cáo tin đăng](d04-bao-cao-tin-dang.png)
 
-**Mục đích:**
+**Mục đích:** Cho người dùng báo cáo một tin đăng có dấu hiệu vi phạm, chọn lý do và mô tả thêm để Admin xử lý.
 
 **Thành phần chính:**
--
+- Thanh trên: nút quay lại, tiêu đề "Báo cáo tin đăng"
+- Thẻ tin đăng bị báo cáo: ảnh, tên món (ví dụ iPhone 13 128GB, pin 89%) và tên người bán
+- Câu hỏi "Vì sao bạn báo cáo tin này?" với năm lựa chọn chọn một, mỗi lựa chọn có dòng giải thích: Nghi ngờ hàng giả, Thông tin sai lệch, Dấu hiệu lừa đảo, Nội dung không phù hợp, Khác
+- Ô "Mô tả thêm (không bắt buộc)"
+- Nút "Gửi báo cáo" màu đỏ ở cuối
 
 **Hành động và điều hướng:**
--
+- Bấm nút quay lại: về màn trước đó, không gửi báo cáo
+- Bấm một lý do: chọn lý do đó, bỏ chọn lý do trước
+- Bấm "Gửi báo cáo": gửi báo cáo kèm lý do và mô tả tới Admin
 
-**Chức năng liên quan:**
+**Chức năng liên quan:** dòng 54 (tạo báo cáo) trong bảng đặc tả chức năng.
 
 **Trạng thái đặc biệt:**
--
+- Chưa chọn lý do nào: nút "Gửi báo cáo" chưa bấm được
+- Mất mạng: báo gửi không thành công, giữ nguyên lý do và mô tả đã nhập
 
 ## D05. Tạo khiếu nại
 
-**Ảnh:** chưa nộp
+**Ảnh:** ![D05 Tạo khiếu nại](d05-tao-khieu-nai.png)
 
-**Mục đích:**
+**Mục đích:** Cho người dùng gửi khiếu nại về một giao dịch có vấn đề, kèm lý do, mô tả chi tiết và ảnh bằng chứng để Admin xử lý.
 
 **Thành phần chính:**
--
+- Thanh trên: nút quay lại, tiêu đề "Khiếu nại giao dịch"
+- Thẻ giao dịch bị khiếu nại: ảnh, tên món, mã giao dịch và số tiền (ví dụ Giao dịch #DL2049, 6.800.000đ)
+- Mục "Lý do khiếu nại" với bốn lựa chọn chọn một, mỗi lựa chọn có dòng giải thích: Hàng không đúng mô tả, Không nhận được hàng, Hàng bị hư hỏng, Khác
+- Ô "Mô tả chi tiết"
+- Mục "Ảnh bằng chứng (tối thiểu 1 ảnh)": ô ảnh đã thêm và ô có biểu tượng máy ảnh để thêm ảnh
+- Dải cảnh báo: giao dịch sẽ tạm đóng băng trong lúc chờ Admin xử lý khiếu nại
+- Nút "Gửi khiếu nại" màu đỏ ở cuối
 
 **Hành động và điều hướng:**
--
+- Bấm nút quay lại: về màn trước đó, không gửi khiếu nại
+- Bấm một lý do: chọn lý do đó, bỏ chọn lý do trước
+- Bấm ô máy ảnh: thêm ảnh bằng chứng
+- Bấm "Gửi khiếu nại": gửi khiếu nại tới Admin, giao dịch chuyển sang tạm đóng băng
 
-**Chức năng liên quan:**
+**Chức năng liên quan:** dòng 57 (tạo đơn khiếu nại, gồm thông tin và bằng chứng) trong bảng đặc tả chức năng.
 
 **Trạng thái đặc biệt:**
--
+- Chưa có ảnh bằng chứng nào: nút "Gửi khiếu nại" chưa bấm được, vì cần tối thiểu 1 ảnh
+- Mất mạng: báo gửi không thành công, giữ nguyên lý do, mô tả và ảnh đã chọn
 
 ## D06. Admin: Xử lý khiếu nại
 
-**Ảnh:** chưa nộp
+**Ảnh:** ![D06 Admin: Xử lý khiếu nại](d06-admin-xu-ly-khieu-nai.png)
 
-**Mục đích:**
+**Mục đích:** Cho Admin xem đầy đủ hồ sơ một khiếu nại và ra quyết định xử lý.
 
 **Thành phần chính:**
--
+- Thanh trên: nút quay lại, tiêu đề là mã khiếu nại (ví dụ Khiếu nại #KN021)
+- Thẻ giao dịch liên quan: ảnh, tên món, mã giao dịch và số tiền
+- Ba dòng thông tin: người khiếu nại (kèm vai trò, ví dụ người mua), lý do, ngày gửi
+- Mục "Mô tả từ người khiếu nại"
+- Mục "Ảnh bằng chứng": các ảnh người khiếu nại đã gửi
+- Mục "Lịch sử chat liên quan": ô tóm tắt số tin nhắn giữa hai bên
+- Mục "Quyết định xử lý": bốn nút Hoàn tiền, Hoàn trả SP, Hủy giao dịch, Bác khiếu nại, và nút "Yêu cầu bổ sung bằng chứng" viền nét đứt
+- Ô "Ghi chú nội bộ", không hiển thị cho người dùng
 
 **Hành động và điều hướng:**
--
+- Bấm nút quay lại: về màn trước đó
+- Bấm ô "Lịch sử chat liên quan": xem các tin nhắn giữa hai bên
+- Bấm một trong bốn nút quyết định: chọn cách xử lý khiếu nại
+- Bấm "Yêu cầu bổ sung bằng chứng": yêu cầu người khiếu nại gửi thêm bằng chứng
+- Nhập "Ghi chú nội bộ": lưu ghi chú chỉ Admin thấy
 
-**Chức năng liên quan:**
+**Chức năng liên quan:** dòng 80 (xem chi tiết hồ sơ khiếu nại: lịch sử chat, ảnh bằng chứng, thông tin giao dịch), dòng 81 (ra quyết định xử lý: hoàn tiền, hoàn trả, hủy, bác khiếu nại, yêu cầu bổ sung bằng chứng), dòng 82 (ghi chú nội bộ) trong bảng đặc tả chức năng.
 
 **Trạng thái đặc biệt:**
--
+- Khiếu nại đã có quyết định: các nút quyết định bị khóa, chỉ hiện quyết định đã chọn
+- Mất mạng: báo lưu quyết định không thành công, giữ nguyên lựa chọn và ghi chú đã nhập
