@@ -90,51 +90,81 @@
 
 ## B04. Đăng tin
 
-**Ảnh:** chưa nộp
+**Ảnh:** ![B04 Đăng tin](b04-dang-tin.png)
 
-**Mục đích:**
+**Mục đích:** Cung cấp biểu mẫu (form) để người dùng tạo mới một bài đăng bán/trao đổi/cho tặng món đồ.
 
 **Thành phần chính:**
--
+- Thanh trên cùng: nút quay lại và tiêu đề "Đăng sản phẩm"
+- Khu vực ảnh: nhãn "HÌNH ẢNH (TỐI ĐA 5)", các ô chứa ảnh đã chọn và một ô có biểu tượng camera để chụp/chọn ảnh mới
+- Các trường thông tin (từ trên xuống dưới):
+  - Tên sản phẩm: ô nhập text (VD: iPhone 13 128GB)
+  - Danh mục: ô chọn dropdown (Chọn danh mục)
+  - Mô tả: ô nhập text nhiều dòng (Tình trạng, lý do bán, phụ kiện kèm theo...)
+  - Tình trạng: các thẻ tùy chọn (Mới, Đã sử dụng, Đã sửa chữa, Có lỗi)
+  - Giá bán: ô nhập số (VD: 7.200.000)
+  - Hình thức giao dịch: các thẻ tùy chọn (Bán, Trao đổi, Cho tặng)
+  - Khu vực: ô nhập/chọn text (VD: Quận 1, TP.HCM)
+- Nút "Đăng tin" (Nằm ở cuối màn hình, cuộn xuống sẽ thấy)
 
 **Hành động và điều hướng:**
--
+- Bấm nút quay lại: hủy bỏ việc đăng tin, quay lại màn hình trước đó
+- Bấm biểu tượng camera: mở thư viện ảnh hoặc camera để tải ảnh lên
+- Bấm vào Danh mục: mở danh sách các danh mục để chọn
+- Bấm chọn các thẻ (Tình trạng, Hình thức): thẻ chuyển sang màu xanh lá biểu thị đang được chọn
+- Bấm nút Đăng tin (khi cuộn xuống): lưu dữ liệu lên server và chuyển tới màn hình B05 Kệ hàng của tôi hoặc chi tiết tin vừa đăng
 
-**Chức năng liên quan:**
+**Chức năng liên quan:** dòng 10 (Chỉnh sửa nội dung), 11 (Chỉnh sửa hình ảnh), 12 (Hình thức giao dịch), 13 (Giá cả), 15 (Danh mục) trong bảng đặc tả chức năng.
 
 **Trạng thái đặc biệt:**
--
+- Nếu để trống trường bắt buộc (Tên, Giá, Hình ảnh): hiển thị thông báo lỗi màu đỏ khi bấm Đăng tin
+- Vượt quá 5 ảnh: ẩn nút thêm ảnh
 
 ## B05. Kệ hàng của tôi
 
-**Ảnh:** chưa nộp
+**Ảnh:** ![B05 Kệ hàng của tôi](b05-ke-hang-cua-toi.png)
 
-**Mục đích:**
+**Mục đích:** Nơi người dùng quản lý toàn bộ bài đăng cá nhân, theo dõi trạng thái các món đồ đang bán, đã bán hoặc nháp.
 
 **Thành phần chính:**
--
+- Thanh trên cùng: nút quay lại và tiêu đề "Kệ hàng của tôi"
+- Thanh tab phân loại: Đang hoạt động (6), Đã bán (14), Nháp
+- Danh sách tin đăng hiển thị theo thẻ ngang. Mỗi thẻ gồm: Ảnh đại diện, Tên sản phẩm, Giá tiền, Nhãn trạng thái (ĐANG BÁN, TẠM ẨN, CÓ ĐỀ NGHỊ) và Nút ba chấm (menu thao tác)
+- Thanh điều hướng dưới cùng 5 mục (Tab "Cá nhân" đang được chọn)
 
 **Hành động và điều hướng:**
--
+- Bấm nút quay lại: trở về trang D01 Hồ sơ cá nhân
+- Chuyển tab trên thanh phân loại: lọc hiển thị danh sách tin tương ứng với trạng thái
+- Bấm vào một thẻ tin đăng: sang màn hình B03 Chi tiết tin đăng tương ứng
+- Bấm nút ba chấm trên một thẻ: mở menu thao tác nhanh (Chỉnh sửa, Đánh dấu đã bán, Ẩn tin, Xóa tin)
+- Bấm các nút ở thanh điều hướng dưới cùng: chuyển sang màn hình chức năng chính (Trang chủ, Tìm kiếm, Đăng tin, Tin nhắn)
 
-**Chức năng liên quan:**
+**Chức năng liên quan:** dòng 8 (Chỉnh sửa sản phẩm trên kệ), 9 (Sắp xếp sản phẩm) trong bảng đặc tả chức năng.
 
 **Trạng thái đặc biệt:**
--
+- Không có tin nào trong tab: hiển thị minh họa trống "Bạn chưa có tin đăng nào ở mục này"
+- Nhãn CÓ ĐỀ NGHỊ nổi bật màu cam để thu hút sự chú ý của người bán
 
 ## B06. Tin đã lưu
 
-**Ảnh:** chưa nộp
+**Ảnh:** ![B06 Tin đã lưu](b06-tin-da-luu.png)
 
-**Mục đích:**
+**Mục đích:** Lưu trữ các tin đăng mà người dùng quan tâm để dễ dàng xem lại, cân nhắc và đưa ra quyết định sau.
 
 **Thành phần chính:**
--
+- Thanh trên cùng: nút quay lại và tiêu đề "Tin đã lưu"
+- Lưới tin đăng 2 cột tương tự Trang chủ: mỗi thẻ có ảnh, tên sản phẩm, giá, tình trạng (Đã sử dụng, Như mới, Cần sửa nhẹ) và khu vực (Q.1, Q.7, Gò Vấp)
+- Dòng thống kê phía dưới danh sách: "Đã lưu 4 tin · Chạm vào biểu tượng trái tim trên tin đăng để bỏ lưu"
+- Thanh điều hướng dưới cùng 5 mục (Tab "Cá nhân" đang được chọn)
 
 **Hành động và điều hướng:**
--
+- Bấm nút quay lại: trở về trang D01 Hồ sơ cá nhân
+- Bấm vào thẻ tin đăng: sang màn hình B03 Chi tiết tin đăng để xem hoặc nhắn tin
+- Chạm vào biểu tượng trái tim trên thẻ (nếu có, hoặc trong chi tiết): bỏ lưu tin, tin sẽ biến mất khỏi danh sách sau khi làm mới
+- Bấm các mục ở thanh điều hướng dưới cùng: chuyển kênh ứng dụng
 
-**Chức năng liên quan:**
+**Chức năng liên quan:** dòng 32 (Lưu tin yêu thích - Lưu tin) trong bảng đặc tả chức năng.
 
 **Trạng thái đặc biệt:**
--
+- Nếu tin gốc đã bị người bán xóa hoặc đã bán: thẻ có thể hiển thị nhãn "ĐÃ BÁN" hoặc bị làm mờ, không thể xem chi tiết
+- Danh sách rỗng: hiển thị hình ảnh minh họa "Bạn chưa lưu tin nào"
