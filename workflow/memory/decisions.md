@@ -294,3 +294,24 @@ Code under `PUBGApp/app/src/main/java/com/nhom3/pubgapp/` is organized by archit
 
 ### Owner
 tahpnart8
+
+## 2026-09-29 - Hai Long is a second code owner for documents
+
+### Decision
+`.github/CODEOWNERS` gains a scoped line: `/workflow/docs/ @tahpnart8 @Contest451`. Everything else keeps the leader as the sole owner. Because a pull request whose changed paths match more than one owner needs only one of them to approve (GitHub's rule for multiple owners on the same CODEOWNERS line), a pull request that touches only `workflow/docs/` can be approved and merged by either the leader or Nguyen Le Hai Long. No collaborator role changed: Hai Long already held `write`, which is what merging a satisfied pull request needs: the change is only about who counts as a required reviewer.
+
+### Context
+24 document issues are open at once for this phase (analysis, diagrams, interface mockups), and every one of them needed the leader specifically to approve, which is the same bottleneck the short document template and the faster `build` workflow (decision above) were built to relieve. Hai Long had already reviewed cleanly as an author on pull request 43. The leader asked directly for this change.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Make Hai Long a repository admin | Far more than the ask; admin also bypasses `main-checks`, which nobody but the leader should |
+| Raise `required_approving_review_count` to 2 for everyone | Slower, not faster, and applies to code pull requests too |
+| A path scoped ruleset instead of CODEOWNERS | GitHub rulesets condition on the base branch, not on which paths changed; not expressible |
+
+### Impact
+`.github/CODEOWNERS`, `workflow/docs/workflow/cau-hinh-github.md`, `workflow/docs/workflow/huong-dan-lam-viec.md`, `workflow/memory/people.md`. No change to collaborator roles or to either ruleset.
+
+### Owner
+tahpnart8

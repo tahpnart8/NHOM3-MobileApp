@@ -16,9 +16,9 @@ Những gì đã được áp dụng cho `tahpnart8/NHOM3-MobileApp`, để lead
 | Giới hạn tương tác | Chỉ collaborator được mở issue, PR và bình luận, **đến 2027-03-25** (GitHub giới hạn tối đa 6 tháng) |
 | Dependabot security updates | Tắt (nó mở PR dưới tên một bot, sẽ thành contributor) |
 
-**Ruleset `main-checks`** (không ai được bỏ qua, kể cả leader): cấm xóa `main`, cấm force push, bắt buộc lịch sử tuyến tính, và bắt buộc hai check **`build`** và **`policy`** đều xanh trên bản đã cập nhật với `main`.
+**Ruleset `main-checks`** (không ai được bỏ qua, kể cả leader): cấm xóa `main`, cấm force push, bắt buộc lịch sử tuyến tính, và bắt buộc hai check **`build`** và **`policy`** đều xanh. Nhánh không bắt buộc phải cập nhật với `main` mới merge được (tắt từ 2026-09-29): với nhiều Pull Request tài liệu mở cùng lúc, yêu cầu đó từng biến mỗi lần merge một cái thành việc mọi cái còn lại phải "Update branch" và chạy lại CI. Người duyệt bù lại bằng cách build cây đã merge trước khi duyệt (skill `pubg-review-pr`), và `build` vẫn chạy lại trên `main` sau mỗi lần merge.
 
-**Ruleset `main-review`**: mọi thay đổi vào `main` phải qua Pull Request, có **1 approval của người trong `CODEOWNERS`** (leader), các thảo luận đã được giải quyết, review cũ bị hủy khi có commit mới, chỉ squash. Vai trò admin được bỏ qua ruleset này **bên trong một PR**, vì leader không thể tự approve PR của chính mình.
+**Ruleset `main-review`**: mọi thay đổi vào `main` phải qua Pull Request, có **1 approval của người trong `CODEOWNERS` cho đường dẫn bị đổi**, các thảo luận đã được giải quyết, chỉ squash. Với hầu hết file thì đó là leader; riêng `workflow/docs/` có thêm Hải Long (`@Contest451`) làm người duyệt thứ hai, một trong hai người duyệt là đủ (xem `.github/CODEOWNERS`). Review cũ **không** bị hủy khi có commit mới (tắt từ 2026-09-29), nên sửa một lỗi chính tả sau khi đã được duyệt không mất approval. Vai trò admin được bỏ qua ruleset này **bên trong một PR**, vì leader không thể tự approve PR của chính mình.
 
 ## Việc định kỳ
 
