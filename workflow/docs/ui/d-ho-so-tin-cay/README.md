@@ -29,7 +29,7 @@
 - Bấm "Đăng tin" ở thanh dưới: sang B04 Đăng tin
 - Bấm "Tin nhắn" ở thanh dưới: sang C01 Danh sách tin nhắn
 
-**Chức năng liên quan:** dòng 6, 7, 8 (chỉnh sửa thông tin, ảnh, địa chỉ), dòng 9 (xem đánh giá cá nhân), dòng 10 (quản lý kệ hàng), dòng 35 (xem danh sách đã lưu), dòng 50 (lịch sử giao dịch), dòng 56, 58 (lịch sử báo cáo, theo dõi khiếu nại) trong bảng đặc tả chức năng.
+**Chức năng liên quan:** dòng 4, 5, 6 (chỉnh sửa thông tin, ảnh, địa chỉ), dòng 7 (xem đánh giá cá nhân), dòng 8 (quản lý kệ hàng), dòng 35 (xem danh sách đã lưu), dòng 50 (lịch sử giao dịch), dòng 56, 58 (lịch sử báo cáo, theo dõi khiếu nại) trong bảng đặc tả chức năng.
 
 **Trạng thái đặc biệt:**
 - Người dùng chưa bán món nào: ba số liệu hiện 0, mục "Sản phẩm của tôi" gợi ý đăng tin đầu tiên
