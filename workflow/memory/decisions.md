@@ -295,6 +295,29 @@ Code under `PUBGApp/app/src/main/java/com/nhom3/pubgapp/` is organized by archit
 ### Owner
 tahpnart8
 
+## 2026-09-29 - A pull request that changes no code takes a short path
+
+### Decision
+A pull request whose diff touches no file under `PUBGApp/` is a document pull request and is treated differently from a code one. It uses the four heading template `.github/PULL_REQUEST_TEMPLATE/tai-lieu.md`. The `build` workflow still runs and still reports the required `build` context, but skips the JDK, Gradle and the Android build. `pubg-open-pr` and `pubg-review-pr` both start by deciding which path applies, and neither runs Gradle on the short path. Two merge guards were turned off repository wide at the same time: `strict_required_status_checks_policy` in the `main-checks` ruleset and `dismiss_stale_reviews_on_push` in `main-review`. The requirement of one approving review from a code owner stays.
+
+### Context
+Three phases of the course project are document work: analysis, diagrams, interface mockups, 24 issues open at once. Every one of them was paying the cost of a workflow built for Java. The long template has 8 sections of which 5 are meaningless for a document, so authors left it blank and the one line CI actually needs, `Closes #N`, got lost; that is what made pull request 43 fail. The `build` workflow ran the whole Android toolchain on Markdown only pull requests: 62 and 61 seconds measured on the two most recent ones. And because a branch had to be up to date with `main`, every merge invalidated every other open pull request, so each one needed an Update branch, a CI re-run and, because that is a push, a second review.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| `paths-ignore` on the `build` workflow | `build` is a required status check. A workflow that does not run never reports, so the check stays pending and the pull request becomes unmergeable instead of fast |
+| Drop the `Closes #N` requirement from `ci-policy.sh` | It is what closes the issue automatically and what shows the marker a traceable line from issue to merge. The problem was the template hiding it, not the rule |
+| A separate ruleset that relaxes the rules only for document branches | A ruleset conditions on the base branch, which is always `main`, never on the changed paths or the head branch. Not expressible |
+| Remove the approving review for document pull requests | Cannot be scoped to documents either, and the review is the evidence the marker looks for |
+| One pull request per round instead of per issue | Fewer reviews, but it blurs the one issue one pull request trail and one document needing a fix would hold up the rest. Rejected by the leader on 2026-09-29 |
+
+### Impact
+`.github/PULL_REQUEST_TEMPLATE/tai-lieu.md` (new), `.github/workflows/build.yml`, `.github/rulesets/main-checks.json`, `.github/rulesets/main-review.json`, `.github/NAMING.md`, `AGENTS.md` section 8, `.agents/skills/pubg-open-pr/`, `.agents/skills/pubg-review-pr/` and the `.claude/skills/` mirror, `workflow/scripts/apply-github-settings.sh` comments, `workflow/scripts/tests/policy-test.sh` (3 tests added, 82 total), `workflow/docs/workflow/nop-tai-lieu.md`. What a code pull request must do did not change, except that its branch no longer has to be up to date with `main`: the reviewer builds the merged tree, and `build` runs on `main` after every merge.
+
+### Owner
+tahpnart8
+
 ## 2026-09-29 - Hai Long is a second code owner for documents
 
 ### Decision

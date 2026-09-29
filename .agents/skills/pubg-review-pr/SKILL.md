@@ -5,6 +5,18 @@ description: Leader only. Review a PUBGApp pull request against its issue by bui
 
 The question a review answers: **if this merges right now, is `main` still correct?** The diff alone does not answer it. Green CI on the branch is evidence about the branch, not about `main`.
 
+## First, which of the two paths
+
+Run `gh pr diff N --name-only`. When **no** path starts with `PUBGApp/`, this is a documents pull request:
+there is no code whose behaviour could change, so **skip steps 2, 3, 7 and 8**. Judge the document itself
+against the issue's acceptance criteria, check the fence, the contributors and the language, and report.
+Do not start Gradle. A minute of building proves nothing about a Markdown file, and the reviewer who does
+it anyway is the reason document work feels slow.
+
+For a documents pull request the useful checks are: every acceptance criterion of the issue met by the text
+itself; the file is at the path the issue asked for; nothing changed outside the fence; `workflow/memory/decisions.md`
+only grew; commits authored by the team with no AI byline; title and body in Vietnamese.
+
 ## Steps
 
 1. **Read.** `gh pr view N --json title,body,author,headRefName,baseRefName,files,statusCheckRollup` and the linked issue (`gh issue view <closed issue>`). Note the acceptance criteria and the scope fence.

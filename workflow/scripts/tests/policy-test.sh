@@ -138,10 +138,20 @@ expect "app gradle in a feature PR"    some check_files_row PUBGApp/app/build.gr
 expect "dependency in a build PR"      none check_files_row PUBGApp/gradle/libs.versions.toml modified 1 - "build(firebase): add firebase bom" ""
 expect "dependency in a chore PR"      none check_files_row PUBGApp/app/build.gradle.kts modified 1 - "chore(deps): add room" ""
 
-# Pull request body: the template's own hints live in <!-- --> comments and must not count.
-tmpl=$(cat "$root/.github/PULL_REQUEST_TEMPLATE.md")
-if body_links_issue "$(strip_comments "$tmpl")"; then failed=$((failed + 1)); echo "FAIL: unfilled template satisfied the Closes check"; else pass=$((pass + 1)); fi
-if body_links_issue "$(strip_comments "$(printf '%s\n' "$tmpl" | sed 's/^Closes #$/Closes #12/')")"; then pass=$((pass + 1)); else failed=$((failed + 1)); echo "FAIL: filled template rejected"; fi
+# Pull request body: the template's own hints live in <!-- --> comments and must not count. Both templates,
+# the long one for code and the short one for documents, must fail while unfilled and pass once filled.
+for tmpl_file in .github/PULL_REQUEST_TEMPLATE.md .github/PULL_REQUEST_TEMPLATE/tai-lieu.md; do
+    tmpl=$(cat "$root/$tmpl_file")
+    if body_links_issue "$(strip_comments "$tmpl")"; then failed=$((failed + 1)); echo "FAIL: unfilled $tmpl_file satisfied the Closes check"; else pass=$((pass + 1)); fi
+    if body_links_issue "$(strip_comments "$(printf '%s\n' "$tmpl" | sed 's/^Closes #$/Closes #12/')")"; then pass=$((pass + 1)); else failed=$((failed + 1)); echo "FAIL: filled $tmpl_file rejected"; fi
+done
+
+# A filled document template must also satisfy the Vietnamese check, or the short body would be rejected
+# for the wrong reason and nobody would understand why.
+doc_body=$(printf '%s\n' "$(cat "$root/.github/PULL_REQUEST_TEMPLATE/tai-lieu.md")" | sed 's/^Closes #$/Closes #16/')
+doc_body="$doc_body
+Bài phân tích cho ứng dụng, thuộc giai đoạn phân tích đề bài."
+if vi_text_ok "$(strip_comments "$doc_body")" 12; then pass=$((pass + 1)); else failed=$((failed + 1)); echo "FAIL: a filled document body failed the Vietnamese check"; fi
 if body_links_issue "$(strip_comments "Closes: none")"; then pass=$((pass + 1)); else failed=$((failed + 1)); echo "FAIL: Closes: none rejected"; fi
 if body_links_issue "$(strip_comments "Reverts tahpnart8/NHOM3-MobileApp#12")"; then pass=$((pass + 1)); else failed=$((failed + 1)); echo "FAIL: GitHub revert body rejected"; fi
 case "$(strip_comments "a <!-- x
