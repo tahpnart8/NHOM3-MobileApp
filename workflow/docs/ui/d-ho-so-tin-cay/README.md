@@ -29,7 +29,7 @@
 - Bấm "Đăng tin" ở thanh dưới: sang B04 Đăng tin
 - Bấm "Tin nhắn" ở thanh dưới: sang C01 Danh sách tin nhắn
 
-**Chức năng liên quan:** dòng 6, 7, 8 (chỉnh sửa thông tin, ảnh, địa chỉ), dòng 9 (xem đánh giá cá nhân), dòng 10 (quản lý kệ hàng), dòng 35 (xem danh sách đã lưu), dòng 50 (lịch sử giao dịch), dòng 56, 58 (lịch sử báo cáo, theo dõi khiếu nại) trong bảng đặc tả chức năng.
+**Chức năng liên quan:** dòng 4, 5, 6 (chỉnh sửa thông tin, ảnh, địa chỉ), dòng 7 (xem đánh giá cá nhân), dòng 8 (quản lý kệ hàng), dòng 35 (xem danh sách đã lưu), dòng 50 (lịch sử giao dịch), dòng 56, 58 (lịch sử báo cáo, theo dõi khiếu nại) trong bảng đặc tả chức năng.
 
 **Trạng thái đặc biệt:**
 - Người dùng chưa bán món nào: ba số liệu hiện 0, mục "Sản phẩm của tôi" gợi ý đăng tin đầu tiên
@@ -59,7 +59,7 @@
 - Bấm một thẻ tin đăng: sang B03 Chi tiết tin đăng
 - Bấm "Trang chủ", "Tìm kiếm", "Đăng tin", "Tin nhắn" ở thanh dưới: sang B01, B02, B04, C01
 
-**Chức năng liên quan:** dòng 6, 7 (chỉnh sửa thông tin và ảnh hồ sơ, qua nút "Chỉnh sửa trang"), dòng 9 (xem đánh giá cá nhân), dòng 10 (kệ hàng: món đang bán, đã bán), dòng 33 (theo dõi, hiện số người theo dõi), dòng 53 (xem lịch sử đánh giá, tab "Đánh giá") trong bảng đặc tả chức năng.
+**Chức năng liên quan:** dòng 4, 5 (chỉnh sửa thông tin và ảnh hồ sơ, qua nút "Chỉnh sửa trang"), dòng 7 (xem đánh giá cá nhân), dòng 8 (kệ hàng: món đang bán, đã bán), dòng 33 (theo dõi, hiện số người theo dõi), dòng 53 (xem lịch sử đánh giá, tab "Đánh giá") trong bảng đặc tả chức năng.
 
 **Trạng thái đặc biệt:**
 - Chưa có món đang bán hoặc đã bán: tab tương ứng hiện dòng báo trống thay cho lưới tin đăng
@@ -86,7 +86,7 @@
 - Bấm "Nhắn tin": sang C02 Trò chuyện và đề nghị giá với người bán này
 - Bấm một thẻ tin đăng: sang B03 Chi tiết tin đăng
 
-**Chức năng liên quan:** dòng 9 (xem công khai điểm đánh giá), dòng 33 (theo dõi người dùng khác), dòng 37 (gửi tin nhắn) trong bảng đặc tả chức năng.
+**Chức năng liên quan:** dòng 7 (xem công khai điểm đánh giá), dòng 33 (theo dõi người dùng khác), dòng 37 (gửi tin nhắn) trong bảng đặc tả chức năng.
 
 **Trạng thái đặc biệt:**
 - Đã theo dõi người bán này: nút "Theo dõi" đổi thành trạng thái đang theo dõi, bấm lại để bỏ theo dõi
