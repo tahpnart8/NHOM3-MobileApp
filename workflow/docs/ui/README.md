@@ -42,7 +42,7 @@ Mỗi nhóm nộp theo 3 đợt: đợt 1 một màn, đợt 2 hai màn, đợt 
 ## Ngoài phạm vi đợt này
 
 - Bố cục xoay ngang (landscape) cho các màn chính: để lại cho giai đoạn code.
-- Màn E01 chỉ là lối vào các mục quản trị, không có phần thống kê hay biểu đồ.
+- Màn E01 có 4 số liệu nhanh dạng ô đếm (người dùng, tin đăng, giao dịch, khiếu nại) và một danh sách "Cần xử lý" chỉ để điều hướng sang màn chi tiết tương ứng; không có biểu đồ xu hướng, thống kê theo danh mục hay xuất báo cáo (những phần đó ở dòng 84 đến 88 của bảng đặc tả, vẫn ngoài phạm vi).
 - Màn E06 chỉ hiển thị trạng thái giải ngân (đã tự động), không có nút duyệt tay.
 
 ## Quy ước tên file ảnh
