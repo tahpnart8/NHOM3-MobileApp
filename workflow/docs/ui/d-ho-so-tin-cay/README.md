@@ -39,37 +39,60 @@
 
 ## D02. Trang cá nhân
 
-**Ảnh:** chưa nộp
+**Ảnh:** ![D02 Trang cá nhân](d02-trang-ca-nhan.png)
 
-**Mục đích:**
+**Mục đích:** Trang công khai của chính người đang đăng nhập, cho họ thấy người khác nhìn hồ sơ của mình ra sao: thông tin giới thiệu, số liệu uy tín và các món đang bán, đã bán, đánh giá nhận được.
 
 **Thành phần chính:**
--
+- Thanh trên: nút quay lại, tiêu đề "Trang cá nhân", nút cài đặt ở góc phải
+- Ảnh bìa màu xanh, ảnh đại diện chữ cái đầu đè lên mép ảnh bìa, nút "Chỉnh sửa trang" bên phải
+- Tên người dùng kèm biểu tượng khiên, dòng khu vực và ngày tham gia (ví dụ Quận 1, TP.HCM, tham gia 03/2025), đoạn giới thiệu ngắn
+- Hàng bốn số liệu: điểm đánh giá kèm năm sao và số lượt đánh giá, số món đã bán, tỉ lệ hoàn tất, số người theo dõi
+- Ba tab: "Đang bán (6)", "Đã bán (27)", "Đánh giá"; tab "Đang bán" đang được chọn
+- Lưới tin đăng hai cột, mỗi thẻ có ảnh, tên món, giá, tình trạng (Đã sử dụng, Như mới) và khu vực
+- Thanh điều hướng dưới cùng 5 mục: Trang chủ, Tìm kiếm, Đăng tin, Tin nhắn, Cá nhân; mục "Cá nhân" đang được chọn
 
 **Hành động và điều hướng:**
--
+- Bấm nút quay lại: về D01 Hồ sơ cá nhân
+- Bấm "Chỉnh sửa trang": sang A05 Chỉnh sửa hồ sơ
+- Bấm tab "Đang bán", "Đã bán" hoặc "Đánh giá": đổi nội dung bên dưới ngay trên màn này
+- Bấm một thẻ tin đăng: sang B03 Chi tiết tin đăng
+- Bấm "Trang chủ", "Tìm kiếm", "Đăng tin", "Tin nhắn" ở thanh dưới: sang B01, B02, B04, C01
 
-**Chức năng liên quan:**
+**Chức năng liên quan:** dòng 6, 7 (chỉnh sửa thông tin và ảnh hồ sơ, qua nút "Chỉnh sửa trang"), dòng 9 (xem đánh giá cá nhân), dòng 10 (kệ hàng: món đang bán, đã bán), dòng 33 (theo dõi, hiện số người theo dõi), dòng 53 (xem lịch sử đánh giá, tab "Đánh giá") trong bảng đặc tả chức năng.
 
 **Trạng thái đặc biệt:**
--
+- Chưa có món đang bán hoặc đã bán: tab tương ứng hiện dòng báo trống thay cho lưới tin đăng
+- Chưa có đánh giá nào: ô điểm đánh giá hiện dấu gạch, tab "Đánh giá" hiện dòng báo trống
+- Mất mạng: vẫn hiện thông tin và tin đăng đã tải trước đó từ bộ nhớ đệm, kèm dải báo đang xem ngoại tuyến
 
 ## D03. Hồ sơ uy tín người bán
 
-**Ảnh:** chưa nộp
+**Ảnh:** ![D03 Hồ sơ uy tín người bán](d03-ho-so-uy-tin-nguoi-ban.png)
 
-**Mục đích:**
+**Mục đích:** Trang người mua xem khi muốn biết một người bán có đáng tin không: số liệu uy tín, đánh giá gần đây của người đã giao dịch, và các món người đó đang bán, kèm nút theo dõi và nhắn tin.
 
 **Thành phần chính:**
--
+- Thanh trên: nút quay lại, tiêu đề "Hồ sơ người bán", nút ba chấm ở góc phải
+- Ảnh đại diện chữ cái đầu, tên người bán kèm biểu tượng khiên, dòng khu vực và năm tham gia (ví dụ Quận 1, TP.HCM, tham gia 2024)
+- Hai nút: "Theo dõi" (viền) và "Nhắn tin" (nền xanh)
+- Hàng ba số liệu: điểm đánh giá kèm năm sao và số lượt đánh giá, tỷ lệ hoàn tất, số giao dịch
+- Mục "Đánh giá gần đây": mỗi dòng có ảnh đại diện chữ cái đầu, tên người đánh giá, số sao và lời nhận xét
+- Mục "Đang bán (6)": lưới tin đăng hai cột, mỗi thẻ có ảnh, tên món, giá, tình trạng và khu vực
 
 **Hành động và điều hướng:**
--
+- Bấm nút quay lại: về màn trước đó
+- Bấm "Theo dõi": theo dõi người bán ngay trên màn này
+- Bấm "Nhắn tin": sang C02 Trò chuyện và đề nghị giá với người bán này
+- Bấm một thẻ tin đăng: sang B03 Chi tiết tin đăng
 
-**Chức năng liên quan:**
+**Chức năng liên quan:** dòng 9 (xem công khai điểm đánh giá), dòng 33 (theo dõi người dùng khác), dòng 37 (gửi tin nhắn) trong bảng đặc tả chức năng.
 
 **Trạng thái đặc biệt:**
--
+- Đã theo dõi người bán này: nút "Theo dõi" đổi thành trạng thái đang theo dõi, bấm lại để bỏ theo dõi
+- Người bán chưa có đánh giá: mục "Đánh giá gần đây" hiện dòng báo trống, ô điểm hiện dấu gạch
+- Người bán không còn món nào đang bán: mục "Đang bán (0)" hiện dòng báo trống
+- Mất mạng: vẫn hiện thông tin đã tải trước đó từ bộ nhớ đệm, kèm dải báo đang xem ngoại tuyến
 
 ## D04. Báo cáo tin đăng
 
