@@ -63,3 +63,38 @@ Tổng hợp từ các tài liệu phân tích ở `workflow/docs/analysis/`. Ch
 | 57 | Người dùng | Khiếu nại | Khiếu nại | Tạo đơn khiếu nại | Cho phép người dùng tạo đơn khiếu nại ( gồm các thông tin, bằng chứng) | |
 | 58 | Người dùng | Khiếu nại | Khiếu nại | Theo dõi tình trạng đơn khiếu nại | Cho phép người dùng theo dõi tình trạng đơn khiếu nại | |
 | 59 | Người dùng | Khiếu nại | Khiếu nại | Gỡ bỏ đơn khiếu nại | Cho phép người dùng huỷ đơn khiếu nại | |
+| 60 | Admin | Quản lý người dùng | Danh sách người dùng | Tìm kiếm, lọc người dùng | Lọc theo trạng thái, ngày tham gia app, khu vực | |
+| 61 | Admin | Quản lý người dùng | Hồ sơ người dùng | Xem chi tiết hồ sơ | Thông tin cá nhân, lịch sử đăng tin, giao dịch, đánh giá, vi phạm | |
+| 62 | Admin | Quản lý người dùng | Khóa/mở khóa tài khoản | Khóa tài khoản | Khóa các tài khoản vi phạm (tạm thời, vĩnh viễn) | |
+| 63 | Admin | Quản lý người dùng | Khóa/mở khóa tài khoản | Mở khóa tài khoản | Mở khóa tài khoản bị khóa | |
+| 64 | Admin | Quản lý người dùng | Khóa/mở khóa tài khoản | Cảnh báo theo bậc | Vi phạm lần 1 cảnh báo, lần 2 khóa tạm, lần 3 khóa vĩnh viễn | |
+| 65 | Admin | Quản lý người dùng | Xác minh tài khoản | Duyệt yêu cầu xác minh | Áp dụng nếu người dùng đã xác thực email và muốn đăng ký trở thành người bán hàng | |
+| 66 | Admin | Quản lý người dùng | Nhật ký hoạt động | Xem nhật ký hoạt động | Theo dõi hành vi một tài khoản cụ thể | |
+| 67 | Admin | Kiểm duyệt nội dung | Xử lý tin bị báo cáo | Danh sách tin bị báo cáo | Kèm số lượt báo cáo, lý do | |
+| 68 | Admin | Kiểm duyệt nội dung | Xử lý tin bị báo cáo | Ẩn, gỡ tin vi phạm | Có lý do, có thể khôi phục nếu duyệt oan | |
+| 69 | Admin | Kiểm duyệt nội dung | Xử lý tin bị báo cáo | Gỡ hàng loạt | Gỡ toàn bộ tin của tài khoản bị khóa | |
+| 70 | Admin | Kiểm duyệt nội dung | Lọc từ khóa cấm | Danh sách từ khóa cấm | Tự động gắn còn tin cần chú ý, so khớp chuỗi | |
+| 71 | Admin | Quản lý danh mục | Quản lý danh mục sản phẩm | Thêm, sửa, xóa danh mục | Gồm danh mục con | |
+| 72 | Admin | Quản lý danh mục | Quản lý danh mục sản phẩm | Cấu hình thuộc tính tình trạng | Theo từng danh mục, khớp conditionFields | |
+| 73 | Admin | Giám sát giao dịch | Theo dõi giao dịch | Danh sách giao dịch | Lọc theo trạng thái | |
+| 74 | Admin | Giám sát giao dịch | Theo dõi giao dịch | Chi tiết giao dịch | Gồm statusHistory | |
+| 75 | Admin | Giám sát giao dịch | Theo dõi giao dịch | Cảnh báo giao dịch bất thường | Đứng yên quá lâu, hoặc một tài khoản hủy liên tiếp nhiều lần | Ngoài phạm vi đợt này |
+| 76 | Admin | Giám sát giao dịch | Giải ngân | Duyệt yêu cầu giải ngân | Xác nhận chuyển tiền cho người bán | Đã đổi sang giải ngân tự động khi người mua xác nhận đã nhận hàng, hoặc khi hết thời hạn đếm ngược. Admin không duyệt tay. |
+| 77 | Admin | Giám sát giao dịch | Can thiệp giao dịch | Đổi trạng thái thủ công | Trường hợp đặc biệt, có ghi log lý do | Ngoài phạm vi đợt này |
+| 78 | Admin | Giám sát giao dịch | Phê duyệt giao dịch | Duyệt hoặc từ chối ở bước chờ duyệt | | Ngoài phạm vi đợt này |
+| 79 | Admin | Xử lý báo cáo, khiếu nại | Danh sách khiếu nại | Khiếu nại chờ xử lý, đã xử lý | Phân loại mức ưu tiên | |
+| 80 | Admin | Xử lý báo cáo, khiếu nại | Hồ sơ khiếu nại | Xem chi tiết hồ sơ | Lịch sử chat, ảnh bằng chứng, thông tin giao dịch liên quan | |
+| 81 | Admin | Xử lý báo cáo, khiếu nại | Ra quyết định xử lý | Hoàn tiền, hoàn trả, hủy, bác khiếu nại, yêu cầu bổ sung bằng chứng | Tương ứng adminNote trong mô hình dữ liệu | |
+| 82 | Admin | Xử lý báo cáo, khiếu nại | Ra quyết định xử lý | Ghi chú nội bộ | Không hiển thị cho người dùng | |
+| 83 | Admin | Xử lý báo cáo, khiếu nại | Ra quyết định xử lý | Gửi thông báo kết quả | Cho các bên liên quan (nói chung là gửi cho người dùng) | |
+| 84 | Admin | Thống kê, báo cáo | Dashboard tổng quan | Số liệu tổng quan | | Ngoài phạm vi đợt này |
+| 85 | Admin | Thống kê, báo cáo | Dashboard tổng quan | Biểu đồ xu hướng | | Ngoài phạm vi đợt này |
+| 86 | Admin | Thống kê, báo cáo | Dashboard tổng quan | Thống kê theo danh mục | | Ngoài phạm vi đợt này |
+| 87 | Admin | Thống kê, báo cáo | Dashboard tổng quan | Tỷ lệ thành công, hủy, tranh chấp | | Ngoài phạm vi đợt này |
+| 88 | Admin | Thống kê, báo cáo | Dashboard tổng quan | Xuất báo cáo | Dạng excel | Ngoài phạm vi đợt này |
+| 89 | Admin | Cấu hình hệ thống | Cấu hình tham số vận hành | Thiết lập thời hạn khiếu nại, thời hạn tự động hoàn tất | | Ngoài phạm vi đợt này |
+| 90 | Admin | Cấu hình hệ thống | Quản lý nội dung tĩnh | Điều khoản, chính sách, FAQ | | Ngoài phạm vi đợt này |
+| 91 | Admin | Cấu hình hệ thống | Thông báo hệ thống | Gửi broadcast | Ví dụ thông báo bảo trì | Ngoài phạm vi đợt này |
+| 92 | Admin | Nhật ký, bảo mật quản trị | Nhật ký hoạt động admin | Ghi log thao tác admin | Ai làm gì, khi nào, trên đối tượng nào | Ngoài phạm vi đợt này |
+| 93 | Admin | Nhật ký, bảo mật quản trị | Phân quyền admin | Phân vai trò | Ví dụ Moderator chỉ xử lý nội dung, không được duyệt giải ngân,... | Ngoài phạm vi đợt này |
+| 94 | Admin | Nhật ký, bảo mật quản trị | Quản lý phiên đăng nhập | Quản lý phiên đăng nhập admin | | Ngoài phạm vi đợt này |
