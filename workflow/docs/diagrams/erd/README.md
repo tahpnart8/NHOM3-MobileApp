@@ -1,90 +1,139 @@
-﻿# Sơ đồ quan hệ thực thể (ERD)
+# Sơ đồ quan hệ thực thể (ERD)
 
-Mô hình dữ liệu cho Cloud Firestore và Room (SQLite cục bộ), khớp với các lớp trong `diagrams/so-do-lop/`.
-
-Nộp vào đây:
-
-- `erd.drawio`: file gốc nhiều trang, mở bằng draw.io.
-- Ảnh `.png` xuất ra của từng trang.
-- Nội dung README này được thay bằng bản tóm tắt đầy đủ: danh sách collection Firestore, bảng Room, quan hệ giữa chúng.
-
-Cập nhật bảng dưới đây khi nộp:
+Mô hình dữ liệu cho Cloud Firestore và Room (SQLite cục bộ), khớp các lớp ở [`../so-do-lop/`](../so-do-lop/README.md). Chi tiết từng trường nằm ở [`../../data/firestore-schema.md`](../../data/firestore-schema.md) và [`../../data/room-schema.md`](../../data/room-schema.md).
 
 | Mục | Số lượng |
-| --- | --- |
-| Collection Firestore | 21 |
+| --- | ---: |
+| Collection Firestore (kể cả collection con) | 22 |
+| Mảng lồng (`deals.statusHistory`) | 1 |
 | Bảng Room | 6 |
 
-$newPart## Trang 3 đến 5
+Firestore không có khóa ngoại thật: cột FK là mã tài liệu khác, ứng dụng và Security Rules giữ quan hệ đúng. Hộp xám nét đứt trên sơ đồ là bảng tham chiếu, nằm thật ở trang khác.
 
-Ảnh xuất từ draw.io của trang 3, 4, 5. Hộp viền nét đứt ghi "(tham chiếu)" là collection của trang khác.
+## Trang 0. Tổng quan và chú giải
 
-### Trang 3. Giao dịch, thanh toán, đánh giá (Firestore)
+![Trang 0. Tổng quan và chú giải](erd-0-tong-quan-va-chu-giai.png)
 
-![ERD trang 3](erd-3-giao-dich-thanh-toan-danh-gia.png)
+## Trang 1. Người dùng, danh mục, tin đăng
 
-| Collection | Đường dẫn |
+![Trang 1. Người dùng, danh mục, tin đăng](erd-1-nguoi-dung-danh-muc-tin-dang.png)
+
+| Bảng | Đường dẫn | Mục đích |
+| --- | --- | --- |
+| `addresses` | `users/{uid}/addresses/{id}` | Địa chỉ giao nhận. |
+| `warnings` | `users/{uid}/warnings/{id}` | Cảnh báo vi phạm theo bậc. |
+| `sellerVerifications` | `sellerVerifications/{userId}` | Yêu cầu xác minh người bán. |
+| `admins` | `admins/{uid}` | Chỉ cần tồn tại: Security Rules dùng nó để nhận diện admin. |
+| `users` | `users/{uid}` | Hồ sơ người dùng. |
+| `follows` | `follows/{followerId_followedId}` | Theo dõi (quan hệ nhiều-nhiều tự thân của users). |
+| `savedListings` | `users/{uid}/saved/{listingId}` | Tin đã lưu (quan hệ nhiều-nhiều). |
+| `listings` | `listings/{id}` | Tin đăng. |
+| `categories` | `categories/{id}` | Danh mục và danh mục con. |
+| `identity` | `users/{uid}/private/identity` | Thông tin định danh riêng tư; Security Rules chỉ cho chủ tài khoản và admin đọc. |
+
+| Khóa ngoại | Trỏ tới |
 | --- | --- |
-| `deals` | `deals/{id}` |
-| `statusHistory` | `deals/{id}.statusHistory[ ]` |
-| `payments` | `payments/{dealId}` |
-| `reviews` | `reviews/{id}` |
+| `addresses.userId` | users |
+| `warnings.userId` | users |
+| `warnings.issuedBy` | users |
+| `sellerVerifications.userId` | users |
+| `sellerVerifications.reviewedBy` | users |
+| `admins.uid` | users |
+| `follows.followerId` | users |
+| `follows.followedId` | users |
+| `savedListings.userId` | users |
+| `savedListings.listingId` | listings |
+| `listings.sellerId` | users |
+| `listings.categoryId` | categories |
+| `categories.parentId` | categories |
+| `identity.userId` | users |
 
-| Quan hệ | Trường |
+## Trang 2. Chat và offer
+
+![Trang 2. Chat và offer](erd-2-chat-va-offer.png)
+
+| Bảng | Đường dẫn | Mục đích |
+| --- | --- | --- |
+| `conversations` | `conversations/{listingId_buyerId}` | Cuộc trò chuyện. |
+| `messages` | `conversations/{id}/messages/{id}` | Tin nhắn. |
+| `offers` | `offers/{id}` | Offer một chạm. |
+
+| Khóa ngoại | Trỏ tới |
 | --- | --- |
-| `offers` 1 - 0..1 `deals` | `offerId` |
-| `listings` 1 - 0..n `deals` | `listingId` |
-| `users` 1 - 0..n `deals` | `buyerId`, `sellerId` |
-| `deals` 1 - 1..n `statusHistory` | `statusHistory[ ]` |
-| `deals` 1 - 0..1 `payments` | `dealId` |
-| `deals` 1 - 0..n `reviews` | `dealId` |
-| `users` 1 - 0..n `payments` | `payerId`, `payeeId` |
-| `users` 1 - 0..n `reviews` | `reviewerId`, `revieweeId` |
+| `conversations.listingId` | listings |
+| `conversations.buyerId` | users |
+| `conversations.sellerId` | users |
+| `messages.conversationId` | conversations |
+| `messages.senderId` | users |
+| `messages.offerId` | offers |
+| `offers.listingId` | listings |
+| `offers.conversationId` | conversations |
+| `offers.buyerId` | users |
+| `offers.sellerId` | users |
 
-### Trang 4. Tin cậy, quản trị (Firestore)
+## Trang 3. Giao dịch, thanh toán, đánh giá
 
-![ERD trang 4](erd-4-tin-cay-quan-tri.png)
+![Trang 3. Giao dịch, thanh toán, đánh giá](erd-3-giao-dich-thanh-toan-danh-gia.png)
 
-| Collection | Đường dẫn |
+| Bảng | Đường dẫn | Mục đích |
+| --- | --- | --- |
+| `deals` | `deals/{id}` | Giao dịch. |
+| `statusHistory` | `deals/{id}.statusHistory[ ]` | Mảng nhúng trong deals, không phải collection riêng. |
+| `payments` | `payments/{dealId}` | Khoản ký quỹ mô phỏng. |
+| `reviews` | `reviews/{id}` | Đánh giá đối tác. |
+
+| Khóa ngoại | Trỏ tới |
 | --- | --- |
-| `reports` | `reports/{id}` |
-| `complaints` | `complaints/{id}` |
-| `adminNote` | `complaints/{id}/adminNote/note` |
-| `bannedKeywords` | `bannedKeywords/{id}` |
-| `notifications` | `notifications/{id}` |
-| `activityLogs` | `activityLogs/{id}` |
+| `deals.listingId` | listings |
+| `deals.offerId` | offers |
+| `deals.buyerId` | users |
+| `deals.sellerId` | users |
+| `payments.dealId` | deals |
+| `payments.payerId` | users |
+| `payments.payeeId` | users |
+| `reviews.dealId` | deals |
+| `reviews.reviewerId` | users |
+| `reviews.revieweeId` | users |
 
-| Quan hệ | Trường |
+## Trang 4. Tin cậy, quản trị
+
+![Trang 4. Tin cậy, quản trị](erd-4-tin-cay-quan-tri.png)
+
+| Bảng | Đường dẫn | Mục đích |
+| --- | --- | --- |
+| `reports` | `reports/{id}` | Báo cáo vi phạm. |
+| `complaints` | `complaints/{id}` | Khiếu nại. |
+| `adminNote` | `complaints/{id}/adminNote/note` | Ghi chú nội bộ ở tài liệu con để người dùng không đọc được. |
+| `notifications` | `notifications/{id}` | Thông báo. |
+| `activityLogs` | `activityLogs/{id}` | Nhật ký hoạt động. |
+| `bannedKeywords` | `bannedKeywords/{id}` | Từ khóa cấm. |
+
+| Khóa ngoại | Trỏ tới |
 | --- | --- |
-| `users` 1 - 0..n `reports` | `reporterId` |
-| `reports` tham chiếu `listings` (nét đứt) | `targetId` |
-| `users` 1 - 0..n `complaints` | `complainantId` |
-| `complaints` 1 - 0..1 `adminNote` | `complaintId` |
-| `deals` 1 - 0..n `complaints` | `dealId` |
-| `users` 1 - 0..n `bannedKeywords` | `createdBy` |
-| `users` 1 - 0..n `notifications` | `recipientId` |
-| `users` 1 - 0..n `activityLogs` | `userId` |
+| `reports.reporterId` | users |
+| `reports.handledBy` | users |
+| `complaints.complainantId` | users |
+| `complaints.dealId` | deals |
+| `complaints.handledBy` | users |
+| `adminNote.complaintId` | complaints |
+| `adminNote.adminId` | users |
+| `notifications.recipientId` | users |
+| `activityLogs.userId` | users |
+| `bannedKeywords.createdBy` | users |
 
-### Trang 5. Room (SQLite)
+## Trang 5. Room (SQLite)
 
-![ERD trang 5](erd-5-room-sqlite.png)
+![Trang 5. Room (SQLite)](erd-5-room-sqlite.png)
 
-| Bảng | Entity |
+| Bảng | Đường dẫn | Mục đích |
+| --- | --- | --- |
+| `conversation_cache` | `Room · ConversationEntity` | Bản sao cuộc trò chuyện. |
+| `message_cache` | `Room · MessageEntity` | Bản sao tin nhắn. |
+| `listing_cache` | `Room · ListingEntity` | Bản sao tin đăng. |
+| `recent_view` | `Room · RecentViewEntity` | Lịch sử xem, chỉ ở trên máy. |
+| `deal_cache` | `Room · DealEntity` | Bản sao giao dịch. |
+| `recent_search` | `Room · RecentSearchEntity` | Lịch sử tìm kiếm, chỉ ở trên máy. |
+
+| Khóa ngoại | Trỏ tới |
 | --- | --- |
-| `conversation_cache` | `ConversationEntity` |
-| `message_cache` | `MessageEntity` |
-| `listing_cache` | `ListingEntity` |
-| `recent_view` | `RecentViewEntity` |
-| `deal_cache` | `DealEntity` |
-| `recent_search` | `RecentSearchEntity` |
-
-| Quan hệ | Trường |
-| --- | --- |
-| `conversation_cache` 1 - 0..n `message_cache` | `conversationId` |
-| `recent_view` tham chiếu `listing_cache` (nét đứt) | `listingId` |
-| `deal_cache` tham chiếu `listing_cache` (nét đứt) | `listingId` |
-| `conversation_cache` bản sao của `conversations` | |
-| `message_cache` bản sao của `messages` | |
-| `listing_cache` bản sao của `listings` | |
-| `deal_cache` bản sao của `deals` | |
-
+| `message_cache.conversationId` | conversation_cache |
