@@ -1,6 +1,6 @@
 # Sơ đồ mô hình hóa chức năng
 
-Giai đoạn 1 của đồ án, dựa trên bảng đặc tả chức năng ở [`../product/dac-ta-chuc-nang.md`](../product/dac-ta-chuc-nang.md). Cả ba sơ đồ không vẽ các chức năng ngoài phạm vi đợt này.
+Giai đoạn 1 của đồ án, dựa trên bảng đặc tả chức năng ở [`../product/dac-ta-chuc-nang.md`](../product/dac-ta-chuc-nang.md). Cả ba sơ đồ chỉ vẽ các chức năng **Đợt này**; chức năng **Phát triển sau** không có trên sơ đồ.
 
 | Sơ đồ | Thư mục | Người phụ trách |
 | --- | --- | --- |

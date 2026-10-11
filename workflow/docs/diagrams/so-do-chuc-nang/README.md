@@ -1,17 +1,15 @@
 # Sơ đồ chức năng
 
-Cây chức năng toàn hệ thống, vẽ theo cấu trúc cây ngang từ trái sang phải: PUBGApp, Người dùng và Admin, Module, Tên chức năng, Chức năng con. Không vẽ các chức năng ngoài phạm vi đợt này.
-
-Nộp vào đây:
+Cây chức năng toàn hệ thống, vẽ ngang từ trái sang phải: PUBGApp, Người dùng và Admin, Module, Tên chức năng, Chức năng con. Sinh từ [bảng đặc tả chức năng](../../product/dac-ta-chuc-nang.md), chỉ vẽ chức năng **Đợt này**.
 
 - `function-diagram.drawio`: file gốc, mở bằng draw.io.
-- `function-diagram.png`: ảnh xuất ra để xem nhanh.
+- `function-diagram.png`: ảnh để xem nhanh.
 - `function-diagram.pdf`: bản in chất lượng cao, dạng vector.
 
-Cập nhật bảng dưới đây khi nộp:
+![Sơ đồ chức năng](function-diagram.png)
 
 | Mục | Giá trị |
 | --- | --- |
-| Số chức năng được vẽ | 78 |
-| Số chức năng ngoài phạm vi, không vẽ | 14 (dòng 75, 77, 78, 84 đến 94 của bảng đặc tả) |
+| Số chức năng được vẽ | 88 |
+| Số chức năng phát triển sau, không vẽ | 14 (STT 83, 85, 86, 92 đến 102) |
 | Nguồn đối chiếu | `product/dac-ta-chuc-nang.md` |

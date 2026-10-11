@@ -338,3 +338,70 @@ tahpnart8
 
 ### Owner
 tahpnart8
+
+## 2026-10-11 - One numbering for every function, and a "Phát triển sau" scope mark
+
+### Decision
+`workflow/docs/product/dac-ta-chuc-nang.md` is renumbered from 1 with no gaps or duplicates: the 92 functions of the team's original sheet plus 10 functions that the interface mockups need, 102 rows in all. Every row carries a scope: 88 are "Đợt này" and 14 are "Phát triển sau" (rows 83, 85, 86, 92 to 102). A "Phát triển sau" function is kept as a future direction only: it is not in `features.md`, has no class of its own on the class diagram, is not drawn on the function diagram, and is not coded in the coming phase, even where a mockup draws part of it. Every other document refers to a function by this STT. A mapping table from the old sheet row to the new STT sits at the end of the function table, for reading older documents.
+
+### Context
+The function table on `main` had been renumbered by hand and repeated two rows, while the class diagram, the function diagram and the interface documents each used a different numbering. A tool that reads "row 75" could land on the wrong function in each document.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep the original sheet row numbers (3 to 94) | They start at 3 and leave no room for the functions the mockups added |
+| Delete the out of scope functions from the table | The leader wants them kept as the direction for later work |
+
+### Impact
+`workflow/docs/product/dac-ta-chuc-nang.md`, the three diagrams and their READMEs, `workflow/docs/analysis/du-kien-lop.md`. The interface documents and `features.md` move to the new STT in later pull requests.
+
+### Owner
+tahpnart8
+
+## 2026-10-11 - The model is extended to match the interface mockups
+
+### Decision
+Where a mockup shows something the model lacked, the model grows to match, except where the mockup draws a "Phát triển sau" function. Added: profile counters (sold, followers, deals, completion rate), notification settings, change password, deactivate account, private identity data, save a listing as draft, seller hides or shows a listing, a reference price range, partner activity status, a notification list, three review criteria (accuracy, attitude, commitment), preset reasons for reports and complaints, and a `RECEIVED` step in a deal. Not added, because the function is "Phát triển sau": admin dashboard counters, a manual release request, an "abnormal deal" filter, configurable lock durations, maintenance broadcasts. Three smaller rules: a seller hiding a listing reuses `ListingStatus.HIDDEN`; there is no per conversation unread dot; a pending offer cannot be cancelled, only accepted or rejected.
+
+### Context
+The mockups were drawn after the class diagram and the ERD, so the two had drifted apart. The leader chose to extend the model rather than cut the mockups.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Cut the mockups down to the old model | Loses screens the team already designed and the teacher will see |
+| Add everything the mockups show, including the future admin parts | Pulls "Phát triển sau" work into the coming phase |
+
+### Impact
+Class diagram (89 classes: model 21, enums 21, data 14, data.local 12, util 7, viewmodel 14), ERD (22 Firestore collections, 1 embedded array, 6 Room tables), `workflow/docs/data/firestore-schema.md`, `workflow/docs/data/room-schema.md`.
+
+### Owner
+tahpnart8
+
+## 2026-10-11 - Accounts, identity data and the end of a deal
+
+### Decision
+- Sign in is by email and password or by Google only. The phone number is a profile field, not a sign in method; no SMS code anywhere.
+- Identity data (national ID number, date of birth, gender, permanent address) lives in `users/{uid}/private/identity`, class `UserIdentity`, readable only by the owner and admins.
+- Deleting an account deactivates it: `UserStatus.DELETED`, profile and listings hidden, sign in removed, deal history and reviews kept for the other party. Not allowed while a deal is still open.
+- A deal goes `SHIPPED` to `RECEIVED` when the buyer confirms receipt, or automatically when the countdown from `autoReleaseAt` runs out; the payment is released at that moment. It goes `RECEIVED` to `COMPLETED` when both sides have reviewed, or 3 days (`Deal.AUTO_COMPLETE_DAYS`) after `receivedAt`. Shipping needs carrier, tracking code and a photo of the waybill.
+- `ItemCondition` has five values: `NEW`, `LIKE_NEW`, `USED`, `REPAIRED`, `DEFECTIVE`.
+- An admin is a user with a document at `admins/{uid}`; all admins have the same rights.
+
+### Context
+The mockups and the original function table disagreed on these points, and each one changes a field or a status that code will depend on.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Phone number sign in | Needs SMS, which costs money on Firebase; email and Google already meet the course requirement |
+| Identity fields on the public `users` document | Anyone signed in could read a national ID number |
+| Hard delete of the account | Breaks the other party's deal history and reviews |
+| Release the payment only at `COMPLETED` | The seller would wait for reviews that the buyer may never write |
+
+### Impact
+`workflow/docs/data/firestore-schema.md`, class diagram pages 1 and 3, ERD pages 1 and 3, function table notes.
+
+### Owner
+tahpnart8
