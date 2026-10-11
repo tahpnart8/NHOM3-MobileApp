@@ -405,3 +405,33 @@ The mockups and the original function table disagreed on these points, and each 
 
 ### Owner
 tahpnart8
+
+## 2026-10-12 - Remaining rules for deals, offers, complaints, listings and accounts
+
+### Decision
+Rules that the function table and the mockups left open, settled so the state machines in `workflow/docs/architecture/trang-thai.md` are complete:
+- The shipping countdown is 7 days: `Deal.AUTO_RELEASE_DAYS = 7`, so `autoReleaseAt = shippedAt + 7 days`.
+- A meet-up deal (`DeliveryMethod.MEET_UP`) has no `SHIPPED` step and no countdown: the buyer confirms receipt straight from `CONFIRMED`, and the payment is released then.
+- A complaint can be opened only while the deal is `SHIPPED`, or `CONFIRMED` for a meet-up, and only one at a time. Outcomes: `REFUND`, `RETURN_ITEM` and `CANCEL_DEAL` cancel the deal and refund a held payment; `REJECT` moves the deal to `RECEIVED` and releases the payment; `REQUEST_EVIDENCE` keeps the deal `DISPUTED`. Withdrawing a complaint returns the deal to its previous status with the original `autoReleaseAt`.
+- Accepting an offer reserves the listing and rejects every other pending offer on it. A cancelled deal puts the listing back to `AVAILABLE`; a completed deal marks it `SOLD`.
+- Editing the terms of a deal clears both confirmations.
+- Profile counters: `dealCount` grows when a deal is created, `completedDealCount` and the seller's `soldCount` when it completes.
+- Seller verification is a badge, not a requirement to post: `User.canSell()` needs an active, unlocked account with a verified email.
+- An expired temporary lock is lifted by the app at the next sign-in; Security Rules allow that write only after `lockedUntil` has passed.
+- A seller can mark a listing sold by hand when it was sold outside the app, and reopen it.
+
+### Context
+Writing the state machines and data dictionary as text showed transitions with no rule behind them. None of these changes a collection, a field or a dependency, so they are recorded here instead of being asked first (AGENTS.md R6).
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Countdown of 3 days, like auto completion | Starts at shipping, not delivery; delivery inside Vietnam often takes several days |
+| Seller verification required to post | Blocks every new user, including giveaways; the mockups only show a reminder banner |
+| Withdrawing a complaint restarts the countdown | Lets a buyer delay payment again and again |
+
+### Impact
+`workflow/docs/architecture/trang-thai.md`, `luong-xu-ly.md`, `dac-ta-lop/`, `workflow/docs/data/firestore-schema.md`. Known gap: no method yet lets a complainant add evidence after `REQUEST_EVIDENCE`; it is listed under risks in `workflow/docs/architecture/overview.md`.
+
+### Owner
+tahpnart8

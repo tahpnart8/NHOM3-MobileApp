@@ -2,6 +2,8 @@
 
 Sơ đồ lớp của PUBGApp: **89 lớp Java tự viết**, chia gói theo tầng (`AGENTS.md` mục 7). File gốc `class-diagram.drawio` mở bằng draw.io, mỗi trang là một tab ở đáy màn hình. Danh sách lớp kèm trách nhiệm và chức năng liên quan nằm ở [`../../analysis/du-kien-lop.md`](../../analysis/du-kien-lop.md).
 
+**Bản chữ của sơ đồ này** (mọi thuộc tính, phương thức, quan hệ, sơ đồ Mermaid) ở [`../../architecture/dac-ta-lop/`](../../architecture/dac-ta-lop/README.md); máy trạng thái ở [`../../architecture/trang-thai.md`](../../architecture/trang-thai.md). Khi code, đọc bản chữ; ảnh để người xem nhanh.
+
 Số chức năng nhắc trong tài liệu này là số STT của [bảng đặc tả chức năng](../../product/dac-ta-chuc-nang.md).
 
 ## 1. Kiến trúc: MVVM kết hợp Repository
@@ -77,7 +79,7 @@ model, model.enums, util: mọi tầng đều dùng
 
 **Gửi hàng kèm bằng chứng vận đơn.** `DealViewModel.markShipped(carrier, trackingCode, photoUri)` tải ảnh mã vận đơn lên qua `MediaRepository`, rồi `DealRepository.markShipped` ghi `carrierName`, `trackingCode`, `trackingImageUrl` và `shippedAt`. Thiếu một trong ba thứ thì `Deal.hasShippingProof()` sai và giao dịch không sang `SHIPPED`. Cùng lúc `autoReleaseAt = shippedAt + AUTO_RELEASE_DAYS` được đặt: mốc đếm ngược hiển thị cho cả hai bên.
 
-**Nhận hàng, giải ngân và hoàn tất.** Khi giao dịch được xác nhận, `Payment` ở trạng thái `HELD`. Giao dịch sang `RECEIVED` theo một trong hai đường, đều tự động, admin không duyệt tay; `Payment` sang `RELEASED` ngay lúc đó:
+**Nhận hàng, giải ngân và hoàn tất.** Sau khi giao dịch được xác nhận, người mua thanh toán và `Payment` ở trạng thái `HELD` (giao dịch không có tiền thì bỏ bước này; gặp trực tiếp thì không có bước giao và đếm ngược, xem `trang-thai.md`). Giao dịch sang `RECEIVED` theo một trong hai đường, đều tự động, admin không duyệt tay; `Payment` sang `RELEASED` ngay lúc đó:
 
 1. Người mua bấm đã nhận hàng: `DealRepository.markReceived`.
 2. Hết đếm ngược mà người mua chưa xác nhận: `DealRepository.releaseDueDeals` gọi `Deal.autoReceive()`.

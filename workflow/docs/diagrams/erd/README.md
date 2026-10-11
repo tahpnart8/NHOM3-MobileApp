@@ -1,6 +1,6 @@
 # Sơ đồ quan hệ thực thể (ERD)
 
-Mô hình dữ liệu cho Cloud Firestore và Room (SQLite cục bộ), khớp các lớp ở [`../so-do-lop/`](../so-do-lop/README.md). Chi tiết từng trường nằm ở [`../../data/firestore-schema.md`](../../data/firestore-schema.md) và [`../../data/room-schema.md`](../../data/room-schema.md).
+Mô hình dữ liệu cho Cloud Firestore và Room (SQLite cục bộ), khớp các lớp ở [`../so-do-lop/`](../so-do-lop/README.md). Chi tiết từng trường nằm ở [`../../data/firestore-schema.md`](../../data/firestore-schema.md) và [`../../data/room-schema.md`](../../data/room-schema.md): đó là **bản chữ** của sơ đồ này, kèm quan hệ có bội số, ý nghĩa từng trường, truy vấn dự kiến và sơ đồ Mermaid. Khi code, đọc bản chữ; ảnh để người xem nhanh.
 
 | Mục | Số lượng |
 | --- | ---: |
