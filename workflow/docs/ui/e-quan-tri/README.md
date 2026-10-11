@@ -103,20 +103,22 @@
 
 **Ảnh:** ![E06 Admin Giám sát giao dịch](e06-admin-giam-sat-giao-dich.png)
 
-**Mục đích:** Cho admin theo dõi tình trạng mọi giao dịch trong hệ thống, phát hiện giao dịch bất thường hoặc đang có khiếu nại.
+**Mục đích:** Cho admin theo dõi tình trạng mọi giao dịch trong hệ thống và những giao dịch đang có khiếu nại.
 
 **Thành phần chính:**
 - Tiêu đề "Giám sát giao dịch"
-- Hàng lọc theo trạng thái: Tất cả, Chờ giải ngân, Bất thường, Khiếu nại
-- Danh sách giao dịch, mỗi dòng có mã giao dịch, tên món đồ, giá, nhãn trạng thái màu, và dòng cảnh báo phụ khi giao dịch đứng yên quá lâu
+- Hàng lọc theo trạng thái: Tất cả, Chờ giải ngân, Khiếu nại
+- Danh sách giao dịch, mỗi dòng có mã giao dịch, tên món đồ, giá và nhãn trạng thái màu
+
+**Khác với ảnh:**
+- Nút lọc "Bất thường" và dòng cảnh báo "Đứng yên quá 3 ngày" thuộc chức năng "Cảnh báo giao dịch bất thường", là **phát triển sau**, chưa làm.
 
 **Hành động và điều hướng:**
 - Bấm một giao dịch: sang C03 Chi tiết giao dịch để xem đầy đủ statusHistory
 - Bấm một nút lọc trạng thái: lọc lại danh sách theo trạng thái đã chọn
 
-**Chức năng liên quan:** dòng 73 (theo dõi danh sách giao dịch theo trạng thái), dòng 74 (chi tiết giao dịch kèm statusHistory) trong bảng đặc tả chức năng.
+**Chức năng liên quan:** theo dõi danh sách giao dịch theo trạng thái, chi tiết giao dịch kèm statusHistory (số dòng sẽ ghi lại khi bảng đặc tả được đánh số lại).
 
 **Trạng thái đặc biệt:**
 - Trạng thái "Chờ giải ngân" chỉ hiển thị thông tin, không có nút duyệt tay: giải ngân diễn ra tự động khi người mua xác nhận đã nhận hoặc khi hết thời hạn đếm ngược
-- Giao dịch đứng yên quá lâu (ví dụ quá 3 ngày không đổi trạng thái): thêm dòng cảnh báo màu đỏ ngay dưới thông tin giao dịch, chỉ để admin biết, không có hành động can thiệp thủ công ở màn này
 - Mất mạng: hiện lại danh sách đã tải trước đó từ bộ nhớ đệm, kèm dải báo đang xem ngoại tuyến
