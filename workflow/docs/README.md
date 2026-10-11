@@ -6,9 +6,13 @@ Thư mục này mô tả **hệ thống là gì**. Lý do đằng sau các lựa
 | --- | --- | --- |
 | Sản phẩm là gì, cho ai | [product/brief.md](product/brief.md) | Mục tiêu, người dùng, phạm vi |
 | Danh sách tính năng | [product/features.md](product/features.md) | Mã `F-xx`, trạng thái, người làm. **AI chỉ làm tính năng có mã ở đây** |
-| Kiến trúc ứng dụng | [architecture/overview.md](architecture/overview.md) | Các lớp, cấu trúc gói, Firebase, offline |
-| Dữ liệu trên Firestore | [data/firestore-schema.md](data/firestore-schema.md) | Collection, trường, quy tắc |
-| Dữ liệu cục bộ Room | [data/room-schema.md](data/room-schema.md) | Bảng SQLite, phiên bản |
+| Kiến trúc ứng dụng | [architecture/overview.md](architecture/overview.md) | Theo khung arc42: mục tiêu, ràng buộc, ngữ cảnh, tầng, triển khai, khái niệm xuyên suốt, rủi ro |
+| Đặc tả từng lớp | [architecture/dac-ta-lop/](architecture/dac-ta-lop/README.md) | Bản chữ của sơ đồ lớp: 89 lớp, thuộc tính, phương thức, quan hệ, Mermaid |
+| Ai dùng ai | [architecture/thanh-phan.md](architecture/thanh-phan.md) | ViewModel, repository, collection, DAO |
+| Máy trạng thái | [architecture/trang-thai.md](architecture/trang-thai.md) | Chuyển trạng thái của tin, offer, giao dịch, ký quỹ, báo cáo, khiếu nại, tài khoản |
+| Luồng xử lý | [architecture/luong-xu-ly.md](architecture/luong-xu-ly.md) | Sơ đồ tuần tự các luồng chính |
+| Dữ liệu trên Firestore | [data/firestore-schema.md](data/firestore-schema.md) | Từ điển dữ liệu: collection, trường, ý nghĩa, quan hệ, truy vấn, chỉ mục, ví dụ |
+| Dữ liệu cục bộ Room | [data/room-schema.md](data/room-schema.md) | Bảng SQLite, quan hệ, câu lệnh DAO, chính sách giữ, phiên bản |
 | Quy ước viết code | [conventions/android-java.md](conventions/android-java.md) | Đặt tên, tài nguyên, luồng |
 | Cách làm việc nhóm | [workflow/huong-dan-lam-viec.md](workflow/huong-dan-lam-viec.md) | Cài đặt, Issue, Branch, PR |
 | Cấu hình GitHub | [workflow/cau-hinh-github.md](workflow/cau-hinh-github.md) | Ruleset của `main`, cách gỡ khi check chặn mọi PR, chi phí |
