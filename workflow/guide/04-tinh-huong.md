@@ -14,6 +14,12 @@ Mục lục: [AI bịa API](#ai-bịa-api-hoặc-lớp) · [AI xóa code cũ](#a
 Chỗ này build lỗi vì <tên lớp hoặc hàm> có thể không tồn tại. Đừng đoán tiếp. Dùng context7 (hoặc tài liệu chính thức của Firebase, AndroidX, Room) để tra chữ ký thật của <API>, cho tôi xem nguồn bạn tra, rồi mới sửa code. Nếu không tra được, nói "chưa xác minh".
 ```
 
+**Tên lớp, trường hoặc trạng thái của chính dự án** cũng có thể bị bịa: build lỗi `cannot find symbol` ở một tên mà bạn không thấy trong tài liệu. Cách xử lý:
+
+```
+Tên <tên đó> không có trong đặc tả. Chỉ cho tôi tệp và mục của dac-ta-lop/, data/ hoặc trang-thai.md chứa tên này. Nếu không có, đổi sang tên đúng trong tài liệu, hoặc soạn một bình luận tiếng Việt cho issue hỏi leader. Đừng tự thêm lớp, phương thức công khai hay trạng thái mới.
+```
+
 Trong Claude Code, context7 đã cấu hình sẵn ở `.mcp.json`. Ở Antigravity, thêm server MCP `https://mcp.context7.com/mcp` trong phần cài đặt MCP.
 
 ## AI xóa hoặc đổi tên code cũ
@@ -97,7 +103,7 @@ Nhắc AI trong phiên: "Không thêm Co-authored-by, Generated with hay tên c�
 
 ## Task quá lớn hoặc AI làm lan man
 
-**Dấu hiệu:** kế hoạch có hơn 6 bước, hoặc diff hơn khoảng 300 dòng, hoặc AI bắt đầu "cải thiện thêm" các phần khác.
+**Dấu hiệu:** kế hoạch có hơn 6 bước, hoặc việc vượt khoảng một ngày công, hoặc cần file của module khác, hoặc diff hơn khoảng 300 dòng, hoặc AI bắt đầu "cải thiện thêm" các phần khác. Một issue chỉ là một lát cắt dọc của một module.
 
 ```
 Issue #<N> quá lớn cho một PR. Đề xuất cách tách thành 2 đến 4 issue nhỏ, mỗi issue là một lát cắt hoạt động được và build được, có tiêu chí nghiệm thu và phạm vi riêng. Chưa tạo gì; đưa danh sách cho tôi.
@@ -117,7 +123,7 @@ Trong lúc chờ, làm phần không phụ thuộc chỗ đó.
 
 ## AI lặp vòng sửa lỗi không dứt
 
-Dùng prompt "Dừng lại, đừng sửa nữa" ở [02-vong-lap-lam-task.md](02-vong-lap-lam-task.md) bước 3. Nếu vẫn không ra, mở phiên chat mới, dán prompt mở đầu, đọc `.agents/tmp/plan-<N>.md` và mô tả lỗi cho model khác. Đổi model thường hiệu quả hơn lặp lại với cùng một model.
+Dùng prompt "Dừng lại, đừng sửa nữa" ở [02-vong-lap-lam-task.md](02-vong-lap-lam-task.md) bước 3. Nếu vẫn không ra, mở phiên chat mới, dán prompt mở đầu, đọc `.agents/tmp/steps-<N>.md` và mô tả lỗi cho model khác. Đổi model thường hiệu quả hơn lặp lại với cùng một model.
 
 ## Cần thêm thư viện
 
@@ -138,7 +144,7 @@ Phiên chat dài thì AI mờ dần các luật ở đầu. Dấu hiệu: nó b�
 Cách sửa rẻ nhất: mở phiên mới, dán prompt mở đầu ([01-khoi-tao.md](01-khoi-tao.md) mục B), rồi:
 
 ```
-Tiếp tục issue #<N>. Đọc .agents/tmp/plan-<N>.md để biết kế hoạch và bước nào đã xong (xem git log và git status). Làm bước kế tiếp và chỉ bước đó.
+Tiếp tục issue #<N>. Đọc .agents/tmp/steps-<N>.md để biết kế hoạch và bước nào đã xong (xem git log và git status). Làm bước kế tiếp và chỉ bước đó.
 ```
 
 ## Lỡ commit trên main hoặc đặt sai tên branch
@@ -160,7 +166,7 @@ Nguyên nhân gần như luôn là SHA-1 của khóa debug trên máy bạn chư
 
 Xoay màn hình làm Activity bị tạo lại. Trạng thái phải nằm trong `ViewModel` hoặc `onSaveInstanceState`. Đừng "chữa" bằng `android:configChanges` trong manifest, vì nó che lỗi thay vì sửa.
 
-Offline: màn hình phải hiển thị dữ liệu từ Room trước rồi mới cập nhật từ Firestore, và Room chỉ có dữ liệu của những trang bạn từng xem khi còn mạng. Chính sách bộ đệm sẽ nằm ở `workflow/docs/data/room-schema.md` khi có.
+Offline: màn hình phải hiển thị dữ liệu từ Room trước rồi mới cập nhật từ Firestore, và Room chỉ có dữ liệu của những trang bạn từng xem khi còn mạng. Chính sách bộ đệm nằm ở `workflow/docs/data/room-schema.md`.
 
 ```
 Màn hình <tên> mất <trạng thái gì> khi xoay ngang. Đọc lớp UI và ViewModel của nó, chỉ ra trạng thái nào đang nằm ở Activity hoặc Fragment thay vì ViewModel, và đề xuất sửa nhỏ nhất. Không dùng android:configChanges.

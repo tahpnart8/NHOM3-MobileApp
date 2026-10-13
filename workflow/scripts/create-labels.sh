@@ -14,8 +14,12 @@ label "type:chore"    "6B7A86" "Build, công cụ, thư viện, dọn dẹp"
 label "type:docs"     "1F6FB2" "Chỉ sửa tài liệu"
 label "type:removal"  "7A1F1F" "Chủ ý gỡ chức năng đã có, do leader mở"
 
-for area in auth listing feed chat order profile admin offline ui build docs; do
+for area in auth account notification listing feed chat deal trade order profile trust complaint admin offline ui build docs; do
     label "area:$area" "C9D6DF" "Khu vực: $area"
+done
+
+for module in a b c d e; do
+    label "module:$module" "D8C9F0" "Module $module, chủ sở hữu theo workflow/plan/so-huu.md"
 done
 
 label "priority:p0" "B3261E" "Đang chặn cả nhóm"

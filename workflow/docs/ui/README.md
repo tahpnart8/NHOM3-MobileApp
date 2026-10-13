@@ -1,50 +1,83 @@
 # Giao diện (mockup)
 
-Giai đoạn 2 của đồ án. 30 màn hình, vẽ bằng Figma, nộp dạng ảnh PNG khung điện thoại dọc (tỉ lệ 390 x 844), chia 5 nhóm theo luồng nghiệp vụ để không ai sửa chung một file.
+Giai đoạn 2 của đồ án. 30 màn hình có ảnh, vẽ bằng Figma, nộp dạng ảnh PNG khung điện thoại dọc (tỉ lệ 390 x 844), cộng 1 màn hình bổ sung chưa có ảnh (D07), tổng cộng 31 mã màn hình. Chia 5 nhóm theo luồng nghiệp vụ để không ai sửa chung một file.
 
 Mỗi nhóm nộp theo 3 đợt: đợt 1 một màn, đợt 2 hai màn, đợt 3 ba màn. Xem chi tiết từng màn trong README của nhóm.
 
-## Mục lục 30 màn hình
+**Mọi số trong tài liệu giao diện là số STT của [bảng đặc tả chức năng](../product/dac-ta-chuc-nang.md)** (đánh số lại ngày 2026-10-11). Không dùng số dòng của bảng gốc. Khi ảnh mockup và mô tả chữ khác nhau, mô tả chữ đúng; từng README nhóm có mục "Khác với ảnh" liệt kê chỗ khác.
 
-| Mã | Tên màn hình | Nhóm |
+## Mục lục 31 mã màn hình
+
+Tên lớp lấy từ [bản đồ sở hữu](../../plan/so-huu.md) mục 3. Một mã màn hình có thể gồm nhiều lớp Fragment.
+
+| Mã | Tên màn hình | Lớp giao diện | Activity | Nhóm |
+| --- | --- | --- | --- | --- |
+| A01 | Đăng nhập | `LoginFragment` | `AuthActivity` | [a-tai-khoan](a-tai-khoan/README.md) |
+| A02 | Đăng ký (và hoàn tất hồ sơ sau lần đăng nhập Google đầu tiên) | `RegisterFragment` | `AuthActivity` | [a-tai-khoan](a-tai-khoan/README.md) |
+| A03 | Quên mật khẩu | `ForgotPasswordFragment` | `AuthActivity` | [a-tai-khoan](a-tai-khoan/README.md) |
+| A04 | Quản lý thông tin cá nhân | `PersonalInfoFragment` | `MainActivity` | [a-tai-khoan](a-tai-khoan/README.md) |
+| A05 | Chỉnh sửa hồ sơ và cài đặt tài khoản | `EditProfileFragment`, `AccountSettingsFragment` | `MainActivity` | [a-tai-khoan](a-tai-khoan/README.md) |
+| A06 | Quản lý địa chỉ | `AddressListFragment`, `AddressEditFragment` | `MainActivity` | [a-tai-khoan](a-tai-khoan/README.md) |
+| B01 | Trang chủ | `HomeFragment` | `MainActivity` (tab Trang chủ) | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
+| B02 | Tìm kiếm và bộ lọc | `SearchFragment` | `MainActivity` (tab Tìm kiếm) | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
+| B03 | Chi tiết tin đăng | `ListingDetailFragment` | `MainActivity` | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
+| B04 | Đăng tin | `PostListingFragment` | `MainActivity` (tab Đăng tin) | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
+| B05 | Kệ hàng của tôi | `MyShopFragment` | `MainActivity` | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
+| B06 | Tin đã lưu | `SavedListingsFragment` | `MainActivity` | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
+| C01 | Danh sách tin nhắn | `ConversationListFragment` | `MainActivity` (tab Tin nhắn) | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
+| C02 | Trò chuyện và đề nghị giá | `ChatFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
+| C03 | Chi tiết giao dịch | `DealDetailFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
+| C04 | Lịch sử giao dịch và thanh toán | `DealHistoryFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
+| C05 | Viết đánh giá | `WriteReviewFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
+| C06 | Thông báo | `NotificationListFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
+| D01 | Hồ sơ cá nhân | `MyProfileFragment` | `MainActivity` (tab Cá nhân) | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
+| D02 | Trang cá nhân | `UserProfileFragment` | `MainActivity` | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
+| D03 | Hồ sơ uy tín người bán | `SellerTrustFragment` | `MainActivity` | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
+| D04 | Báo cáo | `ReportFragment` | `MainActivity` | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
+| D05 | Tạo khiếu nại | `CreateComplaintFragment` | `MainActivity` | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
+| D06 | Admin: Xử lý khiếu nại | `AdminComplaintListFragment`, `AdminComplaintDetailFragment` | `AdminActivity` | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
+| D07 (chưa có ảnh) | Báo cáo và khiếu nại của tôi | `MyReportsFragment` | `MainActivity` | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
+| E01 | Admin: Bảng điều khiển | `AdminDashboardFragment` | `AdminActivity` | [e-quan-tri](e-quan-tri/README.md) |
+| E02 | Admin: Danh sách người dùng | `AdminUserListFragment` | `AdminActivity` | [e-quan-tri](e-quan-tri/README.md) |
+| E03 | Admin: Chi tiết người dùng | `AdminUserDetailFragment` | `AdminActivity` | [e-quan-tri](e-quan-tri/README.md) |
+| E04 | Admin: Kiểm duyệt nội dung | `AdminModerationFragment` | `AdminActivity` | [e-quan-tri](e-quan-tri/README.md) |
+| E05 | Admin: Quản lý danh mục | `AdminCategoryFragment` | `AdminActivity` | [e-quan-tri](e-quan-tri/README.md) |
+| E06 | Admin: Giám sát giao dịch | `AdminDealMonitorFragment` | `AdminActivity` | [e-quan-tri](e-quan-tri/README.md) |
+
+**Màn hình phụ không có mã riêng và chưa có ảnh**, nằm trong `AdminActivity`:
+
+- `AdminListingDetailFragment`: chi tiết tin cho admin, mở từ E04.
+- `AdminDealDetailFragment`: chi tiết giao dịch kèm `statusHistory` cho admin, mở từ E06.
+
+## Điều hướng
+
+Ứng dụng có ba Activity. Mỗi Activity dùng Navigation component, mỗi module có đồ thị điều hướng riêng; lối đi chéo module là hành động toàn cục trong `nav_main.xml` (xem [bản đồ sở hữu](../../plan/so-huu.md) mục 4).
+
+| Activity | Chứa | Vào bằng cách nào |
 | --- | --- | --- |
-| A01 | Đăng nhập | [a-tai-khoan](a-tai-khoan/README.md) |
-| A02 | Đăng ký | [a-tai-khoan](a-tai-khoan/README.md) |
-| A03 | Quên mật khẩu | [a-tai-khoan](a-tai-khoan/README.md) |
-| A04 | Quản lý thông tin cá nhân | [a-tai-khoan](a-tai-khoan/README.md) |
-| A05 | Chỉnh sửa hồ sơ | [a-tai-khoan](a-tai-khoan/README.md) |
-| A06 | Quản lý địa chỉ | [a-tai-khoan](a-tai-khoan/README.md) |
-| B01 | Trang chủ | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
-| B02 | Tìm kiếm và bộ lọc | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
-| B03 | Chi tiết tin đăng | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
-| B04 | Đăng tin | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
-| B05 | Kệ hàng của tôi | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
-| B06 | Tin đã lưu | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
-| C01 | Danh sách tin nhắn | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
-| C02 | Trò chuyện và đề nghị giá | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
-| C03 | Chi tiết giao dịch | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
-| C04 | Lịch sử giao dịch | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
-| C05 | Viết đánh giá | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
-| C06 | Thông báo | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
-| D01 | Hồ sơ cá nhân | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
-| D02 | Trang cá nhân | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
-| D03 | Hồ sơ uy tín người bán | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
-| D04 | Báo cáo tin đăng | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
-| D05 | Tạo khiếu nại | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
-| D06 | Admin: Xử lý khiếu nại | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
-| E01 | Admin: Bảng điều khiển | [e-quan-tri](e-quan-tri/README.md) |
-| E02 | Admin: Danh sách người dùng | [e-quan-tri](e-quan-tri/README.md) |
-| E03 | Admin: Chi tiết người dùng | [e-quan-tri](e-quan-tri/README.md) |
-| E04 | Admin: Kiểm duyệt nội dung | [e-quan-tri](e-quan-tri/README.md) |
-| E05 | Admin: Quản lý danh mục | [e-quan-tri](e-quan-tri/README.md) |
-| E06 | Admin: Giám sát giao dịch | [e-quan-tri](e-quan-tri/README.md) |
+| `AuthActivity` | A01, A02, A03 | Mở ứng dụng khi chưa có phiên đăng nhập |
+| `MainActivity` | Mọi màn hình của người dùng (nhóm A từ A04, B, C, D trừ D06) | Sau khi đăng nhập thành công. Đăng nhập luôn vào B01, kể cả tài khoản admin |
+| `AdminActivity` | E01 đến E06, D06 và hai màn hình phụ của admin | Nút "Khu vực quản trị" trên D01, chỉ hiện khi tài khoản là admin (`SessionManager.isAdmin()`) |
+
+**Không có chế độ khách.** Chưa đăng nhập thì chỉ thấy A01 đến A03. Mọi màn hình còn lại cần phiên đăng nhập.
+
+**Thanh điều hướng dưới (5 tab)** chỉ có trong `MainActivity`: Trang chủ (B01), Tìm kiếm (B02), Đăng tin (B04, nút tròn nổi ở giữa), Tin nhắn (C01), Cá nhân (D01).
+
+- Thanh dưới **chỉ hiện ở 5 màn hình gốc của tab**: B01, B02, B04, C01, D01.
+- Mọi màn hình khác của `MainActivity` là **màn hình chi tiết**: có nút quay lại ở góc trái trên, ẩn thanh dưới. Quay lại trả về màn hình đã gọi nó.
+- `AuthActivity` không có thanh dưới. `AdminActivity` không có thanh dưới; E01 là màn hình gốc, các màn hình khác có nút quay lại, và E01 có nút "Về ứng dụng" để quay lại `MainActivity`.
+- Chuông thông báo nằm ở thanh trên của `MainActivity` (hiện trên B01) và mở C06.
+- Một số ảnh mockup (B05, B06, C06, D02) vẽ thanh dưới trên màn hình chi tiết. Theo quy tắc trên, thanh dưới không hiện ở đó; xem mục "Khác với ảnh" của từng nhóm.
+
+**Ảnh người dùng gửi** (ảnh tin đăng, ảnh trong chat, ảnh vận đơn, ảnh bằng chứng khiếu nại, ảnh đại diện): nén trên máy rồi lưu trong Firestore, tối đa 5 ảnh mỗi tin. Dự án dùng gói Firebase miễn phí, không có Cloud Storage. **Không có video** ở bất kỳ màn hình nào (STT 45 là Phát triển sau).
 
 ## Ngoài phạm vi đợt này
 
 - Bố cục xoay ngang (landscape) cho các màn chính: để lại cho giai đoạn code.
-- Màn E01: 4 ô số liệu tổng (người dùng, tin đăng, giao dịch, khiếu nại) có trong mockup nhưng thuộc chức năng "Số liệu tổng quan", là **phát triển sau**, chưa làm. Đợt này E01 chỉ gồm danh sách "Cần xử lý" và lưới lối tắt quản lý.
-- Màn E06 chỉ hiển thị trạng thái giải ngân (đã tự động), không có nút duyệt tay.
+- Màn E01: 4 ô số liệu tổng (người dùng, tin đăng, giao dịch, khiếu nại) có trong mockup nhưng thuộc chức năng "Số liệu tổng quan" (STT 92), là **phát triển sau**, chưa làm. Đợt này E01 chỉ gồm danh sách "Cần xử lý" và lưới lối tắt quản lý.
+- Màn E06 chỉ hiển thị trạng thái giải ngân (đã tự động, STT 84), không có nút duyệt tay (STT 86). Nút lọc "Bất thường" và dòng "Đứng yên quá 3 ngày" (STT 83) là phát triển sau.
+- Gửi video trong chat (STT 45) và thông báo hệ thống do admin gửi (STT 99) là phát triển sau.
 
 ## Quy ước tên file ảnh
 
-`ui/<nhóm>/<mã>-<tên-khong-dau>.png`, ví dụ `ui/a-tai-khoan/a01-dang-nhap.png`.
+`ui/<nhóm>/<mã>-<tên-khong-dau>.png`, ví dụ `ui/a-tai-khoan/a01-dang-nhap.png`. Màn hình ghi "chưa có ảnh" chưa có file ảnh.

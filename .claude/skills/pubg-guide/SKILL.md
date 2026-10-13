@@ -24,10 +24,10 @@ The guide in `workflow/guide/` is written for the person coding, in Vietnamese. 
 | Starting a session, checking the machine, turning an idea into an issue | `workflow/guide/01-khoi-tao.md` |
 | Working an issue: exploring, planning, implementing in steps, self-review | `workflow/guide/02-vong-lap-lam-task.md` |
 | Finished code: opening the PR, asking another AI to cross-check, asking the leader, answering review comments | `workflow/guide/03-ket-thuc-task.md` |
-| Build or CI red, hook refusal, merge conflict, AI invented an API, AI deleted code, `Co-authored-by`, `DEVELOPER_ERROR`, lost state on rotation, AI forgot the rules | `workflow/guide/04-tinh-huong.md` |
+| Build or CI red, hook refusal, merge conflict, AI invented an API or a class name that is not in the specification, AI deleted code, `Co-authored-by`, `DEVELOPER_ERROR`, lost state on rotation, AI forgot the rules | `workflow/guide/04-tinh-huong.md` |
 | Wants to skip a step, or a rule seems to block a reasonable thing | `workflow/guide/05-khi-nao-duoc-pha-le.md` |
 | AI wrote wordy, lambda-heavy or over-commented code, or the person asks how the code should look | `workflow/guide/04-tinh-huong.md` (section on code style) and the `pubg-code` skill |
-| The person is the leader: reviewing, merging, opening work | `workflow/guide/06-danh-cho-leader.md` |
+| The person is the leader or a code owner (Hai Long): reviewing, merging, opening work | `workflow/guide/06-danh-cho-leader.md` |
 
 ## The guide is flexible
 
@@ -43,6 +43,7 @@ Say it once, briefly, and continue if they carry on:
 - They are coding with no issue, or the change is large and there is no plan.
 - They are about to commit AI-written code they have not read (`git diff` not looked at).
 - They tell you a check "passed" and you cannot see the command or its result.
+- They ask you to build a "Phát triển sau" function, to use Cloud Storage or video, or to edit a file that is not in the issue's file list or belongs to another module (AGENTS.md R17, R19, R20, R21).
 - They ask you to add a dependency, change an existing Firestore or Room structure, or remove a feature without the leader's decision (AGENTS.md R6).
 
 ## Not allowed

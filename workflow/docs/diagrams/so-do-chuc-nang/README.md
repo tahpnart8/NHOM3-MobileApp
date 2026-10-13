@@ -10,6 +10,6 @@ Cây chức năng toàn hệ thống, vẽ ngang từ trái sang phải: PUBGApp
 
 | Mục | Giá trị |
 | --- | --- |
-| Số chức năng được vẽ | 88 |
-| Số chức năng phát triển sau, không vẽ | 14 (STT 83, 85, 86, 92 đến 102) |
+| Số chức năng được vẽ | 87 |
+| Số chức năng phát triển sau, không vẽ | 15 (STT 45, 83, 85, 86, 92 đến 102) |
 | Nguồn đối chiếu | `product/dac-ta-chuc-nang.md` |

@@ -1,9 +1,9 @@
 ---
 name: pubg-review-pr
-description: Leader only. Review a PUBGApp pull request against its issue by building and testing the merged tree, and report a recommendation. Use when the leader asks to review, check or judge a pull request. Does not approve or merge unless told.
+description: Leader or code owner (Hai Long for code under PUBGApp/). Review a PUBGApp pull request against its issue by building and testing the merged tree, and report a recommendation. Use when the leader asks to review, check or judge a pull request. Does not approve or merge unless told.
 ---
 
-The question a review answers: **if this merges right now, is `main` still correct?** The diff alone does not answer it. Green CI on the branch is evidence about the branch, not about `main`.
+The reviewer is the leader, or Hai Long for pull requests whose files he owns under `.github/CODEOWNERS`. The question a review answers: **if this merges right now, is `main` still correct?** The diff alone does not answer it. Green CI on the branch is evidence about the branch, not about `main`.
 
 ## First, which of the two paths
 
@@ -24,7 +24,7 @@ only grew; commits authored by the team with no AI byline; title and body in Vie
 3. **Build and test the merged tree.** From `PUBGApp/`: `./gradlew assembleDebug testDebugUnitTest lintDebug`. Report the exact result.
 4. **Check each acceptance criterion** one by one against the code, not against the pull request description. Mark each met, not met, or cannot verify without a device.
 5. **Look for lost work.** `git diff --diff-filter=DR --name-status origin/main...pr-N` lists deleted and renamed files. Also scan the diff for large removed blocks in feature code. Any removal without an approved `type:removal` issue and `Removal-Issue: #N` is a blocking finding (AGENTS.md R4).
-6. **Check the fence and the rules.** Files outside the issue's scope; new dependencies (R5); changes to an existing Firestore collection or Room table without approval (R6); authority taken from the client (R12); secrets (R11); network or disk work on the main thread; missing rotation handling.
+6. **Check the fence and the rules.** Files outside the issue's list `File được tạo hoặc sửa` (compare `gh pr diff N --name-only` with it); a module's file edited by someone else, a shared file (`workflow/plan/so-huu.md` section 6) changed beyond the lines the issue allows, a method body replaced that the issue did not assign, a new public method or changed signature on a shared class (R19, R20); every new class, method, field, enum value, collection and status present in `dac-ta-lop/`, `data/` or `trang-thai.md` (R16); any STT row marked "Phát triển sau" implemented, even as a stub (R17); a status written or a transition missing from `trang-thai.md` (R18); Cloud Storage, video, a fourth Activity or an edit of another module's navigation graph (R21, R22); new dependencies (R5); changes to an existing Firestore collection or Room table without approval (R6); authority taken from the client (R12); secrets (R11); network or disk work on the main thread; missing rotation handling.
 7. **Check the style.** Run `sh workflow/scripts/check-java-style.sh --base origin/main` on the merged tree and read the diff for what a script cannot judge: names that do not say what they mean, methods or classes that grew too long, comments that restate the code or run past two lines, knowledge that should be in `workflow/memory/code/`. Style findings are `minor`, unless the same pattern is everywhere, which is `major`.
 8. **Check documents.** `workflow/docs/data/*` and `workflow/docs/product/features.md` match the change (R7). Use the `pubg-doc-check` skill if unsure.
 9. **Check contributors.** Commits authored only by the team, no `Co-authored-by`, no AI byline (R8).
@@ -33,7 +33,7 @@ only grew; commits authored by the team with no AI byline; title and body in Vie
 
 ## Recommendation values
 
-`READY`, `CHANGES NEEDED`, or `BLOCKED`. This is a recommendation. **You never approve or merge on your own initiative.** When the leader tells you to merge, run `gh pr merge N --squash` (the ruleset supplies the message); they decided and you are the hands.
+`READY`, `CHANGES NEEDED`, or `BLOCKED`. This is a recommendation. **You never approve or merge on your own initiative.** When the leader, or Hai Long for code he reviewed as code owner, tells you to merge, run `gh pr merge N --squash` (the ruleset supplies the message); they decided and you are the hands.
 
 ## Read only
 

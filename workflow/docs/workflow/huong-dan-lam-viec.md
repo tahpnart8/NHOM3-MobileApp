@@ -19,15 +19,15 @@ Cả nhóm làm **một kiểu duy nhất**. Quy tắc đặt tên chi tiết �
 
 ```
 Issue  ->  nhận task  ->  branch từ main mới nhất  ->  commit nhỏ
-   ->  Pull Request (Closes #N)  ->  CI xanh  ->  leader review  ->  squash merge
+   ->  Pull Request (Closes #N)  ->  CI xanh  ->  người duyệt  ->  squash merge
 ```
 
-1. **Issue.** Mọi việc bắt đầu từ một issue dùng form (`feature`, `bug`, `chore`). Nhờ AI tạo bằng lệnh `/new-issue` cho đúng mẫu. Không có issue thì không có code.
+1. **Issue.** Mọi việc bắt đầu từ một issue dùng form (`feature`, `bug`, `chore`). Nhờ AI tạo bằng lệnh `/new-issue` cho đúng mẫu. Không có issue thì không có code. Issue code gắn với một việc trong [kế hoạch](../../plan/README.md) (đóng băng code 2026-10-26, nộp bài 2026-10-30) và ghi danh sách file được sửa.
 2. **Nhận task.** Gán chính bạn (assignee) vào issue. Issue đã có người nhận thì không làm lại.
 3. **Bắt đầu.** Dùng `/start-task` với số issue. Nó tạo branch dạng `feat/12-google-sign-in` từ `main` mới nhất và nêu rõ được sửa gì, không được sửa gì.
 4. **Code.** Chỉ làm đúng phạm vi issue. Không tự xóa hay đổi tên chức năng đã có. Không thêm thư viện.
 5. **Mở Pull Request.** Dùng `/open-pr`. Nó chạy build, kiểm tra phạm vi, rồi mở PR theo mẫu.
-6. **Review.** Ai duyệt tùy file bị đổi, xem `.github/CODEOWNERS`: hầu hết mọi thứ chỉ leader duyệt và merge; riêng Pull Request đổi file trong `workflow/docs/` thì Hải Long (`@Contest451`) cũng duyệt được, một trong hai người là đủ. Sửa theo góp ý bằng commit mới trên cùng branch.
+6. **Review.** Ai duyệt tùy file bị đổi, xem `.github/CODEOWNERS`: hầu hết mọi thứ chỉ leader duyệt; riêng Pull Request đổi file trong `PUBGApp/` và `workflow/docs/` thì Hải Long (`@Contest451`) cũng duyệt được, một trong hai người là đủ, và người đã duyệt có thể merge. File Gradle, `google-services.json`, `AndroidManifest.xml`, thư mục `firebase/` và mọi file luật chơi (`.github/`, `AGENTS.md`, `.agents/`, `workflow/scripts/`) chỉ leader duyệt. Không ai tự duyệt Pull Request của mình. Sửa theo góp ý bằng commit mới trên cùng branch.
 
 **Issue và Pull Request viết bằng tiếng Việt** (tiêu đề và nội dung), vì người đọc là người thật. Phần `feat(auth):` ở đầu tiêu đề PR và các từ khóa `Closes`, `Removal-Issue` giữ tiếng Anh; tên lớp, đường dẫn, lệnh giữ nguyên. Tiêu đề PR có dạng `feat(auth): thêm nút đăng nhập bằng Google`. CI từ chối PR không viết bằng tiếng Việt. Commit thì viết tiếng Việt hoặc tiếng Anh đều được.
 

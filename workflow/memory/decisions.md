@@ -435,3 +435,132 @@ Writing the state machines and data dictionary as text showed transitions with n
 
 ### Owner
 tahpnart8
+
+## 2026-10-12 - Free Spark plan: images as Base64 in Firestore, no video
+
+### Decision
+The Firebase project stays on the free Spark plan with no billing card. Cloud Storage and Cloud Functions are not used. Images are compressed on the phone and stored as Base64 strings in Firestore:
+
+- **Full images** (long edge 1024 px, at most 300 KB of JPEG) each go in their own document of the new collection `images` (class `MediaImage`, enum `ImagePurpose`).
+- **Small thumbnails** (320 px for a listing cover, 256 px for an avatar, at most 20 KB) sit inline in `listings.coverThumb`, `deals.itemThumb` and `users.avatarBase64`. Lists and the Room cache therefore never load full images.
+
+Fields that held Storage URLs now hold image ids: `Listing.imageIds`, `ChatMessage.imageId`, `Deal.trackingImageId` and `Complaint.evidenceImageIds`.
+
+Sending video in chat (function STT 45) moves to "Phát triển sau", and `MessageType.VIDEO` is removed. That leaves 87 functions in "Đợt này" and 15 in "Phát triển sau".
+
+This supersedes three earlier entries:
+
+- 2026-09-25 "Product images are stored in Cloud Storage on the Blaze plan".
+- 2026-09-25 "Media files, images and videos, stay in Cloud Storage within the free tier".
+- The mention of Cloud Storage in "Backend and offline strategy".
+
+### Context
+On 2026-10-12 the leader confirmed that the project must cost nothing and that no card will be attached. Cloud Storage has required the Blaze plan since 2026-02-03. Three options were offered: Blaze with a card, Base64 in Firestore, or an outside image host. The leader chose Base64 in Firestore.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Blaze plan with a card, usage kept in the free tier | The leader will not attach a card |
+| Outside image host with an unsigned upload preset | Adds a second service and SDK, and has no Security Rules: anyone who reads the preset from the public repository can upload |
+| Full images inside the listing document | The 1 MiB document limit allows about two images, and every list page would download them |
+
+### Impact
+- Changed: the class diagram (92 classes), the ERD (23 collections), `workflow/docs/data/*`, `workflow/docs/architecture/*`, `workflow/docs/workflow/firebase-setup.md` and the mockup notes for chat.
+- The Spark quotas (stored data, reads and writes per day) become the limit to watch.
+
+### Owner
+tahpnart8
+
+## 2026-10-12 - Navigation, UI packages, module owners and code review
+
+### Decision
+- **Navigation:**
+  - Three Activities. `AuthActivity` holds sign in, sign up and password reset. `MainActivity` holds a bottom bar with five tabs: Trang chủ, Tìm kiếm, Đăng tin, Tin nhắn and Cá nhân. `AdminActivity` is opened from the personal page when the user is an admin.
+  - Every screen is a Fragment, using the Navigation component, with one nested graph per module.
+  - Cross-module links go only through global actions in `nav_main.xml`.
+- **UI packages:** the layer packages of 2026-09-27 gain `ui.<module>`: `ui.account`, `ui.notification`, `ui.listing`, `ui.trade`, `ui.profile`, `ui.trust`, `ui.admin`, `ui.admin.complaint`, `ui.common` and `ui.main`.
+- **Module owners:**
+  - A: Nguyen Thuy Ngan.
+  - B: Tran Anh Tu.
+  - C: Nguyen Le Hai Long.
+  - D: Nguyen Hoang Phuc.
+  - E: Tran Duc Phat.
+
+  Each person owns a module from data to screens, matching the mockup group they drew. `workflow/plan/so-huu.md` maps who may edit which file and which repository method.
+- **Shared classes are pre-built:** in phase 1 the leader creates every class with its full signature. Methods not yet written fail with `DataCallback.NOT_READY`. Members only replace the bodies of the methods assigned to them.
+- **Code review:** Hai Long becomes a code owner of `PUBGApp/` alongside the leader, except for Gradle files, `google-services.json`, `firebase/` and `AndroidManifest.xml`. Either of them may approve and merge a code pull request they did not author.
+- **Issues:** each issue is one vertical slice of half a day to one day, with an exact list of the files it may touch.
+- **Dates:** code freeze on 2026-10-26, submission on 2026-10-30.
+- **Sample data:** a debug-only button writes it through the repositories, with document ids that start with `demo_`.
+
+### Context
+Thirty-odd pull requests in ten days would all wait on the leader. Five people working with AI tools will also collide on shared files unless ownership is decided in advance. Navigation and the UI packages were the last open questions blocking interface code.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Many Activities, one per screen | Hard to keep one bottom bar and the state across tabs |
+| Split the work by layer (data, UI) | People would wait on each other for every screen |
+| The leader alone reviews code | The leader becomes the bottleneck in a two-week build |
+
+### Impact
+`AGENTS.md`, `.github/CODEOWNERS`, `workflow/plan/`, `workflow/docs/conventions/android-java.md`, `workflow/docs/architecture/overview.md`, `workflow/memory/people.md` and `workflow/memory/preferences.md`.
+
+### Owner
+tahpnart8
+
+## 2026-10-12 - Data and behaviour fixes from the second documentation audit
+
+### Decision
+- **No cross-user counters:**
+  - Removed: `User.soldCount`, `followerCount`, `dealCount`, `completedDealCount`, `reportCount` and `Category.listingCount`.
+  - Firestore aggregation queries count them when a screen needs them. `UserRepository.getStats` returns the new value class `ProfileStats`.
+  - Only the rating stays stored, as `ratingSum` and `ratingCount`, incremented in the same batch as the review.
+- **One owner per side effect:**
+  - The repository that changes a state writes the notification for it. ViewModels never create notifications.
+  - `DealRepository.completeDeal` is the only place where a deal becomes COMPLETED.
+- **Uniqueness through document ids:**
+  - A review is `reviews/{dealId}_{reviewerId}`.
+  - A complaint is `complaints/{dealId}`. A deal therefore has at most one complaint ever, and withdrawing it is final.
+  - A complaint can be opened only before `autoReleaseAt`.
+- **Deals that stall:**
+  - A deal still in PENDING_CONFIRM after 3 days is cancelled by the automatic sweep (`DealRepository.expirePendingDeals`).
+  - When a listing leaves AVAILABLE for any reason other than an accepted offer, its pending offers are rejected in the same batch.
+  - Only DRAFT listings can be deleted. Other listings are hidden.
+- **Accounts:**
+  - `User.lockReason` is added.
+  - A warning of level 3 or more locks the account permanently, and unlocking does not reset `warningCount`.
+  - `User.canSell` takes the email-verified flag.
+  - Deleting an account requires signing in again first.
+  - A first Google sign-in goes through a profile completion step.
+- **Firestore mapping rules:**
+  - `BaseDocument.id` uses `@DocumentId` and is not stored.
+  - Computed `isX()` and `getX()` methods use `@Exclude`.
+  - Booleans named `isX` use `@PropertyName`.
+  - `createdAt`, `updatedAt` and `shippedAt` use server time.
+- **Paging:**
+  - Paging uses a cursor on `createdAt`, not page numbers.
+  - Sorting by price is done on the server.
+  - Sorting by seller rating is done on the device, within the loaded page.
+- **Security Rules** are specified in `workflow/docs/data/security-rules.md` before coding starts.
+
+### Context
+The second audit (2026-10-12) read the architecture and data documents as the engineers who will code from them would. It found five problems:
+
+- counters that any client could forge;
+- side effects with two owners;
+- states that could wait forever;
+- methods that the flows needed but no class had;
+- Firestore mapping traps that silently store wrong field names.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep the counters and guard each one with a Security Rule | Needs one rule per counter and per cross-user write, which is easy to get wrong; aggregation queries are cheap at this scale |
+| Leave timeouts to an admin override | The override (STT 85) is "Phát triển sau" |
+
+### Impact
+The class diagram, the ERD, `workflow/docs/architecture/*`, `workflow/docs/data/*` and `workflow/plan/phase-2-tinh-nang.md`.
+
+### Owner
+tahpnart8

@@ -36,7 +36,7 @@ Tiện ích dùng chung, không giữ trạng thái màn hình.
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public SessionManager getInstance()` | Trả thể hiện duy nhất. |  |
+| `public static SessionManager getInstance()` | Trả thể hiện duy nhất. |  |
 | `public void start(User, boolean)` | Lưu người dùng và cờ admin sau khi đăng nhập. |  |
 | `public void clear()` | Xóa phiên khi đăng xuất. |  |
 | `public String getCurrentUserId()` | Mã người đang đăng nhập. |  |
@@ -116,11 +116,11 @@ Tiện ích dùng chung, không giữ trạng thái màn hình.
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
 | `public List<Listing> similarTo(Listing, List<Listing>)` | Tin cùng danh mục, gần giá, sắp theo điểm giống nhau. | 36 |
-| `public List<Listing> forYou(List<Listing>, List<RecentViewEntity>, List<RecentSearchEntity>, User)` | Chấm điểm tin theo danh mục đã xem, từ khóa đã tìm và danh mục quan tâm. | 29, 38 |
+| `public List<Listing> forYou(List<Listing>, List<String>, List<String>, List<String>, User)` | Chấm điểm theo [goi-y.md](../goi-y.md): danh mục đã xem, từ khóa đã tìm, danh mục của tin đã lưu, danh mục quan tâm, độ mới. Nhận danh sách thường, không nhận entity Room. | 29, 38 |
 | `public long[] priceRange(Listing, List<Listing>)` | Khoảng giá [thấp, cao] từ các tin cùng danh mục và tình trạng; mảng rỗng khi quá ít tin để tính. | 37 |
 | `private double score(Listing)` | Điểm phù hợp của một tin với người dùng. |  |
 
-**Dùng tới:** [`Listing`](model.md#listing), [`RecentSearchEntity`](data-local.md#recentsearchentity), [`RecentViewEntity`](data-local.md#recentviewentity), [`User`](model.md#user)
+**Dùng tới:** [`Listing`](model.md#listing), [`User`](model.md#user)
 
 **Được dùng bởi:** [`FeedViewModel`](viewmodel.md#feedviewmodel), [`ListingDetailViewModel`](viewmodel.md#listingdetailviewmodel)
 
@@ -182,10 +182,10 @@ Tiện ích dùng chung, không giữ trạng thái màn hình.
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public Result doWork()` | Gọi `releaseDueDeals` rồi `completeDueDeals` cho người dùng đang đăng nhập. |  |
+| `public Result doWork()` | Chạy mỗi 15 phút bằng WorkManager: `releaseDueDeals`, `completeDueDeals`, `expirePendingDeals` cho người đang đăng nhập; chờ kết quả bằng `Tasks.await` vì `doWork` là đồng bộ. Ngoại lệ duy nhất của luật tầng: lớp ở `util` gọi repository. |  |
 
 **Quan hệ trên sơ đồ lớp**
 
 - `AutoReleaseWorker` kế thừa `Worker`. Trang 7. ViewModel và tiện ích.
 
-**Dùng tới:** [`DealRepository`](data.md#dealrepository), [`NotificationRepository`](data.md#notificationrepository)
+**Dùng tới:** [`DealRepository`](data.md#dealrepository)

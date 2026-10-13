@@ -1,6 +1,6 @@
 # Đặc tả lớp: gói `com.nhom3.pubgapp.model.enums`
 
-Bản chữ của sơ đồ lớp cho gói này: 21 lớp. Mục lục và cách đọc ở [README.md](README.md).
+Bản chữ của sơ đồ lớp cho gói này: 22 lớp. Mục lục và cách đọc ở [README.md](README.md).
 
 Các kiểu liệt kê. Thêm giá trị mới là đổi cấu trúc dữ liệu: cần hỏi leader trước (`AGENTS.md`, luật R6).
 
@@ -15,6 +15,7 @@ Các kiểu liệt kê. Thêm giá trị mới là đổi cấu trúc dữ liệ
 | [`ItemCondition`](#itemcondition) | enum | Tình trạng món đồ: mới, như mới, đã sử dụng, đã sửa chữa, có lỗi. |
 | [`SortOrder`](#sortorder) | enum | Cách sắp xếp kết quả. |
 | [`MessageType`](#messagetype) | enum | Loại tin nhắn. |
+| [`ImagePurpose`](#imagepurpose) | enum | Ảnh dùng cho việc gì. |
 | [`OfferType`](#offertype) | enum | Loại offer: tiền, vật, hoặc cả hai. |
 | [`OfferStatus`](#offerstatus) | enum | Trạng thái offer. |
 | [`DealStatus`](#dealstatus) | enum | Trạng thái giao dịch. |
@@ -138,7 +139,7 @@ Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị l
 
 Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị lấy từ string resource, không dùng tên hằng.
 
-**Được dùng bởi:** [`Listing`](model.md#listing), [`ShopViewModel`](viewmodel.md#shopviewmodel)
+**Được dùng bởi:** [`Listing`](model.md#listing), [`ListingRepository`](data.md#listingrepository), [`ShopViewModel`](viewmodel.md#shopviewmodel)
 
 ### TradeType
 
@@ -211,18 +212,38 @@ Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị l
 | Loại | enum |
 | Lưu trữ | Không lưu |
 | Trách nhiệm | Loại tin nhắn. |
-| Chức năng liên quan (STT) | 43 đến 45 |
+| Chức năng liên quan (STT) | 43, 44 |
 
 | Giá trị | Nghĩa |
 | --- | --- |
 | `TEXT` | Chữ |
 | `IMAGE` | Ảnh |
-| `VIDEO` | Video |
 | `OFFER` | Đề nghị giá |
 
 Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị lấy từ string resource, không dùng tên hằng.
 
-**Được dùng bởi:** [`ChatMessage`](model.md#chatmessage), [`ChatRepository`](data.md#chatrepository)
+**Được dùng bởi:** [`ChatMessage`](model.md#chatmessage)
+
+### ImagePurpose
+
+| Mục | Nội dung |
+| --- | --- |
+| Định danh | `com.nhom3.pubgapp.model.enums.ImagePurpose` |
+| Loại | enum |
+| Lưu trữ | Không lưu |
+| Trách nhiệm | Ảnh dùng cho việc gì. |
+| Chức năng liên quan (STT) | 17 |
+
+| Giá trị | Nghĩa |
+| --- | --- |
+| `LISTING` | Ảnh tin đăng |
+| `CHAT` | Ảnh gửi trong chat |
+| `WAYBILL` | Ảnh vận đơn |
+| `EVIDENCE` | Ảnh bằng chứng khiếu nại |
+
+Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị lấy từ string resource, không dùng tên hằng.
+
+**Được dùng bởi:** [`MediaImage`](model.md#mediaimage), [`MediaRepository`](data.md#mediarepository)
 
 ### OfferType
 

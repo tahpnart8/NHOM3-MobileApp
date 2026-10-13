@@ -12,7 +12,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | [`FeedViewModel`](#feedviewmodel) | lớp (ViewModel) | Kênh chung, kênh đang theo dõi, sắp xếp, mục Dành cho bạn. |
 | [`SearchViewModel`](#searchviewmodel) | lớp (ViewModel) | Từ khóa, bộ lọc và lịch sử tìm kiếm. |
 | [`ListingDetailViewModel`](#listingdetailviewmodel) | lớp (ViewModel) | Chi tiết tin, người bán, tin tương tự, giá tham khảo, lưu tin. |
-| [`ChatViewModel`](#chatviewmodel) | lớp (ViewModel) | Danh sách chat, trạng thái hoạt động của người đối thoại, gửi chữ, ảnh, video và offer. |
+| [`ChatViewModel`](#chatviewmodel) | lớp (ViewModel) | Danh sách chat, trạng thái hoạt động của người đối thoại, gửi chữ, ảnh và offer. |
 | [`DealViewModel`](#dealviewmodel) | lớp (ViewModel) | Tạo, sửa, xác nhận, thanh toán, giao (kèm vận đơn), nhận, hoàn tất, hủy, đếm ngược và lịch sử giao dịch. |
 | [`TrustViewModel`](#trustviewmodel) | lớp (ViewModel) | Đánh giá, báo cáo và khiếu nại phía người dùng. |
 | [`NotificationViewModel`](#notificationviewmodel) | lớp (ViewModel) | Danh sách thông báo và số chưa đọc. |
@@ -37,15 +37,18 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | Tên | Kiểu | Truy cập | Ý nghĩa |
 | --- | --- | --- | --- |
 | `loggedIn` | `LiveData<Boolean>` | private | Đăng nhập thành công hay chưa; màn hình chuyển trang khi giá trị là true. |
+| `needsProfile` | `LiveData<Boolean>` | private | Dữ liệu màn hình quan sát (`Boolean`); giữ qua lần xoay màn hình. |
 | `error` | `LiveData<String>` | private | Câu báo lỗi để màn hình hiện; rỗng khi không có lỗi. |
 
 **Phương thức**
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public void register(User user, String password, UserIdentity identity, List<String> categoryIds)` | Đăng ký: `AuthRepository.signUp`, rồi ghi hồ sơ (kèm `termsAcceptedAt`, danh mục quan tâm) và thông tin định danh qua `UserRepository`. | 1 đến 3, 35 |
-| `public void login(String email, String password)` | `AuthRepository.signIn`, đọc `admins/{uid}`, rồi `SessionManager.start`. | 1 đến 3 |
-| `public void loginWithGoogle(String idToken)` | `AuthRepository.signInWithGoogle`, đọc `admins/{uid}`, rồi `SessionManager.start`. | 1 đến 3 |
+| `public void register(User user, String password, UserIdentity identity, List<String> categoryIds)` | Đăng ký email: `AuthRepository.signUp`, rồi `UserRepository.createProfile` (kèm `termsAcceptedAt`, danh mục quan tâm, thông tin định danh), rồi gửi email xác thực. | 1 đến 3, 35 |
+| `public void completeProfile(User user, UserIdentity identity, List<String> categoryIds)` | Bước hoàn tất hồ sơ cho người đăng nhập Google lần đầu: `UserRepository.createProfile`. |  |
+| `public void login(String email, String password)` | `AuthRepository.signIn`; tài khoản DELETED thì báo đã xóa và đăng xuất; khóa tạm hết hạn thì `clearExpiredLock`; đang khóa thì hiện `lockReason` và hạn rồi đăng xuất; còn lại đọc `admins/{uid}` và `SessionManager.start`. | 1 đến 3 |
+| `public void loginWithGoogle(String idToken)` | Như `login` nhưng qua `signInWithGoogle`; lần đầu (chưa có hồ sơ) thì đặt `needsProfile` để mở bước hoàn tất hồ sơ. | 1 đến 3 |
+| `public void restoreSession()` | Chạy khi mở ứng dụng nếu Firebase còn phiên: đọc lại `users/{uid}`, kiểm tra khóa và DELETED, đọc lại `admins/{uid}`, rồi `SessionManager.start`. |  |
 | `public void resetPassword(String email)` | `AuthRepository.sendPasswordReset`. | 1 đến 3 |
 | `public void changePassword(String current, String next)` | Gọi `AuthRepository.changePassword` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 11 |
 | `public void logout()` | `AuthRepository.signOut`, xóa Room và `SessionManager`. |  |
@@ -54,7 +57,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 
 - `AuthViewModel` kế thừa `ViewModel`. Trang 7. ViewModel và tiện ích.
 
-**Dùng tới:** [`AuthRepository`](data.md#authrepository), [`SessionManager`](util.md#sessionmanager), [`User`](model.md#user), [`UserIdentity`](model.md#useridentity), [`UserRepository`](data.md#userrepository)
+**Dùng tới:** [`AdminRepository`](data.md#adminrepository), [`AuthRepository`](data.md#authrepository), [`SessionManager`](util.md#sessionmanager), [`User`](model.md#user), [`UserIdentity`](model.md#useridentity), [`UserRepository`](data.md#userrepository)
 
 ### ProfileViewModel
 
@@ -72,6 +75,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | Tên | Kiểu | Truy cập | Ý nghĩa |
 | --- | --- | --- | --- |
 | `profile` | `LiveData<User>` | private | Dữ liệu màn hình quan sát (`User`); giữ qua lần xoay màn hình. |
+| `stats` | `LiveData<ProfileStats>` | private | Dữ liệu màn hình quan sát (`ProfileStats`); giữ qua lần xoay màn hình. |
 | `addresses` | `LiveData<List<UserAddress>>` | private | Dữ liệu màn hình quan sát (`List<UserAddress>`); giữ qua lần xoay màn hình. |
 | `savedListings` | `LiveData<List<Listing>>` | private | Dữ liệu màn hình quan sát (`List<Listing>`); giữ qua lần xoay màn hình. |
 | `identity` | `LiveData<UserIdentity>` | private | Dữ liệu màn hình quan sát (`UserIdentity`); giữ qua lần xoay màn hình. |
@@ -80,9 +84,9 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public void loadProfile(String uid)` | Đọc hồ sơ, địa chỉ và số liệu hồ sơ của một người dùng. | 7, 8 |
+| `public void loadProfile(String uid)` | Đọc hồ sơ và `UserRepository.getStats`. | 7, 8 |
 | `public void updateProfile(User user)` | Gọi `UserRepository.updateProfile` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 4 |
-| `public void changeAvatar(Uri uri)` | Tải ảnh qua `MediaRepository` rồi ghi `avatarUrl`. | 5 |
+| `public void changeAvatar(Uri uri)` | Tạo ảnh 256 px qua `MediaRepository.makeThumb` rồi ghi `avatarBase64`. | 5 |
 | `public void saveAddress(UserAddress address)` | Gọi `UserRepository.saveAddress` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 6 |
 | `public void deleteAddress(String id)` | Gọi `UserRepository.deleteAddress` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 6 |
 | `public void follow(String uid)` | Gọi `UserRepository.follow` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 39 |
@@ -92,13 +96,13 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | `public void loadIdentity()` | `UserRepository.getIdentity` cho chính chủ. | 9 |
 | `public void saveIdentity(UserIdentity identity)` | Gọi `UserRepository.saveIdentity` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 9 |
 | `public void updateNotificationPrefs(Map<String,Boolean> prefs)` | Gọi `UserRepository.updateNotificationPrefs` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 10 |
-| `public void deactivateAccount()` | `UserRepository.deactivate`, rồi `AuthRepository.deleteLogin`, rồi đăng xuất. | 12 |
+| `public void deactivateAccount(String password)` | Xác thực lại, rồi `UserRepository.deactivate`, rồi `AuthRepository.deleteLogin`, rồi đăng xuất và xóa Room. | 12 |
 
 **Quan hệ trên sơ đồ lớp**
 
 - `ProfileViewModel` kế thừa `ViewModel`. Trang 7. ViewModel và tiện ích.
 
-**Dùng tới:** [`AuthRepository`](data.md#authrepository), [`Listing`](model.md#listing), [`ListingRepository`](data.md#listingrepository), [`MediaRepository`](data.md#mediarepository), [`User`](model.md#user), [`UserAddress`](model.md#useraddress), [`UserIdentity`](model.md#useridentity), [`UserRepository`](data.md#userrepository)
+**Dùng tới:** [`AuthRepository`](data.md#authrepository), [`Listing`](model.md#listing), [`ListingRepository`](data.md#listingrepository), [`MediaRepository`](data.md#mediarepository), [`ProfileStats`](model.md#profilestats), [`User`](model.md#user), [`UserAddress`](model.md#useraddress), [`UserIdentity`](model.md#useridentity), [`UserRepository`](data.md#userrepository)
 
 ### ShopViewModel
 
@@ -248,8 +252,8 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | Loại | lớp (ViewModel) |
 | Kế thừa | `androidx.lifecycle.ViewModel` |
 | Lưu trữ | Không lưu |
-| Trách nhiệm | Danh sách chat, trạng thái hoạt động của người đối thoại, gửi chữ, ảnh, video và offer. |
-| Chức năng liên quan (STT) | 43 đến 49 |
+| Trách nhiệm | Danh sách chat, trạng thái hoạt động của người đối thoại, gửi chữ, ảnh và offer. |
+| Chức năng liên quan (STT) | 43, 44, 46 đến 49 |
 
 **Thuộc tính**
 
@@ -265,10 +269,11 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | --- | --- | --- |
 | `public void loadConversations()` | Danh sách chat của người dùng. |  |
 | `public void openConversation(String listingId)` | Mở hoặc tạo cuộc trò chuyện về một tin, bắt đầu lắng nghe tin nhắn. |  |
+| `public void openConversationById(String id)` | Mở cuộc trò chuyện theo mã (người bán, hoặc từ thông báo). |  |
+| `public void loadOlder()` | Tải thêm tin nhắn cũ. |  |
 | `public void loadPartner()` | Đọc hồ sơ bên còn lại để hiện tên và trạng thái hoạt động. | 46 |
-| `public void sendText(String text)` | Gọi `ChatRepository.sendText` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 43 đến 45 |
-| `public void sendImage(Uri uri)` | `ChatRepository.sendMedia` với IMAGE. | 43 đến 45 |
-| `public void sendVideo(Uri uri)` | `ChatRepository.sendMedia` với VIDEO. | 43 đến 45 |
+| `public void sendText(String text)` | Gọi `ChatRepository.sendText` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 43, 44 |
+| `public void sendImage(Uri uri)` | `ChatRepository.sendImage`. | 43, 44 |
 | `public void makeOffer(Offer offer)` | `ChatRepository.sendOffer`. | 47 đến 49 |
 | `public void respondToOffer(String offerId, boolean accept)` | Gọi `ChatRepository.respondToOffer` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 47 đến 49 |
 
@@ -276,7 +281,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 
 - `ChatViewModel` kế thừa `ViewModel`. Trang 7. ViewModel và tiện ích.
 
-**Dùng tới:** [`ChatMessage`](model.md#chatmessage), [`ChatRepository`](data.md#chatrepository), [`Conversation`](model.md#conversation), [`DealRepository`](data.md#dealrepository), [`MediaRepository`](data.md#mediarepository), [`NotificationRepository`](data.md#notificationrepository), [`Offer`](model.md#offer), [`User`](model.md#user), [`UserRepository`](data.md#userrepository)
+**Dùng tới:** [`ChatMessage`](model.md#chatmessage), [`ChatRepository`](data.md#chatrepository), [`Conversation`](model.md#conversation), [`MediaRepository`](data.md#mediarepository), [`Offer`](model.md#offer), [`User`](model.md#user), [`UserRepository`](data.md#userrepository)
 
 ### DealViewModel
 
@@ -301,13 +306,14 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public void loadDeal(String id)` | Đọc một giao dịch và khoản ký quỹ của nó. | 50 |
+| `public void loadDeal(String id)` | `DealRepository.getById` và `getPayment`. | 50 |
 | `public void updateTerms(Deal deal)` | Gọi `DealRepository.updateTerms` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 51 |
 | `public void confirm()` | Gọi `DealRepository.confirm` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 52 |
 | `public void pay()` | Gọi `DealRepository.pay` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 56 |
+| `public void loadMyReview()` | `ReviewRepository.getByDeal` để biết người đang xem đã đánh giá chưa (ẩn hoặc hiện nút Viết đánh giá). |  |
 | `public void markShipped(String carrier, String trackingCode, Uri photoUri)` | Gọi `DealRepository.markShipped` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 54 |
 | `public void markReceived()` | Gọi `DealRepository.markReceived` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 53 |
-| `public void checkAutoRelease()` | Gọi khi mở ứng dụng: chạy `releaseDueDeals` và `completeDueDeals` ngay, không chờ việc chạy nền. | 84 |
+| `public void checkAutoRelease()` | Gọi khi mở ứng dụng: chạy `releaseDueDeals`, `completeDueDeals`, `expirePendingDeals` ngay, không chờ việc chạy nền. | 84 |
 | `public void cancel(String reason)` | Gọi `DealRepository.cancel` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 55 |
 | `public void loadHistory()` | `DealRepository.getMyDeals`. | 57 |
 | `public void loadPayments()` | `DealRepository.getPayments`. | 58 |
@@ -316,7 +322,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 
 - `DealViewModel` kế thừa `ViewModel`. Trang 7. ViewModel và tiện ích.
 
-**Dùng tới:** [`Deal`](model.md#deal), [`DealRepository`](data.md#dealrepository), [`MediaRepository`](data.md#mediarepository), [`NotificationRepository`](data.md#notificationrepository), [`Payment`](model.md#payment), [`UserRepository`](data.md#userrepository)
+**Dùng tới:** [`Deal`](model.md#deal), [`DealRepository`](data.md#dealrepository), [`MediaRepository`](data.md#mediarepository), [`Payment`](model.md#payment), [`ReviewRepository`](data.md#reviewrepository), [`UserRepository`](data.md#userrepository)
 
 ### TrustViewModel
 
@@ -348,6 +354,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | `public void loadMyReports()` | `ReportRepository.getMyReports`. | 63 |
 | `public void exportReports()` | `ReportRepository.exportCsv` rồi mở hộp chia sẻ tệp. | 63 |
 | `public void submitComplaint(Complaint complaint, List<Uri> evidenceUris)` | Tải ảnh bằng chứng (tối thiểu 1) rồi `ComplaintRepository.create`. | 64 |
+| `public void addEvidence(String id, List<Uri> evidenceUris)` | Lưu ảnh qua `MediaRepository`, rồi `ComplaintRepository.addEvidence`. | 64 |
 | `public void loadMyComplaints()` | `ComplaintRepository.getMyComplaints`. | 65 |
 | `public void withdrawComplaint(String id)` | `ComplaintRepository.withdraw`. | 66 |
 
@@ -412,19 +419,19 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
 | `public void filterUsers(UserStatus status, Timestamp from, Timestamp to, String province)` | `AdminRepository.listUsers`. | 68 |
-| `public void loadProfile(String userId)` | Hồ sơ, tin đăng, giao dịch, đánh giá và cảnh báo của một người dùng. | 69 |
-| `public void lock(String userId, Timestamp until)` | `AdminRepository.lockUser`. | 70, 71 |
+| `public void loadProfile(String userId)` | Hồ sơ, thông tin định danh, tin đăng, giao dịch, đánh giá và cảnh báo của một người dùng. | 69 |
+| `public void lock(String userId, Timestamp until, String reason)` | `AdminRepository.lockUser`. | 70, 71 |
 | `public void unlock(String userId)` | `AdminRepository.unlockUser`. | 70, 71 |
-| `public void warn(String userId, String reason)` | `AdminRepository.warnUser`; bậc 3 thì gỡ hàng loạt tin của tài khoản. | 72 |
+| `public void warn(String userId, String reason, Timestamp until)` | `AdminRepository.warnUser`; bậc 3 thì gỡ hàng loạt tin của tài khoản. | 72 |
 | `public void loadVerificationRequests()` | `AdminRepository.getVerificationRequests`. | 73 |
-| `public void reviewVerification(String userId, boolean approve)` | Gọi `AdminRepository.reviewVerification` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 73 |
+| `public void reviewVerification(String userId, boolean approve, String note)` | Gọi `AdminRepository.reviewVerification` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 73 |
 | `public void loadActivityLog(String userId)` | `AdminRepository.getActivityLogs`. | 74 |
 
 **Quan hệ trên sơ đồ lớp**
 
 - `AdminUserViewModel` kế thừa `ViewModel`. Trang 7. ViewModel và tiện ích.
 
-**Dùng tới:** [`ActivityLog`](model.md#activitylog), [`AdminRepository`](data.md#adminrepository), [`DealRepository`](data.md#dealrepository), [`ListingRepository`](data.md#listingrepository), [`NotificationRepository`](data.md#notificationrepository), [`ReviewRepository`](data.md#reviewrepository), [`User`](model.md#user), [`UserRepository`](data.md#userrepository), [`UserStatus`](enums.md#userstatus), [`Warning`](model.md#warning)
+**Dùng tới:** [`ActivityLog`](model.md#activitylog), [`AdminRepository`](data.md#adminrepository), [`DealRepository`](data.md#dealrepository), [`ListingRepository`](data.md#listingrepository), [`ReviewRepository`](data.md#reviewrepository), [`User`](model.md#user), [`UserRepository`](data.md#userrepository), [`UserStatus`](enums.md#userstatus), [`Warning`](model.md#warning)
 
 ### AdminContentViewModel
 
@@ -454,6 +461,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | `public void hide(String listingId, String reason)` | `AdminRepository.hideListing`. | 76 |
 | `public void restore(String listingId)` | `AdminRepository.restoreListing`. | 76 |
 | `public void removeAllOf(String userId)` | `AdminRepository.removeAllListingsOf`. | 77 |
+| `public void clearFlag(String listingId)` | Gọi `AdminRepository.clearFlag` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 78 |
 | `public void loadKeywords()` | `AdminRepository.getKeywords`. |  |
 | `public void addKeyword(String word)` | Gọi `AdminRepository.addKeyword` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 78 |
 | `public void removeKeyword(String id)` | Gọi `AdminRepository.removeKeyword` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 78 |
@@ -465,7 +473,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 
 - `AdminContentViewModel` kế thừa `ViewModel`. Trang 7. ViewModel và tiện ích.
 
-**Dùng tới:** [`AdminRepository`](data.md#adminrepository), [`BannedKeyword`](model.md#bannedkeyword), [`Category`](model.md#category), [`CategoryRepository`](data.md#categoryrepository), [`Listing`](model.md#listing), [`ListingRepository`](data.md#listingrepository), [`NotificationRepository`](data.md#notificationrepository), [`ReportRepository`](data.md#reportrepository)
+**Dùng tới:** [`AdminRepository`](data.md#adminrepository), [`BannedKeyword`](model.md#bannedkeyword), [`Category`](model.md#category), [`CategoryRepository`](data.md#categoryrepository), [`Listing`](model.md#listing), [`ListingRepository`](data.md#listingrepository), [`ReportRepository`](data.md#reportrepository)
 
 ### AdminDealViewModel
 
@@ -507,7 +515,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | Kế thừa | `androidx.lifecycle.ViewModel` |
 | Lưu trữ | Không lưu |
 | Trách nhiệm | Admin: xử lý khiếu nại, ra quyết định, ghi chú nội bộ, thông báo. |
-| Chức năng liên quan (STT) | 87 đến 91 |
+| Chức năng liên quan (STT) | 87 đến 90 |
 
 **Thuộc tính**
 
@@ -522,12 +530,12 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | --- | --- | --- |
 | `public void loadComplaints(ComplaintStatus status, Priority priority)` | `ComplaintRepository.getByStatus`. | 87 |
 | `public void loadDetail(String id)` | `ComplaintRepository.getDetail` kèm lịch sử chat của giao dịch. | 88 |
-| `public void decide(String id, ComplaintDecision decision, String message)` | Gọi `ComplaintRepository.decide` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 89 |
+| `public void setPriority(String id, Priority priority)` | `ComplaintRepository.setPriority`. |  |
+| `public void decide(String id, ComplaintDecision decision, String message)` | `ComplaintRepository.decide` (repository ghi thông báo cho hai bên). | 89 |
 | `public void saveNote(String id, String note)` | `ComplaintRepository.saveAdminNote`. | 90 |
-| `public void notifyParties(String id)` | Gửi thông báo COMPLAINT_RESULT cho hai bên. | 91 |
 
 **Quan hệ trên sơ đồ lớp**
 
 - `AdminComplaintViewModel` kế thừa `ViewModel`. Trang 7. ViewModel và tiện ích.
 
-**Dùng tới:** [`ChatRepository`](data.md#chatrepository), [`Complaint`](model.md#complaint), [`ComplaintDecision`](enums.md#complaintdecision), [`ComplaintRepository`](data.md#complaintrepository), [`ComplaintStatus`](enums.md#complaintstatus), [`DealRepository`](data.md#dealrepository), [`NotificationRepository`](data.md#notificationrepository), [`Priority`](enums.md#priority)
+**Dùng tới:** [`ChatRepository`](data.md#chatrepository), [`Complaint`](model.md#complaint), [`ComplaintDecision`](enums.md#complaintdecision), [`ComplaintRepository`](data.md#complaintrepository), [`ComplaintStatus`](enums.md#complaintstatus), [`DealRepository`](data.md#dealrepository), [`Priority`](enums.md#priority)

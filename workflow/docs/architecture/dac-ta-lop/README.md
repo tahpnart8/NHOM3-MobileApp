@@ -10,19 +10,20 @@ Cách mô tả mỗi lớp theo khung "thực thể thiết kế" của IEEE 101
 - **Kiểu ngoài:** `Timestamp` là `com.google.firebase.Timestamp`, `GeoPoint` là `com.google.firebase.firestore.GeoPoint`, `Uri` là `android.net.Uri`, `LiveData` là `androidx.lifecycle.LiveData`. Firebase và Room **chưa có trong build** (xem [overview.md](../overview.md)).
 - **`DataCallback<T>`:** kết quả bất đồng bộ của repository; `T` ghi ở chữ ký. `Void` nghĩa là chỉ báo xong.
 - **STT:** số dòng trong [bảng đặc tả chức năng](../../product/dac-ta-chuc-nang.md). Chỉ chức năng Đợt này.
+- **Lớp ngoài danh sách:** `PubgApplication` (lớp `Application` ở gói gốc, khởi tạo `NetworkMonitor`, Room và WorkManager), các Activity, Fragment và Adapter thuộc tầng giao diện, xem [overview.md](../overview.md) mục 5.
 - **Quan hệ:** hợp thành nghĩa là phần con nằm trong cha (collection con hoặc mảng lồng) và mất khi cha mất; liên kết nghĩa là lưu mã của bên kia; phụ thuộc nghĩa là dùng tạm thời trong phương thức.
 
 ## Theo gói
 
 | Tệp | Gói | Số lớp |
 | --- | --- | ---: |
-| [model.md](model.md) | `com.nhom3.pubgapp.model` | 21 |
-| [enums.md](enums.md) | `com.nhom3.pubgapp.model.enums` | 21 |
+| [model.md](model.md) | `com.nhom3.pubgapp.model` | 23 |
+| [enums.md](enums.md) | `com.nhom3.pubgapp.model.enums` | 22 |
 | [data.md](data.md) | `com.nhom3.pubgapp.data` | 14 |
 | [data-local.md](data-local.md) | `com.nhom3.pubgapp.data.local` | 12 |
 | [util.md](util.md) | `com.nhom3.pubgapp.util` | 7 |
 | [viewmodel.md](viewmodel.md) | `com.nhom3.pubgapp.viewmodel` | 14 |
-| **Tổng** | | **89** |
+| **Tổng** | | **92** |
 
 ## Mọi lớp theo thứ tự chữ cái
 
@@ -69,6 +70,7 @@ Cách mô tả mỗi lớp theo khung "thực thể thiết kế" của IEEE 101
 | [`Gender`](enums.md#gender) | `model.enums` | enum |
 | [`GeoUtils`](util.md#geoutils) | `util` | lớp |
 | [`HistoryDao`](data-local.md#historydao) | `data.local` | interface |
+| [`ImagePurpose`](enums.md#imagepurpose) | `model.enums` | enum |
 | [`ItemCondition`](enums.md#itemcondition) | `model.enums` | enum |
 | [`KeywordFilter`](util.md#keywordfilter) | `util` | lớp |
 | [`Listing`](model.md#listing) | `model` | lớp |
@@ -77,6 +79,7 @@ Cách mô tả mỗi lớp theo khung "thực thể thiết kế" của IEEE 101
 | [`ListingEntity`](data-local.md#listingentity) | `data.local` | lớp (entity) |
 | [`ListingRepository`](data.md#listingrepository) | `data` | lớp (repository) |
 | [`ListingStatus`](enums.md#listingstatus) | `model.enums` | enum |
+| [`MediaImage`](model.md#mediaimage) | `model` | lớp |
 | [`MediaRepository`](data.md#mediarepository) | `data` | lớp (repository) |
 | [`MessageEntity`](data-local.md#messageentity) | `data.local` | lớp (entity) |
 | [`MessageType`](enums.md#messagetype) | `model.enums` | enum |
@@ -90,6 +93,7 @@ Cách mô tả mỗi lớp theo khung "thực thể thiết kế" của IEEE 101
 | [`Payment`](model.md#payment) | `model` | lớp |
 | [`PaymentStatus`](enums.md#paymentstatus) | `model.enums` | enum |
 | [`Priority`](enums.md#priority) | `model.enums` | enum |
+| [`ProfileStats`](model.md#profilestats) | `model` | lớp (value object) |
 | [`ProfileViewModel`](viewmodel.md#profileviewmodel) | `viewmodel` | lớp (ViewModel) |
 | [`RecentSearchEntity`](data-local.md#recentsearchentity) | `data.local` | lớp (entity) |
 | [`RecentViewEntity`](data-local.md#recentviewentity) | `data.local` | lớp (entity) |
@@ -342,7 +346,6 @@ classDiagram
         <<enumeration>>
         TEXT
         IMAGE
-        VIDEO
         OFFER
     }
     class OfferType {

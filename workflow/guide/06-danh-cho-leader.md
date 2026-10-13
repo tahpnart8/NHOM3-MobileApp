@@ -1,6 +1,6 @@
-# 06. Dành cho leader
+# 06. Dành cho leader và người đồng duyệt
 
-Prompt cho người duyệt và merge. Dùng với Claude Code hoặc công cụ nào bạn chọn. Nguyên tắc: **AI đề xuất, bạn quyết định** (`AGENTS.md` R10). AI chỉ merge khi bạn nói rõ.
+Prompt cho người duyệt và merge: leader, và Hải Long (`@Contest451`) với code trong `PUBGApp/` và tài liệu trong `workflow/docs/` do anh ấy sở hữu theo `CODEOWNERS`. PR đụng tới file chỉ leader sở hữu (Gradle, manifest, `firebase/`, `.github/`, script, luật, kế hoạch) thì phải có leader duyệt. Dùng với Claude Code hoặc công cụ nào bạn chọn. Nguyên tắc: **AI đề xuất, bạn quyết định** (`AGENTS.md` R10). AI chỉ merge khi bạn nói rõ.
 
 ## Duyệt một PR
 
@@ -38,7 +38,7 @@ Lệnh sẽ là `gh pr merge <N> --squash`. Ruleset của repo đặt nội dung
 Đọc workflow/docs/product/features.md và các issue đang mở (gh issue list). Đề xuất 3 issue tiếp theo nên mở, mỗi issue là một lát cắt nhỏ, có tiêu chí nghiệm thu kiểm được và phạm vi rõ. Chưa tạo; đưa danh sách để tôi duyệt.
 ```
 
-Giao việc bằng cách gán assignee cho issue. Tính năng phải ở trạng thái `planned` trong `features.md` thì mới nên có issue mã nguồn.
+Giao việc bằng cách gán assignee cho issue. Chỉ giao issue của việc trong `workflow/plan/` mà phụ thuộc đã xong, thuộc tính năng `F-xx` không còn ở trạng thái `proposed` trong `features.md`. Mỗi issue phải có đủ module, STT "Đợt này", danh sách file được sửa và tên lớp lấy từ đặc tả.
 
 ## Việc định kỳ
 

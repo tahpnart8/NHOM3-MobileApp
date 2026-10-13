@@ -1,5 +1,5 @@
 name: Tính năng
-description: Hành vi mới mà người dùng nhìn thấy được
+description: Một lát cắt dọc của một module, khoảng nửa ngày đến một ngày
 title: "Thêm "
 labels: ["type:feature"]
 body:
@@ -7,10 +7,45 @@ body:
     id: feature_id
     attributes:
       label: Mã tính năng
-      description: Mã trong workflow/docs/product/features.md, ví dụ F-04. Nếu tính năng chưa được đăng ký ở đó thì mở issue docs trước và nhờ leader duyệt.
+      description: Mã F-xx trong workflow/docs/product/features.md. Tính năng phải ở trạng thái khác proposed.
       placeholder: F-04
     validations:
       required: true
+  - type: input
+    id: plan_item
+    attributes:
+      label: Mã việc kế hoạch
+      description: Mã trong workflow/plan/, ví dụ P2-B3. Thân issue giữ dòng này để Pull Request dẫn lại.
+      placeholder: P2-B3
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      description: Module sở hữu các file ở mục "File được tạo hoặc sửa" (workflow/plan/so-huu.md).
+      options:
+        - A. Tài khoản và thông báo (Ngân)
+        - B. Tin đăng và khám phá (Tú)
+        - C. Chat và giao dịch (Hải Long)
+        - D. Hồ sơ và tin cậy (Phúc)
+        - E. Quản trị và nền móng (Phát)
+    validations:
+      required: true
+  - type: input
+    id: stt
+    attributes:
+      label: STT trong bảng đặc tả
+      description: Số STT trong workflow/docs/product/dac-ta-chuc-nang.md, chỉ dòng có Phạm vi "Đợt này". Không dùng STT "Phát triển sau".
+      placeholder: "13, 14, 15"
+    validations:
+      required: true
+  - type: input
+    id: mockups
+    attributes:
+      label: Màn hình mockup
+      description: Mã trong workflow/docs/ui/, ví dụ B03.
+      placeholder: B03
   - type: textarea
     id: summary
     attributes:
@@ -29,19 +64,56 @@ body:
     validations:
       required: true
   - type: textarea
-    id: scope
+    id: reading
     attributes:
-      label: Gói hoặc file được phép sửa
-      description: Nêu chính xác tên gói, ví dụ com.nhom3.pubgapp.feature.auth. Mọi thứ khác nằm ngoài phạm vi.
+      label: Tài liệu phải đọc
+      description: Mục cụ thể, ví dụ dac-ta-lop/model.md#listing, data/firestore-schema.md#listings, trang-thai.md mục 1, ui/b-kham-pha-tin-dang/README.md.
     validations:
       required: true
+  - type: textarea
+    id: names
+    attributes:
+      label: Lớp, trường, trạng thái sẽ dùng
+      description: Tên đúng như trong tài liệu đặc tả. Tên không có trong tài liệu thì không viết ở đây; hỏi leader.
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: File được tạo hoặc sửa
+      description: Đường dẫn đầy đủ, mỗi dòng một file, đánh dấu [tạo] hoặc [sửa]. Với lớp dùng chung, ghi tên các phương thức được thay thân. File không có trong danh sách thì không được đụng.
+    validations:
+      required: true
+  - type: textarea
+    id: shared
+    attributes:
+      label: File dùng chung cần thêm dòng
+      description: Manifest, đồ thị điều hướng, menu, strings, AppDatabase, luật Firestore... Ghi file và dòng sẽ thêm. Để trống nếu không có.
+  - type: textarea
+    id: forbidden
+    attributes:
+      label: Cấm đụng
+      description: Lớp và file của module khác mà issue này chỉ gọi, không sửa.
+  - type: input
+    id: dependencies
+    attributes:
+      label: Phụ thuộc
+      description: Issue hoặc mã kế hoạch phải xong trước, và lớp hoặc phương thức đã có trên main mà issue này cần.
+      placeholder: P1-04, P2-A1
   - type: textarea
     id: out_of_scope
     attributes:
       label: Ngoài phạm vi
-      description: Những gì không được đụng tới hoặc không làm trong issue này.
+      description: Những gì không được đụng tới hoặc không làm trong issue này, kể cả chức năng "Phát triển sau".
   - type: textarea
     id: docs
     attributes:
       label: Tài liệu cần cập nhật
       description: Ví dụ workflow/docs/data/firestore-schema.md, workflow/docs/product/features.md.
+  - type: checkboxes
+    id: size
+    attributes:
+      label: Quy mô
+      options:
+        - label: Đây là một lát cắt dọc của một module, khoảng nửa ngày đến một ngày, một Pull Request.
+          required: true

@@ -11,7 +11,16 @@ body:
     id: feature_id
     attributes:
       label: Mã tính năng
+      description: Mã F-xx trong workflow/docs/product/features.md.
       placeholder: F-04
+    validations:
+      required: true
+  - type: input
+    id: plan_item
+    attributes:
+      label: Mã việc kế hoạch
+      description: Mã trong workflow/plan/ của việc đã làm ra phần bị gỡ, và STT của chức năng bị gỡ.
+      placeholder: P2-B3
     validations:
       required: true
   - type: textarea

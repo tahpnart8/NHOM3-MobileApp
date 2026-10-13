@@ -1,14 +1,26 @@
-# Every pull request needs a review from an owner of the files it touches. Files that decide the rules of
-# the game stay leader only, listed separately so that a change to them is an explicit act, not a side
-# effect. Documents under workflow/docs/ have a second owner: either approval satisfies the ruleset, which
-# spreads the review load for the analysis, diagram and interface work of this phase (decision 2026-09-29).
-*                       @tahpnart8
-/workflow/docs/         @tahpnart8 @Contest451
-/.github/               @tahpnart8
-/.githooks/             @tahpnart8
-/workflow/scripts/      @tahpnart8
-/.agents/               @tahpnart8
-/.claude/               @tahpnart8
-/AGENTS.md              @tahpnart8
-/CLAUDE.md              @tahpnart8
-/workflow/memory/       @tahpnart8
+# Every pull request needs a review from an owner of the files it touches. The last matching line wins,
+# so general lines come first and the leader-only paths after them. Files that decide the rules of the
+# game stay leader only, listed separately so that a change to them is an explicit act, not a side effect.
+# Hai Long (Contest451) co-reviews the app code under PUBGApp/ and the documents under workflow/docs/:
+# either owner's approval satisfies the ruleset there (decisions of 2026-09-29 and 2026-10-12).
+# A pull request that also touches a leader-only path still needs the leader.
+*                                       @tahpnart8
+/PUBGApp/                               @tahpnart8 @Contest451
+/PUBGApp/gradle/                        @tahpnart8
+/PUBGApp/build.gradle.kts               @tahpnart8
+/PUBGApp/settings.gradle.kts            @tahpnart8
+/PUBGApp/gradle.properties              @tahpnart8
+/PUBGApp/app/build.gradle.kts           @tahpnart8
+/PUBGApp/app/google-services.json       @tahpnart8
+/PUBGApp/app/src/main/AndroidManifest.xml @tahpnart8
+/firebase/                              @tahpnart8
+/workflow/docs/                         @tahpnart8 @Contest451
+/workflow/plan/                         @tahpnart8
+/.github/                               @tahpnart8
+/.githooks/                             @tahpnart8
+/workflow/scripts/                      @tahpnart8
+/.agents/                               @tahpnart8
+/.claude/                               @tahpnart8
+/AGENTS.md                              @tahpnart8
+/CLAUDE.md                              @tahpnart8
+/workflow/memory/                       @tahpnart8

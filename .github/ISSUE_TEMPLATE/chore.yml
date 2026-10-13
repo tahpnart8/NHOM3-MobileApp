@@ -3,6 +3,14 @@ description: Build, thư viện, công cụ, tài liệu hoặc dọn dẹp repo
 title: ""
 labels: ["type:chore"]
 body:
+  - type: input
+    id: plan_item
+    attributes:
+      label: Mã việc kế hoạch
+      description: Mã trong workflow/plan/ nếu việc này nằm trong kế hoạch, ví dụ P1-04. Không có thì ghi "không có".
+      placeholder: P1-04
+    validations:
+      required: true
   - type: textarea
     id: summary
     attributes:
@@ -23,6 +31,16 @@ body:
     id: scope
     attributes:
       label: File được phép sửa
-      description: Với issue thư viện, nêu tên thư viện, nguồn bạn tra phiên bản, và vì sao cần.
+      description: Đường dẫn đầy đủ, mỗi dòng một file. Với issue thư viện, nêu tên thư viện, nguồn bạn tra phiên bản, và vì sao cần. File không có trong danh sách thì không được đụng.
     validations:
       required: true
+  - type: textarea
+    id: forbidden
+    attributes:
+      label: Cấm đụng
+      description: File hoặc lớp của người khác mà việc này chỉ đọc.
+  - type: input
+    id: dependencies
+    attributes:
+      label: Phụ thuộc
+      description: Issue hoặc mã kế hoạch phải xong trước.

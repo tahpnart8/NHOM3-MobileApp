@@ -4,8 +4,8 @@ Standing instructions from the team leader (`tahpnart8`) that outlive a single t
 
 ## How the team works
 
-- **The leader reviews and merges every pull request.** Members open pull requests; nobody else merges.
-- **Most code is written by AI tools inside Antigravity** (Gemini and Claude models) by the engineers; the leader uses Claude Code to direct the project and to review. The repository must therefore give any AI enough context to avoid inventing things, breaking working code or deleting designed features.
+- **The leader reviews and merges pull requests; Hai Long (`Contest451`) also reviews and merges the ones whose files he co-owns under `.github/CODEOWNERS` (`PUBGApp/` and `workflow/docs/`).** Members open pull requests; nobody else merges.
+- **Most code is written by AI tools inside Antigravity** (Gemini and Claude models) by the engineers; the leader uses Claude Code to direct the project and to review. The repository must therefore give any AI enough context to avoid inventing things, breaking working code, deleting designed features, building "Phát triển sau" functions or editing another member's files.
 - **Everyone works the same way**: issue, branch, pull request, review, squash merge. No personal variations of naming, templates or flow.
 
 ## Contributors

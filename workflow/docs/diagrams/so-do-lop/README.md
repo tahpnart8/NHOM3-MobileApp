@@ -1,6 +1,6 @@
 # Sơ đồ lớp
 
-Sơ đồ lớp của PUBGApp: **89 lớp Java tự viết**, chia gói theo tầng (`AGENTS.md` mục 7). File gốc `class-diagram.drawio` mở bằng draw.io, mỗi trang là một tab ở đáy màn hình. Danh sách lớp kèm trách nhiệm và chức năng liên quan nằm ở [`../../analysis/du-kien-lop.md`](../../analysis/du-kien-lop.md).
+Sơ đồ lớp của PUBGApp: **92 lớp Java tự viết**, chia gói theo tầng (`AGENTS.md` mục 7). File gốc `class-diagram.drawio` mở bằng draw.io, mỗi trang là một tab ở đáy màn hình. Danh sách lớp kèm trách nhiệm và chức năng liên quan nằm ở [`../../analysis/du-kien-lop.md`](../../analysis/du-kien-lop.md).
 
 **Bản chữ của sơ đồ này** (mọi thuộc tính, phương thức, quan hệ, sơ đồ Mermaid) ở [`../../architecture/dac-ta-lop/`](../../architecture/dac-ta-lop/README.md); máy trạng thái ở [`../../architecture/trang-thai.md`](../../architecture/trang-thai.md). Khi code, đọc bản chữ; ảnh để người xem nhanh.
 
@@ -22,10 +22,10 @@ model, model.enums, util: mọi tầng đều dùng
 | ViewModel | `viewmodel` | 14 | Giữ trạng thái màn hình bằng LiveData, sống qua lần xoay màn hình, gọi repository |
 | Truy cập dữ liệu | `data` | 14 | 12 repository kế thừa `BaseRepository`, cùng `BaseRepository` và `DataCallback`; đọc Room trước rồi gọi Firebase |
 | Lưu trữ cục bộ | `data.local` | 12 | Room: cơ sở dữ liệu, bộ chuyển kiểu, 6 entity, 4 DAO |
-| Mô hình miền | `model` | 21 | Tài liệu Firestore và quy tắc nghiệp vụ |
-| Kiểu liệt kê | `model.enums` | 21 | Giá trị cố định của trạng thái, loại, lý do |
+| Mô hình miền | `model` | 23 | Tài liệu Firestore và quy tắc nghiệp vụ |
+| Kiểu liệt kê | `model.enums` | 22 | Giá trị cố định của trạng thái, loại, lý do |
 | Tiện ích | `util` | 7 | Phiên đăng nhập, mạng, lọc từ khóa, gợi ý, khoảng cách, định dạng, việc chạy nền |
-| **Tổng** | | **89** | |
+| **Tổng** | | **92** | |
 
 ## 2. Các trang sơ đồ
 
@@ -63,21 +63,21 @@ model, model.enums, util: mọi tầng đều dùng
 
 ## 3. Thể hiện OOP
 
-- **Kế thừa:** 18 lớp tài liệu kế thừa `BaseDocument`; 12 repository kế thừa `BaseRepository`; 14 ViewModel kế thừa `ViewModel` của AndroidX; `AppDatabase` kế thừa `RoomDatabase`; `AutoReleaseWorker` kế thừa `Worker`.
-- **Đóng gói:** thuộc tính private; quy tắc nghiệp vụ nằm trong chính lớp (`Deal.canMoveTo`, `Warning.resultingStatus`, `Listing.acceptsOffer`, `User.completionRate`).
+- **Kế thừa:** 19 lớp tài liệu kế thừa `BaseDocument`; 12 repository kế thừa `BaseRepository`; 14 ViewModel kế thừa `ViewModel` của AndroidX; `AppDatabase` kế thừa `RoomDatabase`; `AutoReleaseWorker` kế thừa `Worker`.
+- **Đóng gói:** thuộc tính private; quy tắc nghiệp vụ nằm trong chính lớp (`Deal.canMoveTo`, `Warning.resultingStatus`, `Listing.acceptsOffer`, `ProfileStats.completionRate`).
 - **Trừu tượng hóa:** `DataCallback<T>` thay cho lambda theo luật viết code của nhóm; các DAO là interface.
 - **Quan hệ:** hợp thành (`User` với `UserAddress`, `Warning`, `UserIdentity`; `Deal` với `StatusChange`, `Payment`; `Conversation` với `ChatMessage`), liên kết có bội số, phụ thuộc giữa các tầng.
 - **Không tạo lớp thừa:** theo dõi và lưu tin chỉ là cặp mã nên là quan hệ nhiều-nhiều (ERD vẫn có bảng nối); `ChatMessage` dùng `MessageType` thay cho lớp con từng loại tin.
 
 ## 4. Luồng hoạt động chính
 
-**Đăng tin.** `ShopViewModel` tạo `Listing` (hoặc lưu nháp với trạng thái `DRAFT`, đăng sau bằng `publish`), `KeywordFilter` gắn cờ nếu chứa từ khóa cấm, `MediaRepository` tải ảnh (tối đa 5), `ListingRepository` ghi Firestore. Người bán tự ẩn hoặc hiện lại tin bằng `setHidden`, dùng chung trạng thái `HIDDEN` với việc admin ẩn tin.
+**Đăng tin.** `ShopViewModel` tạo `Listing` (hoặc lưu nháp với trạng thái `DRAFT`, đăng sau bằng `publish`), `KeywordFilter` gắn cờ nếu chứa từ khóa cấm, `MediaRepository` lưu ảnh Base64 vào collection `images` (tối đa 5 ảnh, kèm ảnh bìa thu nhỏ trong tin), `ListingRepository` ghi Firestore. Người bán tự ẩn hoặc hiện lại tin bằng `setHidden`, dùng chung trạng thái `HIDDEN` với việc admin ẩn tin.
 
 **Tìm kiếm và gợi ý.** Người mua tìm bằng `SearchFilter`; Firestore không tìm toàn văn nên từ khóa được bỏ dấu và lưu trong `searchKeywords`, còn bán kính do `GeoUtils` tính trên máy. `RecommendationEngine` tính tin tương tự, mục Dành cho bạn và khoảng giá tham khảo, hoàn toàn trên máy.
 
-**Offer và giao dịch.** Người mua gửi `Offer` (tiền, vật, hoặc cả hai) trong `Conversation`; offer chỉ được chấp nhận hoặc từ chối. Người bán chấp nhận thì `DealRepository.createFromOffer` tạo `Deal`. Trạng thái: `PENDING_CONFIRM`, `CONFIRMED`, `SHIPPED`, `RECEIVED`, `COMPLETED`, cùng hai nhánh `CANCELLED` và `DISPUTED`; mỗi lần chuyển ghi một `StatusChange`.
+**Offer và giao dịch.** Người mua gửi `Offer` (tiền, vật, hoặc cả hai) trong `Conversation`; offer chỉ được chấp nhận hoặc từ chối. Người bán chấp nhận thì `ChatRepository.respondToOffer` ghi trong một lô: offer ACCEPTED, các offer chờ khác REJECTED, `Deal` dựng bởi `DealRepository.buildFromOffer`, tin RESERVED. Trạng thái: `PENDING_CONFIRM`, `CONFIRMED`, `SHIPPED`, `RECEIVED`, `COMPLETED`, cùng hai nhánh `CANCELLED` và `DISPUTED`; mỗi lần chuyển thật sự ghi một `StatusChange`. Chi tiết ở [`trang-thai.md`](../../architecture/trang-thai.md).
 
-**Gửi hàng kèm bằng chứng vận đơn.** `DealViewModel.markShipped(carrier, trackingCode, photoUri)` tải ảnh mã vận đơn lên qua `MediaRepository`, rồi `DealRepository.markShipped` ghi `carrierName`, `trackingCode`, `trackingImageUrl` và `shippedAt`. Thiếu một trong ba thứ thì `Deal.hasShippingProof()` sai và giao dịch không sang `SHIPPED`. Cùng lúc `autoReleaseAt = shippedAt + AUTO_RELEASE_DAYS` được đặt: mốc đếm ngược hiển thị cho cả hai bên.
+**Gửi hàng kèm bằng chứng vận đơn.** `DealViewModel.markShipped(carrier, trackingCode, photoUri)` tải ảnh mã vận đơn vào Firestore qua `MediaRepository.saveImage`, rồi `DealRepository.markShipped` ghi `carrierName`, `trackingCode`, `trackingImageId` và `shippedAt`. Thiếu một trong ba thứ thì `Deal.hasShippingProof()` sai và giao dịch không sang `SHIPPED`. Cùng lúc `autoReleaseAt = shippedAt + AUTO_RELEASE_DAYS` được đặt: mốc đếm ngược hiển thị cho cả hai bên.
 
 **Nhận hàng, giải ngân và hoàn tất.** Sau khi giao dịch được xác nhận, người mua thanh toán và `Payment` ở trạng thái `HELD` (giao dịch không có tiền thì bỏ bước này; gặp trực tiếp thì không có bước giao và đếm ngược, xem `trang-thai.md`). Giao dịch sang `RECEIVED` theo một trong hai đường, đều tự động, admin không duyệt tay; `Payment` sang `RELEASED` ngay lúc đó:
 
@@ -86,7 +86,7 @@ model, model.enums, util: mọi tầng đều dùng
 
 Từ `RECEIVED`, giao dịch sang `COMPLETED` khi cả hai bên đã đánh giá, hoặc sau `AUTO_COMPLETE_DAYS` (3 ngày) kể từ `receivedAt` (`DealRepository.completeDueDeals`). Hủy trước khi giao hoặc khiếu nại được hoàn tiền thì `Payment` sang `REFUNDED`. Mở khiếu nại trước khi hết đếm ngược thì giao dịch sang `DISPUTED` và đếm ngược dừng. Đây là ký quỹ mô phỏng: không có cổng thanh toán thật, không có số dư ví.
 
-**Vì sao có `AutoReleaseWorker`.** Đồ án không có máy chủ nên không ai chạy lệnh đúng lúc hết hạn. `AutoReleaseWorker` (WorkManager, chạy nền định kỳ) và bước kiểm tra khi mở ứng dụng (`DealViewModel.checkAutoRelease`) cùng gọi `releaseDueDeals` và `completeDueDeals`. Security Rules chặn phía máy chủ: chỉ cho giải ngân khi giờ của Firestore đã qua `autoReleaseAt`. Giới hạn: nếu không máy nào của hai bên chạy, việc giải ngân chậm tới lần mở ứng dụng kế tiếp.
+**Vì sao có `AutoReleaseWorker`.** Đồ án không có máy chủ nên không ai chạy lệnh đúng lúc hết hạn. `AutoReleaseWorker` (WorkManager, chạy nền định kỳ) và bước kiểm tra khi mở ứng dụng (`DealViewModel.checkAutoRelease`) cùng gọi `releaseDueDeals`, `completeDueDeals` và `expirePendingDeals`. Security Rules chặn phía máy chủ: chỉ cho giải ngân khi giờ của Firestore đã qua `autoReleaseAt`. Giới hạn: nếu không máy nào của hai bên chạy, việc giải ngân chậm tới lần mở ứng dụng kế tiếp.
 
 **Tài khoản.** Đăng nhập bằng email và mật khẩu hoặc Google, không đăng nhập bằng số điện thoại. Thông tin định danh (số CCCD, ngày sinh, giới tính, địa chỉ thường trú) nằm ở `UserIdentity`, tài liệu con riêng tư chỉ chủ tài khoản và admin đọc được. Xóa tài khoản là vô hiệu hóa (`UserStatus.DELETED`): ẩn hồ sơ và tin, giữ lịch sử giao dịch và đánh giá cho đối tác.
 
@@ -102,10 +102,10 @@ Mỗi chức năng **Đợt này** có ít nhất một lớp hoặc thành viê
 | --- | --- | --- |
 | 1 đến 3 | Đăng ký, đăng nhập, quên mật khẩu (kèm xác thực email và Google) | `AuthViewModel.register`, `AuthViewModel.login`, `AuthViewModel.loginWithGoogle`, `AuthViewModel.resetPassword`, `AuthRepository.signUp`, `AuthRepository.sendVerificationEmail`, `AuthRepository.signIn`, `AuthRepository.signInWithGoogle`, `AuthRepository.sendPasswordReset`, `SessionManager`, `User`, `User.termsAcceptedAt`, `UserIdentity.nationalId` |
 | 4 | Chỉnh sửa thông tin cá nhân | `ProfileViewModel.updateProfile`, `UserRepository.updateProfile`, `User`, `User.province`, `User.district` |
-| 5 | Chỉnh sửa ảnh hồ sơ | `ProfileViewModel.changeAvatar`, `MediaRepository.uploadImage`, `User.avatarUrl` |
+| 5 | Chỉnh sửa ảnh hồ sơ | `ProfileViewModel.changeAvatar`, `MediaRepository.makeThumb`, `User.avatarBase64` |
 | 6 | Chỉnh sửa địa chỉ | `ProfileViewModel.saveAddress`, `ProfileViewModel.deleteAddress`, `UserRepository.saveAddress`, `UserRepository.deleteAddress`, `UserAddress` |
 | 7 | Xem đánh giá cá nhân công khai | `User.ratingAverage`, `User.ratingCount`, `ProfileViewModel.loadProfile`, `ReviewRepository.create` |
-| 8 | Xem số liệu hồ sơ: Hiển thị số món đã bán, số người theo dõi, số giao dịch và tỷ lệ hoàn tất | `User.soldCount`, `User.followerCount`, `User.dealCount`, `User.completedDealCount`, `User.completionRate`, `ProfileViewModel.loadProfile` |
+| 8 | Xem số liệu hồ sơ: Hiển thị số món đã bán, số người theo dõi, số giao dịch và tỷ lệ hoàn tất | `ProfileStats`, `ProfileStats.completionRate`, `UserRepository.getStats`, `ProfileViewModel.loadProfile` |
 | 9 | Khai báo thông tin định danh: Khai báo số CCCD, ngày sinh, giới tính, địa chỉ thường trú để xác minh danh tính | `UserIdentity`, `Gender`, `ProfileViewModel.loadIdentity`, `ProfileViewModel.saveIdentity`, `UserRepository.saveIdentity`, `UserRepository.getIdentity` |
 | 10 | Cài đặt thông báo: Bật hoặc tắt từng loại thông báo: tin nhắn mới, đề nghị giá mới, cập nhật giao dịch | `User.notificationPrefs`, `ProfileViewModel.updateNotificationPrefs`, `UserRepository.updateNotificationPrefs` |
 | 11 | Đổi mật khẩu: Đổi mật khẩu sau khi nhập lại mật khẩu hiện tại | `AuthViewModel.changePassword`, `AuthRepository.changePassword` |
@@ -114,7 +114,7 @@ Mỗi chức năng **Đợt này** có ít nhất một lớp hoặc thành viê
 | 14 | Sắp xếp sản phẩm trên kệ theo danh mục, thời gian | `ShopViewModel.loadMyListings`, `ListingRepository.getBySeller`, `SortOrder` |
 | 15 | Ẩn hoặc hiện lại tin: Người bán tạm ẩn tin của mình khỏi kênh xem và hiện lại khi muốn | `ShopViewModel.setHidden`, `ListingRepository.setHidden`, `Listing.hide`, `Listing.restore` |
 | 16 | Chỉnh sửa nội dung bài đăng | `Listing.description`, `Listing.itemCondition`, `Listing.conditionValues`, `ItemCondition` |
-| 17 | Thêm hình ảnh chụp từ phần mềm | `Listing.imageUrls`, `MediaRepository.uploadImage`, `ShopViewModel.createListing` |
+| 17 | Thêm hình ảnh chụp từ phần mềm | `Listing.imageIds`, `Listing.coverThumb`, `MediaImage`, `ImagePurpose`, `MediaRepository.saveImage`, `MediaRepository.makeThumb`, `MediaRepository.getImage`, `ShopViewModel.createListing` |
 | 18 | Hình thức giao dịch bán, trao đổi, cho tặng (kết hợp được) | `Listing.tradeTypes`, `Listing.acceptsTradeType`, `TradeType` |
 | 19 | Chỉnh sửa giá cả | `Listing.price` |
 | 20 | Offer mong muốn và giới hạn mức deal | `Listing.acceptedOfferTypes`, `Listing.minOfferPrice`, `Listing.acceptsOffer`, `OfferType` |
@@ -135,14 +135,14 @@ Mỗi chức năng **Đợt này** có ít nhất một lớp hoặc thành viê
 | 38 | Mục Dành cho bạn từ lịch sử xem, tìm kiếm, tin đã lưu | `FeedViewModel.loadForYou`, `RecommendationEngine.forYou`, `RecentViewEntity`, `RecentSearchEntity`, `HistoryDao`, `ListingRepository.recordView`, `ListingRepository.recordSearch`, `SearchViewModel.loadRecentSearches` |
 | 39 | Theo dõi người dùng khác | `ProfileViewModel.follow`, `ProfileViewModel.unfollow`, `UserRepository.follow`, `UserRepository.unfollow` |
 | 40 đến 42 | Lưu tin, xem danh sách đã lưu, bỏ lưu | `ListingDetailViewModel.toggleSave`, `ProfileViewModel.loadSaved`, `UserRepository.saveListing`, `UserRepository.unsaveListing`, `UserRepository.getSavedIds` |
-| 43 đến 45 | Chat: gửi chữ, ảnh, video | `ChatViewModel.sendText`, `ChatViewModel.sendImage`, `ChatViewModel.sendVideo`, `ChatRepository.sendText`, `ChatRepository.sendMedia`, `ChatMessage`, `Conversation`, `MessageType`, `MediaRepository.uploadVideo`, `ChatDao`, `ConversationEntity`, `MessageEntity` |
+| 43, 44 | Chat: gửi chữ, ảnh | `ChatViewModel.sendText`, `ChatViewModel.sendImage`, `ChatRepository.sendText`, `ChatRepository.sendImage`, `ChatMessage`, `Conversation`, `MessageType`, `MediaRepository.saveImage`, `ChatDao`, `ConversationEntity`, `MessageEntity` |
 | 46 | Trạng thái hoạt động: Hiển thị người đối thoại đang hoạt động hay thời điểm hoạt động gần nhất | `ChatViewModel.loadPartner`, `User.lastActiveAt`, `User.isActiveSince`, `UserRepository.touchLastActive` |
 | 47 đến 49 | Offer một chạm: đề nghị, chấp nhận, từ chối | `ChatViewModel.makeOffer`, `ChatViewModel.respondToOffer`, `ChatRepository.sendOffer`, `ChatRepository.respondToOffer`, `Offer.accept`, `Offer.reject`, `OfferStatus`, `NotificationType` |
-| 50 | Tạo giao dịch và xem thông tin giao dịch | `DealRepository.createFromOffer`, `DealViewModel.loadDeal`, `Deal`, `DeliveryMethod`, `Deal.itemTitle`, `Deal.agreedTerms` |
+| 50 | Tạo giao dịch và xem thông tin giao dịch | `DealRepository.buildFromOffer`, `ChatRepository.respondToOffer`, `Listing.reservedDealId`, `DealViewModel.loadDeal`, `Deal`, `DeliveryMethod`, `Deal.itemTitle`, `Deal.agreedTerms` |
 | 51 | Chỉnh sửa thông tin giao dịch | `DealViewModel.updateTerms`, `DealRepository.updateTerms` |
 | 52 | Xác nhận giao dịch | `DealViewModel.confirm`, `DealRepository.confirm`, `Deal.confirmBy`, `Deal.canMoveTo`, `DealStatus` |
 | 53 | Xác nhận đã nhận (giải ngân tự động cho người bán) | `DealViewModel.markReceived`, `DealRepository.markReceived`, `Deal.markReceived`, `Deal.receivedAt`, `Payment.release`, `Deal.isAutoCompleteDue`, `Deal.complete`, `Deal.AUTO_COMPLETE_DAYS`, `DealRepository.completeDueDeals` |
-| 54 | Xác nhận đã giao, kèm ảnh mã vận đơn và thông tin đơn vị vận chuyển; bắt đầu đếm ngược | `DealViewModel.markShipped`, `DealRepository.markShipped`, `Deal.markShipped`, `Deal.carrierName`, `Deal.trackingCode`, `Deal.trackingImageUrl`, `Deal.shippedAt`, `Deal.autoReleaseAt`, `Deal.hasShippingProof`, `Deal.AUTO_RELEASE_DAYS`, `MediaRepository.uploadImage` |
+| 54 | Xác nhận đã giao, kèm ảnh mã vận đơn và thông tin đơn vị vận chuyển; bắt đầu đếm ngược | `DealViewModel.markShipped`, `DealRepository.markShipped`, `Deal.markShipped`, `Deal.carrierName`, `Deal.trackingCode`, `Deal.trackingImageId`, `Deal.shippedAt`, `Deal.autoReleaseAt`, `Deal.hasShippingProof`, `Deal.AUTO_RELEASE_DAYS`, `MediaRepository.saveImage` |
 | 55 | Hủy giao dịch có lý do (hoàn tiền nếu đang giữ) | `DealViewModel.cancel`, `DealRepository.cancel`, `Deal.cancel`, `Deal.cancelReason`, `Payment.refund` |
 | 56 | Thanh toán qua bên thứ ba (ký quỹ mô phỏng) | `DealViewModel.pay`, `DealRepository.pay`, `Payment`, `PaymentStatus`, `Deal.needsPayment` |
 | 57 | Lịch sử giao dịch | `DealViewModel.loadHistory`, `DealRepository.getMyDeals`, `DealDao`, `DealEntity` |
@@ -152,7 +152,7 @@ Mỗi chức năng **Đợt này** có ít nhất một lớp hoặc thành viê
 | 61 | Tạo báo cáo | `TrustViewModel.submitReport`, `ReportRepository.create`, `Report`, `ReportTarget`, `Report.reason`, `ReportReason`, `Report.description` |
 | 62 | Hủy báo cáo | `TrustViewModel.cancelReport`, `ReportRepository.cancel`, `Report.cancel`, `ReportStatus` |
 | 63 | Xem và xuất lịch sử báo cáo | `TrustViewModel.loadMyReports`, `TrustViewModel.exportReports`, `ReportRepository.getMyReports`, `ReportRepository.exportCsv` |
-| 64 | Tạo đơn khiếu nại kèm bằng chứng | `TrustViewModel.submitComplaint`, `ComplaintRepository.create`, `Complaint`, `Complaint.evidenceUrls`, `Complaint.reason`, `ComplaintReason` |
+| 64 | Tạo đơn khiếu nại kèm bằng chứng | `TrustViewModel.submitComplaint`, `ComplaintRepository.create`, `Complaint`, `Complaint.evidenceImageIds`, `Complaint.reason`, `ComplaintReason`, `ComplaintRepository.addEvidence`, `TrustViewModel.addEvidence` |
 | 65 | Theo dõi tình trạng khiếu nại | `TrustViewModel.loadMyComplaints`, `ComplaintRepository.getMyComplaints`, `ComplaintStatus` |
 | 66 | Gỡ bỏ đơn khiếu nại | `TrustViewModel.withdrawComplaint`, `ComplaintRepository.withdraw`, `Complaint.withdraw` |
 | 67 | Xem thông báo: Xem danh sách thông báo về đề nghị giá, giao dịch, tin nhắn, đánh giá, khiếu nại, cảnh báo; đánh dấu đã đọc | `NotificationViewModel.load`, `NotificationViewModel.markRead`, `NotificationRepository.getForUser`, `NotificationRepository.markRead`, `AppNotification`, `NotificationType` |
@@ -165,8 +165,8 @@ Mỗi chức năng **Đợt này** có ít nhất một lớp hoặc thành viê
 | 75 | Admin: xử lý tin bị báo cáo | `AdminContentViewModel.loadReportedListings`, `AdminContentViewModel.closeReports`, `ReportRepository.getByStatus`, `ReportRepository.countByTarget`, `ReportRepository.closeByTarget`, `Report.resolve`, `Report.dismiss` |
 | 76 | Admin: ẩn, gỡ và khôi phục tin | `AdminContentViewModel.hide`, `AdminContentViewModel.restore`, `AdminRepository.hideListing`, `AdminRepository.restoreListing`, `Listing.hide`, `Listing.restore`, `Listing.statusReason` |
 | 77 | Admin: gỡ hàng loạt tin của tài khoản bị khóa | `AdminContentViewModel.removeAllOf`, `AdminRepository.removeAllListingsOf` |
-| 78 | Admin: lọc từ khóa cấm | `AdminContentViewModel.addKeyword`, `AdminContentViewModel.removeKeyword`, `AdminRepository.addKeyword`, `AdminRepository.removeKeyword`, `AdminRepository.getKeywords`, `BannedKeyword`, `KeywordFilter`, `Listing.flagged`, `ShopViewModel.createListing` |
-| 79 | Admin: quản lý danh mục và danh mục con | `AdminContentViewModel.saveCategory`, `AdminContentViewModel.deleteCategory`, `CategoryRepository.add`, `CategoryRepository.update`, `CategoryRepository.delete`, `Category.parentId`, `Category.isRoot`, `Category.listingCount` |
+| 78 | Admin: lọc từ khóa cấm | `AdminContentViewModel.addKeyword`, `AdminContentViewModel.removeKeyword`, `AdminContentViewModel.clearFlag`, `AdminRepository.clearFlag`, `ListingRepository.getBannedKeywords`, `AdminRepository.addKeyword`, `AdminRepository.removeKeyword`, `AdminRepository.getKeywords`, `BannedKeyword`, `KeywordFilter`, `Listing.flagged`, `ShopViewModel.createListing` |
+| 79 | Admin: quản lý danh mục và danh mục con | `AdminContentViewModel.saveCategory`, `AdminContentViewModel.deleteCategory`, `CategoryRepository.add`, `CategoryRepository.update`, `CategoryRepository.delete`, `Category.parentId`, `Category.isRoot`, `Category.isActive`, `CategoryRepository.getAllForAdmin` |
 | 80 | Admin: cấu hình thuộc tính tình trạng theo danh mục | `AdminContentViewModel.setConditionFields`, `Category.conditionFields`, `Category.hasConditionField`, `Listing.conditionValues` |
 | 81 | Admin: theo dõi danh sách giao dịch theo trạng thái | `AdminDealViewModel.loadDeals`, `DealRepository.listAll` |
 | 82 | Admin: chi tiết giao dịch kèm statusHistory | `AdminDealViewModel.loadDetail`, `Deal.statusHistory`, `StatusChange` |
@@ -175,7 +175,7 @@ Mỗi chức năng **Đợt này** có ít nhất một lớp hoặc thành viê
 | 88 | Admin: hồ sơ khiếu nại (chat, bằng chứng, giao dịch) | `AdminComplaintViewModel.loadDetail`, `ComplaintRepository.getDetail` |
 | 89 | Admin: ra quyết định xử lý khiếu nại | `AdminComplaintViewModel.decide`, `ComplaintRepository.decide`, `Complaint.decide`, `ComplaintDecision`, `Complaint.decision` |
 | 90 | Admin: ghi chú nội bộ không hiện cho người dùng | `AdminComplaintViewModel.saveNote`, `ComplaintRepository.saveAdminNote`, `Complaint.adminNote` |
-| 91 | Gửi thông báo kết quả cho các bên | `AdminComplaintViewModel.notifyParties`, `NotificationRepository.create`, `NotificationViewModel.load`, `NotificationViewModel.markRead`, `NotificationRepository.getForUser`, `NotificationRepository.markRead`, `AppNotification` |
+| 91 | Gửi thông báo kết quả cho các bên | `ComplaintRepository.decide`, `NotificationRepository.create`, `NotificationViewModel.load`, `NotificationViewModel.markRead`, `NotificationRepository.getForUser`, `NotificationRepository.markRead`, `AppNotification` |
 
 ## 6. Lớp hạ tầng (không gắn riêng một chức năng)
 

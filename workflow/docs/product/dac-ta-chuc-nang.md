@@ -2,7 +2,7 @@
 
 Nguồn sự thật về **hệ thống làm những gì**. Mọi tài liệu khác (sơ đồ chức năng, sơ đồ lớp, ERD, giao diện, sổ tính năng) nhắc tới một chức năng đều dùng **số STT của bảng này**.
 
-- **102 chức năng**: 88 chức năng **Đợt này**, làm trong giai đoạn phát triển sắp tới; 14 chức năng **Phát triển sau**, giữ lại làm hướng phát triển, **không code trong giai đoạn này**.
+- **102 chức năng**: 87 chức năng **Đợt này**, làm trong giai đoạn phát triển sắp tới; 15 chức năng **Phát triển sau**, giữ lại làm hướng phát triển, **không code trong giai đoạn này**.
 - Nguồn: bảng chức năng gốc của nhóm (92 dòng) và 10 chức năng bổ sung theo mockup giao diện, ghi "Bổ sung theo mockup" ở cột Ghi chú. Đánh số lại ngày 2026-10-11; bảng đối chiếu với số dòng của bảng gốc nằm ở cuối tài liệu.
 - Cột **Ghi chú** ghi các quyết định thiết kế đã chốt (ví dụ giải ngân tự động, bằng chứng vận đơn). Khi ghi chú và mockup giao diện khác nhau, ghi chú đúng.
 
@@ -52,7 +52,7 @@ Nguồn sự thật về **hệ thống làm những gì**. Mọi tài liệu kh
 | 42 | Người dùng | Kết nối | Lưu tin yêu thích | Bỏ lưu | Gỡ một tin khỏi danh sách đã lưu | Đợt này |  |
 | 43 | Người dùng | Kết nối | Chat | Gửi tin nhắn văn bản | Cho phép người dùng gửi tin nhắn chữ | Đợt này |  |
 | 44 | Người dùng | Kết nối | Chat | Gửi hình ảnh | Cho phép người dùng gửi hình ảnh | Đợt này |  |
-| 45 | Người dùng | Kết nối | Chat | Gửi video | Cho phép người dùng gửi video | Đợt này |  |
+| 45 | Người dùng | Kết nối | Chat | Gửi video | Cho phép người dùng gửi video | **Phát triển sau** | Chuyển sang Phát triển sau ngày 2026-10-12: gói Firebase Spark không có Cloud Storage, video không lưu được trong Firestore |
 | 46 | Người dùng | Kết nối | Chat | Trạng thái hoạt động | Hiển thị người đối thoại đang hoạt động hay thời điểm hoạt động gần nhất | Đợt này | Bổ sung theo mockup C02. |
 | 47 | Người dùng | Kết nối | Offer (đề nghị 1 chạm) | Gửi đề nghị | Gửi đề nghị cho người đăng bài theo loại người bán chấp nhận: tiền, vật trao đổi, hoặc cả hai | Đợt này | Đề nghị chỉ được chấp nhận hoặc từ chối; không có hủy, không có đề xuất lại |
 | 48 | Người dùng | Kết nối | Offer (đề nghị 1 chạm) | Chấp nhận đề nghị | Người bán chấp nhận đề nghị | Đợt này | Chấp nhận thì hệ thống tạo giao dịch |
@@ -113,10 +113,11 @@ Nguồn sự thật về **hệ thống làm những gì**. Mọi tài liệu kh
 
 ## Chức năng phát triển sau
 
-14 chức năng dưới đây **không được đưa vào giai đoạn phát triển sắp tới**: không có trong sổ tính năng, không có lớp riêng trên sơ đồ lớp, không có màn hình riêng. Mockup có vẽ phần nào thuộc nhóm này thì tài liệu giao diện ghi rõ "phát triển sau, chưa làm".
+15 chức năng dưới đây **không được đưa vào giai đoạn phát triển sắp tới**: không có trong sổ tính năng, không có lớp riêng trên sơ đồ lớp, không có màn hình riêng. Mockup có vẽ phần nào thuộc nhóm này thì tài liệu giao diện ghi rõ "phát triển sau, chưa làm".
 
 | STT | Chức năng |
 | --- | --- |
+| 45 | Chat: Gửi video |
 | 83 | Theo dõi giao dịch: Cảnh báo giao dịch bất thường |
 | 85 | Can thiệp giao dịch: Đổi trạng thái thủ công |
 | 86 | Phê duyệt giao dịch: Duyệt hoặc từ chối ở bước chờ duyệt |

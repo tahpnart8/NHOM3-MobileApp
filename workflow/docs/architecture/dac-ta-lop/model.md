@@ -1,13 +1,14 @@
 # Đặc tả lớp: gói `com.nhom3.pubgapp.model`
 
-Bản chữ của sơ đồ lớp cho gói này: 21 lớp. Mục lục và cách đọc ở [README.md](README.md).
+Bản chữ của sơ đồ lớp cho gói này: 23 lớp. Mục lục và cách đọc ở [README.md](README.md).
 
-Mô hình miền: các tài liệu Firestore và quy tắc nghiệp vụ nằm trong chính lớp. Không phụ thuộc Android, trừ kiểu `Timestamp` và `GeoPoint` của Firebase. Mỗi lớp tài liệu cần hàm dựng rỗng và getter, setter công khai để Firestore tự chuyển đổi (`toObject`).
+Mô hình miền: các tài liệu Firestore và quy tắc nghiệp vụ nằm trong chính lớp. Không phụ thuộc Android, trừ kiểu `Timestamp`, `GeoPoint` và các chú thích của Firestore. Mỗi lớp tài liệu cần hàm dựng rỗng và getter, setter công khai để Firestore tự chuyển đổi (`toObject`). Bốn luật ánh xạ bắt buộc: (1) `BaseDocument.id` gắn `@DocumentId`, không lưu thành trường; (2) mọi phương thức tính toán có dạng `isX()` hoặc `getX()` mà không phải trường (ví dụ `isLocked`, `ratingAverage`, `toBytes`) gắn `@Exclude`; (3) trường boolean tên bắt đầu bằng `is` (`isDefault`, `isActive`, `isRead`) gắn `@PropertyName` với đúng tên đó ở cả getter và setter; (4) `createdAt` và `updatedAt` ghi bằng `FieldValue.serverTimestamp()`.
 
 | Lớp | Loại | Trách nhiệm |
 | --- | --- | --- |
 | [`BaseDocument`](#basedocument) | lớp trừu tượng | Lớp cha của mọi tài liệu Firestore: mã, thời điểm tạo và sửa. |
-| [`User`](#user) | lớp | Người dùng: hồ sơ công khai, khu vực, trạng thái tài khoản, điểm đánh giá, số liệu hồ sơ, cài đặt thông báo. |
+| [`User`](#user) | lớp | Người dùng: hồ sơ công khai, khu vực, trạng thái tài khoản, tổng điểm đánh giá, cài đặt thông báo. |
+| [`ProfileStats`](#profilestats) | lớp (value object) | Số liệu hồ sơ đếm bằng truy vấn tổng hợp của Firestore lúc mở hồ sơ; không lưu thành trường. |
 | [`UserAddress`](#useraddress) | lớp | Địa chỉ giao nhận của một người dùng (mỗi người có nhiều địa chỉ). |
 | [`UserIdentity`](#useridentity) | lớp | Thông tin định danh riêng tư (số CCCD, ngày sinh, giới tính, địa chỉ thường trú); chỉ chủ tài khoản và admin đọc được. |
 | [`SellerVerification`](#sellerverification) | lớp | Yêu cầu xác minh để trở thành người bán, do admin duyệt. |
@@ -17,7 +18,7 @@ Mô hình miền: các tài liệu Firestore và quy tắc nghiệp vụ nằm t
 | [`Listing`](#listing) | lớp | Tin đăng bán, trao đổi hoặc cho tặng; nhiều hình thức cùng lúc, giới hạn mức offer. |
 | [`SearchFilter`](#searchfilter) | lớp (value object) | Đối tượng giá trị gom mọi tiêu chí tìm kiếm và lọc; không lưu trong Firestore. |
 | [`Conversation`](#conversation) | lớp | Cuộc trò chuyện giữa người mua và người bán về một tin. |
-| [`ChatMessage`](#chatmessage) | lớp | Tin nhắn chữ, ảnh, video hoặc một offer trong cuộc trò chuyện. |
+| [`ChatMessage`](#chatmessage) | lớp | Tin nhắn chữ, ảnh hoặc một offer trong cuộc trò chuyện. |
 | [`Offer`](#offer) | lớp | Đề nghị một chạm: tiền, vật trao đổi, hoặc cả hai. |
 | [`Deal`](#deal) | lớp | Giao dịch giữa hai bên; kèm bằng chứng vận đơn, mốc đếm ngược tự giải ngân, bước Đã nhận trước Hoàn tất. |
 | [`StatusChange`](#statuschange) | lớp (value object) | Một dòng lịch sử trạng thái của giao dịch (statusHistory), nằm trong Deal. |
@@ -27,6 +28,7 @@ Mô hình miền: các tài liệu Firestore và quy tắc nghiệp vụ nằm t
 | [`Complaint`](#complaint) | lớp | Đơn khiếu nại giao dịch kèm bằng chứng; adminNote là ghi chú nội bộ của admin. |
 | [`ActivityLog`](#activitylog) | lớp | Nhật ký hành động quan trọng của một tài khoản để admin theo dõi. |
 | [`BannedKeyword`](#bannedkeyword) | lớp | Một từ khóa cấm; tin đăng chứa nó bị gắn cờ cần chú ý. |
+| [`MediaImage`](#mediaimage) | lớp | Một ảnh đã nén, lưu dạng Base64 trong Firestore (gói Spark không có Cloud Storage). |
 
 ### BaseDocument
 
@@ -42,9 +44,9 @@ Mô hình miền: các tài liệu Firestore và quy tắc nghiệp vụ nằm t
 
 | Tên | Kiểu | Truy cập | Ý nghĩa |
 | --- | --- | --- | --- |
-| `id` | `String` | protected | Mã tài liệu Firestore. Với `User` là `uid` của Firebase Authentication. |
-| `createdAt` | `Timestamp` | protected | Thời điểm tạo, lấy giờ máy chủ Firestore lúc ghi. |
-| `updatedAt` | `Timestamp` | protected | Thời điểm sửa gần nhất; `touch()` đặt lại trước mỗi lần ghi. |
+| `id` | `String` | protected | Mã tài liệu Firestore, gắn `@DocumentId` nên **không lưu thành trường**. Với `User` là `uid` của Firebase Authentication. |
+| `createdAt` | `Timestamp` | protected | Thời điểm tạo, ghi bằng giờ máy chủ (`FieldValue.serverTimestamp()`). |
+| `updatedAt` | `Timestamp` | protected | Thời điểm sửa gần nhất, ghi bằng giờ máy chủ ở mỗi lần ghi. |
 
 **Phương thức**
 
@@ -82,8 +84,8 @@ Mô hình miền: các tài liệu Firestore và quy tắc nghiệp vụ nằm t
 | Loại | lớp |
 | Kế thừa | [`BaseDocument`](model.md#basedocument) |
 | Lưu trữ | Firestore `users/{uid}`, xem [firestore-schema.md](../../data/firestore-schema.md#users) |
-| Trách nhiệm | Người dùng: hồ sơ công khai, khu vực, trạng thái tài khoản, điểm đánh giá, số liệu hồ sơ, cài đặt thông báo. |
-| Chức năng liên quan (STT) | 1 đến 5, 7, 8, 10, 12, 31 đến 35, 46, 59, 70 đến 73 |
+| Trách nhiệm | Người dùng: hồ sơ công khai, khu vực, trạng thái tài khoản, tổng điểm đánh giá, cài đặt thông báo. |
+| Chức năng liên quan (STT) | 1 đến 5, 7, 10, 12, 31 đến 35, 46, 59, 70 đến 73 |
 
 Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `touch()`.
 
@@ -94,35 +96,31 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `email` | `String` | private | Email đăng nhập, lấy từ Firebase Authentication. |
 | `displayName` | `String` | private | Họ tên hiển thị. |
 | `phone` | `String` | private | Số điện thoại liên hệ. Không dùng để đăng nhập. |
-| `avatarUrl` | `String` | private | Đường dẫn ảnh đại diện trên Cloud Storage. |
+| `avatarBase64` | `String` | private | Ảnh đại diện 256 px, JPEG dạng Base64, tối đa 20 KB. Nằm luôn trong tài liệu người dùng để danh sách và chat hiện ngay. |
 | `bio` | `String` | private | Đoạn giới thiệu ngắn trên trang cá nhân. |
 | `status` | `UserStatus` | private | Trạng thái tài khoản. Admin đổi giữa ACTIVE và hai mức khóa; chính chủ chỉ được đổi sang DELETED khi vô hiệu hóa. |
 | `lockedUntil` | `Timestamp` | private | Hạn khóa tạm. Rỗng khi không khóa hoặc khóa vĩnh viễn. |
 | `verificationStatus` | `VerificationStatus` | private | Trạng thái xác minh người bán; APPROVED thì hồ sơ có huy hiệu đã xác minh. |
-| `ratingAverage` | `double` | private | Điểm sao trung bình nhận được, 0 khi chưa có đánh giá. |
-| `ratingCount` | `int` | private | Số đánh giá đã nhận. |
-| `warningCount` | `int` | private | Số lần bị cảnh báo; quyết định bậc của lần cảnh báo kế tiếp. |
+| `ratingSum` | `int` | private | Tổng điểm sao tổng thể đã nhận; điểm trung bình = `ratingSum / ratingCount`. Tăng bằng `FieldValue.increment` cùng lô với `Review`. |
+| `ratingCount` | `int` | private | Số đánh giá đã nhận, tăng 1 cùng lô với `Review`. |
+| `warningCount` | `int` | private | Số lần bị cảnh báo; bậc của lần cảnh báo kế tiếp là `warningCount + 1`. Mở khóa không đặt lại số này. |
 | `interestedCategoryIds` | `List<String>` | private | Danh mục quan tâm chọn lúc đăng ký; nguồn của gợi ý. |
 | `province` | `String` | private | Tỉnh hoặc thành phố. |
 | `district` | `String` | private | Quận hoặc huyện. |
 | `termsAcceptedAt` | `Timestamp` | private | Lúc đồng ý Điều khoản sử dụng và Chính sách bảo mật khi đăng ký. |
 | `notificationPrefs` | `Map<String,Boolean>` | private | Bật hoặc tắt từng loại thông báo. Khóa là tên hằng `NotificationType`, thiếu khóa nghĩa là bật. |
 | `lastActiveAt` | `Timestamp` | private | Lần cuối ứng dụng của người này hoạt động; dùng cho trạng thái hoạt động trong chat. |
-| `soldCount` | `int` | private | Số món đã bán hoặc đã trao (giao dịch hoàn tất với vai trò người bán). |
-| `followerCount` | `int` | private | Số người đang theo dõi. |
-| `dealCount` | `int` | private | Số giao dịch đã tạo, ở cả hai vai trò. |
-| `completedDealCount` | `int` | private | Số giao dịch đã hoàn tất; chia cho `dealCount` ra tỷ lệ hoàn tất. |
-| `reportCount` | `int` | private | Số báo cáo nhắm vào người này; admin dùng khi lọc. |
+| `lockReason` | `String` | private | Lý do khóa gần nhất do admin ghi; hiện cho người bị khóa khi đăng nhập. |
 
 **Phương thức**
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public boolean isLocked()` | True khi `status` là PERM_LOCKED, hoặc TEMP_LOCKED và `lockedUntil` chưa qua. | 70, 71 |
+| `public boolean isLocked()` | True khi `status` là PERM_LOCKED, hoặc TEMP_LOCKED và `lockedUntil` chưa qua. Gắn `@Exclude`. | 70, 71 |
 | `public boolean isDeleted()` | True khi `status` là DELETED. | 12 |
-| `public boolean canSell()` | True khi tài khoản ACTIVE, không bị khóa và đã xác thực email. Xác minh người bán không bắt buộc để đăng tin; nó chỉ thêm huy hiệu. | 73 |
-| `public void applyRating(int)` | Cộng một đánh giá mới vào `ratingAverage` và tăng `ratingCount`. | 59 |
-| `public double completionRate()` | `completedDealCount / dealCount`; 0 khi chưa có giao dịch. | 8 |
+| `public boolean canSell(boolean)` | Nhận cờ email đã xác thực (từ `AuthRepository.isEmailVerified()` sau `reloadUser`). True khi tài khoản ACTIVE, không bị khóa và email đã xác thực. Xác minh người bán chỉ thêm huy hiệu. | 73 |
+| `public void applyRating(int)` | Cộng điểm sao tổng thể vào `ratingSum` và tăng `ratingCount` trên đối tượng trong máy (repository ghi bằng `FieldValue.increment`). | 59 |
+| `public double ratingAverage()` | `ratingSum / ratingCount`, 0 khi chưa có đánh giá. Gắn `@Exclude` để không bị lưu thành trường. | 7, 31 đến 34 |
 | `public boolean isActiveSince(Timestamp)` | True khi `lastActiveAt` sau mốc truyền vào; ứng dụng dùng mốc 5 phút trước để hiện Đang hoạt động. | 46 |
 
 **Quan hệ trên sơ đồ lớp**
@@ -146,6 +144,33 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 **Dùng tới:** [`UserStatus`](enums.md#userstatus), [`VerificationStatus`](enums.md#verificationstatus)
 
 **Được dùng bởi:** [`AdminRepository`](data.md#adminrepository), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`AuthRepository`](data.md#authrepository), [`AuthViewModel`](viewmodel.md#authviewmodel), [`ChatViewModel`](viewmodel.md#chatviewmodel), [`ListingDetailViewModel`](viewmodel.md#listingdetailviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`RecommendationEngine`](util.md#recommendationengine), [`SessionManager`](util.md#sessionmanager), [`UserRepository`](data.md#userrepository)
+
+### ProfileStats
+
+| Mục | Nội dung |
+| --- | --- |
+| Định danh | `com.nhom3.pubgapp.model.ProfileStats` |
+| Loại | lớp (value object) |
+| Lưu trữ | Không lưu riêng (đối tượng giá trị) |
+| Trách nhiệm | Số liệu hồ sơ đếm bằng truy vấn tổng hợp của Firestore lúc mở hồ sơ; không lưu thành trường. |
+| Chức năng liên quan (STT) | 8 |
+
+**Thuộc tính**
+
+| Tên | Kiểu | Truy cập | Ý nghĩa |
+| --- | --- | --- | --- |
+| `soldCount` | `int` | private | Số giao dịch COMPLETED mà người này là người bán. |
+| `followerCount` | `int` | private | Số tài liệu `follows` có `followedId` là người này. |
+| `dealCount` | `int` | private | Số giao dịch người này tham gia, mọi trạng thái trừ CANCELLED. |
+| `completedDealCount` | `int` | private | Số giao dịch COMPLETED người này tham gia, ở cả hai vai trò. |
+
+**Phương thức**
+
+| Chữ ký | Mô tả | STT |
+| --- | --- | --- |
+| `public double completionRate()` | `completedDealCount / dealCount`; 0 khi chưa có giao dịch. | 8 |
+
+**Được dùng bởi:** [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`UserRepository`](data.md#userrepository)
 
 ### UserAddress
 
@@ -291,7 +316,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public UserStatus resultingStatus()` | Bậc 1 trả ACTIVE (chỉ cảnh báo), bậc 2 trả TEMP_LOCKED, bậc 3 trả PERM_LOCKED. | 72 |
+| `public UserStatus resultingStatus()` | Bậc 1 trả ACTIVE (chỉ cảnh báo), bậc 2 trả TEMP_LOCKED, bậc 3 trở lên trả PERM_LOCKED. | 72 |
 
 **Quan hệ trên sơ đồ lớp**
 
@@ -362,7 +387,6 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `parentId` | `String` | private | Danh mục cha. Rỗng nghĩa là danh mục gốc. Chỉ có hai cấp. |
 | `conditionFields` | `List<String>` | private | Tên các thuộc tính tình trạng riêng của danh mục, ví dụ Dung lượng pin, Bảo hành. |
 | `isActive` | `boolean` | private | Danh mục còn dùng; false thì ẩn khỏi lựa chọn khi đăng tin. |
-| `listingCount` | `int` | private | Số tin đang hiển thị trong danh mục, cập nhật khi đăng hoặc gỡ tin. |
 
 **Phương thức**
 
@@ -388,7 +412,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | Kế thừa | [`BaseDocument`](model.md#basedocument) |
 | Lưu trữ | Firestore `listings/{id}`, xem [firestore-schema.md](../../data/firestore-schema.md#listings) |
 | Trách nhiệm | Tin đăng bán, trao đổi hoặc cho tặng; nhiều hình thức cùng lúc, giới hạn mức offer. |
-| Chức năng liên quan (STT) | 13, 15 đến 23, 27, 76, 78, 80 |
+| Chức năng liên quan (STT) | 13, 15 đến 23, 27, 50, 76, 78, 80 |
 
 Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `touch()`.
 
@@ -400,7 +424,8 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `categoryId` | `String` | private | Danh mục, phải là danh mục con hoặc danh mục gốc không có con. |
 | `title` | `String` | private | Tiêu đề tin. |
 | `description` | `String` | private | Mô tả món đồ và yêu cầu của người đăng. |
-| `imageUrls` | `List<String>` | private | Đường dẫn ảnh trên Cloud Storage, từ 1 đến 5 ảnh. |
+| `imageIds` | `List<String>` | private | Mã 1 đến 5 tài liệu `images` (ảnh đầy đủ). Chỉ màn chi tiết tin mới đọc các ảnh này. |
+| `coverThumb` | `String` | private | Ảnh bìa thu nhỏ 320 px, JPEG Base64, tối đa 20 KB, lấy từ ảnh đầu tiên. Bảng tin và bộ nhớ đệm chỉ dùng ảnh này. |
 | `itemCondition` | `ItemCondition` | private | Tình trạng chung của món đồ. |
 | `conditionValues` | `Map<String,String>` | private | Giá trị của từng thuộc tính tình trạng; khóa lấy từ `Category.conditionFields`. |
 | `tradeTypes` | `List<TradeType>` | private | Các hình thức chấp nhận, chọn được nhiều. Có GIVEAWAY thì giá bằng 0. |
@@ -409,10 +434,11 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `minOfferPrice` | `long` | private | Mức tiền offer tối thiểu, 0 là không giới hạn. |
 | `province` | `String` | private | Tỉnh hoặc thành phố, dùng cho lọc khu vực. |
 | `location` | `GeoPoint` | private | Tọa độ món đồ, dùng cho lọc bán kính và sắp theo khoảng cách. |
-| `status` | `ListingStatus` | private | Trạng thái tin, xem `trang-thai.md`. |
+| `status` | `ListingStatus` | private | Trạng thái tin, xem `trang-thai.md` mục 1. |
 | `statusReason` | `String` | private | Lý do admin ẩn hoặc gỡ tin, hiển thị cho người đăng. |
 | `searchKeywords` | `List<String>` | private | Các từ đã bỏ dấu, viết thường của tiêu đề và mô tả, để truy vấn `array-contains`. |
-| `flagged` | `boolean` | private | Bị gắn cờ vì chứa từ khóa cấm; tin vẫn đăng nhưng hiện trong danh sách cần chú ý của admin. |
+| `flagged` | `boolean` | private | Bị gắn cờ vì chứa từ khóa cấm. Người đăng chỉ đổi được từ false sang true (khi sửa tin); chỉ admin bỏ cờ (`AdminRepository.clearFlag`). |
+| `reservedDealId` | `String` | private | Giao dịch đang giữ chỗ tin khi tin RESERVED; rỗng ở trạng thái khác. Security Rules dùng nó để cho người mua của giao dịch đó trả tin về AVAILABLE khi hủy, hoặc chuyển sang SOLD khi hoàn tất. |
 
 **Phương thức**
 
@@ -495,7 +521,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | Kế thừa | [`BaseDocument`](model.md#basedocument) |
 | Lưu trữ | Firestore `conversations/{listingId_buyerId}`, xem [firestore-schema.md](../../data/firestore-schema.md#conversations) |
 | Trách nhiệm | Cuộc trò chuyện giữa người mua và người bán về một tin. |
-| Chức năng liên quan (STT) | 43 đến 45 |
+| Chức năng liên quan (STT) | 43, 44 |
 
 Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `touch()`.
 
@@ -535,8 +561,8 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | Loại | lớp |
 | Kế thừa | [`BaseDocument`](model.md#basedocument) |
 | Lưu trữ | Firestore `conversations/{id}/messages/{id}`, xem [firestore-schema.md](../../data/firestore-schema.md#messages) |
-| Trách nhiệm | Tin nhắn chữ, ảnh, video hoặc một offer trong cuộc trò chuyện. |
-| Chức năng liên quan (STT) | 43 đến 45 |
+| Trách nhiệm | Tin nhắn chữ, ảnh hoặc một offer trong cuộc trò chuyện. |
+| Chức năng liên quan (STT) | 43, 44 |
 
 Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `touch()`.
 
@@ -548,14 +574,14 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `senderId` | `String` | private | Người gửi. |
 | `type` | `MessageType` | private | Loại tin nhắn. |
 | `text` | `String` | private | Nội dung chữ khi type là TEXT. |
-| `mediaUrl` | `String` | private | Đường dẫn ảnh hoặc video khi type là IMAGE hoặc VIDEO. |
+| `imageId` | `String` | private | Mã tài liệu `images` khi type là IMAGE. |
 | `offerId` | `String` | private | Offer được gửi khi type là OFFER. |
 
 **Phương thức**
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public boolean isMedia()` | True khi type là IMAGE hoặc VIDEO. |  |
+| `public boolean isMedia()` | True khi type là IMAGE. Gắn `@Exclude`. |  |
 
 **Quan hệ trên sơ đồ lớp**
 
@@ -641,20 +667,20 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `scheduledAt` | `Timestamp` | private | Thời gian hẹn giao nhận. |
 | `agreedTerms` | `String` | private | Điều kiện khác hai bên thống nhất. |
 | `itemTitle` | `String` | private | Bản chụp tiêu đề tin lúc tạo giao dịch, để lịch sử không đổi khi tin bị sửa hoặc gỡ. |
-| `itemImageUrl` | `String` | private | Bản chụp ảnh đầu tiên của tin lúc tạo giao dịch. |
+| `itemThumb` | `String` | private | Bản chụp `Listing.coverThumb` lúc tạo giao dịch. |
 | `status` | `DealStatus` | private | Trạng thái giao dịch, xem `trang-thai.md`. |
 | `buyerConfirmed` | `boolean` | private | Người mua đã xác nhận thông tin giao dịch. |
 | `sellerConfirmed` | `boolean` | private | Người bán đã xác nhận thông tin giao dịch. |
 | `cancelReason` | `String` | private | Lý do hủy, bắt buộc khi hủy. |
 | `carrierName` | `String` | private | Tên đơn vị vận chuyển. |
 | `trackingCode` | `String` | private | Mã vận đơn. |
-| `trackingImageUrl` | `String` | private | Ảnh chụp vận đơn trên Cloud Storage. |
-| `shippedAt` | `Timestamp` | private | Lúc người bán xác nhận đã giao. |
+| `trackingImageId` | `String` | private | Mã tài liệu `images` của ảnh vận đơn. |
+| `shippedAt` | `Timestamp` | private | Lúc người bán xác nhận đã giao, ghi bằng giờ máy chủ. |
 | `autoReleaseAt` | `Timestamp` | private | Hạn đếm ngược: `shippedAt + AUTO_RELEASE_DAYS`. Hết hạn mà người mua chưa xác nhận thì tự sang RECEIVED. |
 | `receivedAt` | `Timestamp` | private | Lúc sang RECEIVED (người mua xác nhận hoặc hết đếm ngược); tiền được giải ngân lúc này. |
 | `AUTO_RELEASE_DAYS` | `int` | private, static final | Hằng số: 7 ngày đếm ngược kể từ lúc giao. |
 | `AUTO_COMPLETE_DAYS` | `int` | private, static final | Hằng số: 3 ngày kể từ `receivedAt` thì tự hoàn tất. |
-| `statusHistory` | `List<StatusChange>` | private | Lịch sử chuyển trạng thái, thêm một phần tử mỗi lần chuyển. |
+| `statusHistory` | `List<StatusChange>` | private | Lịch sử chuyển trạng thái. Chỉ thêm khi trạng thái thật sự đổi (sửa điều khoản không thêm dòng). |
 
 **Phương thức**
 
@@ -662,13 +688,15 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | --- | --- | --- |
 | `public boolean canMoveTo(DealStatus)` | True khi bảng chuyển trạng thái trong `trang-thai.md` cho phép đi từ trạng thái hiện tại sang trạng thái đích. | 52 |
 | `public void confirmBy(String userId)` | Đặt cờ xác nhận của bên gọi; khi cả hai bên đã xác nhận thì PENDING_CONFIRM sang CONFIRMED. | 52 |
-| `public void markShipped(String carrier, String trackingCode, String imageUrl)` | Ghi đơn vị vận chuyển, mã và ảnh vận đơn, `shippedAt`, `autoReleaseAt`; CONFIRMED sang SHIPPED. Từ chối nếu thiếu bằng chứng hoặc còn cần thanh toán mà chưa có tiền ký quỹ. | 54 |
-| `public boolean hasShippingProof()` | True khi đủ cả `carrierName`, `trackingCode`, `trackingImageUrl`. | 54 |
-| `public void markReceived()` | Người mua xác nhận: SHIPPED sang RECEIVED (hoặc CONFIRMED sang RECEIVED khi gặp trực tiếp), ghi `receivedAt`. | 53 |
+| `public void markShipped(String carrier, String trackingCode, String imageId)` | Chỉ kiểm tra điều kiện của riêng giao dịch: đang CONFIRMED, giao qua vận chuyển, đủ ba bằng chứng; ghi đơn vị vận chuyển, mã, mã ảnh vận đơn; sang SHIPPED. Điều kiện về tiền do repository kiểm tra. | 54 |
+| `public boolean hasShippingProof()` | True khi đủ cả `carrierName`, `trackingCode`, `trackingImageId`. | 54 |
+| `public void markReceived()` | SHIPPED sang RECEIVED (hoặc CONFIRMED sang RECEIVED khi gặp trực tiếp). Điều kiện về tiền do repository kiểm tra. | 53 |
 | `public boolean isAutoReleaseDue(Timestamp)` | True khi đang SHIPPED và thời điểm truyền vào đã qua `autoReleaseAt`. | 84 |
 | `public void autoReceive()` | Hệ thống tự chuyển SHIPPED sang RECEIVED khi hết đếm ngược, người đổi ghi là `system`. | 84 |
 | `public boolean isAutoCompleteDue(Timestamp)` | True khi đang RECEIVED và đã qua `receivedAt + AUTO_COMPLETE_DAYS`. | 53 |
 | `public void complete()` | RECEIVED sang COMPLETED. | 53 |
+| `public boolean isPendingExpired(Timestamp)` | True khi đang PENDING_CONFIRM và đã quá 3 ngày kể từ `createdAt`. |  |
+| `public DealStatus statusBeforeDispute()` | Trạng thái trước khi khiếu nại: `fromStatus` của dòng lịch sử cuối cùng có `toStatus` là DISPUTED. |  |
 | `public void cancel(String userId, String reason)` | PENDING_CONFIRM hoặc CONFIRMED sang CANCELLED, bắt buộc có lý do. | 55 |
 | `public boolean isParticipant(String userId)` | True khi người đó là người mua hoặc người bán. |  |
 | `public boolean needsPayment()` | True khi `agreedPrice` lớn hơn 0. | 56 |
@@ -707,7 +735,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `toStatus` | `DealStatus` | private | Trạng thái sau. |
 | `changedBy` | `String` | private | Người làm thay đổi; `system` khi do việc chạy nền. |
 | `reason` | `String` | private | Lý do, nếu có (hủy, khiếu nại). |
-| `changedAt` | `Timestamp` | private | Lúc thay đổi. |
+| `changedAt` | `Timestamp` | private | Lúc thay đổi theo giờ máy (trong mảng không dùng được giờ máy chủ); chỉ để hiển thị, Security Rules không dựa vào. |
 
 **Phương thức**
 
@@ -869,10 +897,11 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `dealId` | `String` | private | Giao dịch bị khiếu nại. |
 | `reason` | `ComplaintReason` | private | Lý do chọn sẵn. |
 | `description` | `String` | private | Mô tả của người khiếu nại. |
-| `evidenceUrls` | `List<String>` | private | Ảnh bằng chứng trên Cloud Storage, tối thiểu 1. |
+| `evidenceImageIds` | `List<String>` | private | Mã tài liệu `images` của ảnh bằng chứng, 1 đến 5 lúc tạo, bổ sung thêm tối đa 5. |
 | `status` | `ComplaintStatus` | private | Trạng thái khiếu nại. |
 | `priority` | `Priority` | private | Mức ưu tiên do admin đặt; mặc định MEDIUM. |
 | `decision` | `ComplaintDecision` | private | Quyết định của admin; rỗng khi chưa xử lý. |
+| `evidenceRequest` | `String` | private | Lời admin yêu cầu bổ sung bằng chứng (quyết định REQUEST_EVIDENCE); khác `resolutionMessage` là lời kết luận cuối. |
 | `resolutionMessage` | `String` | private | Lời giải thích kết quả gửi cho hai bên. |
 | `adminNote` | `String` | private | Ghi chú nội bộ. Trên Firestore nằm ở tài liệu con `complaints/{id}/adminNote/note`, không nằm trong tài liệu khiếu nại. |
 | `handledBy` | `String` | private | Admin đã xử lý. |
@@ -881,8 +910,9 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public void withdraw()` | Người khiếu nại rút đơn khi còn OPEN hoặc NEEDS_EVIDENCE: sang WITHDRAWN. | 66 |
-| `public void decide(ComplaintDecision, String adminId)` | Ghi quyết định và admin. REQUEST_EVIDENCE thì sang NEEDS_EVIDENCE, các quyết định khác sang RESOLVED. | 89 |
+| `public void withdraw()` | Người khiếu nại rút đơn khi còn OPEN hoặc NEEDS_EVIDENCE: sang WITHDRAWN. Rút là cuối cùng, giao dịch đó không khiếu nại lại được. | 66 |
+| `public void decide(ComplaintDecision, String adminId)` | Ghi quyết định và admin. REQUEST_EVIDENCE: ghi `evidenceRequest`, sang NEEDS_EVIDENCE. Quyết định khác: ghi `resolutionMessage`, sang RESOLVED. | 89 |
+| `public void addEvidence(List<String>)` | Thêm mã ảnh vào `evidenceImageIds` (tối đa 5 ảnh thêm), NEEDS_EVIDENCE sang OPEN. |  |
 | `public boolean isOpen()` | True khi OPEN hoặc NEEDS_EVIDENCE. |  |
 
 **Quan hệ trên sơ đồ lớp**
@@ -954,4 +984,36 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 
 - `BannedKeyword` kế thừa `BaseDocument`. Trang 4. Tin cậy, quản trị.
 
-**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`AdminRepository`](data.md#adminrepository), [`KeywordFilter`](util.md#keywordfilter)
+**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`AdminRepository`](data.md#adminrepository), [`KeywordFilter`](util.md#keywordfilter), [`ListingRepository`](data.md#listingrepository)
+
+### MediaImage
+
+| Mục | Nội dung |
+| --- | --- |
+| Định danh | `com.nhom3.pubgapp.model.MediaImage` |
+| Loại | lớp |
+| Kế thừa | [`BaseDocument`](model.md#basedocument) |
+| Lưu trữ | Firestore `images/{id}`, xem [firestore-schema.md](../../data/firestore-schema.md#images) |
+| Trách nhiệm | Một ảnh đã nén, lưu dạng Base64 trong Firestore (gói Spark không có Cloud Storage). |
+| Chức năng liên quan (STT) | 17 |
+
+Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `touch()`.
+
+**Thuộc tính**
+
+| Tên | Kiểu | Truy cập | Ý nghĩa |
+| --- | --- | --- | --- |
+| `ownerId` | `String` | private | Người tải ảnh lên; chỉ người này ghi và xóa được. |
+| `purpose` | `ImagePurpose` | private | Ảnh dùng cho việc gì. |
+| `data` | `String` | private | Ảnh JPEG mã hóa Base64. Cạnh dài tối đa 1024 px, tối đa 300 KB trước khi mã hóa (khoảng 400 KB sau khi mã hóa), dưới giới hạn 1 MiB mỗi tài liệu. |
+| `width` | `int` | private | Chiều rộng sau khi nén, tính bằng px. |
+| `height` | `int` | private | Chiều cao sau khi nén, tính bằng px. |
+| `sizeBytes` | `int` | private | Số byte ảnh JPEG trước khi mã hóa Base64. |
+
+**Phương thức**
+
+| Chữ ký | Mô tả | STT |
+| --- | --- | --- |
+| `public byte[] toBytes()` | Giải mã Base64 thành mảng byte để Glide hiển thị. Gắn `@Exclude`. |  |
+
+**Dùng tới:** [`ImagePurpose`](enums.md#imagepurpose)

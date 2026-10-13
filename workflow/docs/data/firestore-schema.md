@@ -14,7 +14,7 @@ Quy tắc:
 
 ## Tổng quan
 
-**22 collection** (kể cả collection con) và **1 mảng lồng** (`deals.statusHistory`).
+**23 collection** (kể cả collection con) và **1 mảng lồng** (`deals.statusHistory`).
 
 | Collection | Đường dẫn | Lớp Java | Mục đích |
 | --- | --- | --- | --- |
@@ -41,6 +41,7 @@ Quy tắc:
 | [`notifications`](#notifications) | `notifications/{id}` | `AppNotification` | Thông báo. |
 | [`activityLogs`](#activitylogs) | `activityLogs/{id}` | `ActivityLog` | Nhật ký hoạt động. |
 | [`bannedKeywords`](#bannedkeywords) | `bannedKeywords/{id}` | `BannedKeyword` | Từ khóa cấm. |
+| [`images`](#images) | `images/{id}` | `MediaImage` | Ảnh đã nén dạng Base64 (tin đăng, chat, vận đơn, bằng chứng). Mỗi tài liệu dưới 1 MiB. |
 
 ## Quan hệ
 
@@ -130,12 +131,12 @@ erDiagram
         string email
         string displayName
         string phone
-        string avatarUrl
+        string avatarBase64
         string bio
         string status
         timestamp lockedUntil
         string verificationStatus
-        number ratingAverage
+        number ratingSum
         number ratingCount
         number warningCount
         array_string interestedCategoryIds
@@ -144,11 +145,7 @@ erDiagram
         timestamp termsAcceptedAt
         map notificationPrefs
         timestamp lastActiveAt
-        number soldCount
-        number followerCount
-        number dealCount
-        number completedDealCount
-        number reportCount
+        string lockReason
         timestamp createdAt
         timestamp updatedAt
     }
@@ -209,7 +206,6 @@ erDiagram
         string parentId FK
         array_string conditionFields
         boolean isActive
-        number listingCount
     }
     listings {
         string id PK
@@ -217,7 +213,8 @@ erDiagram
         string categoryId FK
         string title
         string description
-        array_string imageUrls
+        array_string imageIds
+        string coverThumb
         string itemCondition
         map conditionValues
         array_string tradeTypes
@@ -230,6 +227,7 @@ erDiagram
         string statusReason
         array_string searchKeywords
         boolean flagged
+        string reservedDealId FK
         timestamp createdAt
         timestamp updatedAt
     }
@@ -248,7 +246,7 @@ erDiagram
         string senderId FK
         string type
         string text
-        string mediaUrl
+        string imageId FK
         string offerId FK
         timestamp createdAt
     }
@@ -278,14 +276,14 @@ erDiagram
         timestamp scheduledAt
         string agreedTerms
         string itemTitle
-        string itemImageUrl
+        string itemThumb
         string status
         boolean buyerConfirmed
         boolean sellerConfirmed
         string cancelReason
         string carrierName
         string trackingCode
-        string trackingImageUrl
+        string trackingImageId FK
         timestamp shippedAt
         timestamp autoReleaseAt
         timestamp receivedAt
@@ -336,10 +334,11 @@ erDiagram
         string dealId FK
         string reason
         string description
-        array_string evidenceUrls
+        array_string evidenceImageIds
         string status
         string priority
         string decision
+        string evidenceRequest
         string resolutionMessage
         string handledBy FK
         timestamp createdAt
@@ -374,6 +373,16 @@ erDiagram
         string createdBy FK
         timestamp createdAt
     }
+    images {
+        string id PK
+        string ownerId FK
+        string purpose
+        string data
+        number width
+        number height
+        number sizeBytes
+        timestamp createdAt
+    }
 ```
 
 ## users
@@ -381,7 +390,8 @@ erDiagram
 - **Đường dẫn:** `users/{uid}`
 - **Lớp Java:** `User`
 - **Mục đích:** Hồ sơ người dùng.
-- **Ai ghi:** `AuthRepository` (tạo lần đầu), `UserRepository`, `AdminRepository` (khóa, cảnh báo), `ReviewRepository` (điểm), `DealRepository` (bộ đếm), `ReportRepository` (`reportCount`)
+- **Ai ghi:** `UserRepository` (tạo hồ sơ, sửa hồ sơ, mở khóa đã hết hạn, vô hiệu hóa), `AdminRepository` (khóa, cảnh báo, xác minh), `ReviewRepository` (`ratingSum`, `ratingCount` của người được đánh giá)
+- **Quyền đã chốt:** Lúc tạo: `status` ACTIVE, `verificationStatus` NONE, `ratingSum` và `ratingCount` bằng 0. Chủ tài khoản không tự đổi `status` trừ hai trường hợp: sang DELETED, hoặc từ TEMP_LOCKED về ACTIVE khi giờ Firestore đã qua `lockedUntil`; chỉ đổi `verificationStatus` từ NONE hoặc REJECTED sang PENDING.
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
 | --- | --- | --- | --- | --- |
@@ -389,25 +399,21 @@ erDiagram
 | `email` | string |  | Email đăng nhập, lấy từ Firebase Authentication. |  |
 | `displayName` | string |  | Họ tên hiển thị. |  |
 | `phone` | string |  | Số điện thoại liên hệ. Không dùng để đăng nhập. |  |
-| `avatarUrl` | string |  | Đường dẫn ảnh đại diện trên Cloud Storage. |  |
+| `avatarBase64` | string |  | Ảnh đại diện 256 px, JPEG dạng Base64, tối đa 20 KB. Nằm luôn trong tài liệu người dùng để danh sách và chat hiện ngay. |  |
 | `bio` | string |  | Đoạn giới thiệu ngắn trên trang cá nhân. |  |
 | `status` | string |  | Trạng thái tài khoản. Admin đổi giữa ACTIVE và hai mức khóa; chính chủ chỉ được đổi sang DELETED khi vô hiệu hóa. | một trong: ACTIVE, TEMP_LOCKED, PERM_LOCKED, DELETED |
 | `lockedUntil` | timestamp |  | Hạn khóa tạm. Rỗng khi không khóa hoặc khóa vĩnh viễn. |  |
 | `verificationStatus` | string |  | Trạng thái xác minh người bán; APPROVED thì hồ sơ có huy hiệu đã xác minh. | một trong: NONE, PENDING, APPROVED, REJECTED |
-| `ratingAverage` | number |  | Điểm sao trung bình nhận được, 0 khi chưa có đánh giá. |  |
-| `ratingCount` | number |  | Số đánh giá đã nhận. |  |
-| `warningCount` | number |  | Số lần bị cảnh báo; quyết định bậc của lần cảnh báo kế tiếp. |  |
+| `ratingSum` | number |  | Tổng điểm sao tổng thể đã nhận; điểm trung bình = `ratingSum / ratingCount`. Tăng bằng `FieldValue.increment` cùng lô với `Review`. |  |
+| `ratingCount` | number |  | Số đánh giá đã nhận, tăng 1 cùng lô với `Review`. |  |
+| `warningCount` | number |  | Số lần bị cảnh báo; bậc của lần cảnh báo kế tiếp là `warningCount + 1`. Mở khóa không đặt lại số này. |  |
 | `interestedCategoryIds` | array<string> |  | Danh mục quan tâm chọn lúc đăng ký; nguồn của gợi ý. | tham chiếu categories |
 | `province` | string |  | Tỉnh hoặc thành phố. |  |
 | `district` | string |  | Quận hoặc huyện. |  |
 | `termsAcceptedAt` | timestamp |  | Lúc đồng ý Điều khoản sử dụng và Chính sách bảo mật khi đăng ký. |  |
 | `notificationPrefs` | map |  | Bật hoặc tắt từng loại thông báo. Khóa là tên hằng `NotificationType`, thiếu khóa nghĩa là bật. |  |
 | `lastActiveAt` | timestamp |  | Lần cuối ứng dụng của người này hoạt động; dùng cho trạng thái hoạt động trong chat. |  |
-| `soldCount` | number |  | Số món đã bán hoặc đã trao (giao dịch hoàn tất với vai trò người bán). |  |
-| `followerCount` | number |  | Số người đang theo dõi. |  |
-| `dealCount` | number |  | Số giao dịch đã tạo, ở cả hai vai trò. |  |
-| `completedDealCount` | number |  | Số giao dịch đã hoàn tất; chia cho `dealCount` ra tỷ lệ hoàn tất. |  |
-| `reportCount` | number |  | Số báo cáo nhắm vào người này; admin dùng khi lọc. |  |
+| `lockReason` | string |  | Lý do khóa gần nhất do admin ghi; hiện cho người bị khóa khi đăng nhập. |  |
 | `createdAt` | timestamp |  |  |  |
 | `updatedAt` | timestamp |  |  |  |
 
@@ -416,7 +422,8 @@ Truy vấn dự kiến:
 | Phương thức | Điều kiện | Chỉ mục |
 | --- | --- | --- |
 | `UserRepository.getProfile` | Đọc theo mã | Không cần |
-| `AdminRepository.listUsers` | `status ==`, `province ==`, `createdAt` trong khoảng, sắp `createdAt` giảm | Ghép: `status`, `province`, `createdAt` |
+| `AdminRepository.listUsers` | Tùy chọn `status ==` và `province ==`, `createdAt` trong khoảng, sắp `createdAt` giảm | Ghép: `status`, `createdAt`; `province`, `createdAt`; `status`, `province`, `createdAt` |
+| `UserRepository.getStats` | Bốn truy vấn tổng hợp `count()` trên `deals` và `follows` | Dùng chỉ mục của `deals` và `follows` |
 
 Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên Firestore là `Timestamp`; `null` là chưa có giá trị):
 
@@ -426,12 +433,12 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   "email": "an.nguyen@example.com",
   "displayName": "Nguyễn An",
   "phone": "0901234567",
-  "avatarUrl": "https://firebasestorage.googleapis.com/.../avatar.jpg",
+  "avatarBase64": "/9j/4AAQSkZJRg...(Base64, tối đa 20 KB)",
   "bio": "Thích đồ công nghệ cũ",
   "status": "ACTIVE",
   "lockedUntil": null,
   "verificationStatus": "APPROVED",
-  "ratingAverage": 4.8,
+  "ratingSum": 58,
   "ratingCount": 12,
   "warningCount": 0,
   "interestedCategoryIds": [
@@ -446,11 +453,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
     "DEAL_UPDATE": true
   },
   "lastActiveAt": "2026-10-12T09:30:00+07:00",
-  "soldCount": 0,
-  "followerCount": 0,
-  "dealCount": 0,
-  "completedDealCount": 0,
-  "reportCount": 0,
+  "lockReason": "",
   "createdAt": "2026-10-12T09:30:00+07:00",
   "updatedAt": "2026-10-12T09:30:00+07:00"
 }
@@ -508,7 +511,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 - **Lớp Java:** `UserIdentity`
 - **Mục đích:** Thông tin định danh riêng tư; Security Rules chỉ cho chủ tài khoản và admin đọc.
 - **Ai ghi:** `UserRepository`
-- **Quyền đã chốt:** Chỉ chính chủ tài khoản và admin đọc, ghi. Không hiển thị công khai.
+- **Quyền đã chốt:** Chính chủ tài khoản đọc và ghi; admin chỉ đọc (màn E03, khi duyệt xác minh). Không hiển thị công khai.
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
 | --- | --- | --- | --- | --- |
@@ -555,7 +558,7 @@ Truy vấn dự kiến:
 
 | Phương thức | Điều kiện | Chỉ mục |
 | --- | --- | --- |
-| `UserRepository.getSavedIds` | Cả collection con, sắp `createdAt` giảm | Không cần |
+| `UserRepository.getSavedIds` | Cả collection con, sắp `savedAt` giảm; rồi đọc từng tin, bỏ qua tin không còn hoặc không được xem | Không cần |
 
 Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên Firestore là `Timestamp`; `null` là chưa có giá trị):
 
@@ -701,7 +704,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 - **Đường dẫn:** `categories/{id}`
 - **Lớp Java:** `Category`
 - **Mục đích:** Danh mục và danh mục con.
-- **Ai ghi:** `CategoryRepository` (admin), `ListingRepository` và `DealRepository` (`listingCount`)
+- **Ai ghi:** `CategoryRepository` (chỉ admin)
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
 | --- | --- | --- | --- | --- |
@@ -710,13 +713,13 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `parentId` | string | FK | Danh mục cha. Rỗng nghĩa là danh mục gốc. Chỉ có hai cấp. | tham chiếu categories |
 | `conditionFields` | array<string> |  | Tên các thuộc tính tình trạng riêng của danh mục, ví dụ Dung lượng pin, Bảo hành. |  |
 | `isActive` | boolean |  | Danh mục còn dùng; false thì ẩn khỏi lựa chọn khi đăng tin. |  |
-| `listingCount` | number |  | Số tin đang hiển thị trong danh mục, cập nhật khi đăng hoặc gỡ tin. |  |
 
 Truy vấn dự kiến:
 
 | Phương thức | Điều kiện | Chỉ mục |
 | --- | --- | --- |
 | `CategoryRepository.getAll` | `isActive == true` | Không cần |
+| `CategoryRepository.getAllForAdmin` | Cả collection | Không cần |
 | `CategoryRepository.getChildren` | `parentId == id` | Không cần |
 
 Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên Firestore là `Timestamp`; `null` là chưa có giá trị):
@@ -727,8 +730,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   "name": "Điện thoại",
   "parentId": "parent_01",
   "conditionFields": [],
-  "isActive": false,
-  "listingCount": 0
+  "isActive": false
 }
 ```
 
@@ -737,7 +739,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 - **Đường dẫn:** `listings/{id}`
 - **Lớp Java:** `Listing`
 - **Mục đích:** Tin đăng.
-- **Ai ghi:** `ListingRepository`, `ChatRepository` (RESERVED), `DealRepository` (AVAILABLE, SOLD), `AdminRepository` (ẩn, gỡ), `UserRepository` (ẩn khi vô hiệu hóa)
+- **Ai ghi:** `ListingRepository`, `ChatRepository` (RESERVED), `DealRepository` (AVAILABLE khi hủy, SOLD khi hoàn tất), `ComplaintRepository` (AVAILABLE khi quyết định hủy), `AdminRepository` (ẩn, khôi phục, gỡ), `UserRepository` (ẩn khi vô hiệu hóa)
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
 | --- | --- | --- | --- | --- |
@@ -746,7 +748,8 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `categoryId` | string | FK | Danh mục, phải là danh mục con hoặc danh mục gốc không có con. | tham chiếu categories |
 | `title` | string |  | Tiêu đề tin. |  |
 | `description` | string |  | Mô tả món đồ và yêu cầu của người đăng. |  |
-| `imageUrls` | array<string> |  | Đường dẫn ảnh trên Cloud Storage, từ 1 đến 5 ảnh. |  |
+| `imageIds` | array<string> |  | Mã 1 đến 5 tài liệu `images` (ảnh đầy đủ). Chỉ màn chi tiết tin mới đọc các ảnh này. | tham chiếu images |
+| `coverThumb` | string |  | Ảnh bìa thu nhỏ 320 px, JPEG Base64, tối đa 20 KB, lấy từ ảnh đầu tiên. Bảng tin và bộ nhớ đệm chỉ dùng ảnh này. |  |
 | `itemCondition` | string |  | Tình trạng chung của món đồ. | một trong: NEW, LIKE_NEW, USED, REPAIRED, DEFECTIVE |
 | `conditionValues` | map |  | Giá trị của từng thuộc tính tình trạng; khóa lấy từ `Category.conditionFields`. |  |
 | `tradeTypes` | array<string> |  | Các hình thức chấp nhận, chọn được nhiều. Có GIVEAWAY thì giá bằng 0. | mỗi phần tử là một trong: SELL, EXCHANGE, GIVEAWAY |
@@ -755,10 +758,11 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `minOfferPrice` | number |  | Mức tiền offer tối thiểu, 0 là không giới hạn. |  |
 | `province` | string |  | Tỉnh hoặc thành phố, dùng cho lọc khu vực. |  |
 | `location` | geopoint |  | Tọa độ món đồ, dùng cho lọc bán kính và sắp theo khoảng cách. |  |
-| `status` | string |  | Trạng thái tin, xem `trang-thai.md`. | một trong: DRAFT, AVAILABLE, RESERVED, SOLD, HIDDEN, REMOVED |
+| `status` | string |  | Trạng thái tin, xem `trang-thai.md` mục 1. | một trong: DRAFT, AVAILABLE, RESERVED, SOLD, HIDDEN, REMOVED |
 | `statusReason` | string |  | Lý do admin ẩn hoặc gỡ tin, hiển thị cho người đăng. |  |
 | `searchKeywords` | array<string> |  | Các từ đã bỏ dấu, viết thường của tiêu đề và mô tả, để truy vấn `array-contains`. |  |
-| `flagged` | boolean |  | Bị gắn cờ vì chứa từ khóa cấm; tin vẫn đăng nhưng hiện trong danh sách cần chú ý của admin. |  |
+| `flagged` | boolean |  | Bị gắn cờ vì chứa từ khóa cấm. Người đăng chỉ đổi được từ false sang true (khi sửa tin); chỉ admin bỏ cờ (`AdminRepository.clearFlag`). |  |
+| `reservedDealId` | string | FK | Giao dịch đang giữ chỗ tin khi tin RESERVED; rỗng ở trạng thái khác. Security Rules dùng nó để cho người mua của giao dịch đó trả tin về AVAILABLE khi hủy, hoặc chuyển sang SOLD khi hoàn tất. | tham chiếu deals |
 | `createdAt` | timestamp |  |  |  |
 | `updatedAt` | timestamp |  |  |  |
 
@@ -769,7 +773,9 @@ Truy vấn dự kiến:
 | `ListingRepository.getFeed` | `status == AVAILABLE`, có thể thêm `categoryId ==` hoặc `province ==`, sắp `createdAt` giảm, 20 tin một trang | Ghép: `status`, `createdAt`; `status`, `categoryId`, `createdAt`; `status`, `province`, `createdAt` |
 | `ListingRepository.getFeed` (kênh đang theo dõi) | `status == AVAILABLE`, `sellerId in [...]`, sắp `createdAt` giảm | Ghép: `status`, `sellerId`, `createdAt` |
 | `ListingRepository.search` | `searchKeywords array-contains <từ đầu>`, `status == AVAILABLE`, sắp `createdAt` giảm; giá, tình trạng, hình thức, bán kính lọc trên máy | Ghép: `searchKeywords` (array-contains), `status`, `createdAt` |
-| `ListingRepository.getBySeller` | `sellerId ==`, sắp `createdAt` giảm | Ghép: `sellerId`, `createdAt` |
+| `ListingRepository.getFeed` (sắp theo giá) | `status == AVAILABLE`, có thể thêm `categoryId ==`, sắp `price` tăng hoặc giảm | Ghép: `status`, `price`; `status`, `categoryId`, `price` |
+| `ListingRepository.getBySeller` (chính chủ) | `sellerId ==`, sắp `createdAt` giảm | Ghép: `sellerId`, `createdAt` |
+| `ListingRepository.getBySeller` (người khác xem) | `sellerId ==`, `status in [AVAILABLE, RESERVED, SOLD]`, sắp `createdAt` giảm | Ghép: `sellerId`, `status`, `createdAt` |
 | `ListingRepository.getSimilar` | `status == AVAILABLE`, `categoryId ==`, 20 tin | Dùng chỉ mục của getFeed |
 
 Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên Firestore là `Timestamp`; `null` là chưa có giá trị):
@@ -781,9 +787,11 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   "categoryId": "category_01",
   "title": "iPhone 12 128GB",
   "description": "Máy đẹp, pin 85%",
-  "imageUrls": [
-    "https://firebasestorage.googleapis.com/.../listing_1.jpg"
+  "imageIds": [
+    "image_listing_01",
+    "image_listing_02"
   ],
+  "coverThumb": "/9j/4AAQSkZJRg...(Base64, tối đa 20 KB)",
   "itemCondition": "NEW",
   "conditionValues": {
     "Dung lượng pin": "85%"
@@ -813,6 +821,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
     "dep"
   ],
   "flagged": false,
+  "reservedDealId": "reservedDeal_01",
   "createdAt": "2026-10-12T09:30:00+07:00",
   "updatedAt": "2026-10-12T09:30:00+07:00"
 }
@@ -867,9 +876,9 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `id` | string | PK | Mã tài liệu Firestore (tự sinh, trừ khi đường dẫn ghi khác). |  |
 | `conversationId` | string | FK | Cuộc trò chuyện chứa tin nhắn. | tham chiếu conversations |
 | `senderId` | string | FK | Người gửi. | tham chiếu users |
-| `type` | string |  | Loại tin nhắn. | một trong: TEXT, IMAGE, VIDEO, OFFER |
+| `type` | string |  | Loại tin nhắn. | một trong: TEXT, IMAGE, OFFER |
 | `text` | string |  | Nội dung chữ khi type là TEXT. |  |
-| `mediaUrl` | string |  | Đường dẫn ảnh hoặc video khi type là IMAGE hoặc VIDEO. |  |
+| `imageId` | string | FK | Mã tài liệu `images` khi type là IMAGE. | tham chiếu images |
 | `offerId` | string | FK | Offer được gửi khi type là OFFER. | tham chiếu offers |
 | `createdAt` | timestamp |  |  |  |
 
@@ -888,8 +897,8 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   "senderId": "sender_01",
   "type": "TEXT",
   "text": "Bạn để 6 triệu được không?",
-  "mediaUrl": "",
-  "offerId": "offer_01",
+  "imageId": null,
+  "offerId": null,
   "createdAt": "2026-10-12T09:30:00+07:00"
 }
 ```
@@ -942,7 +951,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 - **Đường dẫn:** `deals/{id}`
 - **Lớp Java:** `Deal`
 - **Mục đích:** Giao dịch.
-- **Ai ghi:** `DealRepository`, `ComplaintRepository` (DISPUTED và hệ quả quyết định), `ReviewRepository` (COMPLETED)
+- **Ai ghi:** `DealRepository` (kể cả COMPLETED qua `completeDeal`), `ComplaintRepository` (DISPUTED và hệ quả quyết định)
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
 | --- | --- | --- | --- | --- |
@@ -959,18 +968,18 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `scheduledAt` | timestamp |  | Thời gian hẹn giao nhận. |  |
 | `agreedTerms` | string |  | Điều kiện khác hai bên thống nhất. |  |
 | `itemTitle` | string |  | Bản chụp tiêu đề tin lúc tạo giao dịch, để lịch sử không đổi khi tin bị sửa hoặc gỡ. | bản chụp từ tin đăng lúc tạo giao dịch |
-| `itemImageUrl` | string |  | Bản chụp ảnh đầu tiên của tin lúc tạo giao dịch. | bản chụp từ tin đăng lúc tạo giao dịch |
+| `itemThumb` | string |  | Bản chụp `Listing.coverThumb` lúc tạo giao dịch. | bản chụp từ tin đăng lúc tạo giao dịch |
 | `status` | string |  | Trạng thái giao dịch, xem `trang-thai.md`. | một trong: PENDING_CONFIRM, CONFIRMED, SHIPPED, RECEIVED, COMPLETED, CANCELLED, DISPUTED |
 | `buyerConfirmed` | boolean |  | Người mua đã xác nhận thông tin giao dịch. |  |
 | `sellerConfirmed` | boolean |  | Người bán đã xác nhận thông tin giao dịch. |  |
 | `cancelReason` | string |  | Lý do hủy, bắt buộc khi hủy. |  |
 | `carrierName` | string |  | Tên đơn vị vận chuyển. |  |
 | `trackingCode` | string |  | Mã vận đơn. |  |
-| `trackingImageUrl` | string |  | Ảnh chụp vận đơn trên Cloud Storage. |  |
-| `shippedAt` | timestamp |  | Lúc người bán xác nhận đã giao. |  |
+| `trackingImageId` | string | FK | Mã tài liệu `images` của ảnh vận đơn. | tham chiếu images |
+| `shippedAt` | timestamp |  | Lúc người bán xác nhận đã giao, ghi bằng giờ máy chủ. |  |
 | `autoReleaseAt` | timestamp |  | Hạn đếm ngược: `shippedAt + AUTO_RELEASE_DAYS`. Hết hạn mà người mua chưa xác nhận thì tự sang RECEIVED. |  |
 | `receivedAt` | timestamp |  | Lúc sang RECEIVED (người mua xác nhận hoặc hết đếm ngược); tiền được giải ngân lúc này. |  |
-| `statusHistory` | array<map> |  | Lịch sử chuyển trạng thái, thêm một phần tử mỗi lần chuyển. | mảng lồng, mỗi phần tử theo mục statusHistory |
+| `statusHistory` | array<map> |  | Lịch sử chuyển trạng thái. Chỉ thêm khi trạng thái thật sự đổi (sửa điều khoản không thêm dòng). | mảng lồng, mỗi phần tử theo mục statusHistory |
 
 Truy vấn dự kiến:
 
@@ -979,6 +988,7 @@ Truy vấn dự kiến:
 | `DealRepository.getMyDeals` | Hai truy vấn `buyerId == uid` và `sellerId == uid`, sắp `updatedAt` giảm, rồi gộp | Ghép: `buyerId`, `updatedAt`; `sellerId`, `updatedAt` |
 | `DealRepository.releaseDueDeals` | `buyerId == uid` (và lần nữa với `sellerId`), `status == SHIPPED`, `autoReleaseAt <= bây giờ` | Ghép: `buyerId`, `status`, `autoReleaseAt`; `sellerId`, `status`, `autoReleaseAt` |
 | `DealRepository.completeDueDeals` | `buyerId == uid` (và `sellerId`), `status == RECEIVED`, `receivedAt <= bây giờ - 3 ngày` | Ghép: `buyerId`, `status`, `receivedAt`; `sellerId`, `status`, `receivedAt` |
+| `DealRepository.expirePendingDeals` | `buyerId == uid` (và `sellerId`), `status == PENDING_CONFIRM`, `createdAt <= bây giờ - 3 ngày` | Ghép: `buyerId`, `status`, `createdAt`; `sellerId`, `status`, `createdAt` |
 | `DealRepository.listAll` | `status ==` (tùy chọn), sắp `updatedAt` giảm | Ghép: `status`, `updatedAt` |
 
 Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên Firestore là `Timestamp`; `null` là chưa có giá trị):
@@ -998,14 +1008,14 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   "scheduledAt": null,
   "agreedTerms": "Kèm sạc zin",
   "itemTitle": "iPhone 12 128GB",
-  "itemImageUrl": "https://firebasestorage.googleapis.com/.../listing_1.jpg",
+  "itemThumb": "/9j/4AAQSkZJRg...(Base64, tối đa 20 KB)",
   "status": "SHIPPED",
   "buyerConfirmed": true,
   "sellerConfirmed": true,
   "cancelReason": "",
   "carrierName": "Giao Hàng Nhanh",
   "trackingCode": "GHN123456789",
-  "trackingImageUrl": "https://firebasestorage.googleapis.com/.../waybill.jpg",
+  "trackingImageId": "image_waybill_01",
   "shippedAt": "2026-10-12T09:30:00+07:00",
   "autoReleaseAt": "2026-10-19T09:30:00+07:00",
   "receivedAt": null,
@@ -1048,7 +1058,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `toStatus` | string |  | Trạng thái sau. | một trong: PENDING_CONFIRM, CONFIRMED, SHIPPED, RECEIVED, COMPLETED, CANCELLED, DISPUTED |
 | `changedBy` | string |  | Người làm thay đổi; `system` khi do việc chạy nền. | mã người dùng thực hiện lần chuyển |
 | `reason` | string |  | Lý do, nếu có (hủy, khiếu nại). |  |
-| `changedAt` | timestamp |  | Lúc thay đổi. |  |
+| `changedAt` | timestamp |  | Lúc thay đổi theo giờ máy (trong mảng không dùng được giờ máy chủ); chỉ để hiển thị, Security Rules không dựa vào. |  |
 
 Truy vấn dự kiến:
 
@@ -1074,7 +1084,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 - **Lớp Java:** `Payment`
 - **Mục đích:** Khoản ký quỹ mô phỏng.
 - **Ai ghi:** `DealRepository`, `ComplaintRepository` (hoàn hoặc giải ngân theo quyết định)
-- **Quyền đã chốt:** Chuyển sang RELEASED chỉ khi người mua xác nhận, hoặc khi giờ của Firestore đã qua `deals.autoReleaseAt` và giao dịch còn SHIPPED.
+- **Quyền đã chốt:** Tạo (HELD) chỉ bởi người mua, khi giao dịch CONFIRMED, `amount` bằng `deals.agreedPrice`. Sang RELEASED chỉ cùng lô với việc giao dịch sang RECEIVED: người mua xác nhận (từ SHIPPED, hoặc từ CONFIRMED khi gặp trực tiếp), hoặc giờ Firestore đã qua `deals.autoReleaseAt` và giao dịch còn SHIPPED, hoặc admin bác khiếu nại. Sang REFUNDED chỉ cùng lô với việc giao dịch sang CANCELLED. Danh sách này trùng `trang-thai.md` mục 4.
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
 | --- | --- | --- | --- | --- |
@@ -1111,7 +1121,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 - **Đường dẫn:** `reviews/{id}`
 - **Lớp Java:** `Review`
 - **Mục đích:** Đánh giá đối tác.
-- **Ai ghi:** `ReviewRepository`
+- **Ai ghi:** `ReviewRepository`; mã tài liệu `{dealId}_{reviewerId}` nên mỗi bên chỉ một đánh giá
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
 | --- | --- | --- | --- | --- |
@@ -1175,7 +1185,7 @@ Truy vấn dự kiến:
 | Phương thức | Điều kiện | Chỉ mục |
 | --- | --- | --- |
 | `ReportRepository.getMyReports` | `reporterId == uid`, sắp `createdAt` giảm | Ghép: `reporterId`, `createdAt` |
-| `ReportRepository.getByStatus` | `status ==`, sắp `createdAt` | Ghép: `status`, `createdAt` |
+| `ReportRepository.getByStatus` | `status ==`, `targetType ==` (tùy chọn), sắp `createdAt` | Ghép: `status`, `createdAt`; `targetType`, `status`, `createdAt` |
 | `ReportRepository.countByTarget` | `targetId ==`, `status == OPEN`, đếm bằng truy vấn tổng hợp | Chỉ so bằng: thường không cần chỉ mục ghép |
 
 Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên Firestore là `Timestamp`; `null` là chưa có giá trị):
@@ -1199,7 +1209,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 - **Đường dẫn:** `complaints/{id}`
 - **Lớp Java:** `Complaint`
 - **Mục đích:** Khiếu nại.
-- **Ai ghi:** `ComplaintRepository`
+- **Ai ghi:** `ComplaintRepository`; mã tài liệu là `dealId` nên mỗi giao dịch tối đa một khiếu nại
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
 | --- | --- | --- | --- | --- |
@@ -1208,10 +1218,11 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `dealId` | string | FK | Giao dịch bị khiếu nại. | tham chiếu deals |
 | `reason` | string |  | Lý do chọn sẵn. | một trong: NOT_AS_DESCRIBED, NOT_RECEIVED, DAMAGED, OTHER |
 | `description` | string |  | Mô tả của người khiếu nại. |  |
-| `evidenceUrls` | array<string> |  | Ảnh bằng chứng trên Cloud Storage, tối thiểu 1. |  |
+| `evidenceImageIds` | array<string> |  | Mã tài liệu `images` của ảnh bằng chứng, 1 đến 5 lúc tạo, bổ sung thêm tối đa 5. | tham chiếu images |
 | `status` | string |  | Trạng thái khiếu nại. | một trong: OPEN, NEEDS_EVIDENCE, RESOLVED, WITHDRAWN |
 | `priority` | string |  | Mức ưu tiên do admin đặt; mặc định MEDIUM. | một trong: LOW, MEDIUM, HIGH |
 | `decision` | string |  | Quyết định của admin; rỗng khi chưa xử lý. | một trong: REFUND, RETURN_ITEM, CANCEL_DEAL, REJECT, REQUEST_EVIDENCE |
+| `evidenceRequest` | string |  | Lời admin yêu cầu bổ sung bằng chứng (quyết định REQUEST_EVIDENCE); khác `resolutionMessage` là lời kết luận cuối. |  |
 | `resolutionMessage` | string |  | Lời giải thích kết quả gửi cho hai bên. |  |
 | `handledBy` | string | FK | Admin đã xử lý. | tham chiếu users |
 | `createdAt` | timestamp |  |  |  |
@@ -1221,7 +1232,7 @@ Truy vấn dự kiến:
 | Phương thức | Điều kiện | Chỉ mục |
 | --- | --- | --- |
 | `ComplaintRepository.getMyComplaints` | `complainantId == uid`, sắp `createdAt` giảm | Ghép: `complainantId`, `createdAt` |
-| `ComplaintRepository.getByStatus` | `status ==`, `priority ==` (tùy chọn), sắp `createdAt` | Ghép: `status`, `priority`, `createdAt` |
+| `ComplaintRepository.getByStatus` | `status ==`, `priority ==` (tùy chọn), sắp `createdAt` | Ghép: `status`, `createdAt`; `status`, `priority`, `createdAt` |
 
 Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên Firestore là `Timestamp`; `null` là chưa có giá trị):
 
@@ -1232,12 +1243,13 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   "dealId": "deal_01",
   "reason": "Đăng hàng giả nhiều lần",
   "description": "Máy không lên nguồn khi nhận",
-  "evidenceUrls": [
-    "https://firebasestorage.googleapis.com/.../evidence_1.jpg"
+  "evidenceImageIds": [
+    "image_evidence_01"
   ],
   "status": "OPEN",
   "priority": "MEDIUM",
   "decision": null,
+  "evidenceRequest": "",
   "resolutionMessage": "",
   "handledBy": null,
   "createdAt": "2026-10-12T09:30:00+07:00"
@@ -1281,7 +1293,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 - **Đường dẫn:** `notifications/{id}`
 - **Lớp Java:** `AppNotification`
 - **Mục đích:** Thông báo.
-- **Ai ghi:** `NotificationRepository` (ghi cho người khác), người nhận chỉ đổi `isRead`
+- **Ai ghi:** Repository làm đổi trạng thái gọi `NotificationRepository.create` (ghi cho người khác); người nhận chỉ đổi `isRead`
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
 | --- | --- | --- | --- | --- |
@@ -1381,12 +1393,54 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 }
 ```
 
+## images
+
+- **Đường dẫn:** `images/{id}`
+- **Lớp Java:** `MediaImage`
+- **Mục đích:** Ảnh đã nén dạng Base64 (tin đăng, chat, vận đơn, bằng chứng). Mỗi tài liệu dưới 1 MiB.
+- **Ai ghi:** `MediaRepository`; chỉ người tải lên ghi và xóa
+- **Quyền đã chốt:** Ai đã đăng nhập cũng đọc được; chỉ người tải lên tạo và xóa; `ownerId` phải là người ghi; chuỗi `data` dài dưới 600.000 ký tự.
+
+| Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
+| --- | --- | --- | --- | --- |
+| `id` | string | PK | Mã tài liệu Firestore (tự sinh, trừ khi đường dẫn ghi khác). |  |
+| `ownerId` | string | FK | Người tải ảnh lên; chỉ người này ghi và xóa được. | tham chiếu users |
+| `purpose` | string |  | Ảnh dùng cho việc gì. | một trong: LISTING, CHAT, WAYBILL, EVIDENCE |
+| `data` | string |  | Ảnh JPEG mã hóa Base64. Cạnh dài tối đa 1024 px, tối đa 300 KB trước khi mã hóa (khoảng 400 KB sau khi mã hóa), dưới giới hạn 1 MiB mỗi tài liệu. |  |
+| `width` | number |  | Chiều rộng sau khi nén, tính bằng px. |  |
+| `height` | number |  | Chiều cao sau khi nén, tính bằng px. |  |
+| `sizeBytes` | number |  | Số byte ảnh JPEG trước khi mã hóa Base64. |  |
+| `createdAt` | timestamp |  |  |  |
+
+Truy vấn dự kiến:
+
+| Phương thức | Điều kiện | Chỉ mục |
+| --- | --- | --- |
+| `MediaRepository.getImage` | Đọc theo mã, có bộ nhớ đệm trong RAM | Không cần |
+
+Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên Firestore là `Timestamp`; `null` là chưa có giá trị):
+
+```json
+{
+  "id": "image_01",
+  "ownerId": "owner_01",
+  "purpose": "LISTING",
+  "data": "/9j/4AAQSkZJRg...(Base64, tối đa khoảng 400 KB)",
+  "width": 1024,
+  "height": 768,
+  "sizeBytes": 245760,
+  "createdAt": "2026-10-12T09:30:00+07:00"
+}
+```
+
 ## Chỉ mục ghép dự kiến
 
 Gom từ các bảng Truy vấn dự kiến ở trên. Khi một truy vấn thiếu chỉ mục, Firestore trả lỗi kèm đường dẫn tạo chỉ mục; tạo xong thì ghi vào đây. Truy vấn chỉ so bằng thường không cần chỉ mục ghép.
 
 | Collection | Các trường |
 | --- | --- |
+| `users` | `status`, `createdAt` |
+| `users` | `province`, `createdAt` |
 | `users` | `status`, `province`, `createdAt` |
 | `sellerVerifications` | `status`, `createdAt` |
 | `listings` | `status`, `createdAt` |
@@ -1394,7 +1448,10 @@ Gom từ các bảng Truy vấn dự kiến ở trên. Khi một truy vấn thi�
 | `listings` | `status`, `province`, `createdAt` |
 | `listings` | `status`, `sellerId`, `createdAt` |
 | `listings` | `searchKeywords` (array-contains), `status`, `createdAt` |
+| `listings` | `status`, `price` |
+| `listings` | `status`, `categoryId`, `price` |
 | `listings` | `sellerId`, `createdAt` |
+| `listings` | `sellerId`, `status`, `createdAt` |
 | `conversations` | `buyerId`, `lastMessageAt` |
 | `conversations` | `sellerId`, `lastMessageAt` |
 | `deals` | `buyerId`, `updatedAt` |
@@ -1403,6 +1460,8 @@ Gom từ các bảng Truy vấn dự kiến ở trên. Khi một truy vấn thi�
 | `deals` | `sellerId`, `status`, `autoReleaseAt` |
 | `deals` | `buyerId`, `status`, `receivedAt` |
 | `deals` | `sellerId`, `status`, `receivedAt` |
+| `deals` | `buyerId`, `status`, `createdAt` |
+| `deals` | `sellerId`, `status`, `createdAt` |
 | `deals` | `status`, `updatedAt` |
 | `payments` | `payerId`, `heldAt` |
 | `payments` | `payeeId`, `heldAt` |
@@ -1410,11 +1469,13 @@ Gom từ các bảng Truy vấn dự kiến ở trên. Khi một truy vấn thi�
 | `reviews` | `reviewerId`, `createdAt` |
 | `reports` | `reporterId`, `createdAt` |
 | `reports` | `status`, `createdAt` |
+| `reports` | `targetType`, `status`, `createdAt` |
 | `complaints` | `complainantId`, `createdAt` |
+| `complaints` | `status`, `createdAt` |
 | `complaints` | `status`, `priority`, `createdAt` |
 | `notifications` | `recipientId`, `createdAt` |
 | `activityLogs` | `userId`, `createdAt` |
 
-## Quyền đọc và ghi còn lại
+## Quyền đọc và ghi
 
-Ngoài các mục "Quyền đã chốt" ở trên, quyền của từng collection được chốt khi viết Security Rules ở giai đoạn code, theo nguyên tắc: phải đăng nhập; chỉ người trong cuộc (hai bên của giao dịch, cuộc trò chuyện, đơn khiếu nại) đọc dữ liệu của cuộc đó; admin xác định bằng `admins/{uid}`; bộ đếm chỉ được tăng hoặc giảm đúng 1. Khi chốt, ghi vào tài liệu này.
+Ma trận đầy đủ cho từng collection (ai tạo, sửa, xóa; được đổi trường nào; kiểm tra gì) nằm ở [security-rules.md](security-rules.md). Nguyên tắc chung: phải đăng nhập; mọi lần ghi đòi tài khoản ACTIVE; chỉ người trong cuộc (hai bên của giao dịch, cuộc trò chuyện, đơn khiếu nại) đọc dữ liệu của cuộc đó; admin xác định bằng `admins/{uid}`. Không lưu bộ đếm do người dùng ghi chéo vào tài liệu của người khác, trừ `ratingSum` và `ratingCount` (tăng cùng lô với đánh giá).

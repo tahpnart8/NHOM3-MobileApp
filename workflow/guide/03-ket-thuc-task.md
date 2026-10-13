@@ -3,7 +3,7 @@
 Từ lúc code xong đến lúc PR được merge: mở PR, nhờ một AI khác kiểm chéo, nhờ leader duyệt, xử lý góp ý.
 
 ```
-Code xong  ->  /sync-branch  ->  /open-pr  ->  Cross-check (AI khác)  ->  Nhắn leader  ->  Sửa theo góp ý  ->  Leader merge
+Code xong  ->  /sync-branch  ->  /open-pr  ->  Cross-check (AI khác)  ->  Nhắn người duyệt  ->  Sửa theo góp ý  ->  Người duyệt merge
 ```
 
 ## 1. Trước khi mở PR
@@ -66,33 +66,33 @@ Bạn đăng bằng `gh pr comment <N> --body-file <file>` hoặc dán vào tran
 
 **Lưu ý quan trọng về danh sách contributor.** Không cài Copilot, Codex hay bất kỳ GitHub App, bot review nào vào repo, và không @ một AI trong PR: chúng xuất hiện như một contributor, trái với luật của nhóm (`AGENTS.md` R8). Cross-check luôn diễn ra **trong máy của bạn**, còn lên GitHub chỉ là lời của bạn.
 
-**Được bỏ qua khi:** PR chỉ sửa tài liệu, chữ hoặc màu, vài dòng. Khi đó nhờ chính leader xem là đủ.
+**Được bỏ qua khi:** PR chỉ sửa tài liệu, chữ hoặc màu, vài dòng. Khi đó nhờ chính người duyệt xem là đủ.
 
-## 4. Nhờ leader duyệt
+## 4. Nhờ người duyệt (leader hoặc Hải Long)
 
-GitHub tự yêu cầu leader review nhờ `CODEOWNERS`. Bạn chỉ cần nhắn nhóm một tin để leader biết:
+GitHub tự yêu cầu review của người sở hữu đường dẫn bị đổi nhờ `CODEOWNERS`: leader hoặc Hải Long (một trong hai là đủ) với code trong `PUBGApp/` và tài liệu trong `workflow/docs/`; chỉ leader với file Gradle, manifest, `firebase/`, `.github/`, script, luật và kế hoạch. Bạn chỉ cần nhắn nhóm một tin để người duyệt biết:
 
 ```
-PR #<N> <tiêu đề>: <một câu nói làm được gì>. CI xanh. Đã cross-check. Đã tự chạy: <luồng chính, xoay, máy bay>. Cần leader xem kỹ: <chỗ bạn thấy rủi ro hoặc chưa chắc>.
+PR #<N> <tiêu đề>: <một câu nói làm được gì>. CI xanh. Đã cross-check. Đã tự chạy: <luồng chính, xoay, máy bay>. Cần người duyệt xem kỹ: <chỗ bạn thấy rủi ro hoặc chưa chắc>.
 ```
 
 Nêu **chỗ bạn thấy rủi ro** là phần có giá trị nhất: leader biết đọc ở đâu.
 
-Không hối thúc bằng cách merge hộ: chỉ leader duyệt và merge.
+Không hối thúc bằng cách merge hộ: chỉ người duyệt (leader, hoặc Hải Long với phần anh ấy duyệt) merge.
 
-## 5. Khi leader để lại góp ý
+## 5. Khi người duyệt để lại góp ý
 
 ```
-Leader để lại góp ý ở PR #<N>. Chạy gh pr view <N> --comments để đọc. Với mỗi góp ý: nói bạn hiểu ý là gì, bạn đồng ý hay không và vì sao, và sẽ sửa thế nào. CHƯA SỬA. Chờ tôi xác nhận.
+Người duyệt để lại góp ý ở PR #<N>. Chạy gh pr view <N> --comments để đọc. Với mỗi góp ý: nói bạn hiểu ý là gì, bạn đồng ý hay không và vì sao, và sẽ sửa thế nào. CHƯA SỬA. Chờ tôi xác nhận.
 ```
 
 Sau khi bạn xác nhận:
 
 ```
-Sửa theo các góp ý đã xác nhận. Mỗi góp ý một commit nhỏ trên cùng branch (không force push, không rebase, không tạo PR mới). Build lại, đẩy lên, rồi tóm tắt từng góp ý đã xử lý thế nào để tôi trả lời leader.
+Sửa theo các góp ý đã xác nhận. Mỗi góp ý một commit nhỏ trên cùng branch (không force push, không rebase, không tạo PR mới). Build lại, đẩy lên, rồi tóm tắt từng góp ý đã xử lý thế nào để tôi trả lời người duyệt.
 ```
 
-Bạn không đồng ý một góp ý: trả lời leader bằng lý do kỹ thuật cụ thể, không im lặng bỏ qua.
+Bạn không đồng ý một góp ý: trả lời người duyệt bằng lý do kỹ thuật cụ thể, không im lặng bỏ qua.
 
 ## 6. Sau khi PR được merge
 

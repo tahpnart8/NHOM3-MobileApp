@@ -45,7 +45,7 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | `public ChatDao chatDao()` | DAO của `conversation_cache` và `message_cache`. |  |
 | `public DealDao dealDao()` | DAO của `deal_cache`. |  |
 | `public HistoryDao historyDao()` | DAO của `recent_view` và `recent_search`. |  |
-| `public AppDatabase getInstance(Context)` | Trả thể hiện duy nhất, tạo lần đầu bằng `Room.databaseBuilder`. |  |
+| `public static AppDatabase getInstance(Context)` | Trả thể hiện duy nhất, tạo lần đầu bằng `Room.databaseBuilder`. |  |
 
 **Quan hệ trên sơ đồ lớp**
 
@@ -99,15 +99,17 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | `sellerId` | `String` | private | Bản sao `Listing.sellerId`. |
 | `title` | `String` | private | Bản sao `Listing.title`. |
 | `description` | `String` | private | Bản sao `Listing.description`. |
-| `imageUrlsJson` | `String` | private | Danh sách ảnh dạng chuỗi JSON. |
+| `imageIdsJson` | `String` | private | Danh sách mã ảnh dạng chuỗi JSON (không đệm ảnh đầy đủ). |
+| `coverThumb` | `String` | private | Bản sao `Listing.coverThumb`; ảnh duy nhất có khi offline. |
 | `price` | `long` | private | Bản sao `Listing.price`. |
 | `categoryId` | `String` | private | Bản sao `Listing.categoryId`. |
 | `tradeTypesJson` | `String` | private | Danh sách hình thức giao dịch dạng chuỗi JSON. |
+| `itemCondition` | `String` | private | Bản sao `Listing.itemCondition`. |
+| `minOfferPrice` | `long` | private | Bản sao `Listing.minOfferPrice`. |
 | `province` | `String` | private | Bản sao `Listing.province`. |
 | `status` | `String` | private | Bản sao `Listing.status` (tên hằng enum dạng chuỗi). |
 | `createdAtMillis` | `long` | private | Bản sao `Listing.createdAt` dạng mili giây. |
 | `cachedAtMillis` | `long` | private | Lúc ghi vào bộ nhớ đệm. |
-| `viewedAtMillis` | `long` | private | Lúc người dùng mở chi tiết tin gần nhất; 0 nếu chỉ thấy trong bảng tin. |
 
 **Phương thức**
 
@@ -133,7 +135,7 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | Loại | lớp (entity) |
 | Lưu trữ | Room, bảng `conversation_cache`, xem [room-schema.md](../../data/room-schema.md#conversation_cache) |
 | Trách nhiệm | Bản sao danh sách cuộc trò chuyện. |
-| Chức năng liên quan (STT) | 43 đến 45 |
+| Chức năng liên quan (STT) | 43, 44 |
 
 **Thuộc tính**
 
@@ -171,7 +173,7 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | Loại | lớp (entity) |
 | Lưu trữ | Room, bảng `message_cache`, xem [room-schema.md](../../data/room-schema.md#message_cache) |
 | Trách nhiệm | Bản sao tin nhắn đã xem. |
-| Chức năng liên quan (STT) | 43 đến 45 |
+| Chức năng liên quan (STT) | 43, 44 |
 
 **Thuộc tính**
 
@@ -182,7 +184,8 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | `senderId` | `String` | private | Bản sao `ChatMessage.senderId`. |
 | `type` | `String` | private | Bản sao `ChatMessage.type` (tên hằng enum dạng chuỗi). |
 | `text` | `String` | private | Bản sao `ChatMessage.text`. |
-| `mediaUrl` | `String` | private | Bản sao `ChatMessage.mediaUrl`. |
+| `imageId` | `String` | private | Bản sao `ChatMessage.imageId`; ảnh đầy đủ không có khi offline. |
+| `offerId` | `String` | private | Bản sao `ChatMessage.offerId`. |
 | `sentAtMillis` | `long` | private | Bản sao `ChatMessage.createdAt` dạng mili giây. |
 
 **Phương thức**
@@ -220,10 +223,12 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | `buyerId` | `String` | private | Bản sao `Deal.buyerId`. |
 | `sellerId` | `String` | private | Bản sao `Deal.sellerId`. |
 | `itemTitle` | `String` | private | Bản sao `Deal.itemTitle`. |
-| `itemImageUrl` | `String` | private | Bản sao `Deal.itemImageUrl`. |
+| `itemThumb` | `String` | private | Bản sao `Deal.itemThumb`. |
 | `agreedPrice` | `long` | private | Bản sao `Deal.agreedPrice`. |
 | `status` | `String` | private | Bản sao `Deal.status` (tên hằng enum dạng chuỗi). |
+| `deliveryMethod` | `String` | private | Bản sao `Deal.deliveryMethod` (tên hằng enum dạng chuỗi). |
 | `autoReleaseAtMillis` | `long` | private | Hạn đếm ngược, để hiện đồng hồ cả khi offline. |
+| `receivedAtMillis` | `long` | private | Bản sao `Deal.receivedAt` dạng mili giây. |
 | `updatedAtMillis` | `long` | private | Bản sao `Deal.updatedAt` dạng mili giây. |
 
 **Phương thức**
@@ -264,7 +269,7 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 
 - Phụ thuộc: `HistoryDao` dùng `RecentViewEntity`. Trang 6. Lưu trữ cục bộ (Room).
 
-**Được dùng bởi:** [`HistoryDao`](data-local.md#historydao), [`RecommendationEngine`](util.md#recommendationengine)
+**Được dùng bởi:** [`HistoryDao`](data-local.md#historydao)
 
 ### RecentSearchEntity
 
@@ -280,7 +285,6 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 
 | Tên | Kiểu | Truy cập | Ý nghĩa |
 | --- | --- | --- | --- |
-| `id` | `long` | private | Khóa chính tự tăng. |
 | `keyword` | `String` | private | Từ khóa đã tìm. |
 | `searchedAtMillis` | `long` | private | Lúc tìm. |
 
@@ -288,7 +292,7 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 
 - Phụ thuộc: `HistoryDao` dùng `RecentSearchEntity`. Trang 6. Lưu trữ cục bộ (Room).
 
-**Được dùng bởi:** [`HistoryDao`](data-local.md#historydao), [`RecommendationEngine`](util.md#recommendationengine)
+**Được dùng bởi:** [`HistoryDao`](data-local.md#historydao)
 
 ### ListingDao
 
@@ -305,9 +309,10 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
 | `public void upsertAll(List<ListingEntity>)` | Chèn hoặc thay các tin. |  |
-| `public List<ListingEntity> getFeed()` | Tin đã đệm, mới đệm trước. |  |
+| `public List<ListingEntity> getFeed()` | Tin đã đệm đang AVAILABLE, mới đăng trước. |  |
 | `public ListingEntity getById(String)` | Một tin đã đệm. |  |
-| `public void trim(int)` | Chỉ giữ số tin mới nhất truyền vào, xóa phần còn lại. |  |
+| `public void trim(int)` | Giữ số tin đệm mới nhất truyền vào, không xóa tin có trong `recent_view`. |  |
+| `public void clearAll()` | Xóa mọi tin đệm (khi đăng xuất). |  |
 
 **Quan hệ trên sơ đồ lớp**
 
@@ -326,7 +331,7 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | Loại | interface |
 | Lưu trữ | Không lưu |
 | Trách nhiệm | Truy vấn conversation_cache và message_cache. |
-| Chức năng liên quan (STT) | 43 đến 45 |
+| Chức năng liên quan (STT) | 43, 44 |
 
 **Phương thức**
 
@@ -391,6 +396,8 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | `public List<RecentViewEntity> getRecentViews(int)` | Các lần xem gần nhất, giới hạn số dòng. |  |
 | `public void insertSearch(RecentSearchEntity)` | Ghi một lần tìm kiếm. |  |
 | `public List<RecentSearchEntity> getRecentSearches(int)` | Các lần tìm gần nhất, giới hạn số dòng. |  |
+| `public void trimViews(int)` | Chỉ giữ số lần xem mới nhất truyền vào. |  |
+| `public void trimSearches(int)` | Chỉ giữ số từ khóa mới nhất truyền vào. |  |
 | `public void clearAll()` | Xóa lịch sử xem và tìm kiếm. |  |
 
 **Quan hệ trên sơ đồ lớp**

@@ -13,15 +13,18 @@ People are not bound by this file; it exists because a tool can change many file
 - Java 17 only. **No Kotlin, no Jetpack Compose.** XML Views with ViewBinding. minSdk 30, compileSdk and targetSdk 37.
 - Project directory: `PUBGApp/`. Package: `com.nhom3.pubgapp`. Build: Gradle wrapper, Kotlin DSL scripts.
 - **Versions live in one place: `PUBGApp/gradle/libs.versions.toml`.** Never copy a version number into a document or another file.
-- Planned, **not yet in the build**: Firebase Authentication (email and Google), Cloud Firestore, Cloud Storage, Room for the offline cache. Do not write code that assumes they are configured until `workflow/docs/architecture/overview.md` says so.
+- Planned, **not yet in the build**: Firebase Authentication (email and Google), Cloud Firestore, Room for the offline cache. Do not write code that assumes they are configured until `workflow/docs/architecture/overview.md` says so.
+- The Firebase project stays on the free Spark plan: **no Cloud Storage, no Cloud Functions, no video** (rule R21).
+- Navigation: three Activities (`AuthActivity`, `MainActivity` with a bottom bar, `AdminActivity`); every other screen is a Fragment (rule R22).
 
 ## 3. Read this at the start of a session
 
 1. `workflow/memory/people.md`, `workflow/memory/preferences.md`, and the last entries of `workflow/memory/decisions.md`.
-2. `workflow/docs/product/features.md`: the register of features. Work only on a feature that has an ID and a status other than `proposed`.
-3. The issue you are working on, and every document it names.
-4. The topic document you need, and no more: `workflow/docs/architecture/`, `workflow/docs/data/`, `workflow/docs/conventions/`.
-5. Before you write Java: the `pubg-code` skill, and `workflow/memory/code/README.md` with the file for the area you are about to touch.
+2. `workflow/docs/product/features.md`: the register of features (`F-01` to `F-14`, one owner module each). Work only on a feature that has an ID and a status other than `proposed`.
+3. The issue you are working on: its plan item (a code such as `P2-B3` in `workflow/plan/`), its STT rows in `workflow/docs/product/dac-ta-chuc-nang.md` (only rows whose Phạm vi is "Đợt này"), its mockup codes in `workflow/docs/ui/`, and every document section it names.
+4. `workflow/plan/so-huu.md`: which module owns which screen, class, method and shared file.
+5. The specification you must take names from, only the sections the issue needs: `workflow/docs/architecture/dac-ta-lop/` (classes, fields, methods, enum values), `workflow/docs/data/firestore-schema.md`, `room-schema.md` and `security-rules.md` (collections, fields, tables, access rules), `workflow/docs/architecture/trang-thai.md` (statuses and transitions), and `workflow/docs/architecture/goi-y.md` (recommendation spec). Other topic documents: `workflow/docs/architecture/`, `workflow/docs/conventions/`.
+6. Before you write Java: the `pubg-code` skill, and `workflow/memory/code/README.md` with the file for the area you are about to touch.
 
 ## 4. Where things are
 
@@ -30,7 +33,7 @@ People are not bound by this file; it exists because a tool can change many file
 | `PUBGApp/` | The Android project |
 | `workflow/` | Everything that is not app code, gathered under one folder: documents, plan, guide, memory, scripts |
 | `workflow/docs/` | What the system is: product, architecture, data schemas, conventions, workflow. Vietnamese |
-| `workflow/plan/` | Delivery plan: phases and work items. Empty until the leader loads the requirements |
+| `workflow/plan/` | Delivery plan: phases, work items with codes such as `P2-B3`, and `so-huu.md` (who owns what). Only the leader edits it |
 | `workflow/guide/` | Advice for people using AI on this repository: prompts for the explore, plan, implement and review loop and for ending a task. Vietnamese. Not a rulebook |
 | `workflow/memory/` | Why it is that way: decisions (append only), preferences, people. `workflow/memory/code/` holds what people and tools learn about the code and the libraries, so it stays out of code comments |
 | `.agents/` | Source of rules, workflows and skills for Antigravity and Codex |
@@ -59,7 +62,7 @@ sh workflow/scripts/tests/policy-test.sh                          # after touchi
 
 **R5. No new dependency without an issue.** Add nothing to `libs.versions.toml` or a Gradle script unless the issue is a `chore(deps)` or `build` issue that names it. Look the current version up; do not recall it from memory. CI fails a pull request that changes a Gradle file unless its title starts with `build(` or `chore(`.
 
-**R6. Ask first, in three cases.** (a) Changing a Firestore collection or Room table that already exists. (b) Adding or changing a dependency. (c) Removing or renaming a feature. Everything else that is undecided is not a stop: choose the reasonable option, record one line with the `pubg-record-decision` skill, and continue.
+**R6. Ask first, in three cases.** (a) Changing, adding or removing a collection, field, Room table or column that is named in `workflow/docs/data/` or already in code. (b) Adding or changing a dependency. (c) Removing or renaming a feature. Choices about implementation detail (layout, private helpers, local names) are not a stop: choose the reasonable option, record a durable one line with the `pubg-record-decision` skill, and continue. A name, field, status, method, collection or scope that the documents do not give you is always a stop (R16 to R18, R23).
 
 **R7. Documents change with the code.** A pull request that changes a data schema or the behaviour of a feature updates `workflow/docs/data/*` and `workflow/docs/product/features.md` in the same pull request. Do not edit a document to make it match code you could not get right; if code and document disagree, say so.
 
@@ -67,7 +70,7 @@ sh workflow/scripts/tests/policy-test.sh                          # after touchi
 
 **R9. Git discipline.** Branch from the latest `main` as `type/issue-slug` (for example `feat/12-google-sign-in`). One issue per pull request. Commit subjects are `type(scope): imperative summary`. Never push to `main`, never force push, never use `--no-verify`. The full grammar is `.github/NAMING.md`.
 
-**R10. You do not decide that work is done.** No AI step approves, merges or marks its own work verified. A passing build is not a decision. When the leader asks you to merge a specific pull request, do it (`gh pr merge --squash`); they decided and you are the hands.
+**R10. You do not decide that work is done.** No AI step approves, merges or marks its own work verified. A passing build is not a decision. When the leader, or Hai Long for code he reviewed as code owner (`.github/CODEOWNERS`), asks you to merge a specific pull request, do it (`gh pr merge --squash`); they decided and you are the hands.
 
 **R11. No secrets.** Never commit keys, keystores, tokens, passwords or `local.properties`. `google-services.json` is the only configuration file that is committed: it holds public identifiers, and the Firebase Security Rules are what protect the data.
 
@@ -79,19 +82,35 @@ sh workflow/scripts/tests/policy-test.sh                          # after touchi
 
 **R15. Write plain, explicit Java, and keep knowledge out of comments.** Follow the `pubg-code` skill for every line you write or change: explicit types, no lambdas, method references, streams or `var`, small methods, comments of one or two lines that say why. Run `sh workflow/scripts/check-java-style.sh` before you finish. What you learn about the code or a library that the code cannot say goes in `workflow/memory/code/`, not in comments. The style applies to the lines you write or change; do not rewrite old code for it (R3).
 
+**R16. Names come from the specification.** Every class, field, method, enum value, Firestore collection, Room table and status you write must exist, spelled exactly, in `workflow/docs/architecture/dac-ta-lop/`, `workflow/docs/data/` or `workflow/docs/architecture/trang-thai.md`. If a name you need is not there, stop and ask in the issue (in Vietnamese); do not invent it and do not rename a documented one. At the end of your work, list every new public class, method and field with the document line that defines it, and report any that has none.
+
+**R17. "Phát triển sau" is never built.** A row of `workflow/docs/product/dac-ta-chuc-nang.md` whose Phạm vi is "Phát triển sau", or a mockup part marked that way, gets no class, field, screen, string, menu entry, placeholder or stub. Implement only the STT rows listed in the issue. If a mockup disagrees with a spec row's Ghi chú, the Ghi chú wins; report the difference.
+
+**R18. Status changes follow the state machine.** Use only the statuses and transitions in `workflow/docs/architecture/trang-thai.md`, through the documented methods (for example `Deal.canMoveTo`). Do not add a status value and do not write a status field directly.
+
+**R19. Touch only the files the issue lists.** The issue's list of files to create or change is the scope fence (R3 made concrete). Copy it into your plan unchanged. A file that is not listed is out of scope even for a one-line fix; report it in the issue instead.
+
+**R20. Shared files and shared classes have owners.** `workflow/plan/so-huu.md` section 5 says who may fill which method of the shared classes, and section 6 lists the files only one person edits (manifest, `nav_main.xml`, `nav_admin.xml`, theme and common resources, `AppDatabase`, `Converters`, `firebase/firestore.rules`, `firebase/firestore.indexes.json`, Gradle files). The leader pre-creates every repository, DAO and utility method with the documented signature and a `DataCallback.NOT_READY` body. You replace only the bodies of the methods your issue assigns to you: no new public method, no changed signature, no edit to another module's method or file. If something you need is missing, stop, say so in the issue and mark it `blocked`; never create it yourself.
+
+**R21. Free Spark plan.** No Cloud Storage, no Cloud Functions, no video (STT 45 is "Phát triển sau"). Images are compressed on the device and stored as Base64 strings inside Firestore documents, through `MediaImage` and within the caps in `workflow/docs/data/firestore-schema.md`: full image 1024 px and at most 300 KB before Base64; thumbnails 320 px for listings and 256 px for avatars, at most 20 KB. If a document still names Storage or video, treat that part as stale and ask; do not build it.
+
+**R22. Navigation.** Three Activities only: `AuthActivity` (A01 to A03), `MainActivity` (bottom bar with 5 tabs) and `AdminActivity`. A new screen is a Fragment in your module's `ui` package, with the class name given in `so-huu.md` section 3. Going to another module's screen uses only the global actions of `nav_main.xml` listed in `so-huu.md` section 4; never edit another module's navigation graph.
+
+**R23. Stop on a gap.** If the issue, its plan item and the documents disagree, or the issue asks for something outside its STT rows, do not choose silently. Comment on the issue in Vietnamese with the two readings and wait.
+
 ## 7. Code conventions (short form)
 
 Details are in `workflow/docs/conventions/android-java.md`.
 
-- Code is split by layer: `com.nhom3.pubgapp.model` (domain), `.model.enums`, `.data` (repositories), `.data.local` (Room), `.util`, `.viewmodel`. Matches the class diagram in `workflow/docs/diagrams/so-do-lop/`.
-- Use ViewBinding, not `findViewById`. Every user visible string is a resource; a feature's strings go in its own `strings_<feature>.xml`.
+- Code is split by layer: `com.nhom3.pubgapp.model` (domain), `.model.enums`, `.data` (repositories), `.data.local` (Room), `.util`, `.viewmodel`. Matches the class diagram in `workflow/docs/diagrams/so-do-lop/`. Screens (Fragments, Adapters, Activities) live in `com.nhom3.pubgapp.ui.<module>` with module one of `account`, `notification`, `listing`, `trade`, `profile`, `trust`, `admin`, `common`, `main` (`workflow/plan/so-huu.md` section 2). There is no per-feature package.
+- Use ViewBinding, not `findViewById`. Every user visible string is a resource; a module's strings go in its own `strings_<module>.xml` (`account`, `listing`, `trade`, `profile`, `admin`, `common`).
 - No network or disk work on the main thread. Every screen must survive rotation without losing its state.
 - Plain, explicit Java (R15): no lambdas, streams or `var`; comments of one or two lines; lasting knowledge in `workflow/memory/code/`. Detail in the `pubg-code` skill and `workflow/docs/conventions/android-java.md`.
 - Identifiers and comments in English. The user interface language is Vietnamese by default.
 
 ## 8. Workflow and skills
 
-Issue, then branch, then pull request, then the leader reviews and squash merges. The skills below carry out each step the same way for everyone; their source is `.agents/skills/`.
+Issue, then branch, then pull request, then the leader or the code owner (`.github/CODEOWNERS`) reviews and squash merges. The skills below carry out each step the same way for everyone; their source is `.agents/skills/`.
 
 **A pull request that changes no file under `PUBGApp/` takes the short path.** It uses the four heading template `.github/PULL_REQUEST_TEMPLATE/tai-lieu.md`, not the long one; nobody runs Gradle for it, on a machine or in CI, because a build proves nothing about a Markdown file; and the reviewer judges the document against the issue instead of building the merged tree. `pubg-open-pr` and `pubg-review-pr` both begin by deciding which path applies. What still holds: `Closes #N` in the body, Vietnamese title and body (R14), the branch and commit grammar (R9), and no AI attribution (R8).
 
@@ -102,7 +121,7 @@ Issue, then branch, then pull request, then the leader reviews and squash merges
 | `pubg-code` | Write Java the PUBGApp way: plain, explicit, short comments, notes in `workflow/memory/code/` |
 | `pubg-sync-branch` | Merge the latest `main` into your branch and resolve conflicts without dropping anyone's code |
 | `pubg-open-pr` | Verify, then open the pull request from the template |
-| `pubg-review-pr` | Leader only: judge a pull request against its issue on the merged tree |
+| `pubg-review-pr` | Leader or code owner: judge a pull request against its issue on the merged tree |
 | `pubg-record-decision` | Append a decision to `workflow/memory/decisions.md` |
 | `pubg-doc-check` | Find where documents and code disagree |
 | `pubg-guide` | Point the person to the right page of `workflow/guide/` when they are stuck or something was refused |

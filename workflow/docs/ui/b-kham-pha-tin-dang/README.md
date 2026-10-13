@@ -1,10 +1,12 @@
 # Nhóm B: Khám phá và tin đăng
 
-6 màn hình, nộp theo 3 đợt: đợt 1 một màn (B01), đợt 2 hai màn (B02, B03), đợt 3 ba màn (B04, B05, B06).
+6 màn hình, nộp theo 3 đợt: đợt 1 một màn (B01), đợt 2 hai màn (B02, B03), đợt 3 ba màn (B04, B05, B06). Số trong tài liệu là STT của [bảng đặc tả chức năng](../../product/dac-ta-chuc-nang.md). Điều hướng chung ở [README giao diện](../README.md#điều-hướng). Mọi màn hình cần đăng nhập, không có chế độ khách.
 
 ## B01. Trang chủ
 
 **Ảnh:** ![B01 Trang chủ](b01-trang-chu.png)
+
+**Lớp:** `HomeFragment` trong `MainActivity`, tab Trang chủ. Hiện thanh điều hướng dưới.
 
 **Mục đích:** Màn hình chính sau khi đăng nhập, nơi người dùng lướt xem tin đăng mới và tìm nhanh món đồ mình cần.
 
@@ -12,159 +14,237 @@
 - Thanh trên cùng: tên ứng dụng ĐồCũ, chuông thông báo có chấm đỏ khi có thông báo chưa đọc, ảnh đại diện người dùng
 - Ô tìm kiếm với gợi ý "Tìm iPhone, xe đạp, sách..."
 - Hai thẻ chuyển kênh: "Kênh chung" và "Đang theo dõi"
-- Hàng lọc nhanh theo danh mục: Tất cả, Điện thoại, Thời trang, Xe cộ
+- Hàng "Dành cho bạn" (chưa có ảnh): dải ngang các tin gợi ý theo lịch sử xem, lịch sử tìm kiếm và tin đã lưu
+- Hàng lọc nhanh theo danh mục: Tất cả và các danh mục gốc (ví dụ Điện thoại, Thời trang, Xe cộ)
 - Lưới tin đăng hai cột, mỗi thẻ có ảnh, tên món đồ, giá, tình trạng và khu vực
-- Thanh điều hướng dưới cùng 5 mục: Trang chủ, Tìm kiếm, Đăng tin (nút tròn nổi ở giữa), Tin nhắn, Cá nhân
+- Thanh điều hướng dưới cùng 5 tab: Trang chủ, Tìm kiếm, Đăng tin (nút tròn nổi ở giữa), Tin nhắn, Cá nhân
 
 **Hành động và điều hướng:**
-- Bấm ô tìm kiếm: sang B02 Tìm kiếm và bộ lọc
+- Bấm ô tìm kiếm: sang tab Tìm kiếm, B02
 - Bấm một thẻ tin đăng: sang B03 Chi tiết tin đăng
-- Bấm nút tròn "Đăng tin": sang B04 Đăng tin
-- Bấm "Tin nhắn" ở thanh dưới: sang C01 Danh sách tin nhắn
-- Bấm "Cá nhân" ở thanh dưới: sang D01 Hồ sơ cá nhân
+- Bấm tab "Đăng tin": sang B04. Bấm tab "Tin nhắn": C01. Bấm tab "Cá nhân": D01
 - Bấm chuông thông báo: sang C06 Thông báo
+- Bấm ảnh đại diện: sang tab Cá nhân, D01
 - Chuyển thẻ "Đang theo dõi": vẫn ở màn này, lưới chỉ còn tin của người đang theo dõi
+- Chọn một danh mục ở hàng lọc nhanh: lưới chỉ còn tin của danh mục đó
 
-**Chức năng liên quan:** dòng 24, 25 (kênh chung, kênh đang theo dõi), dòng 17, 19 (danh mục), dòng 31, 32 (gợi ý sản phẩm, mục Dành cho bạn) trong bảng đặc tả chức năng.
+**Chức năng liên quan:** STT 29, 30 (kênh chung, kênh đang theo dõi), STT 24 (lọc theo danh mục), STT 38 (mục "Dành cho bạn"), STT 23 (ô tìm kiếm), STT 67 (chuông thông báo).
 
 **Trạng thái đặc biệt:**
 - Chưa có tin nào khớp bộ lọc: hiện dòng chữ báo trống thay cho lưới
 - Đang tải thêm khi cuộn xuống: hiện các ô xám mờ ở cuối lưới
 - Mất mạng: hiện lại các tin đã xem gần đây lấy từ bộ nhớ đệm, kèm dải báo đang xem ngoại tuyến
 - Thẻ "Đang theo dõi" khi chưa theo dõi ai: gợi ý người dùng tìm và theo dõi người bán
+- Chưa có lịch sử để gợi ý: ẩn hàng "Dành cho bạn"
+
+**Khác với ảnh:**
+- Ảnh không vẽ hàng "Dành cho bạn"; vẫn phải làm (STT 38).
+- Ảnh vẽ thanh dưới 5 mục; theo quy tắc điều hướng thanh này hiện ở B01.
 
 ## B02. Tìm kiếm và bộ lọc
 
 **Ảnh:** ![B02 Tìm kiếm và bộ lọc](b02-tim-kiem-bo-loc.png)
 
-**Mục đích:** Hỗ trợ người dùng tra cứu tin đăng bằng từ khóa và thu hẹp phạm vi kết quả theo các tiêu chí (danh mục, khoảng giá, tình trạng, hình thức).
+**Lớp:** `SearchFragment` trong `MainActivity`, tab Tìm kiếm. Hiện thanh điều hướng dưới.
+
+**Mục đích:** Hỗ trợ người dùng tra cứu tin đăng bằng từ khóa và thu hẹp phạm vi kết quả theo các tiêu chí. Kết quả hiện ngay trên màn hình này, phía dưới khu vực tiêu chí.
 
 **Thành phần chính:**
-- Thanh trên cùng: nút quay lại, ô nhập từ khóa tìm kiếm (đang nhập "iPhone 13"), nút đóng bộ lọc (hiển thị biểu tượng menu)
-- Khu vực Tìm gần đây: các thẻ từ khóa lịch sử (iPhone 13, xe đạp, bàn học, áo khoác)
-- Khu vực chọn tiêu chí lọc: Danh mục, Khoảng giá (Từ - Đến), Tình trạng (Mới, Đã sử dụng, Đã sửa chữa, Có lỗi), Hình thức (Bán, Trao đổi, Cho tặng)
-- Thanh dưới cùng: Nút "Xóa lọc" và nút "Áp dụng"
+- Thanh trên cùng: ô nhập từ khóa tìm kiếm (đang nhập "iPhone 13") và nút mở hoặc đóng bảng bộ lọc
+- Khu vực Tìm gần đây: các thẻ từ khóa lịch sử (iPhone 13, xe đạp, bàn học, áo khoác), lưu trên máy
+- Khu vực chọn tiêu chí lọc:
+  - Danh mục
+  - Khoảng giá (Từ, Đến) kèm các mốc gợi ý nhanh
+  - Tình trạng, chọn nhiều trong 5 giá trị: Mới, Như mới, Đã sử dụng, Đã sửa chữa, Có lỗi
+  - Hình thức (Bán, Trao đổi, Cho tặng), chọn một hoặc kết hợp nhiều
+  - Khu vực (ảnh chưa vẽ, vẫn phải làm): chọn tỉnh hoặc thành phố; bán kính quanh vị trí hiện tại 1 km, 3 km hoặc 5 km
+  - Sắp xếp (ảnh chưa vẽ, vẫn phải làm): Mới đăng, Giá thấp đến cao, Giá cao đến thấp, Người bán đánh giá tốt
+- Thanh dưới cùng của bảng lọc: nút "Xóa lọc" và nút "Áp dụng"
 
 **Hành động và điều hướng:**
-- Bấm nút quay lại: trở về B01 Trang chủ
-- Bấm vào một thẻ lịch sử tìm kiếm: điền ngay từ khóa đó vào ô tìm kiếm
+- Bấm vào một thẻ lịch sử tìm kiếm: điền ngay từ khóa đó vào ô tìm kiếm và tìm
 - Bấm chọn các thẻ tiêu chí: thẻ đổi màu biểu thị trạng thái đang được chọn
+- Chọn bán kính: lần đầu hỏi quyền vị trí; không cấp quyền thì không lọc theo bán kính
 - Bấm "Xóa lọc": bỏ chọn toàn bộ tiêu chí lọc hiện tại
-- Bấm "Áp dụng": trở lại B01 Trang chủ với danh sách tin đăng đã được lọc theo tiêu chí
-- Bấm nút menu lọc trên cùng: đóng bảng bộ lọc
+- Bấm "Áp dụng": đóng bảng lọc, hiện kết quả đã lọc trên chính B02
+- Bấm một thẻ kết quả: sang B03
+- Bấm nút mở hoặc đóng bảng lọc: ẩn hiện bảng tiêu chí
 
-**Chức năng liên quan:** dòng 27 (Tìm kiếm), 28 (Lọc tin), 29 (Lịch sử tìm kiếm) trong bảng đặc tả chức năng.
+**Chức năng liên quan:** STT 23 (từ khóa), 24 (danh mục), 25 (khoảng giá), 26 (tình trạng), 27 (khu vực, bán kính), 28 (hình thức giao dịch), STT 31 đến 34 (bốn cách sắp xếp), STT 38 (lịch sử tìm kiếm).
 
 **Trạng thái đặc biệt:**
 - Nhập giá "Đến" thấp hơn giá "Từ": hiển thị lỗi màu đỏ nhắc nhở ngay dưới ô giá
 - Không có từ khóa tìm kiếm gần đây: ẩn khu vực "TÌM GẦN ĐÂY"
+- Tin không có tọa độ: không xuất hiện khi lọc theo bán kính
+- Không có kết quả: hiện dòng báo trống
+
+**Khác với ảnh:**
+- Ảnh có 4 tình trạng; đúng là 5, thêm "Như mới" (STT 26).
+- Ảnh không vẽ bộ lọc khu vực và bán kính (STT 27) và bốn cách sắp xếp (STT 31 đến 34); vẫn phải làm.
+- Ảnh vẽ nút quay lại và nút "Áp dụng" trở về B01. Đúng là B02 là tab gốc, không có nút quay lại, và kết quả hiện ngay tại B02.
 
 ## B03. Chi tiết tin đăng
 
 **Ảnh:** ![B03 Chi tiết tin đăng](b03-chi-tiet-tin-dang.png)
 
-**Mục đích:** Hiển thị thông tin đầy đủ nhất về một món đồ, đồng thời cung cấp điểm chạm để người mua liên hệ người bán hoặc chốt giao dịch nhanh.
+**Lớp:** `ListingDetailFragment` trong `MainActivity`. Màn hình chi tiết: có nút quay lại, ẩn thanh dưới.
+
+**Mục đích:** Hiển thị thông tin đầy đủ nhất về một món đồ, đồng thời cung cấp điểm chạm để người mua liên hệ người bán hoặc gửi đề nghị giá.
 
 **Thành phần chính:**
-- Khu vực ảnh phía trên: băng chuyền ảnh, đếm số ảnh (1/6), nút quay lại, nút thả tim (Lưu tin) và nút ba chấm (Menu phụ)
-- Khối thông tin cốt lõi: Nhãn loại tin (BÁN), tình trạng (Đã sử dụng), Tên sản phẩm, Giá tiền, và dải gợi ý giá tham khảo dựa trên thị trường
-- Thẻ người bán: Avatar, Tên shop (Minh Anh Shop), điểm đánh giá sao, số giao dịch, và nút "Theo dõi"
-- Khu vực "Tình trạng chi tiết": liệt kê cụ thể các thông số do người bán nhập (Pin, Màn hình, Camera, Lịch sử sửa chữa)
-- Thanh hành động dưới cùng cố định: Nút "Nhắn tin" và nút "Đề nghị giá" nổi bật
+- Khu vực ảnh phía trên: băng chuyền ảnh, đếm số ảnh (ví dụ 1/5, tối đa 5 ảnh), nút quay lại, nút thả tim (Lưu tin) và nút ba chấm (menu phụ)
+- Khối thông tin cốt lõi: nhãn hình thức giao dịch (BÁN, TRAO ĐỔI, CHO TẶNG; có thể nhiều nhãn), tình trạng (một trong 5 giá trị), tên sản phẩm, giá tiền, và dải "Giá tham khảo" tính trên máy từ các tin tương tự cùng danh mục và tình trạng (ẩn khi không có tin tương tự)
+- Thẻ người bán: ảnh đại diện, tên, điểm đánh giá sao, số giao dịch, huy hiệu đã xác minh (nếu có), nút "Theo dõi" và liên kết "Xem đánh giá"
+- Khu vực "Tình trạng chi tiết": liệt kê các thông số do người bán nhập theo thuộc tính của danh mục (ví dụ Pin, Màn hình, Camera)
+- Mục "Tin tương tự" (ảnh chưa vẽ): dải ngang tin cùng danh mục, tình trạng, khoảng giá
+- Thanh hành động dưới cùng cố định: nút "Nhắn tin" và nút "Đề nghị giá" nổi bật
 
 **Hành động và điều hướng:**
-- Bấm nút quay lại: trở về màn hình trước đó (B01 hoặc màn hình nào đã gọi nó)
-- Bấm nút thả tim: lưu tin vào danh sách yêu thích, biểu tượng tim chuyển sang màu đỏ
-- Bấm nút "Theo dõi" ở thẻ người bán: theo dõi người bán này
-- Bấm nút ba chấm: mở menu phụ (báo cáo tin, chia sẻ)
-- Bấm thẻ người bán: sang D01 Hồ sơ cá nhân của người bán
-- Bấm "Nhắn tin": chuyển sang C02 Cửa sổ chat với người bán, tự động đính kèm tin đăng này
-- Bấm "Đề nghị giá": mở popup hoặc chuyển sang màn hình trả giá/chốt deal nhanh
+- Bấm nút quay lại: trở về màn hình đã gọi
+- Bấm nút thả tim: lưu hoặc bỏ lưu tin, biểu tượng tim đổi màu
+- Bấm nút "Theo dõi" ở thẻ người bán: theo dõi hoặc bỏ theo dõi người bán
+- Bấm thẻ người bán (tên hoặc ảnh): sang D02 Trang cá nhân của người bán
+- Bấm liên kết "Xem đánh giá": sang D03 Hồ sơ uy tín của người bán
+- Bấm nút ba chấm: mở menu phụ có "Báo cáo tin", sang D04 với đối tượng là tin này
+- Bấm một tin trong "Tin tương tự": sang B03 của tin đó
+- Bấm "Nhắn tin": sang C02 với người bán, gắn tin đăng này
+- Bấm "Đề nghị giá": mở biểu mẫu đề nghị (dạng bảng trượt lên) gồm loại đề nghị chỉ gồm các loại người bán chấp nhận (Tiền, Vật trao đổi, Tiền và vật), ô số tiền (không thấp hơn mức tối thiểu của tin), ô mô tả món đồ trao đổi khi có vật. Gửi xong sang C02, thẻ đề nghị hiện trong cuộc trò chuyện
 
-**Chức năng liên quan:** dòng 30 (Xem chi tiết tin đăng), 37 (Lưu tin/Bỏ lưu), 36 (Theo dõi người bán), 44 (Đề nghị giá) trong bảng đặc tả chức năng.
+**Chức năng liên quan:** STT 36 (tin tương tự), 37 (giá tham khảo), 39 (theo dõi người bán), 40 và 42 (lưu tin, bỏ lưu), 43 (nhắn tin), 47 (gửi đề nghị), 61 (báo cáo tin), 13 và 15 (với tin của chính mình).
 
 **Trạng thái đặc biệt:**
-- Tin đăng của chính mình: nút "Nhắn tin/Đề nghị giá" biến thành nút "Chỉnh sửa/Đã bán"
-- Tin đã bán: nút bị làm xám, hiện nhãn "ĐÃ BÁN" đè lên ảnh sản phẩm
-- Chưa đăng nhập: bấm "Nhắn tin" hoặc "Lưu tin" sẽ bật màn hình yêu cầu đăng nhập
+- Tin đăng của chính mình: nút "Nhắn tin" và "Đề nghị giá" biến thành "Chỉnh sửa" (sang B04 ở chế độ sửa) và "Đã bán"
+- Tin đang giữ chỗ (RESERVED): hiện nhãn "ĐANG GIỮ CHỖ", nút "Đề nghị giá" bị làm xám; "Nhắn tin" vẫn dùng được
+- Tin đã bán (SOLD): hiện nhãn "ĐÃ BÁN" đè lên ảnh, cả hai nút bị làm xám
+- Đề nghị chỉ gửi được khi tin đang bán (AVAILABLE) và người gửi không phải người đăng
+- Tin bị ẩn hoặc gỡ: người khác không mở được, hiện "Tin không còn"
+- Mất mạng: hiện lại tin đã xem từ bộ nhớ đệm, không gửi được đề nghị
+
+**Khác với ảnh:**
+- Ảnh đếm "1/6"; tối đa là 5 ảnh.
+- Ảnh vẽ dải giá "dựa trên thị trường"; đúng là tính trên máy từ tin tương tự (STT 37).
+- Ảnh không vẽ liên kết "Xem đánh giá" và mục "Tin tương tự" (STT 36); vẫn phải làm.
+- Ảnh vẽ "Đề nghị giá" như một nút; thực tế mở biểu mẫu loại, số tiền, món đồ trao đổi.
+- Ảnh vẽ tên "Minh Anh Shop"; hiển thị tên hiển thị của người bán.
+- Ảnh vẽ menu "báo cáo tin, chia sẻ"; không làm "chia sẻ".
 
 ## B04. Đăng tin
 
 **Ảnh:** ![B04 Đăng tin](b04-dang-tin.png)
 
-**Mục đích:** Cung cấp biểu mẫu (form) để người dùng tạo mới một bài đăng bán/trao đổi/cho tặng món đồ.
+**Lớp:** `PostListingFragment` trong `MainActivity`, tab Đăng tin. Hiện thanh điều hướng dưới khi mở từ tab; khi mở từ B03 hoặc B05 để sửa tin thì là màn hình chi tiết có nút quay lại, ẩn thanh dưới.
+
+**Mục đích:** Cung cấp biểu mẫu để người dùng tạo mới hoặc sửa một bài đăng bán, trao đổi hoặc cho tặng món đồ.
 
 **Thành phần chính:**
-- Thanh trên cùng: nút quay lại và tiêu đề "Đăng sản phẩm"
-- Khu vực ảnh: nhãn "HÌNH ẢNH (TỐI ĐA 5)", các ô chứa ảnh đã chọn và một ô có biểu tượng camera để chụp/chọn ảnh mới
+- Tiêu đề "Đăng sản phẩm"
+- Khu vực ảnh: nhãn "HÌNH ẢNH (TỐI ĐA 5)", các ô chứa ảnh đã chọn và một ô biểu tượng camera để chụp hoặc chọn ảnh mới (ảnh được nén trước khi lưu)
 - Các trường thông tin (từ trên xuống dưới):
-  - Tên sản phẩm: ô nhập text (VD: iPhone 13 128GB)
-  - Danh mục: ô chọn dropdown (Chọn danh mục)
-  - Mô tả: ô nhập text nhiều dòng (Tình trạng, lý do bán, phụ kiện kèm theo...)
-  - Tình trạng: các thẻ tùy chọn (Mới, Đã sử dụng, Đã sửa chữa, Có lỗi)
-  - Giá bán: ô nhập số (VD: 7.200.000)
-  - Hình thức giao dịch: các thẻ tùy chọn (Bán, Trao đổi, Cho tặng)
-  - Khu vực: ô nhập/chọn text (VD: Quận 1, TP.HCM)
-- Nút "Đăng tin" (Nằm ở cuối màn hình, cuộn xuống sẽ thấy)
+  - Tên sản phẩm: ô nhập text
+  - Danh mục: ô chọn (danh mục con, hoặc danh mục gốc không có con)
+  - Mô tả: ô nhập text nhiều dòng
+  - Tình trạng: các thẻ chọn một trong 5 giá trị (Mới, Như mới, Đã sử dụng, Đã sửa chữa, Có lỗi)
+  - Thuộc tính tình trạng của danh mục (ảnh chưa vẽ): các ô nhập hiện ra theo danh mục đã chọn (ví dụ Dung lượng pin, Bảo hành)
+  - Hình thức giao dịch: các thẻ chọn nhiều (Bán, Trao đổi, Cho tặng)
+  - Giá bán: ô nhập số, chỉ hiện và bắt buộc khi chọn "Bán"; trao đổi hoặc cho tặng thì giá là 0
+  - Offer mong muốn (ảnh chưa vẽ): chọn các loại nhận (Tiền, Vật trao đổi, Tiền và vật) và ô "Mức tiền đề nghị tối thiểu" (0 là không giới hạn)
+  - Khu vực: chọn tỉnh hoặc thành phố, điền sẵn theo địa chỉ mặc định của người đăng. Tọa độ của tin lấy từ địa chỉ mặc định (A06)
+- Hai nút ở cuối màn hình: "Đăng tin" và "Lưu nháp" (chưa có ảnh)
 
 **Hành động và điều hướng:**
-- Bấm nút quay lại: hủy bỏ việc đăng tin, quay lại màn hình trước đó
-- Bấm biểu tượng camera: mở thư viện ảnh hoặc camera để tải ảnh lên
+- Bấm biểu tượng camera: mở thư viện ảnh hoặc camera
 - Bấm vào Danh mục: mở danh sách các danh mục để chọn
-- Bấm chọn các thẻ (Tình trạng, Hình thức): thẻ chuyển sang màu xanh lá biểu thị đang được chọn
-- Bấm nút Đăng tin (khi cuộn xuống): lưu dữ liệu lên server và chuyển tới màn hình B05 Kệ hàng của tôi hoặc chi tiết tin vừa đăng
+- Bấm chọn các thẻ (Tình trạng, Hình thức, loại offer): thẻ chuyển sang màu xanh lá biểu thị đang được chọn
+- Bấm "Đăng tin": kiểm tra rồi lưu tin ở trạng thái đang bán, chuyển tới B03 của tin vừa đăng
+- Bấm "Lưu nháp": lưu tin ở trạng thái nháp, không bắt buộc đủ thông tin, chuyển tới B05 tab Nháp
+- Khi sửa tin: các trường điền sẵn; nút chính là "Lưu thay đổi" (tin nháp thì có thêm "Đăng tin")
 
-**Chức năng liên quan:** dòng 10 (Chỉnh sửa nội dung), 11 (Chỉnh sửa hình ảnh), 12 (Hình thức giao dịch), 13 (Giá cả), 15 (Danh mục) trong bảng đặc tả chức năng.
+**Chức năng liên quan:** STT 13 (chỉnh sửa sản phẩm trên kệ), 16 (nội dung, tình trạng), 17 (hình ảnh), 18 (hình thức giao dịch), 19 (giá cả), 20 (offer mong muốn), 21 (danh mục), 22 (lưu nháp).
 
 **Trạng thái đặc biệt:**
-- Nếu để trống trường bắt buộc (Tên, Giá, Hình ảnh): hiển thị thông báo lỗi màu đỏ khi bấm Đăng tin
+- Đăng tin thiếu thông tin bắt buộc: hiển thị lỗi màu đỏ. Bắt buộc để đăng: tên sản phẩm, danh mục, ít nhất 1 ảnh (tối đa 5), ít nhất một hình thức giao dịch; giá khi có "Bán"
 - Vượt quá 5 ảnh: ẩn nút thêm ảnh
+- Tài khoản không đủ điều kiện bán (chưa xác thực email): báo rõ lý do, không cho đăng
+- Chưa có địa chỉ mặc định: nhắc thêm địa chỉ ở A06; tin vẫn đăng được nhưng không xuất hiện khi lọc theo bán kính
+- Tin chứa từ khóa cấm: vẫn đăng, được gắn cờ cho admin xem
+- Mất mạng: không đăng được, giữ nguyên nội dung đã nhập
+
+**Khác với ảnh:**
+- Ảnh có 4 tình trạng; đúng là 5, thêm "Như mới".
+- Ảnh không vẽ: thuộc tính tình trạng theo danh mục, offer mong muốn (STT 20), nút "Lưu nháp" (STT 22); vẫn phải làm.
+- Ảnh coi "Giá" là bắt buộc; thực tế chỉ bắt buộc khi chọn "Bán".
+- Ảnh vẽ ô "Khu vực" nhập chữ tự do; đúng là chọn tỉnh, tọa độ lấy từ địa chỉ mặc định.
+- Ảnh vẽ nút quay lại; ở chế độ tab không có nút này.
+- Ảnh nói đăng xong sang B05 hoặc chi tiết tin; đúng là sang B03 của tin mới.
 
 ## B05. Kệ hàng của tôi
 
 **Ảnh:** ![B05 Kệ hàng của tôi](b05-ke-hang-cua-toi.png)
 
-**Mục đích:** Nơi người dùng quản lý toàn bộ bài đăng cá nhân, theo dõi trạng thái các món đồ đang bán, đã bán hoặc nháp.
+**Lớp:** `MyShopFragment` trong `MainActivity`. Màn hình chi tiết mở từ D01: có nút quay lại, ẩn thanh dưới.
+
+**Mục đích:** Nơi người dùng quản lý toàn bộ bài đăng cá nhân, theo dõi trạng thái các món đồ đang bán, đã bán, đã ẩn hoặc nháp.
 
 **Thành phần chính:**
 - Thanh trên cùng: nút quay lại và tiêu đề "Kệ hàng của tôi"
-- Thanh tab phân loại: Đang hoạt động (6), Đã bán (14), Nháp
-- Danh sách tin đăng hiển thị theo thẻ ngang. Mỗi thẻ gồm: Ảnh đại diện, Tên sản phẩm, Giá tiền, Nhãn trạng thái (ĐANG BÁN, TẠM ẨN, CÓ ĐỀ NGHỊ) và Nút ba chấm (menu thao tác)
-- Thanh điều hướng dưới cùng 5 mục (Tab "Cá nhân" đang được chọn)
+- Nút chọn sắp xếp và lọc danh mục (ảnh chưa vẽ): theo thời gian, theo danh mục
+- Thanh tab phân loại theo trạng thái tin:
+  - Đang hoạt động: tin đang bán (AVAILABLE) và đang giữ chỗ (RESERVED)
+  - Đã bán: SOLD
+  - Đã ẩn: HIDDEN và REMOVED (ảnh chưa vẽ)
+  - Nháp: DRAFT
+- Danh sách tin đăng theo thẻ ngang. Mỗi thẻ gồm: ảnh đại diện, tên sản phẩm, giá tiền, nhãn trạng thái (ĐANG BÁN, ĐANG GIỮ CHỖ, ĐÃ BÁN, TẠM ẨN, ADMIN ẨN, ĐÃ GỠ, NHÁP), nhãn phụ CÓ ĐỀ NGHỊ khi còn đề nghị chờ trả lời, và nút ba chấm (menu thao tác)
 
 **Hành động và điều hướng:**
-- Bấm nút quay lại: trở về trang D01 Hồ sơ cá nhân
-- Chuyển tab trên thanh phân loại: lọc hiển thị danh sách tin tương ứng với trạng thái
-- Bấm vào một thẻ tin đăng: sang màn hình B03 Chi tiết tin đăng tương ứng
-- Bấm nút ba chấm trên một thẻ: mở menu thao tác nhanh (Chỉnh sửa, Đánh dấu đã bán, Ẩn tin, Xóa tin)
-- Bấm các nút ở thanh điều hướng dưới cùng: chuyển sang màn hình chức năng chính (Trang chủ, Tìm kiếm, Đăng tin, Tin nhắn)
+- Bấm nút quay lại: trở về D01 Hồ sơ cá nhân
+- Chuyển tab: lọc danh sách theo trạng thái tương ứng
+- Bấm vào một thẻ tin đăng: sang B03 của tin đó
+- Menu ba chấm, theo trạng thái:
+  - Đang bán: Chỉnh sửa, Đánh dấu đã bán (chỉ khi không có giao dịch đang mở), Ẩn tin
+  - Đang giữ chỗ: chỉ xem; không đổi được khi giao dịch còn mở
+  - Tạm ẩn do chính mình: Hiện lại, Chỉnh sửa
+  - Admin ẩn: chỉ xem lý do admin ghi; người bán không hiện lại được
+  - Đã bán (người bán tự đánh dấu): Mở bán lại (không có nếu tin đã bán qua giao dịch hoàn tất)
+  - Nháp: Chỉnh sửa, Đăng, Xóa tin
+  - Đã gỡ: chỉ xem
+- "Xóa tin" chỉ có ở tin nháp. Tin khác muốn bỏ thì dùng "Ẩn tin"
 
-**Chức năng liên quan:** dòng 8 (Chỉnh sửa sản phẩm trên kệ), 9 (Sắp xếp sản phẩm) trong bảng đặc tả chức năng.
+**Chức năng liên quan:** STT 13 (chỉnh sửa sản phẩm trên kệ, trạng thái), 14 (sắp xếp), 15 (ẩn hoặc hiện lại tin), 22 (tab Nháp).
 
 **Trạng thái đặc biệt:**
 - Không có tin nào trong tab: hiển thị minh họa trống "Bạn chưa có tin đăng nào ở mục này"
 - Nhãn CÓ ĐỀ NGHỊ nổi bật màu cam để thu hút sự chú ý của người bán
 
+**Khác với ảnh:**
+- Ảnh có 3 tab; đúng là 4, thêm "Đã ẩn".
+- Ảnh vẽ thanh dưới 5 mục; ở đây thanh dưới không hiện.
+- Ảnh vẽ menu "Chỉnh sửa, Đánh dấu đã bán, Ẩn tin, Xóa tin" cho mọi thẻ; đúng là menu đổi theo trạng thái như trên.
+- Ảnh không vẽ nút sắp xếp và nhãn ĐANG GIỮ CHỖ, ADMIN ẨN, ĐÃ GỠ, NHÁP; vẫn phải làm.
+
 ## B06. Tin đã lưu
 
 **Ảnh:** ![B06 Tin đã lưu](b06-tin-da-luu.png)
+
+**Lớp:** `SavedListingsFragment` trong `MainActivity`. Màn hình chi tiết mở từ D01: có nút quay lại, ẩn thanh dưới.
 
 **Mục đích:** Lưu trữ các tin đăng mà người dùng quan tâm để dễ dàng xem lại, cân nhắc và đưa ra quyết định sau.
 
 **Thành phần chính:**
 - Thanh trên cùng: nút quay lại và tiêu đề "Tin đã lưu"
-- Lưới tin đăng 2 cột tương tự Trang chủ: mỗi thẻ có ảnh, tên sản phẩm, giá, tình trạng (Đã sử dụng, Như mới, Cần sửa nhẹ) và khu vực (Q.1, Q.7, Gò Vấp)
+- Lưới tin đăng 2 cột tương tự Trang chủ: mỗi thẻ có ảnh, tên sản phẩm, giá, tình trạng (một trong 5 giá trị: Mới, Như mới, Đã sử dụng, Đã sửa chữa, Có lỗi) và khu vực
 - Dòng thống kê phía dưới danh sách: "Đã lưu 4 tin · Chạm vào biểu tượng trái tim trên tin đăng để bỏ lưu"
-- Thanh điều hướng dưới cùng 5 mục (Tab "Cá nhân" đang được chọn)
 
 **Hành động và điều hướng:**
-- Bấm nút quay lại: trở về trang D01 Hồ sơ cá nhân
-- Bấm vào thẻ tin đăng: sang màn hình B03 Chi tiết tin đăng để xem hoặc nhắn tin
-- Chạm vào biểu tượng trái tim trên thẻ (nếu có, hoặc trong chi tiết): bỏ lưu tin, tin sẽ biến mất khỏi danh sách sau khi làm mới
-- Bấm các mục ở thanh điều hướng dưới cùng: chuyển kênh ứng dụng
+- Bấm nút quay lại: trở về D01 Hồ sơ cá nhân
+- Bấm vào thẻ tin đăng: sang B03 Chi tiết tin đăng để xem hoặc nhắn tin
+- Chạm vào biểu tượng trái tim trên thẻ: bỏ lưu tin, tin biến mất khỏi danh sách
 
-**Chức năng liên quan:** dòng 32 (Lưu tin yêu thích - Lưu tin) trong bảng đặc tả chức năng.
+**Chức năng liên quan:** STT 40 (lưu tin), 41 (xem danh sách đã lưu), 42 (bỏ lưu).
 
 **Trạng thái đặc biệt:**
-- Nếu tin gốc đã bị người bán xóa hoặc đã bán: thẻ có thể hiển thị nhãn "ĐÃ BÁN" hoặc bị làm mờ, không thể xem chi tiết
+- Tin gốc đã bị ẩn, gỡ, xóa hoặc không đọc được: thẻ hiện "Tin không còn", làm mờ, không xem được chi tiết, vẫn bỏ lưu được. Tin đã bán hiện nhãn "ĐÃ BÁN"
 - Danh sách rỗng: hiển thị hình ảnh minh họa "Bạn chưa lưu tin nào"
+
+**Khác với ảnh:**
+- Ảnh vẽ tình trạng "Cần sửa nhẹ"; không có giá trị này, dùng 5 tình trạng chuẩn.
+- Ảnh vẽ thanh dưới 5 mục; ở đây thanh dưới không hiện.

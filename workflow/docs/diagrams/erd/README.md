@@ -4,7 +4,7 @@ Mô hình dữ liệu cho Cloud Firestore và Room (SQLite cục bộ), khớp c
 
 | Mục | Số lượng |
 | --- | ---: |
-| Collection Firestore (kể cả collection con) | 22 |
+| Collection Firestore (kể cả collection con) | 23 |
 | Mảng lồng (`deals.statusHistory`) | 1 |
 | Bảng Room | 6 |
 
@@ -30,6 +30,7 @@ Firestore không có khóa ngoại thật: cột FK là mã tài liệu khác, �
 | `listings` | `listings/{id}` | Tin đăng. |
 | `categories` | `categories/{id}` | Danh mục và danh mục con. |
 | `identity` | `users/{uid}/private/identity` | Thông tin định danh riêng tư; Security Rules chỉ cho chủ tài khoản và admin đọc. |
+| `images` | `images/{id}` | Ảnh đã nén dạng Base64 (tin đăng, chat, vận đơn, bằng chứng). Mỗi tài liệu dưới 1 MiB. |
 
 | Khóa ngoại | Trỏ tới |
 | --- | --- |
@@ -45,8 +46,10 @@ Firestore không có khóa ngoại thật: cột FK là mã tài liệu khác, �
 | `savedListings.listingId` | listings |
 | `listings.sellerId` | users |
 | `listings.categoryId` | categories |
+| `listings.reservedDealId` | deals |
 | `categories.parentId` | categories |
 | `identity.userId` | users |
+| `images.ownerId` | users |
 
 ## Trang 2. Chat và offer
 
@@ -65,6 +68,7 @@ Firestore không có khóa ngoại thật: cột FK là mã tài liệu khác, �
 | `conversations.sellerId` | users |
 | `messages.conversationId` | conversations |
 | `messages.senderId` | users |
+| `messages.imageId` | images |
 | `messages.offerId` | offers |
 | `offers.listingId` | listings |
 | `offers.conversationId` | conversations |
@@ -88,6 +92,7 @@ Firestore không có khóa ngoại thật: cột FK là mã tài liệu khác, �
 | `deals.offerId` | offers |
 | `deals.buyerId` | users |
 | `deals.sellerId` | users |
+| `deals.trackingImageId` | images |
 | `payments.dealId` | deals |
 | `payments.payerId` | users |
 | `payments.payeeId` | users |
