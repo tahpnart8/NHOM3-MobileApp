@@ -128,10 +128,10 @@ Trong đợt này 20 phải xong trước 21, và 21 trước 22 và 23: ba khú
 
 | # | Người | Việc | Tra ở | Dòng barem |
 | --- | --- | --- | --- | --- |
-| 27 | Hải Long | C05 viết đánh giá, `completeDeal` chuyển giao dịch sang hoàn tất | `P2-C7` | C-Functions |
+| 27 | Phúc | C05 viết đánh giá, `completeDeal` chuyển giao dịch sang hoàn tất. Riêng issue này Phúc được tạo Fragment, layout và chuỗi của C05 trong `ui.trade`; làm sau khi issue 21 vào `main` | `P2-C7` | C-Functions |
 | 28 | Ngân | C06 thông báo trong ứng dụng, số chưa đọc trên chuông | `P2-A6` | C-Functions |
 | 29 | Phát | **Nối `MainActivity`**: chuông và số chưa đọc, chặn tab khi là Khách, gọi `restoreSession` khi mở app, **gọi** `DealViewModel.checkAutoRelease` (thân do Hải Long viết ở issue 21) | `P2-E6b` | R-Chapter 2 |
-| 30 | Phát | **Security Rules đầy đủ** theo `security-rules.md` và `firestore.indexes.json` đủ chỉ mục ghép; thử bằng tay các kịch bản ở `overview.md` mục 10 | `security-rules.md` | C-APIs, QA |
+| 30 | Phúc | **Security Rules đầy đủ** theo `security-rules.md` và `firestore.indexes.json` đủ chỉ mục ghép; thử bằng tay các kịch bản ở `overview.md` mục 10 | `security-rules.md` | C-APIs, QA |
 | 31 | Phát | E02 khóa, mở khóa, cảnh cáo ba bậc, gỡ toàn bộ tin; từ khóa cấm và tin bị gắn cờ | `P2-E2c`, `P2-E3c` | C-Functions |
 | 32 | Ngân | 3 kịch bản Espresso: đăng nhập, đăng tin, admin duyệt xác thực | `barem-diem.md` mục 4 | R-Chapter 6 |
 | 33 | Phúc | D04 báo cáo tin, người, tin nhắn; B06 tin đã lưu | `P2-D4a`, `P2-B7` | C-Functions |
@@ -164,7 +164,8 @@ Còn 24 trong 33 màn. Mạch demo vẫn đi trọn một hơi: khách xem tin k
 - **Mỗi lần bắt đầu một issue mới, chạy `pubg-sync-branch`** để lấy `main` mới nhất. Đây là thứ duy nhất cần kỷ luật hằng ngày.
 - Cần một dòng trong tệp đóng băng của Phát thì nhắn trong nhóm. Đừng tự sửa.
 - **Xong một đợt thì cả nhóm rà lại một lượt** rồi mới sang đợt sau: chạy mạch demo tới chỗ đã làm, ghi cái gì hỏng, sửa, rồi đi tiếp.
-- Tải việc: Phát 9 issue nhưng phần lớn là sinh code và duyệt; Tú 6, Hải Long 6, Ngân 5, Phúc 4. Ai xong sớm thì lấy thêm từ mục 4, theo thứ tự `AutoReleaseWorker`, rồi tin tương tự, rồi C04.
+- Tải việc sau lần cân lại ngày 2026-10-22: **Phát 9, Hải Long 7, Tú 6, Phúc 6, Ngân 5.** Issue 27 rời Hải Long sang Phúc vì Hải Long giữ chuỗi 20 đến 23 trên đường tới hạn; issue 30 rời Phát sang Phúc vì Phát còn phải duyệt 33 Pull Request. Ai xong sớm thì lấy thêm từ mục 4, theo thứ tự `AutoReleaseWorker`, rồi tin tương tự, rồi C04.
+- **Commit nhỏ và nhiều, một bước một commit.** `main` gộp squash nên mỗi Pull Request chỉ để lại **một** commit trên `main`: muốn `git shortlog` phản ánh đúng ai làm gì thì phải xem theo nhánh và theo Pull Request, hoặc leader bật thêm cách gộp merge commit cho các Pull Request code. Dòng barem về phân chia công việc đọc bảng issue và danh sách Pull Request từng người, không đọc riêng số commit trên `main`.
 
 ## 6. Ba luật vẫn giữ, đừng bỏ để đi nhanh
 
