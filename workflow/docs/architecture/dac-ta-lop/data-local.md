@@ -28,7 +28,7 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | Kế thừa | `androidx.room.RoomDatabase` |
 | Lưu trữ | Không lưu |
 | Trách nhiệm | Cơ sở dữ liệu SQLite cục bộ; bị xóa sạch khi đăng xuất. |
-| Chức năng liên quan (STT) | hạ tầng dùng chung |
+| Chức năng liên quan (STT) | 104 |
 
 **Thuộc tính**
 
@@ -226,6 +226,7 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | `itemThumb` | `String` | private | Bản sao `Deal.itemThumb`. |
 | `agreedPrice` | `long` | private | Bản sao `Deal.agreedPrice`. |
 | `status` | `String` | private | Bản sao `Deal.status` (tên hằng enum dạng chuỗi). |
+| `tradeType` | `String` | private | Bản sao `Deal.tradeType` dạng chuỗi, để lọc theo loại giao dịch khi mất mạng. |
 | `deliveryMethod` | `String` | private | Bản sao `Deal.deliveryMethod` (tên hằng enum dạng chuỗi). |
 | `autoReleaseAtMillis` | `long` | private | Hạn đếm ngược, để hiện đồng hồ cả khi offline. |
 | `receivedAtMillis` | `long` | private | Bản sao `Deal.receivedAt` dạng mili giây. |
@@ -341,6 +342,7 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | `public List<ConversationEntity> getConversations()` | Cuộc trò chuyện đã đệm, mới nhất trước. |  |
 | `public void upsertMessages(List<MessageEntity>)` | Chèn hoặc thay các tin nhắn. |  |
 | `public List<MessageEntity> getMessages(String)` | Tin nhắn đã đệm của một cuộc trò chuyện, cũ trước. |  |
+| `public void clearAll()` | Xóa sạch conversation_cache và message_cache; gọi khi đăng xuất hoặc xóa tài khoản. |  |
 
 **Quan hệ trên sơ đồ lớp**
 
@@ -368,6 +370,7 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | --- | --- | --- |
 | `public void upsertAll(List<DealEntity>)` | Chèn hoặc thay các giao dịch. |  |
 | `public List<DealEntity> getMyDeals(String)` | Giao dịch đã đệm của một người dùng. |  |
+| `public void clearAll()` | Xóa sạch deal_cache; gọi khi đăng xuất hoặc xóa tài khoản. |  |
 
 **Quan hệ trên sơ đồ lớp**
 

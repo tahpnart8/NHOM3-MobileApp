@@ -18,12 +18,12 @@ Cách mô tả mỗi lớp theo khung "thực thể thiết kế" của IEEE 101
 | Tệp | Gói | Số lớp |
 | --- | --- | ---: |
 | [model.md](model.md) | `com.nhom3.pubgapp.model` | 23 |
-| [enums.md](enums.md) | `com.nhom3.pubgapp.model.enums` | 22 |
+| [enums.md](enums.md) | `com.nhom3.pubgapp.model.enums` | 23 |
 | [data.md](data.md) | `com.nhom3.pubgapp.data` | 14 |
 | [data-local.md](data-local.md) | `com.nhom3.pubgapp.data.local` | 12 |
 | [util.md](util.md) | `com.nhom3.pubgapp.util` | 7 |
 | [viewmodel.md](viewmodel.md) | `com.nhom3.pubgapp.viewmodel` | 14 |
-| **Tổng** | | **92** |
+| **Tổng** | | **93** |
 
 ## Mọi lớp theo thứ tự chữ cái
 
@@ -91,6 +91,7 @@ Cách mô tả mỗi lớp theo khung "thực thể thiết kế" của IEEE 101
 | [`OfferStatus`](enums.md#offerstatus) | `model.enums` | enum |
 | [`OfferType`](enums.md#offertype) | `model.enums` | enum |
 | [`Payment`](model.md#payment) | `model` | lớp |
+| [`PaymentMethod`](enums.md#paymentmethod) | `model.enums` | enum |
 | [`PaymentStatus`](enums.md#paymentstatus) | `model.enums` | enum |
 | [`Priority`](enums.md#priority) | `model.enums` | enum |
 | [`ProfileStats`](model.md#profilestats) | `model` | lớp (value object) |

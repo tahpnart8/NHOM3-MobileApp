@@ -93,6 +93,7 @@ erDiagram
         TEXT itemThumb
         LONG agreedPrice
         TEXT status
+        TEXT tradeType
         TEXT deliveryMethod
         LONG autoReleaseAtMillis
         LONG receivedAtMillis
@@ -182,6 +183,7 @@ erDiagram
 | `itemThumb` | TEXT |  | Bản sao `Deal.itemThumb`. |  |
 | `agreedPrice` | LONG |  | Bản sao `Deal.agreedPrice`. |  |
 | `status` | TEXT |  | Bản sao `Deal.status`. |  |
+| `tradeType` | TEXT |  | Bản sao `Deal.tradeType` dạng chuỗi, để lọc theo loại giao dịch khi mất mạng. |  |
 | `deliveryMethod` | TEXT |  | Bản sao `Deal.deliveryMethod` (tên hằng enum dạng chuỗi). |  |
 | `autoReleaseAtMillis` | LONG |  | Hạn đếm ngược, để hiện đồng hồ cả khi offline. | thời gian dạng mili giây |
 | `receivedAtMillis` | LONG |  | Bản sao `Deal.receivedAt` dạng mili giây. | thời gian dạng mili giây |
@@ -223,8 +225,10 @@ erDiagram
 | `ChatDao` | `getConversations(): List<ConversationEntity>` | `SELECT * FROM conversation_cache ORDER BY lastMessageAt DESC` |
 | `ChatDao` | `upsertMessages(List<MessageEntity>): void` | `@Insert(onConflict = OnConflictStrategy.REPLACE)` |
 | `ChatDao` | `getMessages(String): List<MessageEntity>` | `SELECT * FROM message_cache WHERE conversationId = :id ORDER BY sentAtMillis ASC` |
+| `ChatDao` | `clearAll(): void` |  |
 | `DealDao` | `upsertAll(List<DealEntity>): void` | `@Insert(onConflict = OnConflictStrategy.REPLACE)` |
 | `DealDao` | `getMyDeals(String): List<DealEntity>` | `SELECT * FROM deal_cache WHERE buyerId = :uid OR sellerId = :uid ORDER BY updatedAtMillis DESC` |
+| `DealDao` | `clearAll(): void` |  |
 | `HistoryDao` | `insertView(RecentViewEntity): void` | `@Insert(onConflict = OnConflictStrategy.REPLACE)` |
 | `HistoryDao` | `getRecentViews(int): List<RecentViewEntity>` | `SELECT * FROM recent_view ORDER BY viewedAtMillis DESC LIMIT :limit` |
 | `HistoryDao` | `insertSearch(RecentSearchEntity): void` | `@Insert(onConflict = OnConflictStrategy.REPLACE)` (từ khóa là khóa chính nên không trùng) |

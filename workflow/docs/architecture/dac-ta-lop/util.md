@@ -22,7 +22,7 @@ Tiện ích dùng chung, không giữ trạng thái màn hình.
 | Loại | lớp (singleton) |
 | Lưu trữ | Không lưu |
 | Trách nhiệm | Giữ người dùng đang đăng nhập và cờ admin cho toàn ứng dụng. |
-| Chức năng liên quan (STT) | 1 đến 3 |
+| Chức năng liên quan (STT) | 1 đến 3, 104, 106 |
 
 **Thuộc tính**
 
@@ -37,10 +37,11 @@ Tiện ích dùng chung, không giữ trạng thái màn hình.
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
 | `public static SessionManager getInstance()` | Trả thể hiện duy nhất. |  |
-| `public void start(User, boolean)` | Lưu người dùng và cờ admin sau khi đăng nhập. |  |
-| `public void clear()` | Xóa phiên khi đăng xuất. |  |
+| `public void start(User, boolean)` | Lưu người dùng và cờ admin sau khi đăng nhập. | 106 |
+| `public void clear()` | Xóa phiên khi đăng xuất. | 104 |
+| `public User getCurrentUser()` | Hồ sơ người đang đăng nhập, để màn hình gọi `User.canSell` hoặc `User.canBuy` mà không phải đọc lại Firestore; null khi đang ở chế độ khách. |  |
 | `public String getCurrentUserId()` | Mã người đang đăng nhập. |  |
-| `public boolean isAdmin()` | Cờ admin để hiện giao diện quản trị. |  |
+| `public boolean isAdmin()` | Cờ admin để hiện giao diện quản trị. | 106 |
 | `public boolean isLoggedIn()` | Đã có phiên đăng nhập hay chưa. |  |
 
 **Dùng tới:** [`User`](model.md#user)
@@ -61,12 +62,14 @@ Tiện ích dùng chung, không giữ trạng thái màn hình.
 
 | Tên | Kiểu | Truy cập | Ý nghĩa |
 | --- | --- | --- | --- |
+| `instance` | `NetworkMonitor` | private, static | Thể hiện dùng chung, tạo một lần trong `PubgApplication`. |
 | `online` | `LiveData<Boolean>` | private | Trạng thái mạng để màn hình quan sát. |
 
 **Phương thức**
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
+| `public static NetworkMonitor getInstance()` | Trả thể hiện dùng chung; `PubgApplication` gọi `register` một lần lúc khởi động (xem overview.md mục Khởi tạo ứng dụng). |  |
 | `public void register(Context)` | Đăng ký theo dõi mạng; gọi một lần khi ứng dụng khởi động. |  |
 | `public void unregister()` | Hủy theo dõi mạng. |  |
 | `public boolean isOnline()` | Đang có mạng hay không. |  |
@@ -154,7 +157,7 @@ Tiện ích dùng chung, không giữ trạng thái màn hình.
 | Loại | lớp |
 | Lưu trữ | Không lưu |
 | Trách nhiệm | Định dạng giá, thời gian; bỏ dấu tiếng Việt để tìm kiếm. |
-| Chức năng liên quan (STT) | 23 |
+| Chức năng liên quan (STT) | 23, 103 |
 
 **Phương thức**
 
@@ -163,7 +166,7 @@ Tiện ích dùng chung, không giữ trạng thái màn hình.
 | `public String formatPrice(long)` | Định dạng tiền, ví dụ 1.500.000 đ; 0 hiện Miễn phí. |  |
 | `public String formatTime(Timestamp)` | Thời gian tương đối, ví dụ 5 phút trước. |  |
 | `public String removeAccents(String)` | Bỏ dấu tiếng Việt và viết thường. | 23 |
-| `public List<String> toKeywords(String)` | Tách chuỗi đã bỏ dấu thành các từ, bỏ trùng. | 23 |
+| `public List<String> toKeywords(String)` | Tách chuỗi đã bỏ dấu thành các từ, bỏ trùng. | 23, 103 |
 
 **Được dùng bởi:** [`SearchViewModel`](viewmodel.md#searchviewmodel)
 

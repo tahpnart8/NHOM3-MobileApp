@@ -23,9 +23,9 @@ Quy tắc:
 | [`identity`](#identity) | `users/{uid}/private/identity` | `UserIdentity` | Thông tin định danh riêng tư; Security Rules chỉ cho chủ tài khoản và admin đọc. |
 | [`savedListings`](#savedlistings) | `users/{uid}/saved/{listingId}` | (không có lớp riêng) | Tin đã lưu (quan hệ nhiều-nhiều). |
 | [`follows`](#follows) | `follows/{followerId_followedId}` | (không có lớp riêng) | Theo dõi (quan hệ nhiều-nhiều tự thân của users). |
-| [`sellerVerifications`](#sellerverifications) | `sellerVerifications/{userId}` | `SellerVerification` | Yêu cầu xác minh người bán. |
+| [`sellerVerifications`](#sellerverifications) | `sellerVerifications/{userId}` | `SellerVerification` | Yêu cầu xác thực tài khoản: số CCCD, ảnh giấy tờ và ảnh chân dung cầm giấy tờ. |
 | [`warnings`](#warnings) | `users/{uid}/warnings/{id}` | `Warning` | Cảnh báo vi phạm theo bậc. |
-| [`admins`](#admins) | `admins/{uid}` | (không có lớp riêng) | Chỉ cần tồn tại: Security Rules dùng nó để nhận diện admin. |
+| [`admins`](#admins) | `admins/{uid}` | (không có lớp riêng) | Chỉ cần tồn tại: Security Rules dùng nó để nhận diện admin. Từ 2026-10-22 admin thêm và gỡ được tài liệu này ngay trong ứng dụng (UC42). |
 | [`categories`](#categories) | `categories/{id}` | `Category` | Danh mục và danh mục con. |
 | [`listings`](#listings) | `listings/{id}` | `Listing` | Tin đăng. |
 | [`conversations`](#conversations) | `conversations/{listingId_buyerId}` | `Conversation` | Cuộc trò chuyện. |
@@ -33,7 +33,7 @@ Quy tắc:
 | [`offers`](#offers) | `offers/{id}` | `Offer` | Offer một chạm. |
 | [`deals`](#deals) | `deals/{id}` | `Deal` | Giao dịch. |
 | [`statusHistory`](#statushistory) | `deals/{id}.statusHistory[ ]` | `StatusChange` | Mảng nhúng trong deals, không phải collection riêng. |
-| [`payments`](#payments) | `payments/{dealId}` | `Payment` | Khoản ký quỹ mô phỏng. |
+| [`payments`](#payments) | `payments/{dealId}` | `Payment` | Khoản thanh toán mô phỏng do hệ thống giữ, không có ngân hàng. |
 | [`reviews`](#reviews) | `reviews/{id}` | `Review` | Đánh giá đối tác. |
 | [`reports`](#reports) | `reports/{id}` | `Report` | Báo cáo vi phạm. |
 | [`complaints`](#complaints) | `complaints/{id}` | `Complaint` | Khiếu nại. |
@@ -146,6 +146,7 @@ erDiagram
         map notificationPrefs
         timestamp lastActiveAt
         string lockReason
+        array_string searchKeywords
         timestamp createdAt
         timestamp updatedAt
     }
@@ -182,8 +183,11 @@ erDiagram
     }
     sellerVerifications {
         string userId PK
+        string nationalId
+        array_string imageIds
         string status
         string note
+        number resubmitCount
         string reviewedBy FK
         timestamp reviewedAt
     }
@@ -287,6 +291,7 @@ erDiagram
         timestamp shippedAt
         timestamp autoReleaseAt
         timestamp receivedAt
+        string receivedImageId FK
         array_map statusHistory
     }
     statusHistory {
@@ -302,6 +307,7 @@ erDiagram
         string payeeId FK
         number amount
         string status
+        string method
         timestamp heldAt
         timestamp releasedAt
     }
@@ -325,6 +331,8 @@ erDiagram
         string reason
         string description
         string status
+        array_string evidenceImageIds
+        string conversationId FK
         string handledBy FK
         timestamp createdAt
     }
@@ -390,7 +398,7 @@ erDiagram
 - **Đường dẫn:** `users/{uid}`
 - **Lớp Java:** `User`
 - **Mục đích:** Hồ sơ người dùng.
-- **Ai ghi:** `UserRepository` (tạo hồ sơ, sửa hồ sơ, mở khóa đã hết hạn, vô hiệu hóa), `AdminRepository` (khóa, cảnh báo, xác minh), `ReviewRepository` (`ratingSum`, `ratingCount` của người được đánh giá)
+- **Ai ghi:** `UserRepository` (tạo hồ sơ, sửa hồ sơ, mở khóa đã hết hạn, vô hiệu hóa), `AdminRepository` (khóa, cảnh báo, xác thực tài khoản), `ReviewRepository` (`ratingSum`, `ratingCount` của người được đánh giá)
 - **Quyền đã chốt:** Lúc tạo: `status` ACTIVE, `verificationStatus` NONE, `ratingSum` và `ratingCount` bằng 0. Chủ tài khoản không tự đổi `status` trừ hai trường hợp: sang DELETED, hoặc từ TEMP_LOCKED về ACTIVE khi giờ Firestore đã qua `lockedUntil`; chỉ đổi `verificationStatus` từ NONE hoặc REJECTED sang PENDING.
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
@@ -403,7 +411,7 @@ erDiagram
 | `bio` | string |  | Đoạn giới thiệu ngắn trên trang cá nhân. |  |
 | `status` | string |  | Trạng thái tài khoản. Admin đổi giữa ACTIVE và hai mức khóa; chính chủ chỉ được đổi sang DELETED khi vô hiệu hóa. | một trong: ACTIVE, TEMP_LOCKED, PERM_LOCKED, DELETED |
 | `lockedUntil` | timestamp |  | Hạn khóa tạm. Rỗng khi không khóa hoặc khóa vĩnh viễn. |  |
-| `verificationStatus` | string |  | Trạng thái xác minh người bán; APPROVED thì hồ sơ có huy hiệu đã xác minh. | một trong: NONE, PENDING, APPROVED, REJECTED |
+| `verificationStatus` | string |  | Trạng thái xác thực tài khoản; chỉ APPROVED mới đăng tin, gửi đề nghị và tạo giao dịch được, và hồ sơ mới có nhãn Tài khoản đã xác thực. | một trong: NONE, PENDING, APPROVED, REJECTED |
 | `ratingSum` | number |  | Tổng điểm sao tổng thể đã nhận; điểm trung bình = `ratingSum / ratingCount`. Tăng bằng `FieldValue.increment` cùng lô với `Review`. |  |
 | `ratingCount` | number |  | Số đánh giá đã nhận, tăng 1 cùng lô với `Review`. |  |
 | `warningCount` | number |  | Số lần bị cảnh báo; bậc của lần cảnh báo kế tiếp là `warningCount + 1`. Mở khóa không đặt lại số này. |  |
@@ -414,6 +422,7 @@ erDiagram
 | `notificationPrefs` | map |  | Bật hoặc tắt từng loại thông báo. Khóa là tên hằng `NotificationType`, thiếu khóa nghĩa là bật. |  |
 | `lastActiveAt` | timestamp |  | Lần cuối ứng dụng của người này hoạt động; dùng cho trạng thái hoạt động trong chat. |  |
 | `lockReason` | string |  | Lý do khóa gần nhất do admin ghi; hiện cho người bị khóa khi đăng nhập. |  |
+| `searchKeywords` | array<string> |  | Các từ đã bỏ dấu, viết thường của `displayName`, để truy vấn `array-contains` khi người dùng tìm nhau. Tạo lại mỗi lần `displayName` đổi; tối đa 20 từ. |  |
 | `createdAt` | timestamp |  |  |  |
 | `updatedAt` | timestamp |  |  |  |
 
@@ -424,6 +433,8 @@ Truy vấn dự kiến:
 | `UserRepository.getProfile` | Đọc theo mã | Không cần |
 | `AdminRepository.listUsers` | Tùy chọn `status ==` và `province ==`, `createdAt` trong khoảng, sắp `createdAt` giảm | Ghép: `status`, `createdAt`; `province`, `createdAt`; `status`, `province`, `createdAt` |
 | `UserRepository.getStats` | Bốn truy vấn tổng hợp `count()` trên `deals` và `follows` | Dùng chỉ mục của `deals` và `follows` |
+| `UserRepository.searchUsers` | `searchKeywords array-contains` từ dài nhất trong ô tìm kiếm (đã bỏ dấu), `status == ACTIVE`, sắp `ratingCount` giảm, trang 20 người | Ghép: `searchKeywords` (array-contains), `status`, `ratingCount` |
+| `AdminRepository.findUserByEmail` | `email ==` và `status == ACTIVE`, lấy một tài liệu; dùng khi admin cấp quyền admin (UC42) | Ghép: `email`, `status` |
 
 Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên Firestore là `Timestamp`; `null` là chưa có giá trị):
 
@@ -454,6 +465,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   },
   "lastActiveAt": "2026-10-12T09:30:00+07:00",
   "lockReason": "",
+  "searchKeywords": [],
   "createdAt": "2026-10-12T09:30:00+07:00",
   "updatedAt": "2026-10-12T09:30:00+07:00"
 }
@@ -511,7 +523,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 - **Lớp Java:** `UserIdentity`
 - **Mục đích:** Thông tin định danh riêng tư; Security Rules chỉ cho chủ tài khoản và admin đọc.
 - **Ai ghi:** `UserRepository`
-- **Quyền đã chốt:** Chính chủ tài khoản đọc và ghi; admin chỉ đọc (màn E03, khi duyệt xác minh). Không hiển thị công khai.
+- **Quyền đã chốt:** Chính chủ tài khoản đọc và ghi; admin chỉ đọc (màn E03, khi duyệt xác thực tài khoản). Không hiển thị công khai.
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
 | --- | --- | --- | --- | --- |
@@ -605,14 +617,17 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 
 - **Đường dẫn:** `sellerVerifications/{userId}`
 - **Lớp Java:** `SellerVerification`
-- **Mục đích:** Yêu cầu xác minh người bán.
+- **Mục đích:** Yêu cầu xác thực tài khoản: số CCCD, ảnh giấy tờ và ảnh chân dung cầm giấy tờ.
 - **Ai ghi:** `UserRepository` (gửi), `AdminRepository` (duyệt)
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
 | --- | --- | --- | --- | --- |
 | `userId` | string | PK,FK | Người gửi yêu cầu; cũng là mã tài liệu. | tham chiếu users |
+| `nationalId` | string |  | Số CCCD 12 chữ số người gửi khai trong yêu cầu; admin đối chiếu với ảnh giấy tờ. |  |
+| `imageIds` | array<string> |  | Hai mã tài liệu `images`: ảnh giấy tờ và ảnh chân dung cầm giấy tờ, `purpose` là VERIFICATION. | tham chiếu images |
 | `status` | string |  | Trạng thái yêu cầu. | một trong: NONE, PENDING, APPROVED, REJECTED |
 | `note` | string |  | Lý do từ chối do admin ghi. |  |
+| `resubmitCount` | number |  | Số lần đã gửi lại sau khi bị từ chối; tối đa `MAX_RESUBMIT`. |  |
 | `reviewedBy` | string | FK | Admin đã xử lý. | tham chiếu users |
 | `reviewedAt` | timestamp |  | Lúc xử lý. |  |
 
@@ -627,8 +642,14 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 ```json
 {
   "userId": "user_01",
+  "nationalId": "079201001234",
+  "imageIds": [
+    "image_verify_01",
+    "image_verify_02"
+  ],
   "status": "PENDING",
   "note": "",
+  "resubmitCount": 0,
   "reviewedBy": null,
   "reviewedAt": null
 }
@@ -675,9 +696,9 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 
 - **Đường dẫn:** `admins/{uid}`
 - **Lớp Java:** không có lớp riêng
-- **Mục đích:** Chỉ cần tồn tại: Security Rules dùng nó để nhận diện admin.
-- **Ai ghi:** Không ai ghi từ ứng dụng; `AdminRepository.isAdmin` chỉ đọc
-- **Quyền đã chốt:** Không ai ghi từ ứng dụng; leader tạo tay trên Firebase Console. Security Rules đọc để biết ai là admin.
+- **Mục đích:** Chỉ cần tồn tại: Security Rules dùng nó để nhận diện admin. Từ 2026-10-22 admin thêm và gỡ được tài liệu này ngay trong ứng dụng (UC42).
+- **Ai ghi:** `AdminRepository` (cấp và gỡ quyền admin, UC42); leader vẫn tạo được tài liệu admin đầu tiên trên Firebase Console
+- **Quyền đã chốt:** Admin cấp và gỡ quyền admin cho người khác ngay trong ứng dụng (UC42, quyết định 2026-10-22); không ai tự cấp quyền cho chính mình. Tài liệu admin đầu tiên do leader tạo tay trên Firebase Console. Security Rules đọc tài liệu này để biết ai là admin.
 
 | Trường | Kiểu | Khóa | Ý nghĩa | Giá trị cho phép, tham chiếu |
 | --- | --- | --- | --- | --- |
@@ -689,6 +710,7 @@ Truy vấn dự kiến:
 | Phương thức | Điều kiện | Chỉ mục |
 | --- | --- | --- |
 | `AdminRepository.isAdmin` | Đọc `admins/{uid}`, chỉ xem có tồn tại | Không cần |
+| `AdminRepository.listAdmins` | Cả collection, sắp `createdAt`; rồi đọc hồ sơ từng admin | Không cần |
 
 Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên Firestore là `Timestamp`; `null` là chưa có giá trị):
 
@@ -979,6 +1001,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `shippedAt` | timestamp |  | Lúc người bán xác nhận đã giao, ghi bằng giờ máy chủ. |  |
 | `autoReleaseAt` | timestamp |  | Hạn đếm ngược: `shippedAt + AUTO_RELEASE_DAYS`. Hết hạn mà người mua chưa xác nhận thì tự sang RECEIVED. |  |
 | `receivedAt` | timestamp |  | Lúc sang RECEIVED (người mua xác nhận hoặc hết đếm ngược); tiền được giải ngân lúc này. |  |
+| `receivedImageId` | string | FK | Mã tài liệu `images` của ảnh người mua chụp lúc nhận hàng (`purpose` RECEIVED); rỗng khi giao dịch tự sang RECEIVED vì hết đếm ngược. | tham chiếu images |
 | `statusHistory` | array<map> |  | Lịch sử chuyển trạng thái. Chỉ thêm khi trạng thái thật sự đổi (sửa điều khoản không thêm dòng). | mảng lồng, mỗi phần tử theo mục statusHistory |
 
 Truy vấn dự kiến:
@@ -1019,6 +1042,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   "shippedAt": "2026-10-12T09:30:00+07:00",
   "autoReleaseAt": "2026-10-19T09:30:00+07:00",
   "receivedAt": null,
+  "receivedImageId": "receivedImage_01",
   "statusHistory": [
     {
       "fromStatus": null,
@@ -1082,7 +1106,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 
 - **Đường dẫn:** `payments/{dealId}`
 - **Lớp Java:** `Payment`
-- **Mục đích:** Khoản ký quỹ mô phỏng.
+- **Mục đích:** Khoản thanh toán mô phỏng do hệ thống giữ, không có ngân hàng.
 - **Ai ghi:** `DealRepository`, `ComplaintRepository` (hoàn hoặc giải ngân theo quyết định)
 - **Quyền đã chốt:** Tạo (HELD) chỉ bởi người mua, khi giao dịch CONFIRMED, `amount` bằng `deals.agreedPrice`. Sang RELEASED chỉ cùng lô với việc giao dịch sang RECEIVED: người mua xác nhận (từ SHIPPED, hoặc từ CONFIRMED khi gặp trực tiếp), hoặc giờ Firestore đã qua `deals.autoReleaseAt` và giao dịch còn SHIPPED, hoặc admin bác khiếu nại. Sang REFUNDED chỉ cùng lô với việc giao dịch sang CANCELLED. Danh sách này trùng `trang-thai.md` mục 4.
 
@@ -1093,6 +1117,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `payeeId` | string | FK | Người nhận tiền khi giải ngân (người bán). | tham chiếu users |
 | `amount` | number |  | Số tiền, bằng `Deal.agreedPrice`. |  |
 | `status` | string |  | Trạng thái khoản ký quỹ. | một trong: HELD, RELEASED, REFUNDED |
+| `method` | string |  | Phương thức người mua chọn ở màn thanh toán mô phỏng; chỉ để hiện lại trên biên lai. | một trong: CARD, E_WALLET, BANK_TRANSFER |
 | `heldAt` | timestamp |  | Lúc người mua thanh toán và tiền bắt đầu được giữ. |  |
 | `releasedAt` | timestamp |  | Lúc giải ngân hoặc hoàn tiền. |  |
 
@@ -1111,6 +1136,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   "payeeId": "payee_01",
   "amount": 6000000,
   "status": "HELD",
+  "method": "E_WALLET",
   "heldAt": "2026-10-12T09:30:00+07:00",
   "releasedAt": null
 }
@@ -1177,6 +1203,8 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `reason` | string |  | Lý do chọn sẵn. | một trong: FAKE_ITEM, MISLEADING_INFO, SCAM, INAPPROPRIATE, OTHER |
 | `description` | string |  | Mô tả thêm của người báo cáo. |  |
 | `status` | string |  | Trạng thái báo cáo. | một trong: OPEN, RESOLVED, DISMISSED, CANCELLED |
+| `evidenceImageIds` | array<string> |  | Mã các ảnh người báo cáo đính kèm, tối đa 3, `ImagePurpose` là EVIDENCE; rỗng khi không đính kèm. | tham chiếu images |
+| `conversationId` | string | FK | Mã cuộc trò chuyện chứa tin nhắn bị báo cáo; chỉ có khi `targetType` là MESSAGE. | tham chiếu conversations |
 | `handledBy` | string | FK | Admin đã xử lý. | tham chiếu users |
 | `createdAt` | timestamp |  |  |  |
 
@@ -1199,6 +1227,10 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   "reason": "Đăng hàng giả nhiều lần",
   "description": "Ảnh lấy trên mạng",
   "status": "OPEN",
+  "evidenceImageIds": [
+    "evidenceImage_01"
+  ],
+  "conversationId": "conversation_01",
   "handledBy": null,
   "createdAt": "2026-10-12T09:30:00+07:00"
 }
@@ -1405,7 +1437,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | --- | --- | --- | --- | --- |
 | `id` | string | PK | Mã tài liệu Firestore (tự sinh, trừ khi đường dẫn ghi khác). |  |
 | `ownerId` | string | FK | Người tải ảnh lên; chỉ người này ghi và xóa được. | tham chiếu users |
-| `purpose` | string |  | Ảnh dùng cho việc gì. | một trong: LISTING, CHAT, WAYBILL, EVIDENCE |
+| `purpose` | string |  | Ảnh dùng cho việc gì. | một trong: LISTING, CHAT, WAYBILL, RECEIVED, EVIDENCE, VERIFICATION |
 | `data` | string |  | Ảnh JPEG mã hóa Base64. Cạnh dài tối đa 1024 px, tối đa 300 KB trước khi mã hóa (khoảng 400 KB sau khi mã hóa), dưới giới hạn 1 MiB mỗi tài liệu. |  |
 | `width` | number |  | Chiều rộng sau khi nén, tính bằng px. |  |
 | `height` | number |  | Chiều cao sau khi nén, tính bằng px. |  |
@@ -1442,6 +1474,8 @@ Gom từ các bảng Truy vấn dự kiến ở trên. Khi một truy vấn thi�
 | `users` | `status`, `createdAt` |
 | `users` | `province`, `createdAt` |
 | `users` | `status`, `province`, `createdAt` |
+| `users` | `searchKeywords` (array-contains), `status`, `ratingCount` |
+| `users` | `email`, `status` |
 | `sellerVerifications` | `status`, `createdAt` |
 | `listings` | `status`, `createdAt` |
 | `listings` | `status`, `categoryId`, `createdAt` |

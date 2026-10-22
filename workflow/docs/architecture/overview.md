@@ -84,7 +84,7 @@ Ngoài phạm vi: thông báo đẩy khi ứng dụng đóng, cổng thanh toán
 | Bán kính, gợi ý, giá tham khảo | Tính trên máy (`GeoUtils`, `RecommendationEngine`, công thức ở `goi-y.md`) | Firestore không truy vấn theo bán kính; quy mô đồ án nhỏ |
 | Số liệu hồ sơ (đã bán, người theo dõi, giao dịch, hoàn tất) | Đếm bằng truy vấn tổng hợp `count()` lúc mở hồ sơ, không lưu bộ đếm | Không để người dùng ghi chéo bộ đếm vào tài liệu người khác |
 | Ảnh không có Cloud Storage | `MediaRepository` nén ảnh, mã hóa Base64, ghi mỗi ảnh thành một tài liệu `images`; bảng tin chỉ dùng ảnh bìa thu nhỏ nằm sẵn trong tin | Gói Spark; giới hạn 1 MiB mỗi tài liệu; bảng tin không phải tải ảnh lớn |
-| Quyền admin | Tài liệu `admins/{uid}` do leader tạo tay; Rules đọc tài liệu này | Ứng dụng không được tự khai quyền (luật R12) |
+| Quyền admin | Tài liệu `admins/{uid}`; admin cấp và gỡ quyền cho người khác trong ứng dụng (UC42), tài liệu đầu tiên do leader tạo tay; Rules đọc tài liệu này | Ứng dụng không được tự khai quyền: chỉ người đã là admin mới cấp được, và không cấp hay gỡ cho chính mình (luật R12) |
 | Dữ liệu nhạy cảm | Tài liệu con riêng tư: `users/{uid}/private/identity`, `complaints/{id}/adminNote/note` | Rules phân quyền theo tài liệu, không theo trường |
 
 ## 5. Góc nhìn khối (C4 mức 2 và 3)
@@ -106,8 +106,8 @@ View (Activity, Fragment, Adapter)          gói com.nhom3.pubgapp.ui.<module>
   -> data        14 lớp   12 repository, BaseRepository, DataCallback
        -> Firebase (Auth, Firestore)
        -> data.local  12 lớp   Room: AppDatabase, Converters, 6 entity, 4 DAO
-model (23 lớp), model.enums (22 kiểu), util (7 lớp): mọi tầng đều dùng
-PubgApplication (gốc gói, không tính vào 92 lớp): khởi tạo lúc ứng dụng chạy
+model (23 lớp), model.enums (23 kiểu), util (7 lớp): mọi tầng đều dùng
+PubgApplication (gốc gói, không tính vào 93 lớp): khởi tạo lúc ứng dụng chạy
 ```
 
 | Gói | Được gọi | Không được |
@@ -119,7 +119,7 @@ PubgApplication (gốc gói, không tính vào 92 lớp): khởi tạo lúc ứn
 | `model`, `model.enums` | Không gọi tầng nào | Gọi mạng hay đĩa |
 | `util` | `model`, thư viện | Gọi repository. **Ngoại lệ duy nhất:** `AutoReleaseWorker` gọi `DealRepository`, vì việc chạy nền không có ViewModel |
 
-Tổng 92 lớp. Danh sách và đặc tả từng lớp ở [dac-ta-lop/](dac-ta-lop/README.md); ai dùng ai ở [thanh-phan.md](thanh-phan.md).
+Tổng 93 lớp. Danh sách và đặc tả từng lớp ở [dac-ta-lop/](dac-ta-lop/README.md); ai dùng ai ở [thanh-phan.md](thanh-phan.md).
 
 **Điều hướng (đã chốt).** Ba Activity, mỗi màn hình là một Fragment, dùng Navigation component với một đồ thị lồng cho mỗi module:
 

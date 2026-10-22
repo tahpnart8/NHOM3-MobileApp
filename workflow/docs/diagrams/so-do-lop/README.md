@@ -1,6 +1,6 @@
 # Sơ đồ lớp
 
-Sơ đồ lớp của PUBGApp: **92 lớp Java tự viết**, chia gói theo tầng (`AGENTS.md` mục 7). File gốc `class-diagram.drawio` mở bằng draw.io, mỗi trang là một tab ở đáy màn hình. Danh sách lớp kèm trách nhiệm và chức năng liên quan nằm ở [`../../analysis/du-kien-lop.md`](../../analysis/du-kien-lop.md).
+Sơ đồ lớp của PUBGApp: **93 lớp Java tự viết**, chia gói theo tầng (`AGENTS.md` mục 7). File gốc `class-diagram.drawio` mở bằng draw.io, mỗi trang là một tab ở đáy màn hình. Danh sách lớp kèm trách nhiệm và chức năng liên quan nằm ở [`../../analysis/du-kien-lop.md`](../../analysis/du-kien-lop.md).
 
 **Bản chữ của sơ đồ này** (mọi thuộc tính, phương thức, quan hệ, sơ đồ Mermaid) ở [`../../architecture/dac-ta-lop/`](../../architecture/dac-ta-lop/README.md); máy trạng thái ở [`../../architecture/trang-thai.md`](../../architecture/trang-thai.md). Khi code, đọc bản chữ; ảnh để người xem nhanh.
 
@@ -23,9 +23,9 @@ model, model.enums, util: mọi tầng đều dùng
 | Truy cập dữ liệu | `data` | 14 | 12 repository kế thừa `BaseRepository`, cùng `BaseRepository` và `DataCallback`; đọc Room trước rồi gọi Firebase |
 | Lưu trữ cục bộ | `data.local` | 12 | Room: cơ sở dữ liệu, bộ chuyển kiểu, 6 entity, 4 DAO |
 | Mô hình miền | `model` | 23 | Tài liệu Firestore và quy tắc nghiệp vụ |
-| Kiểu liệt kê | `model.enums` | 22 | Giá trị cố định của trạng thái, loại, lý do |
+| Kiểu liệt kê | `model.enums` | 23 | Giá trị cố định của trạng thái, loại, lý do |
 | Tiện ích | `util` | 7 | Phiên đăng nhập, mạng, lọc từ khóa, gợi ý, khoảng cách, định dạng, việc chạy nền |
-| **Tổng** | | **92** | |
+| **Tổng** | | **93** | |
 
 ## 2. Các trang sơ đồ
 
@@ -100,13 +100,13 @@ Mỗi chức năng **Đợt này** có ít nhất một lớp hoặc thành viê
 
 | STT | Chức năng | Lớp và thành viên |
 | --- | --- | --- |
-| 1 đến 3 | Đăng ký, đăng nhập, quên mật khẩu (kèm xác thực email và Google) | `AuthViewModel.register`, `AuthViewModel.login`, `AuthViewModel.loginWithGoogle`, `AuthViewModel.resetPassword`, `AuthRepository.signUp`, `AuthRepository.sendVerificationEmail`, `AuthRepository.signIn`, `AuthRepository.signInWithGoogle`, `AuthRepository.sendPasswordReset`, `SessionManager`, `User`, `User.termsAcceptedAt`, `UserIdentity.nationalId` |
+| 1 đến 3 | Đăng ký, đăng nhập, quên mật khẩu (kèm xác thực email và Google) | `AuthViewModel.startSignUp`, `AuthViewModel.resendVerificationLink`, `AuthViewModel.checkEmailVerified`, `AuthViewModel.completeProfile`, `AuthViewModel.login`, `AuthViewModel.loginWithGoogle`, `AuthViewModel.resetPassword`, `AuthRepository.signUp`, `AuthRepository.sendVerificationEmail`, `AuthRepository.signIn`, `AuthRepository.signInWithGoogle`, `AuthRepository.sendPasswordReset`, `SessionManager`, `User`, `User.termsAcceptedAt`, `UserIdentity.nationalId` |
 | 4 | Chỉnh sửa thông tin cá nhân | `ProfileViewModel.updateProfile`, `UserRepository.updateProfile`, `User`, `User.province`, `User.district` |
 | 5 | Chỉnh sửa ảnh hồ sơ | `ProfileViewModel.changeAvatar`, `MediaRepository.makeThumb`, `User.avatarBase64` |
 | 6 | Chỉnh sửa địa chỉ | `ProfileViewModel.saveAddress`, `ProfileViewModel.deleteAddress`, `UserRepository.saveAddress`, `UserRepository.deleteAddress`, `UserAddress` |
 | 7 | Xem đánh giá cá nhân công khai | `User.ratingAverage`, `User.ratingCount`, `ProfileViewModel.loadProfile`, `ReviewRepository.create` |
 | 8 | Xem số liệu hồ sơ: Hiển thị số món đã bán, số người theo dõi, số giao dịch và tỷ lệ hoàn tất | `ProfileStats`, `ProfileStats.completionRate`, `UserRepository.getStats`, `ProfileViewModel.loadProfile` |
-| 9 | Khai báo thông tin định danh: Khai báo số CCCD, ngày sinh, giới tính, địa chỉ thường trú để xác minh danh tính | `UserIdentity`, `Gender`, `ProfileViewModel.loadIdentity`, `ProfileViewModel.saveIdentity`, `UserRepository.saveIdentity`, `UserRepository.getIdentity` |
+| 9 | Khai báo thông tin định danh: Khai báo số CCCD, ngày sinh, giới tính, địa chỉ thường trú để xác thực danh tính | `UserIdentity`, `Gender`, `ProfileViewModel.loadIdentity`, `ProfileViewModel.saveIdentity`, `UserRepository.saveIdentity`, `UserRepository.getIdentity` |
 | 10 | Cài đặt thông báo: Bật hoặc tắt từng loại thông báo: tin nhắn mới, đề nghị giá mới, cập nhật giao dịch | `User.notificationPrefs`, `ProfileViewModel.updateNotificationPrefs`, `UserRepository.updateNotificationPrefs` |
 | 11 | Đổi mật khẩu: Đổi mật khẩu sau khi nhập lại mật khẩu hiện tại | `AuthViewModel.changePassword`, `AuthRepository.changePassword` |
 | 12 | Xóa tài khoản: Vô hiệu hóa tài khoản: ẩn hồ sơ và tin đăng, xóa thông tin đăng nhập, giữ lịch sử giao dịch và đánh giá cho đối tác | `ProfileViewModel.deactivateAccount`, `UserRepository.deactivate`, `AuthRepository.deleteLogin`, `User.isDeleted`, `UserStatus` |
@@ -129,7 +129,7 @@ Mỗi chức năng **Đợt này** có ít nhất một lớp hoặc thành viê
 | 29 | Kênh chung có đề xuất phù hợp | `FeedViewModel.loadFeed`, `FeedViewModel.loadNext`, `ListingRepository.getFeed`, `RecommendationEngine.forYou` |
 | 30 | Kênh đang theo dõi | `SearchFilter.followingOnly`, `UserRepository.getFollowingIds`, `FeedViewModel.loadFeed` |
 | 31 đến 34 | Sắp xếp giá thấp đến cao, cao đến thấp, mới đăng, đánh giá tốt | `SortOrder`, `SearchFilter.sortOrder`, `User.ratingAverage` |
-| 35 | Chọn danh mục quan tâm khi đăng ký | `User.interestedCategoryIds`, `AuthViewModel.register` |
+| 35 | Chọn danh mục quan tâm khi đăng ký | `User.interestedCategoryIds`, `AuthViewModel.loadCategories`, `AuthViewModel.completeProfile` |
 | 36 | Gợi ý sản phẩm tương tự | `RecommendationEngine.similarTo`, `ListingDetailViewModel.loadSimilar`, `ListingRepository.getSimilar` |
 | 37 | Giá tham khảo: Hiển thị khoảng giá tham khảo khi xem chi tiết tin, tính từ các tin tương tự cùng danh mục và tình trạng | `ListingDetailViewModel.loadPriceRange`, `RecommendationEngine.priceRange` |
 | 38 | Mục Dành cho bạn từ lịch sử xem, tìm kiếm, tin đã lưu | `FeedViewModel.loadForYou`, `RecommendationEngine.forYou`, `RecentViewEntity`, `RecentSearchEntity`, `HistoryDao`, `ListingRepository.recordView`, `ListingRepository.recordSearch`, `SearchViewModel.loadRecentSearches` |
@@ -144,7 +144,7 @@ Mỗi chức năng **Đợt này** có ít nhất một lớp hoặc thành viê
 | 53 | Xác nhận đã nhận (giải ngân tự động cho người bán) | `DealViewModel.markReceived`, `DealRepository.markReceived`, `Deal.markReceived`, `Deal.receivedAt`, `Payment.release`, `Deal.isAutoCompleteDue`, `Deal.complete`, `Deal.AUTO_COMPLETE_DAYS`, `DealRepository.completeDueDeals` |
 | 54 | Xác nhận đã giao, kèm ảnh mã vận đơn và thông tin đơn vị vận chuyển; bắt đầu đếm ngược | `DealViewModel.markShipped`, `DealRepository.markShipped`, `Deal.markShipped`, `Deal.carrierName`, `Deal.trackingCode`, `Deal.trackingImageId`, `Deal.shippedAt`, `Deal.autoReleaseAt`, `Deal.hasShippingProof`, `Deal.AUTO_RELEASE_DAYS`, `MediaRepository.saveImage` |
 | 55 | Hủy giao dịch có lý do (hoàn tiền nếu đang giữ) | `DealViewModel.cancel`, `DealRepository.cancel`, `Deal.cancel`, `Deal.cancelReason`, `Payment.refund` |
-| 56 | Thanh toán qua bên thứ ba (ký quỹ mô phỏng) | `DealViewModel.pay`, `DealRepository.pay`, `Payment`, `PaymentStatus`, `Deal.needsPayment` |
+| 56 | Thanh toán qua bên thứ ba (ký quỹ mô phỏng) | `DealViewModel.pay`, `DealRepository.pay`, `Payment`, `PaymentStatus`, `PaymentMethod`, `Payment.method`, `Deal.needsPayment` |
 | 57 | Lịch sử giao dịch | `DealViewModel.loadHistory`, `DealRepository.getMyDeals`, `DealDao`, `DealEntity` |
 | 58 | Lịch sử thanh toán | `DealViewModel.loadPayments`, `DealRepository.getPayments` |
 | 59 | Đánh giá đối tác | `TrustViewModel.submitReview`, `ReviewRepository.create`, `Review`, `Review.isValidRating`, `Review.accuracyRating`, `Review.attitudeRating`, `Review.commitmentRating`, `User.applyRating` |
@@ -160,10 +160,10 @@ Mỗi chức năng **Đợt này** có ít nhất một lớp hoặc thành viê
 | 69 | Admin: xem hồ sơ người dùng | `AdminUserViewModel.loadProfile`, `AdminRepository.getWarnings` |
 | 70, 71 | Admin: khóa và mở khóa tài khoản | `AdminUserViewModel.lock`, `AdminUserViewModel.unlock`, `AdminRepository.lockUser`, `AdminRepository.unlockUser`, `User.isLocked`, `User.lockedUntil` |
 | 72 | Admin: cảnh báo theo bậc | `AdminUserViewModel.warn`, `AdminRepository.warnUser`, `Warning`, `Warning.resultingStatus`, `User.warningCount` |
-| 73 | Admin: duyệt yêu cầu xác minh người bán | `AdminUserViewModel.loadVerificationRequests`, `AdminUserViewModel.reviewVerification`, `AdminRepository.getVerificationRequests`, `AdminRepository.reviewVerification`, `SellerVerification`, `VerificationStatus`, `User.canSell`, `UserRepository.requestVerification`, `ProfileViewModel.requestVerification` |
+| 73 | Admin: duyệt yêu cầu xác thực tài khoản | `AdminUserViewModel.loadVerificationRequests`, `AdminUserViewModel.reviewVerification`, `AdminRepository.getVerificationRequests`, `AdminRepository.reviewVerification`, `SellerVerification`, `VerificationStatus`, `User.canSell`, `UserRepository.requestVerification`, `ProfileViewModel.requestVerification` |
 | 74 | Admin: nhật ký hoạt động của một tài khoản | `AdminUserViewModel.loadActivityLog`, `AdminRepository.getActivityLogs`, `ActivityLog`, `BaseRepository.logActivity` |
 | 75 | Admin: xử lý tin bị báo cáo | `AdminContentViewModel.loadReportedListings`, `AdminContentViewModel.closeReports`, `ReportRepository.getByStatus`, `ReportRepository.countByTarget`, `ReportRepository.closeByTarget`, `Report.resolve`, `Report.dismiss` |
-| 76 | Admin: ẩn, gỡ và khôi phục tin | `AdminContentViewModel.hide`, `AdminContentViewModel.restore`, `AdminRepository.hideListing`, `AdminRepository.restoreListing`, `Listing.hide`, `Listing.restore`, `Listing.statusReason` |
+| 76 | Admin: ẩn, gỡ và khôi phục tin | `AdminContentViewModel.hide`, `AdminContentViewModel.restore`, `AdminContentViewModel.remove`, `AdminRepository.hideListing`, `AdminRepository.restoreListing`, `AdminRepository.removeListing`, `Listing.hide`, `Listing.restore`, `Listing.statusReason` |
 | 77 | Admin: gỡ hàng loạt tin của tài khoản bị khóa | `AdminContentViewModel.removeAllOf`, `AdminRepository.removeAllListingsOf` |
 | 78 | Admin: lọc từ khóa cấm | `AdminContentViewModel.addKeyword`, `AdminContentViewModel.removeKeyword`, `AdminContentViewModel.clearFlag`, `AdminRepository.clearFlag`, `ListingRepository.getBannedKeywords`, `AdminRepository.addKeyword`, `AdminRepository.removeKeyword`, `AdminRepository.getKeywords`, `BannedKeyword`, `KeywordFilter`, `Listing.flagged`, `ShopViewModel.createListing` |
 | 79 | Admin: quản lý danh mục và danh mục con | `AdminContentViewModel.saveCategory`, `AdminContentViewModel.deleteCategory`, `CategoryRepository.add`, `CategoryRepository.update`, `CategoryRepository.delete`, `Category.parentId`, `Category.isRoot`, `Category.isActive`, `CategoryRepository.getAllForAdmin` |
@@ -176,6 +176,10 @@ Mỗi chức năng **Đợt này** có ít nhất một lớp hoặc thành viê
 | 89 | Admin: ra quyết định xử lý khiếu nại | `AdminComplaintViewModel.decide`, `ComplaintRepository.decide`, `Complaint.decide`, `ComplaintDecision`, `Complaint.decision` |
 | 90 | Admin: ghi chú nội bộ không hiện cho người dùng | `AdminComplaintViewModel.saveNote`, `ComplaintRepository.saveAdminNote`, `Complaint.adminNote` |
 | 91 | Gửi thông báo kết quả cho các bên | `ComplaintRepository.decide`, `NotificationRepository.create`, `NotificationViewModel.load`, `NotificationViewModel.markRead`, `NotificationRepository.getForUser`, `NotificationRepository.markRead`, `AppNotification` |
+| 103 | Tìm người dùng theo tên: Tìm người dùng khác theo tên hiển thị; mỗi kết quả mở trang cá nhân của người đó | `User.searchKeywords`, `User.buildSearchKeywords`, `UserRepository.searchUsers`, `SearchViewModel.searchUsers`, `FormatUtils.toKeywords` |
+| 104 | Đăng xuất: Thoát khỏi phiên đăng nhập hiện tại trên thiết bị | `AuthViewModel.logout`, `AuthRepository.signOut`, `SessionManager.clear`, `AppDatabase` |
+| 105 | Thêm, gỡ quyền admin: Xem danh sách admin, thêm admin mới, gỡ quyền admin | `AdminUserViewModel.loadAdmins`, `AdminUserViewModel.grantAdmin`, `AdminUserViewModel.revokeAdmin`, `AdminRepository.listAdmins`, `AdminRepository.findUserByEmail`, `AdminRepository.grantAdmin`, `AdminRepository.revokeAdmin` |
+| 106 | Đăng nhập khu vực quản trị: Admin đăng nhập vào khu vực quản trị bằng tài khoản có quyền admin | `AuthViewModel.login`, `AuthViewModel.restoreSession`, `AdminRepository.isAdmin`, `SessionManager.start`, `SessionManager.isAdmin` |
 
 ## 6. Lớp hạ tầng (không gắn riêng một chức năng)
 

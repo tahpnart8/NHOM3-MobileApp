@@ -3,6 +3,19 @@ description: Một lát cắt dọc của một module, khoảng nửa ngày đ�
 title: "Thêm "
 labels: ["type:feature"]
 body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Bối cảnh
+      description: Năm dòng cho người mới vào việc, kể cả trợ lý AI. Ứng dụng là gì, module này làm gì, màn hình nào, đọc ba tệp nào trước, ai sở hữu phần này.
+      placeholder: |
+        PUBGApp là ứng dụng Android mua bán đồ cũ, Java 17, XML Views, Firebase gói Spark.
+        Module B lo tin đăng và khám phá: đăng tin, kệ hàng, trang chủ, tìm kiếm, chi tiết tin.
+        Việc này làm màn B04 Đăng tin.
+        Đọc trước: workflow/docs/ui/b-kham-pha-tin-dang/README.md mục B04, dac-ta-lop/data.md#listingrepository, trang-thai.md mục 1.
+        Người sở hữu module B là Tú; mọi tệp ở mục "File được tạo hoặc sửa" đều thuộc module B.
+    validations:
+      required: true
   - type: input
     id: feature_id
     attributes:
@@ -85,6 +98,17 @@ body:
     validations:
       required: true
   - type: textarea
+    id: steps
+    attributes:
+      label: Các bước đề nghị
+      description: Danh sách đánh số, mỗi bước một việc, kèm tên lớp và tên phương thức chính xác như tài liệu viết. Người làm được phép làm khác, nhưng không được đặt tên mới.
+      placeholder: |
+        1. Thay thân `ListingRepository.create(Listing listing, DataCallback<String> cb)`: gọi `Listing.buildSearchKeywords()`, đặt `flagged` theo `KeywordFilter.containsBanned`, ghi tài liệu `listings` với `status` AVAILABLE.
+        2. Thay thân `ShopViewModel.createListing(Listing listing, List<Uri> imageUris)`: lưu ảnh qua `MediaRepository.saveImage` trước, rồi gọi `ListingRepository.create`.
+        3. Nối `fragment_listing_post.xml` vào `PostListingFragment`: đủ bốn trạng thái đang tải, có dữ liệu, rỗng, lỗi.
+    validations:
+      required: true
+  - type: textarea
     id: shared
     attributes:
       label: File dùng chung cần thêm dòng
@@ -110,6 +134,19 @@ body:
     attributes:
       label: Tài liệu cần cập nhật
       description: Ví dụ workflow/docs/data/firestore-schema.md, workflow/docs/product/features.md.
+  - type: textarea
+    id: self_check
+    attributes:
+      label: Tự kiểm trước khi mở Pull Request
+      description: Danh sách đánh dấu, mỗi dòng một lệnh hoặc một phép thử trên máy ảo, kèm kết quả mong đợi. Người làm dán kết quả thật vào Pull Request (luật R1).
+      placeholder: |
+        - [ ] `cd PUBGApp && ./gradlew assembleDebug testDebugUnitTest lintDebug` chạy xong, không lỗi, không cảnh báo lint mới.
+        - [ ] `sh workflow/scripts/check-java-style.sh` không báo dòng nào.
+        - [ ] Trên máy ảo: đăng tin một tin có 2 ảnh, thấy tài liệu mới trong `listings` trên Firebase Console với `status` là AVAILABLE.
+        - [ ] Xoay màn hình lúc đang nhập: chữ đã gõ và ảnh đã chọn còn nguyên.
+        - [ ] Mọi tên công khai mới đều có dòng tài liệu định nghĩa nó, liệt kê trong Pull Request (luật R16).
+    validations:
+      required: true
   - type: checkboxes
     id: size
     attributes:

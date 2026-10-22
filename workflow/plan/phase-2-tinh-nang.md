@@ -55,7 +55,7 @@
 
 | Mã | Việc | STT | Màn | Phụ thuộc |
 | --- | --- | --- | --- | --- |
-| P2-D1 | Hồ sơ cá nhân: số liệu, lối tắt tới kệ hàng, tin đã lưu, lịch sử giao dịch, chỉnh sửa, cài đặt; gửi yêu cầu xác minh người bán; mở khu quản trị khi là admin | 8, 73 (phía người dùng) | D01 | P1-06 |
+| P2-D1 | Hồ sơ cá nhân: số liệu, lối tắt tới kệ hàng, tin đã lưu, lịch sử giao dịch, chỉnh sửa, cài đặt; gửi yêu cầu xác thực tài khoản; mở khu quản trị khi là admin | 8, 73 (phía người dùng) | D01 | P1-06 |
 | P2-D2 | Trang cá nhân người khác: thông tin công khai, tin đang bán, theo dõi và bỏ theo dõi | 7, 39 | D02 | P2-D1 |
 | P2-D3 | Hồ sơ uy tín người bán: điểm, 3 tiêu chí, tỷ lệ hoàn tất, lịch sử đánh giá đã nhận và đã cho | 7, 60 | D03 | P2-D2 |
 | P2-D4 | Báo cáo tin, người hoặc tin nhắn: lý do chọn sẵn, mô tả; thẻ "Báo cáo của tôi" trên D07: hủy, xuất CSV | 61, 62, 63 | D04, D07 | P1-04 |

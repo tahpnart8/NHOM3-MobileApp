@@ -11,7 +11,7 @@ Mô hình miền: các tài liệu Firestore và quy tắc nghiệp vụ nằm t
 | [`ProfileStats`](#profilestats) | lớp (value object) | Số liệu hồ sơ đếm bằng truy vấn tổng hợp của Firestore lúc mở hồ sơ; không lưu thành trường. |
 | [`UserAddress`](#useraddress) | lớp | Địa chỉ giao nhận của một người dùng (mỗi người có nhiều địa chỉ). |
 | [`UserIdentity`](#useridentity) | lớp | Thông tin định danh riêng tư (số CCCD, ngày sinh, giới tính, địa chỉ thường trú); chỉ chủ tài khoản và admin đọc được. |
-| [`SellerVerification`](#sellerverification) | lớp | Yêu cầu xác minh để trở thành người bán, do admin duyệt. |
+| [`SellerVerification`](#sellerverification) | lớp | Yêu cầu xác thực tài khoản (số CCCD, ảnh giấy tờ và ảnh chân dung cầm giấy tờ), do admin duyệt; đây là cửa mở quyền mua và bán. |
 | [`Warning`](#warning) | lớp | Một lần cảnh báo vi phạm; bậc 1 cảnh báo, bậc 2 khóa tạm, bậc 3 khóa vĩnh viễn. |
 | [`AppNotification`](#appnotification) | lớp | Thông báo gửi cho một người dùng (offer, giao dịch, kết quả khiếu nại, cảnh báo). |
 | [`Category`](#category) | lớp | Danh mục sản phẩm, có danh mục con và danh sách thuộc tính tình trạng riêng. |
@@ -85,7 +85,7 @@ Mô hình miền: các tài liệu Firestore và quy tắc nghiệp vụ nằm t
 | Kế thừa | [`BaseDocument`](model.md#basedocument) |
 | Lưu trữ | Firestore `users/{uid}`, xem [firestore-schema.md](../../data/firestore-schema.md#users) |
 | Trách nhiệm | Người dùng: hồ sơ công khai, khu vực, trạng thái tài khoản, tổng điểm đánh giá, cài đặt thông báo. |
-| Chức năng liên quan (STT) | 1 đến 5, 7, 10, 12, 31 đến 35, 46, 59, 70 đến 73 |
+| Chức năng liên quan (STT) | 1 đến 5, 7, 10, 12, 31 đến 35, 46, 59, 70 đến 73, 103 |
 
 Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `touch()`.
 
@@ -100,7 +100,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `bio` | `String` | private | Đoạn giới thiệu ngắn trên trang cá nhân. |
 | `status` | `UserStatus` | private | Trạng thái tài khoản. Admin đổi giữa ACTIVE và hai mức khóa; chính chủ chỉ được đổi sang DELETED khi vô hiệu hóa. |
 | `lockedUntil` | `Timestamp` | private | Hạn khóa tạm. Rỗng khi không khóa hoặc khóa vĩnh viễn. |
-| `verificationStatus` | `VerificationStatus` | private | Trạng thái xác minh người bán; APPROVED thì hồ sơ có huy hiệu đã xác minh. |
+| `verificationStatus` | `VerificationStatus` | private | Trạng thái xác thực tài khoản; chỉ APPROVED mới đăng tin, gửi đề nghị và tạo giao dịch được, và hồ sơ mới có nhãn Tài khoản đã xác thực. |
 | `ratingSum` | `int` | private | Tổng điểm sao tổng thể đã nhận; điểm trung bình = `ratingSum / ratingCount`. Tăng bằng `FieldValue.increment` cùng lô với `Review`. |
 | `ratingCount` | `int` | private | Số đánh giá đã nhận, tăng 1 cùng lô với `Review`. |
 | `warningCount` | `int` | private | Số lần bị cảnh báo; bậc của lần cảnh báo kế tiếp là `warningCount + 1`. Mở khóa không đặt lại số này. |
@@ -111,6 +111,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `notificationPrefs` | `Map<String,Boolean>` | private | Bật hoặc tắt từng loại thông báo. Khóa là tên hằng `NotificationType`, thiếu khóa nghĩa là bật. |
 | `lastActiveAt` | `Timestamp` | private | Lần cuối ứng dụng của người này hoạt động; dùng cho trạng thái hoạt động trong chat. |
 | `lockReason` | `String` | private | Lý do khóa gần nhất do admin ghi; hiện cho người bị khóa khi đăng nhập. |
+| `searchKeywords` | `List<String>` | private | Các từ đã bỏ dấu, viết thường của `displayName`, để truy vấn `array-contains` khi người dùng tìm nhau. Tạo lại mỗi lần `displayName` đổi; tối đa 20 từ. |
 
 **Phương thức**
 
@@ -118,10 +119,12 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | --- | --- | --- |
 | `public boolean isLocked()` | True khi `status` là PERM_LOCKED, hoặc TEMP_LOCKED và `lockedUntil` chưa qua. Gắn `@Exclude`. | 70, 71 |
 | `public boolean isDeleted()` | True khi `status` là DELETED. | 12 |
-| `public boolean canSell(boolean)` | Nhận cờ email đã xác thực (từ `AuthRepository.isEmailVerified()` sau `reloadUser`). True khi tài khoản ACTIVE, không bị khóa và email đã xác thực. Xác minh người bán chỉ thêm huy hiệu. | 73 |
+| `public boolean canSell(boolean)` | Nhận cờ email đã xác thực (từ `AuthRepository.isEmailVerified()` sau `reloadUser`). True khi tài khoản ACTIVE, không bị khóa, email đã xác thực và `verificationStatus` là APPROVED. Quyết định 2026-10-22: xác thực tài khoản là điều kiện bắt buộc để đăng tin, không còn là nhãn trang trí. | 73 |
+| `public boolean canBuy(boolean)` | Cùng điều kiện với `canSell`: dùng cho việc gửi đề nghị giá và tạo giao dịch. Tài khoản chưa được duyệt xác thực vẫn xem, tìm kiếm, nhắn tin và theo dõi được. |  |
 | `public void applyRating(int)` | Cộng điểm sao tổng thể vào `ratingSum` và tăng `ratingCount` trên đối tượng trong máy (repository ghi bằng `FieldValue.increment`). | 59 |
 | `public double ratingAverage()` | `ratingSum / ratingCount`, 0 khi chưa có đánh giá. Gắn `@Exclude` để không bị lưu thành trường. | 7, 31 đến 34 |
 | `public boolean isActiveSince(Timestamp)` | True khi `lastActiveAt` sau mốc truyền vào; ứng dụng dùng mốc 5 phút trước để hiện Đang hoạt động. | 46 |
+| `public void buildSearchKeywords()` | Tạo `searchKeywords` từ `displayName` bằng `FormatUtils.toKeywords`; gọi trước khi ghi hồ sơ. | 103 |
 
 **Quan hệ trên sơ đồ lớp**
 
@@ -143,7 +146,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 
 **Dùng tới:** [`UserStatus`](enums.md#userstatus), [`VerificationStatus`](enums.md#verificationstatus)
 
-**Được dùng bởi:** [`AdminRepository`](data.md#adminrepository), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`AuthRepository`](data.md#authrepository), [`AuthViewModel`](viewmodel.md#authviewmodel), [`ChatViewModel`](viewmodel.md#chatviewmodel), [`ListingDetailViewModel`](viewmodel.md#listingdetailviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`RecommendationEngine`](util.md#recommendationengine), [`SessionManager`](util.md#sessionmanager), [`UserRepository`](data.md#userrepository)
+**Được dùng bởi:** [`AdminDealViewModel`](viewmodel.md#admindealviewmodel), [`AdminRepository`](data.md#adminrepository), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`AuthRepository`](data.md#authrepository), [`AuthViewModel`](viewmodel.md#authviewmodel), [`ChatViewModel`](viewmodel.md#chatviewmodel), [`ListingDetailViewModel`](viewmodel.md#listingdetailviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`RecommendationEngine`](util.md#recommendationengine), [`SearchViewModel`](viewmodel.md#searchviewmodel), [`SessionManager`](util.md#sessionmanager), [`UserRepository`](data.md#userrepository)
 
 ### ProfileStats
 
@@ -170,7 +173,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | --- | --- | --- |
 | `public double completionRate()` | `completedDealCount / dealCount`; 0 khi chưa có giao dịch. | 8 |
 
-**Được dùng bởi:** [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`UserRepository`](data.md#userrepository)
+**Được dùng bởi:** [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`ListingDetailViewModel`](viewmodel.md#listingdetailviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`UserRepository`](data.md#userrepository)
 
 ### UserAddress
 
@@ -248,7 +251,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 
 **Dùng tới:** [`Gender`](enums.md#gender)
 
-**Được dùng bởi:** [`AuthViewModel`](viewmodel.md#authviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`UserRepository`](data.md#userrepository)
+**Được dùng bởi:** [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`AuthViewModel`](viewmodel.md#authviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`UserRepository`](data.md#userrepository)
 
 ### SellerVerification
 
@@ -258,7 +261,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | Loại | lớp |
 | Kế thừa | [`BaseDocument`](model.md#basedocument) |
 | Lưu trữ | Firestore `sellerVerifications/{userId}`, xem [firestore-schema.md](../../data/firestore-schema.md#sellerverifications) |
-| Trách nhiệm | Yêu cầu xác minh để trở thành người bán, do admin duyệt. |
+| Trách nhiệm | Yêu cầu xác thực tài khoản (số CCCD, ảnh giấy tờ và ảnh chân dung cầm giấy tờ), do admin duyệt; đây là cửa mở quyền mua và bán. |
 | Chức năng liên quan (STT) | 73 |
 
 Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `touch()`.
@@ -268,10 +271,14 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | Tên | Kiểu | Truy cập | Ý nghĩa |
 | --- | --- | --- | --- |
 | `userId` | `String` | private | Người gửi yêu cầu; cũng là mã tài liệu. |
+| `nationalId` | `String` | private | Số CCCD 12 chữ số người gửi khai trong yêu cầu; admin đối chiếu với ảnh giấy tờ. |
+| `imageIds` | `List<String>` | private | Hai mã tài liệu `images`: ảnh giấy tờ và ảnh chân dung cầm giấy tờ, `purpose` là VERIFICATION. |
 | `status` | `VerificationStatus` | private | Trạng thái yêu cầu. |
 | `note` | `String` | private | Lý do từ chối do admin ghi. |
+| `resubmitCount` | `int` | private | Số lần đã gửi lại sau khi bị từ chối; tối đa `MAX_RESUBMIT`. |
 | `reviewedBy` | `String` | private | Admin đã xử lý. |
 | `reviewedAt` | `Timestamp` | private | Lúc xử lý. |
+| `MAX_RESUBMIT` | `int` | private | Hằng số 3: quá số lần này thì phải liên hệ admin. |
 
 **Phương thức**
 
@@ -279,6 +286,8 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | --- | --- | --- |
 | `public void approve(String adminId)` | Đặt APPROVED, ghi admin và thời điểm; `User.verificationStatus` đổi theo. |  |
 | `public void reject(String adminId, String note)` | Đặt REJECTED kèm ghi chú lý do. |  |
+| `public boolean canResubmit()` | True khi `status` là REJECTED và `resubmitCount` nhỏ hơn `MAX_RESUBMIT`. |  |
+| `public int remainingResubmits()` | `MAX_RESUBMIT` trừ `resubmitCount`, không bao giờ âm; màn D01 hiện số lần gửi lại còn lại. |  |
 
 **Quan hệ trên sơ đồ lớp**
 
@@ -287,7 +296,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 
 **Dùng tới:** [`VerificationStatus`](enums.md#verificationstatus)
 
-**Được dùng bởi:** [`AdminRepository`](data.md#adminrepository)
+**Được dùng bởi:** [`AdminRepository`](data.md#adminrepository), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`UserRepository`](data.md#userrepository)
 
 ### Warning
 
@@ -401,7 +410,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 - Liên kết: `Category` [0..1] và `Category` [*] (parent). Trang 2. Tin đăng, tìm kiếm.
 - Liên kết: `Listing` [*] và `Category` [1] (category). Trang 2. Tin đăng, tìm kiếm.
 
-**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`CategoryRepository`](data.md#categoryrepository)
+**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`AuthViewModel`](viewmodel.md#authviewmodel), [`CategoryRepository`](data.md#categoryrepository), [`FeedViewModel`](viewmodel.md#feedviewmodel), [`SearchViewModel`](viewmodel.md#searchviewmodel), [`ShopViewModel`](viewmodel.md#shopviewmodel)
 
 ### Listing
 
@@ -452,6 +461,9 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `public void markSold()` | Chuyển sang SOLD khi giao dịch của tin hoàn tất. | 13 |
 | `public void hide(String reason)` | Chuyển sang HIDDEN kèm lý do. Người bán tự ẩn thì lý do rỗng. | 15, 76 |
 | `public void restore()` | Từ HIDDEN về AVAILABLE và xóa lý do. | 15, 76 |
+| `public void remove(String reason)` | Đặt REMOVED kèm `statusReason`; chỉ admin gọi (UC37). Người bán không khôi phục lại được. |  |
+| `public void reserve(String dealId)` | Đưa tin từ AVAILABLE sang RESERVED và ghi `reservedDealId`, khi người bán chấp nhận một đề nghị; đối xứng với `release()`. |  |
+| `public void release()` | Đưa tin từ RESERVED về AVAILABLE và xóa `reservedDealId`, khi giao dịch bị hủy hoặc hết hạn xác nhận. |  |
 | `public void buildSearchKeywords()` | Tạo `searchKeywords` từ tiêu đề và mô tả bằng `FormatUtils.toKeywords`; gọi trước khi ghi. | 23 |
 
 **Quan hệ trên sơ đồ lớp**
@@ -468,7 +480,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 
 **Dùng tới:** [`ItemCondition`](enums.md#itemcondition), [`ListingStatus`](enums.md#listingstatus), [`Offer`](model.md#offer), [`OfferType`](enums.md#offertype), [`TradeType`](enums.md#tradetype)
 
-**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`FeedViewModel`](viewmodel.md#feedviewmodel), [`GeoUtils`](util.md#geoutils), [`ListingDetailViewModel`](viewmodel.md#listingdetailviewmodel), [`ListingEntity`](data-local.md#listingentity), [`ListingRepository`](data.md#listingrepository), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`RecommendationEngine`](util.md#recommendationengine), [`SearchViewModel`](viewmodel.md#searchviewmodel), [`ShopViewModel`](viewmodel.md#shopviewmodel)
+**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`AdminRepository`](data.md#adminrepository), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`ChatViewModel`](viewmodel.md#chatviewmodel), [`DealRepository`](data.md#dealrepository), [`FeedViewModel`](viewmodel.md#feedviewmodel), [`GeoUtils`](util.md#geoutils), [`ListingDetailViewModel`](viewmodel.md#listingdetailviewmodel), [`ListingEntity`](data-local.md#listingentity), [`ListingRepository`](data.md#listingrepository), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`RecommendationEngine`](util.md#recommendationengine), [`SearchViewModel`](viewmodel.md#searchviewmodel), [`ShopViewModel`](viewmodel.md#shopviewmodel)
 
 ### SearchFilter
 
@@ -592,7 +604,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 
 **Dùng tới:** [`MessageType`](enums.md#messagetype)
 
-**Được dùng bởi:** [`ChatRepository`](data.md#chatrepository), [`ChatViewModel`](viewmodel.md#chatviewmodel), [`MessageEntity`](data-local.md#messageentity)
+**Được dùng bởi:** [`AdminComplaintViewModel`](viewmodel.md#admincomplaintviewmodel), [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`ChatRepository`](data.md#chatrepository), [`ChatViewModel`](viewmodel.md#chatviewmodel), [`MessageEntity`](data-local.md#messageentity)
 
 ### Offer
 
@@ -678,6 +690,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `shippedAt` | `Timestamp` | private | Lúc người bán xác nhận đã giao, ghi bằng giờ máy chủ. |
 | `autoReleaseAt` | `Timestamp` | private | Hạn đếm ngược: `shippedAt + AUTO_RELEASE_DAYS`. Hết hạn mà người mua chưa xác nhận thì tự sang RECEIVED. |
 | `receivedAt` | `Timestamp` | private | Lúc sang RECEIVED (người mua xác nhận hoặc hết đếm ngược); tiền được giải ngân lúc này. |
+| `receivedImageId` | `String` | private | Mã tài liệu `images` của ảnh người mua chụp lúc nhận hàng (`purpose` RECEIVED); rỗng khi giao dịch tự sang RECEIVED vì hết đếm ngược. |
 | `AUTO_RELEASE_DAYS` | `int` | private, static final | Hằng số: 7 ngày đếm ngược kể từ lúc giao. |
 | `AUTO_COMPLETE_DAYS` | `int` | private, static final | Hằng số: 3 ngày kể từ `receivedAt` thì tự hoàn tất. |
 | `statusHistory` | `List<StatusChange>` | private | Lịch sử chuyển trạng thái. Chỉ thêm khi trạng thái thật sự đổi (sửa điều khoản không thêm dòng). |
@@ -690,7 +703,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `public void confirmBy(String userId)` | Đặt cờ xác nhận của bên gọi; khi cả hai bên đã xác nhận thì PENDING_CONFIRM sang CONFIRMED. | 52 |
 | `public void markShipped(String carrier, String trackingCode, String imageId)` | Chỉ kiểm tra điều kiện của riêng giao dịch: đang CONFIRMED, giao qua vận chuyển, đủ ba bằng chứng; ghi đơn vị vận chuyển, mã, mã ảnh vận đơn; sang SHIPPED. Điều kiện về tiền do repository kiểm tra. | 54 |
 | `public boolean hasShippingProof()` | True khi đủ cả `carrierName`, `trackingCode`, `trackingImageId`. | 54 |
-| `public void markReceived()` | SHIPPED sang RECEIVED (hoặc CONFIRMED sang RECEIVED khi gặp trực tiếp). Điều kiện về tiền do repository kiểm tra. | 53 |
+| `public void markReceived(String imageId)` | SHIPPED sang RECEIVED (hoặc CONFIRMED sang RECEIVED khi gặp trực tiếp), ghi `receivedImageId`. Điều kiện về tiền do repository kiểm tra. | 53 |
 | `public boolean isAutoReleaseDue(Timestamp)` | True khi đang SHIPPED và thời điểm truyền vào đã qua `autoReleaseAt`. | 84 |
 | `public void autoReceive()` | Hệ thống tự chuyển SHIPPED sang RECEIVED khi hết đếm ngược, người đổi ghi là `system`. | 84 |
 | `public boolean isAutoCompleteDue(Timestamp)` | True khi đang RECEIVED và đã qua `receivedAt + AUTO_COMPLETE_DAYS`. | 53 |
@@ -698,6 +711,8 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `public boolean isPendingExpired(Timestamp)` | True khi đang PENDING_CONFIRM và đã quá 3 ngày kể từ `createdAt`. |  |
 | `public DealStatus statusBeforeDispute()` | Trạng thái trước khi khiếu nại: `fromStatus` của dòng lịch sử cuối cùng có `toStatus` là DISPUTED. |  |
 | `public void cancel(String userId, String reason)` | PENDING_CONFIRM hoặc CONFIRMED sang CANCELLED, bắt buộc có lý do. | 55 |
+| `public void dispute()` | Chuyển sang DISPUTED khi một bên mở khiếu nại; nhớ trạng thái trước đó để rút đơn thì quay lại. |  |
+| `public void resolveDispute(DealStatus)` | Rời DISPUTED theo quyết định khiếu nại hoặc khi rút đơn; chỉ nhận trạng thái mà `canMoveTo` cho phép. |  |
 | `public boolean isParticipant(String userId)` | True khi người đó là người mua hoặc người bán. |  |
 | `public boolean needsPayment()` | True khi `agreedPrice` lớn hơn 0. | 56 |
 
@@ -715,7 +730,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 
 **Dùng tới:** [`DealStatus`](enums.md#dealstatus), [`DeliveryMethod`](enums.md#deliverymethod), [`StatusChange`](model.md#statuschange), [`TradeType`](enums.md#tradetype)
 
-**Được dùng bởi:** [`AdminDealViewModel`](viewmodel.md#admindealviewmodel), [`DealEntity`](data-local.md#dealentity), [`DealRepository`](data.md#dealrepository), [`DealViewModel`](viewmodel.md#dealviewmodel)
+**Được dùng bởi:** [`AdminComplaintViewModel`](viewmodel.md#admincomplaintviewmodel), [`AdminDealViewModel`](viewmodel.md#admindealviewmodel), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`DealEntity`](data-local.md#dealentity), [`DealRepository`](data.md#dealrepository), [`DealViewModel`](viewmodel.md#dealviewmodel)
 
 ### StatusChange
 
@@ -773,6 +788,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `payeeId` | `String` | private | Người nhận tiền khi giải ngân (người bán). |
 | `amount` | `long` | private | Số tiền, bằng `Deal.agreedPrice`. |
 | `status` | `PaymentStatus` | private | Trạng thái khoản ký quỹ. |
+| `method` | `PaymentMethod` | private | Phương thức người mua chọn ở màn thanh toán mô phỏng; chỉ để hiện lại trên biên lai. |
 | `heldAt` | `Timestamp` | private | Lúc người mua thanh toán và tiền bắt đầu được giữ. |
 | `releasedAt` | `Timestamp` | private | Lúc giải ngân hoặc hoàn tiền. |
 
@@ -789,9 +805,9 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 - `Payment` kế thừa `BaseDocument`. Trang 3. Trao đổi, giao dịch.
 - Hợp thành: một `Deal` chứa 0..1 `Payment` (vai trò `escrow`); phần con không tồn tại khi không có cha. Trang 3. Trao đổi, giao dịch.
 
-**Dùng tới:** [`PaymentStatus`](enums.md#paymentstatus)
+**Dùng tới:** [`PaymentMethod`](enums.md#paymentmethod), [`PaymentStatus`](enums.md#paymentstatus)
 
-**Được dùng bởi:** [`DealRepository`](data.md#dealrepository), [`DealViewModel`](viewmodel.md#dealviewmodel)
+**Được dùng bởi:** [`AdminDealViewModel`](viewmodel.md#admindealviewmodel), [`DealRepository`](data.md#dealrepository), [`DealViewModel`](viewmodel.md#dealviewmodel)
 
 ### Review
 
@@ -831,7 +847,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 - Liên kết: `Review` [*] và `User` [2] (reviewer, reviewee). Trang 4. Tin cậy, quản trị.
 - Liên kết: `Review` [0..2] và `Deal` [1] (about). Trang 4. Tin cậy, quản trị.
 
-**Được dùng bởi:** [`ReviewRepository`](data.md#reviewrepository), [`TrustViewModel`](viewmodel.md#trustviewmodel)
+**Được dùng bởi:** [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`DealViewModel`](viewmodel.md#dealviewmodel), [`ReviewRepository`](data.md#reviewrepository), [`TrustViewModel`](viewmodel.md#trustviewmodel)
 
 ### Report
 
@@ -856,6 +872,8 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `reason` | `ReportReason` | private | Lý do chọn sẵn. |
 | `description` | `String` | private | Mô tả thêm của người báo cáo. |
 | `status` | `ReportStatus` | private | Trạng thái báo cáo. |
+| `evidenceImageIds` | `List<String>` | private | Mã các ảnh người báo cáo đính kèm, tối đa 3, `ImagePurpose` là EVIDENCE; rỗng khi không đính kèm. |
+| `conversationId` | `String` | private | Mã cuộc trò chuyện chứa tin nhắn bị báo cáo; chỉ có khi `targetType` là MESSAGE. |
 | `handledBy` | `String` | private | Admin đã xử lý. |
 
 **Phương thức**
@@ -874,7 +892,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 
 **Dùng tới:** [`ReportReason`](enums.md#reportreason), [`ReportStatus`](enums.md#reportstatus), [`ReportTarget`](enums.md#reporttarget)
 
-**Được dùng bởi:** [`ReportRepository`](data.md#reportrepository), [`TrustViewModel`](viewmodel.md#trustviewmodel)
+**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`ReportRepository`](data.md#reportrepository), [`TrustViewModel`](viewmodel.md#trustviewmodel)
 
 ### Complaint
 

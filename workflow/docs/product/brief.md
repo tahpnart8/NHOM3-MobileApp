@@ -25,7 +25,7 @@ Các yêu cầu này được ghi ở mục "Yêu cầu môn học" của [featu
 
 ## Phạm vi
 
-- **Làm trong giai đoạn này:** 87 chức năng "Đợt này" của bảng đặc tả chức năng, gom thành 14 tính năng trong [features.md](features.md).
+- **Làm trong giai đoạn này:** 91 chức năng "Đợt này" của bảng đặc tả chức năng, gom thành 14 tính năng trong [features.md](features.md).
 - **Phát triển sau, không code:** 15 chức năng (STT 45, 83, 85, 86, 92 đến 102): gửi video trong chat, cảnh báo giao dịch bất thường, admin đổi trạng thái thủ công, duyệt tin trước khi hiện, bảng thống kê, cấu hình tham số, nội dung tĩnh, thông báo hệ thống, nhật ký và phân quyền admin.
 - **Ngoài phạm vi:** thanh toán thật (ký quỹ chỉ mô phỏng), vận chuyển thật (người bán tự nhập đơn vị và mã vận đơn), phát hành lên Google Play.
 - **Hạ tầng:** Firebase gói Spark miễn phí, không dùng Cloud Storage. Ảnh được nén và lưu dạng Base64 trong Firestore; không gửi video.

@@ -149,11 +149,11 @@ sequenceDiagram
     CVM->>CR: sendOffer(offer, cb)
     CR->>CR: Listing.acceptsOffer(offer)
     CR->>FS: ghi offers/id PENDING và tin nhắn OFFER
-    CR->>NR: create(NEW_OFFER cho người bán)
+    CR->>NR: create(notification, batch, cb) cho người bán
     S->>CVM: respondToOffer(offerId, true)
     CVM->>CR: respondToOffer(offerId, true, cb)
     CR->>FS: truy vấn offer PENDING khác của tin
-    CR->>DR: buildFromOffer(offer)
+    CR->>DR: buildFromOffer(offer, listing)
     DR-->>CR: Deal PENDING_CONFIRM đã dựng
     CR->>FS: lô ghi: offer ACCEPTED, offer khác REJECTED, deals/id, listing RESERVED kèm reservedDealId, thông báo OFFER_RESULT
     CR-->>CVM: onSuccess(dealId)
@@ -161,7 +161,7 @@ sequenceDiagram
 ```
 
 1. Offer chỉ gửi được khi tin AVAILABLE, loại offer nằm trong `acceptedOfferTypes`, số tiền không dưới `minOfferPrice` (mức này chỉ áp dụng cho offer có tiền). Security Rules từ chối offer nếu tin không còn AVAILABLE.
-2. Việc chấp nhận (offer, các offer khác, giao dịch, tin, thông báo) gom trong **một lô ghi** của Firestore để không bị nửa chừng. `DealRepository.buildFromOffer(offer)` dựng `Deal` (không ghi) (ITEM thành EXCHANGE, MONEY và MONEY_AND_ITEM thành SELL, giá bằng `offer.amount`, `sellerConfirmed` true, chụp tiêu đề và ảnh bìa) rồi `ChatRepository` đưa vào lô, cùng `Listing.reservedDealId`.
+2. Việc chấp nhận (offer, các offer khác, giao dịch, tin, thông báo) gom trong **một lô ghi** của Firestore để không bị nửa chừng. `DealRepository.buildFromOffer(offer, listing)` dựng `Deal` (không ghi) (ITEM thành EXCHANGE, MONEY và MONEY_AND_ITEM thành SELL, giá bằng `offer.amount`, `sellerConfirmed` true, chụp tiêu đề và ảnh bìa) rồi `ChatRepository` đưa vào lô, cùng `Listing.reservedDealId`.
 3. Tin không còn AVAILABLE lúc chấp nhận thì offer bị từ chối và người bán nhận lỗi rõ ràng.
 4. Sửa điều khoản xóa cả hai cờ xác nhận; giao dịch chỉ sang CONFIRMED khi bên thứ hai xác nhận sau lần sửa cuối, và đã chọn phương thức giao nhận. Giao dịch chưa đủ hai xác nhận sau 3 ngày bị hủy tự động (luồng 5).
 5. Mỗi cuộc trò chuyện chỉ nghe 50 tin nhắn gần nhất; `ChatRepository.observeMessages` trả `ListenerRegistration` để `ChatViewModel` gỡ ở `onCleared`; tin cũ hơn tải bằng `loadOlder`.
@@ -179,8 +179,8 @@ sequenceDiagram
     participant MR as MediaRepository
     participant W as AutoReleaseWorker
     participant FS as Firestore
-    B->>DVM: pay()
-    DVM->>DR: pay(dealId, cb)
+    B->>DVM: pay(method)
+    DVM->>DR: pay(dealId, method, cb)
     DR->>FS: tạo payments/dealId HELD, thông báo PAYMENT_UPDATE
     S->>DVM: markShipped(carrier, trackingCode, photoUri)
     DVM->>MR: saveImage(photoUri, WAYBILL, cb)
@@ -188,8 +188,8 @@ sequenceDiagram
     DVM->>DR: markShipped(dealId, carrier, trackingCode, imageId, cb)
     DR->>FS: deal SHIPPED, shippedAt giờ máy chủ, autoReleaseAt = shippedAt + 7 ngày
     alt người mua bấm Đã nhận
-        B->>DVM: markReceived()
-        DVM->>DR: markReceived(dealId, cb)
+        B->>DVM: markReceived(photoUri)
+        DVM->>DR: markReceived(dealId, imageId, cb)
     else hết đếm ngược
         W->>DR: releaseDueDeals(cb)
     end
@@ -262,7 +262,7 @@ Hệ quả từng quyết định: REFUND, RETURN_ITEM, CANCEL_DEAL làm giao d�
 ## 7. Cảnh báo theo bậc (STT 70 đến 72, 77)
 
 1. Admin chọn tài khoản, nhập lý do, và với bậc 2 chọn hạn khóa tạm, bấm Cảnh báo: `AdminUserViewModel.warn(userId, reason, until)` gọi `AdminRepository.warnUser(id, warning, until)`.
-2. Repository, trong một lô ghi, tăng `User.warningCount`, ghi `users/{uid}/warnings/{id}` với `level` mới, áp `Warning.resultingStatus()`: bậc 1 giữ ACTIVE, bậc 2 TEMP_LOCKED kèm hạn `until`, bậc 3 trở lên PERM_LOCKED; ghi `lockReason`; ghi thông báo WARNING cho người bị cảnh báo.
+2. Repository, trong một lô ghi, tăng `User.warningCount`, ghi `users/{uid}/warnings/{id}` với `level` mới, áp `Warning.resultingStatus()`: bậc 1 giữ ACTIVE, bậc 2 TEMP_LOCKED kèm hạn `until`, bậc 3 trở lên PERM_LOCKED; ghi `lockReason`; ghi thông báo WARNING cho người bị cảnh báo. Hệ thống **không** tự gỡ tin của tài khoản bị khóa: admin bấm "Gỡ toàn bộ tin" ở màn E03 khi thấy cần (quyết định 2026-10-22).
 3. Bậc 3 trở lên thì ViewModel gọi tiếp `AdminRepository.removeAllListingsOf` để gỡ mọi tin của tài khoản.
 4. Lần đăng nhập kế tiếp của họ bị chặn nếu đang khóa; nếu họ đang dùng ứng dụng, lần ghi kế tiếp bị Rules từ chối vì tài khoản không còn ACTIVE.
 

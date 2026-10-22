@@ -3,6 +3,13 @@ description: Build, thư viện, công cụ, tài liệu hoặc dọn dẹp repo
 title: ""
 labels: ["type:chore"]
 body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Bối cảnh
+      description: Năm dòng cho người mới vào việc, kể cả trợ lý AI. Ứng dụng là gì, việc này nằm ở đâu trong dự án, đọc tệp nào trước, ai sở hữu phần này.
+    validations:
+      required: true
   - type: input
     id: plan_item
     attributes:
@@ -35,6 +42,13 @@ body:
     validations:
       required: true
   - type: textarea
+    id: steps
+    attributes:
+      label: Các bước đề nghị
+      description: Danh sách đánh số, mỗi bước một việc, kèm tên tệp và tên lệnh chính xác.
+    validations:
+      required: true
+  - type: textarea
     id: forbidden
     attributes:
       label: Cấm đụng
@@ -44,3 +58,10 @@ body:
     attributes:
       label: Phụ thuộc
       description: Issue hoặc mã kế hoạch phải xong trước.
+  - type: textarea
+    id: self_check
+    attributes:
+      label: Tự kiểm trước khi mở Pull Request
+      description: Danh sách đánh dấu, mỗi dòng một lệnh kèm kết quả mong đợi. Người làm dán kết quả thật vào Pull Request (luật R1).
+    validations:
+      required: true

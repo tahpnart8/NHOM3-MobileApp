@@ -6,7 +6,7 @@
 
 **Ảnh:** ![D01 Hồ sơ cá nhân](d01-ho-so-ca-nhan.png)
 
-**Lớp:** `MyProfileFragment` trong `MainActivity`, tab Cá nhân. Hiện thanh điều hướng dưới.
+**Lớp:** `MyProfileFragment` trong `MainActivity`, tab Cá nhân. Hiện thanh điều hướng dưới. Nút "Đăng ký xác thực" ở các màn khác (C02, C03) dẫn về đây bằng hành động toàn cục `action_global_my_profile`.
 
 **Mục đích:** Trang cá nhân của chính người đang đăng nhập, là lối vào mọi mục quản lý liên quan tới bản thân: hàng đã bán, tin đã lưu, lịch sử giao dịch, uy tín, báo cáo và khiếu nại, cài đặt, và khu vực quản trị nếu là admin.
 
@@ -15,6 +15,8 @@
 - Hàng ba số liệu: số món đã bán, điểm đánh giá trung bình, số người theo dõi
 - Danh sách lối vào, mỗi dòng có biểu tượng và mũi tên sang phải: Sản phẩm của tôi, Tin đã lưu, Lịch sử giao dịch, Hồ sơ uy tín, Báo cáo và khiếu nại của tôi, Cài đặt tài khoản
 - Nút "Khu vực quản trị" (chưa có ảnh), chỉ hiện khi tài khoản là admin
+- Khối xác thực tài khoản (chưa có ảnh), hiện khi tài khoản chưa được admin duyệt: có nút gửi yêu cầu xác thực. Đây là cửa mở quyền mua bán, vì chưa được duyệt thì không đăng tin, không gửi đề nghị, không tạo giao dịch được
+- Biểu mẫu gửi yêu cầu xác thực tài khoản (chưa có ảnh), mở từ khối xác thực ngay trên D01: ô nhập số CCCD, ô tải ảnh giấy tờ, ô tải ảnh chân dung cầm giấy tờ (chỉ nhận ảnh; ảnh được nén trên thiết bị và lưu dạng Base64 trong Firestore), nút "Gửi yêu cầu"
 - Mục "Đăng xuất" màu đỏ, tách riêng ở cuối danh sách
 - Thanh điều hướng dưới cùng 5 tab; tab "Cá nhân" đang được chọn
 
@@ -27,21 +29,26 @@
 - Bấm "Cài đặt tài khoản" hoặc nút cài đặt ở góc phải: sang A04 Quản lý thông tin cá nhân
 - Bấm ảnh đại diện hoặc tên: sang D02 Trang cá nhân của chính mình
 - Bấm "Khu vực quản trị": mở `AdminActivity`, màn E01
-- Bấm "Đăng xuất": hỏi xác nhận, đồng ý thì về A01 Đăng nhập
+- Bấm "Đăng xuất": hỏi xác nhận, đồng ý thì về B01 Trang chủ ở chế độ khách (không về A01 Đăng nhập)
 - Bấm các tab ở thanh dưới: sang B01, B02, B04, C01
-- Bấm dải nhắc xác minh: hộp thoại xác nhận gửi yêu cầu xác minh người bán
+- Bấm nút gửi yêu cầu ở khối xác thực tài khoản: mở biểu mẫu gửi yêu cầu xác thực
+- Trong biểu mẫu, nhập số CCCD, chọn ảnh giấy tờ và ảnh chân dung cầm giấy tờ, bấm "Gửi yêu cầu": thiếu một trong ba thứ thì báo lỗi và giữ nguyên biểu mẫu; đủ thì gửi, khối xác thực chuyển sang "Đang chờ duyệt"
 
-**Chức năng liên quan:** STT 4, 5, 6 (qua A04, A05, A06), STT 7 (xem đánh giá cá nhân), STT 8 (số liệu hồ sơ), STT 13, 14 (kệ hàng, qua B05), STT 41 (qua B06), STT 57 (lịch sử giao dịch), STT 63, 65 (lịch sử báo cáo, theo dõi khiếu nại, qua D07), STT 73 (gửi yêu cầu xác minh người bán, phía người dùng).
+**Chức năng liên quan:** STT 4, 5, 6 (qua A04, A05, A06), STT 7 (xem đánh giá cá nhân), STT 8 (số liệu hồ sơ), STT 13, 14 (kệ hàng, qua B05), STT 41 (qua B06), STT 57 (lịch sử giao dịch), STT 63, 65 (lịch sử báo cáo, theo dõi khiếu nại, qua D07), STT 73 (gửi yêu cầu xác thực tài khoản, phía người dùng).
 
 **Trạng thái đặc biệt:**
 - Người dùng chưa bán món nào: số liệu hiện 0, mục "Sản phẩm của tôi" gợi ý đăng tin đầu tiên
 - Chưa có đánh giá nào: ô điểm đánh giá hiện dấu gạch thay cho số
-- Tài khoản chưa xác minh người bán: hiện thêm một dải nhắc gửi yêu cầu xác minh (cần đã xác thực email). Đang chờ duyệt: dải ghi "Đang chờ duyệt". Bị từ chối: hiện lý do admin ghi và cho gửi lại. Đã duyệt: có huy hiệu đã xác minh. Xác minh không bắt buộc để đăng tin
+- Tài khoản chưa được admin duyệt xác thực: chưa mua bán được, không đăng tin, không gửi đề nghị, không tạo giao dịch (vẫn xem, tìm kiếm, nhắn tin và theo dõi bình thường). Khối xác thực nói rõ điều này và có nút gửi yêu cầu xác thực (cần đã xác thực email). Đang chờ duyệt: khối ghi "Đang chờ duyệt", vẫn chưa mua bán được. Bị từ chối: hiện lý do admin ghi và cho sửa rồi gửi lại, tối đa 3 lần gửi lại; hết 3 lần thì nút gửi lại bị khóa và khối báo cần liên hệ admin; vẫn chưa mua bán được. Đã duyệt: khối đổi thành huy hiệu "Tài khoản đã xác thực" và mở quyền đăng tin, gửi đề nghị, tạo giao dịch. Xác thực tài khoản là điều kiện bắt buộc để mua bán, không còn là huy hiệu tùy chọn
+- Khách chưa đăng nhập: không vào được màn này, bấm tab "Cá nhân" thì được đưa tới A01 Đăng nhập (`action_global_sign_in`)
 - Mất mạng: vẫn hiện thông tin đã tải trước đó từ bộ nhớ đệm, kèm dải báo đang xem ngoại tuyến
 
 **Khác với ảnh:**
 - Ảnh vẽ "Báo cáo & khiếu nại của tôi" dẫn tới D05; đúng là dẫn tới D07 (D05 chỉ mở từ C03).
 - Ảnh không vẽ nút "Khu vực quản trị" cho admin.
+- Ảnh không vẽ khối xác thực tài khoản; vẫn phải làm vì xác thực là điều kiện để mua bán.
+- Ảnh mockup chưa vẽ biểu mẫu gửi yêu cầu xác thực (số CCCD, ảnh giấy tờ, ảnh chân dung cầm giấy tờ, nút gửi); vẫn phải làm, không chỉ là hộp thoại xác nhận.
+- Ảnh không nói đích của "Đăng xuất"; đích là B01 Trang chủ ở chế độ khách, không phải A01.
 - Ảnh vẽ nút cài đặt không rõ đích; đích là A04.
 - Ảnh vẽ "Hồ sơ uy tín" dẫn tới D03; D03 ở chế độ chỉ xem của chính mình, không có nút Theo dõi.
 
@@ -49,14 +56,14 @@
 
 **Ảnh:** ![D02 Trang cá nhân](d02-trang-ca-nhan.png)
 
-**Lớp:** `UserProfileFragment` trong `MainActivity`, nhận `userId`. Màn hình chi tiết: có nút quay lại, ẩn thanh dưới. Mở từ D01 (trang của chính mình), từ B03 (thẻ người bán), từ C02, C03.
+**Lớp:** `UserProfileFragment` trong `MainActivity`, nhận `userId`. Màn hình chi tiết: có nút quay lại, ẩn thanh dưới. Mở từ D01 (trang của chính mình), từ B03 (thẻ người bán), từ C02, C03. Khách chưa đăng nhập không xem được trang của người khác: mọi cách mở màn này đều đưa Khách tới A01 Đăng nhập (`action_global_sign_in`).
 
 **Mục đích:** Trang công khai của một người dùng, cho thấy thông tin giới thiệu, số liệu uy tín và các món đang bán, đã bán, đánh giá. Xem trang của chính mình thì thấy người khác nhìn hồ sơ của mình ra sao.
 
 **Thành phần chính:**
 - Thanh trên: nút quay lại, tiêu đề "Trang cá nhân", nút cài đặt ở góc phải (chỉ trang của chính mình)
 - Ảnh bìa màu xanh, ảnh đại diện chữ cái đầu đè lên mép ảnh bìa, nút "Chỉnh sửa trang" bên phải (chỉ trang của chính mình). Trang người khác có nút "Theo dõi" thay vào đó, và nút ba chấm có "Báo cáo người dùng" (sang D04)
-- Tên người dùng kèm biểu tượng khiên (khi đã xác minh), dòng khu vực và ngày tham gia (ví dụ Quận 1, TP.HCM, tham gia 03/2025), đoạn giới thiệu ngắn
+- Tên người dùng kèm biểu tượng khiên (khi tài khoản đã xác thực, nhãn "Tài khoản đã xác thực"), dòng khu vực và ngày tham gia (ví dụ Quận 1, TP.HCM, tham gia 03/2025), đoạn giới thiệu ngắn
 - Hàng bốn số liệu: điểm đánh giá kèm năm sao và số lượt đánh giá, số món đã bán, tỉ lệ hoàn tất, số người theo dõi
 - Ba tab: "Đang bán (6)", "Đã bán (27)", "Đánh giá"; tab "Đang bán" đang được chọn
 - Tab "Đánh giá" có hai danh sách: "Đã nhận" (ai đã đánh giá người này) và "Đã gửi" (người này đã đánh giá ai; chỉ hiện ở trang của chính mình) (chưa có ảnh)
@@ -88,13 +95,13 @@
 
 **Ảnh:** ![D03 Hồ sơ uy tín người bán](d03-ho-so-uy-tin-nguoi-ban.png)
 
-**Lớp:** `SellerTrustFragment` trong `MainActivity`, nhận `userId`. Màn hình chi tiết: có nút quay lại, ẩn thanh dưới. Mở từ liên kết "Xem đánh giá" trên B03, từ D01 (chế độ chỉ xem của chính mình), từ D02 và từ thông báo đánh giá mới.
+**Lớp:** `SellerTrustFragment` trong `MainActivity`, nhận `userId`. Màn hình chi tiết: có nút quay lại, ẩn thanh dưới. Mở từ liên kết "Xem đánh giá" trên B03, từ D01 (chế độ chỉ xem của chính mình), từ D02 và từ thông báo đánh giá mới. Khách chưa đăng nhập không xem được màn này: bấm "Xem đánh giá" ở B03 thì được đưa tới A01 Đăng nhập (`action_global_sign_in`).
 
 **Mục đích:** Trang người mua xem khi muốn biết một người bán có đáng tin không: số liệu uy tín, đánh giá gần đây của người đã giao dịch, và các món người đó đang bán.
 
 **Thành phần chính:**
 - Thanh trên: nút quay lại, tiêu đề "Hồ sơ người bán", nút ba chấm ở góc phải (có "Báo cáo người dùng", sang D04; ẩn với chính mình)
-- Ảnh đại diện chữ cái đầu, tên người bán kèm biểu tượng khiên (khi đã xác minh), dòng khu vực và năm tham gia (ví dụ Quận 1, TP.HCM, tham gia 2024)
+- Ảnh đại diện chữ cái đầu, tên người bán kèm biểu tượng khiên (khi tài khoản đã xác thực, nhãn "Tài khoản đã xác thực"), dòng khu vực và năm tham gia (ví dụ Quận 1, TP.HCM, tham gia 2024)
 - Nút "Theo dõi" (viền); ẩn khi xem hồ sơ của chính mình
 - Hàng ba số liệu: điểm đánh giá kèm năm sao và số lượt đánh giá, tỷ lệ hoàn tất, số giao dịch
 - Mục "Đánh giá gần đây": mỗi dòng có ảnh đại diện chữ cái đầu, tên người đánh giá, số sao và lời nhận xét
@@ -122,7 +129,7 @@
 
 **Ảnh:** ![D04 Báo cáo tin đăng](d04-bao-cao-tin-dang.png) (chỉ vẽ trường hợp báo cáo tin đăng)
 
-**Lớp:** `ReportFragment` trong `MainActivity`, nhận `targetType` (tin đăng, người dùng, tin nhắn) và `targetId`. Màn hình chi tiết: có nút quay lại, ẩn thanh dưới. Mở từ menu ba chấm của B03 ("Báo cáo tin"), từ C02 (báo cáo người dùng hoặc tin nhắn), từ D02 và D03 (báo cáo người dùng).
+**Lớp:** `ReportFragment` trong `MainActivity`, nhận `targetType` (tin đăng, người dùng, tin nhắn), `targetId` và `conversationId` (chỉ khi `targetType` là MESSAGE: mã cuộc trò chuyện chứa tin nhắn bị báo cáo, C02 truyền sang). Màn hình chi tiết: có nút quay lại, ẩn thanh dưới. Mở bằng hành động toàn cục `action_global_report` từ menu ba chấm của B03 ("Báo cáo tin"), từ C02 (báo cáo người dùng hoặc tin nhắn), từ D02 và D03 (báo cáo người dùng).
 
 **Mục đích:** Cho người dùng báo cáo một tin đăng, người dùng hoặc tin nhắn có dấu hiệu vi phạm, chọn lý do và mô tả thêm để Admin xử lý.
 
@@ -131,21 +138,26 @@
 - Thẻ đối tượng bị báo cáo: với tin đăng là ảnh, tên món và tên người bán; với người dùng là ảnh đại diện và tên; với tin nhắn là nội dung tin nhắn
 - Câu hỏi "Vì sao bạn báo cáo?" với năm lựa chọn chọn một, mỗi lựa chọn có dòng giải thích: Nghi ngờ hàng giả, Thông tin sai lệch, Dấu hiệu lừa đảo, Nội dung không phù hợp, Khác
 - Ô "Mô tả thêm (không bắt buộc)"
+- Ô đính kèm ảnh bằng chứng (không bắt buộc, tối đa 3 ảnh): ô có biểu tượng máy ảnh để thêm ảnh, chỉ nhận ảnh, không video; ảnh được nén trên thiết bị rồi lưu dạng Base64 trong Firestore (`ImagePurpose` là EVIDENCE)
 - Nút "Gửi báo cáo" màu đỏ ở cuối
 
 **Hành động và điều hướng:**
 - Bấm nút quay lại: về màn trước đó, không gửi báo cáo
 - Bấm một lý do: chọn lý do đó, bỏ chọn lý do trước
-- Bấm "Gửi báo cáo": gửi báo cáo kèm lý do và mô tả tới Admin, quay về màn trước kèm thông báo đã gửi. Theo dõi, hủy hoặc xuất báo cáo ở D07
+- Bấm ô máy ảnh: thêm ảnh bằng chứng (không bắt buộc, tối đa 3 ảnh)
+- Bấm "Gửi báo cáo": gửi báo cáo kèm lý do, mô tả, ảnh (nếu có) và, với báo cáo tin nhắn, mã cuộc trò chuyện tới Admin, quay về màn trước kèm thông báo đã gửi. Theo dõi, hủy hoặc xuất báo cáo ở D07
 
 **Chức năng liên quan:** STT 61 (tạo báo cáo).
 
 **Trạng thái đặc biệt:**
 - Chưa chọn lý do nào: nút "Gửi báo cáo" chưa bấm được
-- Mất mạng: báo gửi không thành công, giữ nguyên lý do và mô tả đã nhập
+- Đã thêm đủ 3 ảnh: ô máy ảnh bị khóa, muốn thêm ảnh khác thì xóa bớt một ảnh
+- Mất mạng: báo gửi không thành công, giữ nguyên lý do, mô tả và ảnh đã chọn
+- Khách chưa đăng nhập: không vào được màn này, bấm "Báo cáo" ở B03 thì được đưa tới A01 Đăng nhập (`action_global_sign_in`)
 
 **Khác với ảnh:**
 - Ảnh chỉ vẽ báo cáo tin đăng. Báo cáo người dùng và tin nhắn dùng cùng biểu mẫu, chỉ đổi thẻ đối tượng; vẫn phải làm.
+- Ảnh mockup chưa vẽ ô đính kèm ảnh bằng chứng (không bắt buộc, tối đa 3 ảnh); vẫn phải làm, theo bước 1 của UC33.
 
 ## D05. Tạo khiếu nại
 
@@ -153,22 +165,22 @@
 
 **Lớp:** `CreateComplaintFragment` trong `MainActivity`, nhận `dealId`. Màn hình chi tiết: có nút quay lại, ẩn thanh dưới. Chỉ mở từ nút "Khiếu nại giao dịch" trên C03.
 
-**Mục đích:** Cho người dùng gửi khiếu nại về một giao dịch có vấn đề, kèm lý do, mô tả chi tiết và ảnh bằng chứng để Admin xử lý. Chỉ khiếu nại được khi giao dịch đang giao, hoặc đã xác nhận với giao dịch gặp trực tiếp; mỗi giao dịch có một khiếu nại.
+**Mục đích:** Cho người dùng gửi khiếu nại về một giao dịch có vấn đề, kèm lý do, mô tả chi tiết và ảnh bằng chứng để Admin xử lý. Chỉ khiếu nại được khi giao dịch "Đã giao" (đang đếm ngược), hoặc "Đã xác nhận" với giao dịch gặp trực tiếp; mỗi giao dịch có một khiếu nại.
 
 **Thành phần chính:**
 - Thanh trên: nút quay lại, tiêu đề "Khiếu nại giao dịch"
 - Thẻ giao dịch bị khiếu nại: ảnh, tên món, mã giao dịch và số tiền (ví dụ Giao dịch #DL2049, 6.800.000đ)
 - Mục "Lý do khiếu nại" với bốn lựa chọn chọn một, mỗi lựa chọn có dòng giải thích: Hàng không đúng mô tả, Không nhận được hàng, Hàng bị hư hỏng, Khác
 - Ô "Mô tả chi tiết"
-- Mục "Ảnh bằng chứng (tối thiểu 1 ảnh, tối đa 5)": ô ảnh đã thêm và ô có biểu tượng máy ảnh để thêm ảnh (ảnh được nén trước khi lưu)
-- Dải cảnh báo: giao dịch sẽ tạm đóng băng và dừng đếm ngược tự giải ngân trong lúc chờ Admin xử lý khiếu nại
+- Mục "Ảnh bằng chứng (tối thiểu 1 ảnh, tối đa 5)": ô ảnh đã thêm và ô có biểu tượng máy ảnh để thêm ảnh (chỉ nhận ảnh, không video; ảnh được nén trên thiết bị rồi lưu dạng Base64 trong Firestore, không dùng Cloud Storage)
+- Dải cảnh báo: giao dịch sẽ chuyển sang "Tranh chấp" (tạm đóng băng) và dừng đếm ngược tự giải ngân trong lúc chờ Admin xử lý khiếu nại
 - Nút "Gửi khiếu nại" màu đỏ ở cuối
 
 **Hành động và điều hướng:**
 - Bấm nút quay lại: về màn trước đó, không gửi khiếu nại
 - Bấm một lý do: chọn lý do đó, bỏ chọn lý do trước
 - Bấm ô máy ảnh: thêm ảnh bằng chứng
-- Bấm "Gửi khiếu nại": gửi khiếu nại tới Admin, giao dịch chuyển sang tạm đóng băng, quay về C03 (nay hiện "Đang khiếu nại"). Theo dõi khiếu nại ở D07
+- Bấm "Gửi khiếu nại": gửi khiếu nại tới Admin, giao dịch chuyển sang "Tranh chấp" (tạm đóng băng), quay về C03. Theo dõi khiếu nại ở D07
 
 **Chức năng liên quan:** STT 64 (tạo đơn khiếu nại, gồm thông tin và bằng chứng).
 
@@ -212,11 +224,11 @@
 - Chọn mức ưu tiên: lưu ngay
 - Bấm ô "Lịch sử chat liên quan": xem các tin nhắn giữa hai bên (chỉ đọc)
 - Bấm một trong bốn nút quyết định: hộp thoại xác nhận, đồng ý thì áp dụng:
-  - Hoàn tiền, Hoàn trả SP, Hủy giao dịch: giao dịch sang đã hủy, tiền ký quỹ hoàn cho người mua, tin về đang bán
-  - Bác khiếu nại: giao dịch sang đã nhận, tiền giải ngân cho người bán
+  - Hoàn tiền, Hoàn trả SP, Hủy giao dịch: giao dịch sang "Đã hủy", khoản thanh toán "Đang giữ" chuyển sang "Đã hoàn cho người mua", tin về "Đang bán"
+  - Bác khiếu nại: giao dịch sang "Đã nhận", khoản thanh toán chuyển sang "Đã giải ngân cho người bán"
 - Bấm "Yêu cầu bổ sung bằng chứng": khiếu nại sang chờ bổ sung; người khiếu nại bổ sung ở D07
 - Nhập "Ghi chú nội bộ": lưu ghi chú chỉ Admin thấy
-- Sau khi quyết định, hệ thống tự gửi thông báo kết quả cho hai bên; không có nút gửi riêng
+- Sau khi quyết định, hệ thống tự thực thi việc chuyển trạng thái giao dịch và khoản thanh toán (admin không can thiệp trực tiếp vào tiền) và tự gửi thông báo kết quả cho hai bên; không có nút gửi riêng
 
 **Chức năng liên quan:** STT 87 (danh sách khiếu nại, mức ưu tiên), 88 (xem chi tiết hồ sơ khiếu nại: lịch sử chat, ảnh bằng chứng, thông tin giao dịch), 89 (ra quyết định xử lý), 90 (ghi chú nội bộ), 91 (gửi thông báo kết quả).
 
@@ -241,8 +253,8 @@
 **Thành phần chính:**
 - Thanh trên: nút quay lại, tiêu đề "Báo cáo và khiếu nại của tôi"
 - Hai tab: "Báo cáo của tôi" và "Khiếu nại của tôi"
-- Tab "Báo cáo của tôi": danh sách báo cáo đã gửi, mỗi dòng có đối tượng (tin, người dùng, tin nhắn), lý do, ngày gửi, trạng thái (Chờ xử lý, Đã xử lý, Không vi phạm, Đã hủy); nút "Hủy báo cáo" ở báo cáo còn chờ xử lý; nút "Xuất danh sách" (tệp CSV, mở hộp chia sẻ)
-- Tab "Khiếu nại của tôi": danh sách khiếu nại, mỗi dòng có mã giao dịch, tên món, lý do, ngày gửi, trạng thái (Chờ xử lý, Chờ bổ sung bằng chứng, Đã có quyết định, Đã rút). Khi đã có quyết định: hiện quyết định và lời giải thích của admin. Khi chờ bổ sung bằng chứng: hiện yêu cầu của admin và nút "Bổ sung bằng chứng". Nút "Rút khiếu nại" ở khiếu nại còn chờ xử lý hoặc chờ bổ sung
+- Tab "Báo cáo của tôi": danh sách báo cáo đã gửi, mỗi dòng có đối tượng (tin, người dùng, tin nhắn), lý do, ngày gửi, trạng thái (Chờ xử lý, Đã xử lý có vi phạm, Đã xem không vi phạm, Người báo cáo đã hủy); nút "Hủy báo cáo" ở báo cáo còn chờ xử lý; nút "Xuất danh sách" (tệp CSV, mở hộp chia sẻ)
+- Tab "Khiếu nại của tôi": danh sách khiếu nại, mỗi dòng có mã giao dịch, tên món, lý do, ngày gửi, trạng thái (Chờ xử lý, Chờ bổ sung bằng chứng, Đã có quyết định, Người khiếu nại đã rút). Khi đã có quyết định: hiện quyết định và lời giải thích của admin. Khi chờ bổ sung bằng chứng: hiện yêu cầu của admin và nút "Bổ sung bằng chứng". Nút "Rút khiếu nại" ở khiếu nại còn chờ xử lý hoặc chờ bổ sung
 
 **Hành động và điều hướng:**
 - Bấm nút quay lại: về D01 (hoặc màn đã gọi)

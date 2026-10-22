@@ -18,8 +18,8 @@
 | Hàm, biến | `camelCase` | `loadListings()` |
 | Hằng | `UPPER_SNAKE_CASE` | `MAX_PHOTOS` |
 | Layout | Màn hình là Fragment: `fragment_<tiền-tố><màn>.xml`; mục trong danh sách: `item_<tiền-tố><mục>.xml`. Chỉ ba Activity có `activity_auth.xml`, `activity_main.xml`, `activity_admin.xml` | `fragment_listing_detail.xml`, `item_listing_card.xml` |
-| Id view | `<viết-tắt>_<tên>` chữ thường có gạch dưới | `btn_sign_in`, `tv_price`, `rv_listings` |
-| Chuỗi | `<tiền-tố><tên>` trong `strings_<module>.xml` | `account_sign_in` trong `strings_account.xml` |
+| Id view | `<loại><Việc>` kiểu lowerCamelCase, trùng luôn tên trường ViewBinding sinh ra | `buttonSignIn`, `textPrice`, `recyclerListings` |
+| Chuỗi | `<module>_<màn>_<việc>` trong `strings_<module>.xml` | `listing_detail_price_label` trong `strings_listing.xml` |
 
 Định danh và chú thích trong code viết tiếng Anh, chú thích ngắn (xem "Phong cách viết code" bên dưới).
 

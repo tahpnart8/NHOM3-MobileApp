@@ -34,7 +34,7 @@
 - Tài khoản đang bị khóa (khóa tạm hoặc vĩnh viễn): sau khi đăng nhập, hiện thông báo nêu rõ lý do và thời hạn khóa rồi đăng xuất. Khóa tạm đã hết hạn thì cho vào bình thường
 - Tài khoản đã xóa (DELETED): không vào được
 - Đang gửi yêu cầu: nút "Đăng nhập" chuyển sang trạng thái chờ, không bấm lại được
-- Chưa xác thực email: nhắc người dùng mở hộp thư để xác thực trước khi vào
+- Chưa xác thực email (đã nhập email và mật khẩu ở A02 nhưng chưa bấm liên kết trong thư): không cho vào ứng dụng, chuyển sang màn hình chờ xác thực của A02, có nút "Gửi lại liên kết". Tài khoản Google không gặp trạng thái này vì email đã được Google xác thực
 
 **Khác với ảnh:**
 - Ảnh vẽ ô "Email hoặc số điện thoại". Đúng là chỉ "Email" (STT 2: không đăng nhập bằng số điện thoại).
@@ -45,7 +45,7 @@
 
 **Lớp:** `RegisterFragment` trong `AuthActivity`. Không có thanh điều hướng dưới. Cũng là màn hình "hoàn tất hồ sơ" sau lần đăng nhập Google đầu tiên.
 
-**Mục đích:** Cho phép người dùng chưa có tài khoản tạo tài khoản mới bằng email, khai báo hồ sơ và đồng ý điều khoản. Chia làm hai bước trên cùng một lớp (bước 1 như ảnh, bước 2 chưa có ảnh).
+**Mục đích:** Cho phép người dùng chưa có tài khoản tạo tài khoản mới bằng email, khai báo hồ sơ và đồng ý điều khoản. Không dùng mã OTP: email được xác thực bằng liên kết do hệ thống gửi, và phải xác thực xong mới được điền hồ sơ. Thứ tự: bước 1 (email và mật khẩu), màn hình chờ xác thực, rồi bước 2 (hồ sơ). Tất cả trên cùng một lớp (bước 1 như ảnh, màn hình chờ xác thực và bước 2 chưa có ảnh).
 
 **Thành phần chính, bước 1 (tài khoản, như ảnh):**
 - Tiêu đề "Đăng ký" và một dòng hướng dẫn ngắn
@@ -58,7 +58,13 @@
 - Nút "Đăng nhập bằng Google" có biểu tượng Google
 - Dòng cuối trang: "Đã có tài khoản? Đăng nhập"
 
-**Thành phần chính, bước 2 (hồ sơ, chưa có ảnh):**
+**Thành phần chính, màn hình chờ xác thực (giữa bước 1 và bước 2, chưa có ảnh):**
+- Tiêu đề "Kiểm tra hộp thư" và dòng giải thích đã gửi một liên kết xác thực tới email vừa nhập, nhắc mở thư và bấm liên kết
+- Email đã nhập, hiện để người dùng kiểm tra lại
+- Nút "Gửi lại liên kết"
+- Nút quay lại về bước 1 để sửa email
+
+**Thành phần chính, bước 2 (hồ sơ, chỉ mở sau khi email đã được xác thực, chưa có ảnh):**
 - Ô nhập "Số điện thoại" (liên hệ, không dùng để đăng nhập)
 - Chọn "Tỉnh hoặc thành phố" và "Quận hoặc huyện"
 - Khối "Thông tin định danh": số CCCD 12 chữ số, ngày sinh, giới tính (Nam, Nữ, Khác), địa chỉ thường trú. Ghi chú: thông tin này được cất riêng tư, chỉ bạn và admin xem được
@@ -69,8 +75,11 @@
 **Chế độ hoàn tất hồ sơ (sau lần đăng nhập Google đầu tiên):** bỏ bước 1 vì email và tên đã lấy từ Google (tên điền sẵn, sửa được); vào thẳng bước 2. Hoàn tất thì sang B01.
 
 **Hành động và điều hướng:**
-- Bấm "Tiếp tục" khi bước 1 hợp lệ: sang bước 2
-- Bấm "Hoàn tất đăng ký" khi bước 2 hợp lệ: tạo tài khoản, hiển thị thông báo yêu cầu xác thực email, sau đó sang A01 Đăng nhập
+- Bấm "Tiếp tục" khi bước 1 hợp lệ: hệ thống gửi liên kết xác thực tới email, sang màn hình chờ xác thực
+- Mở hộp thư và bấm liên kết xác thực trong thư: ứng dụng nhận ra email đã được xác thực và tự sang bước 2
+- Bấm "Gửi lại liên kết" ở màn hình chờ xác thực: gửi một liên kết mới tới email
+- Bấm nút quay lại ở màn hình chờ xác thực: về bước 1 để sửa email
+- Bấm "Hoàn tất đăng ký" khi bước 2 hợp lệ: tạo hồ sơ, tự đăng nhập và vào B01 Trang chủ kèm thông báo chào mừng (email đã được xác thực nên không phải đăng nhập lại ở A01)
 - Bấm "Đăng nhập bằng Google": chọn tài khoản. Lần đầu thì sang bước 2 ở chế độ hoàn tất hồ sơ; đã có hồ sơ thì vào B01
 - Bấm "Đăng nhập": trở về A01 Đăng nhập
 
@@ -78,6 +87,9 @@
 
 **Trạng thái đặc biệt:**
 - Email đã tồn tại: hiện dòng báo lỗi màu đỏ ngay dưới ô email
+- Liên kết xác thực không hợp lệ hoặc đã hết hạn: báo "Liên kết xác thực không hợp lệ hoặc đã hết hạn", ở lại màn hình chờ xác thực để bấm "Gửi lại liên kết"
+- Chưa nhận được thư: người dùng bấm "Gửi lại liên kết"
+- Chưa xác thực email thì không mở được bước 2 (không điền hồ sơ trước khi xác thực)
 - Mật khẩu không khớp: hiện báo lỗi dưới ô xác nhận mật khẩu
 - Mật khẩu quá yếu: hiện báo lỗi (ít nhất 8 ký tự, gồm chữ và số)
 - Số CCCD không đủ 12 chữ số, thiếu ngày sinh hoặc giới tính: báo lỗi dưới ô tương ứng
@@ -85,7 +97,7 @@
 - Đang gửi yêu cầu: nút chính chuyển sang trạng thái chờ, không bấm lại được
 
 **Khác với ảnh:**
-- Ảnh chỉ vẽ bước 1. Bước 2 (số điện thoại, tỉnh và quận, định danh, danh mục quan tâm, điều khoản) vẫn phải làm.
+- Ảnh chỉ vẽ bước 1. Màn hình chờ xác thực ("Kiểm tra hộp thư", nút "Gửi lại liên kết") và bước 2 (số điện thoại, tỉnh và quận, định danh, danh mục quan tâm, điều khoản) vẫn phải làm.
 - Nút chính trong ảnh là "Đăng ký"; trong spec bước 1 là "Tiếp tục".
 - Ảnh không có chế độ hoàn tất hồ sơ cho người đăng nhập Google lần đầu.
 
@@ -130,7 +142,7 @@
   - Quản lý địa chỉ
   - Thông tin định danh (chưa có ảnh)
 - Nhóm "Tài khoản và ứng dụng":
-  - Đổi mật khẩu
+  - Đổi mật khẩu (ẩn với tài khoản đăng nhập bằng Google, vì tài khoản đó không có mật khẩu)
   - Cài đặt thông báo (chưa có ảnh)
   - Xóa tài khoản (chưa có ảnh)
 - Nút "Đăng xuất" màu đỏ nổi bật ở cuối danh sách
@@ -139,7 +151,7 @@
 - Bấm "Thông tin hồ sơ": sang A05 `EditProfileFragment`
 - Bấm "Quản lý địa chỉ": sang A06 Quản lý địa chỉ
 - Bấm "Thông tin định danh", "Đổi mật khẩu", "Cài đặt thông báo" hoặc "Xóa tài khoản": sang A05 `AccountSettingsFragment` (mỗi mục là một phần của màn hình đó, xem A05)
-- Bấm "Đăng xuất": hỏi xác nhận, đồng ý thì xóa phiên đăng nhập và chuyển về A01 Đăng nhập (`AuthActivity`)
+- Bấm "Đăng xuất": hỏi xác nhận, đồng ý thì xóa phiên đăng nhập và chuyển về B01 Trang chủ ở chế độ khách (`MainActivity`)
 - Bấm nút quay lại: về D01 Hồ sơ cá nhân
 
 **Chức năng liên quan:** STT 4, 5, 6 (chỉnh sửa thông tin cá nhân, ảnh hồ sơ, địa chỉ), STT 9 (khai báo định danh), STT 10 (cài đặt thông báo), STT 11 (đổi mật khẩu), STT 12 (xóa tài khoản).
@@ -147,10 +159,13 @@
 **Trạng thái đặc biệt:**
 - Bấm Đăng xuất: hiện hộp thoại xác nhận "Bạn có chắc chắn muốn đăng xuất?" trước khi thực hiện
 - Chưa khai báo thông tin định danh: mục "Thông tin định danh" ghi "Chưa khai báo"
+- Tài khoản đăng nhập bằng Google: không hiện mục "Đổi mật khẩu"
 
 **Khác với ảnh:**
 - Ảnh vẽ "Số điện thoại liên kết", "Email liên kết" (chữ "Chưa liên kết") và "Ngôn ngữ". Không làm: số điện thoại là một ô của hồ sơ (sửa ở A05), email là email đăng nhập và luôn có, không có chọn ngôn ngữ.
 - Ảnh không vẽ "Thông tin định danh" và "Xóa tài khoản"; vẫn phải làm.
+- Ảnh luôn vẽ mục "Đổi mật khẩu". Tài khoản đăng nhập bằng Google không có mật khẩu nên mục này ẩn với tài khoản đó.
+- Ảnh không nói nút "Đăng xuất" dẫn đi đâu; đúng là về B01 Trang chủ ở chế độ khách, không về A01.
 - Nút quay lại trong ảnh dẫn về D02; đúng là về D01.
 
 ## A05. Chỉnh sửa hồ sơ và cài đặt tài khoản
@@ -159,7 +174,7 @@
 
 **Lớp:** `EditProfileFragment` (như ảnh) và `AccountSettingsFragment` (chưa có ảnh), cả hai trong `MainActivity`, màn hình chi tiết, ẩn thanh dưới.
 
-**Mục đích:** `EditProfileFragment` cho người dùng cập nhật thông tin hiển thị với công chúng. `AccountSettingsFragment` gom các thiết lập riêng tư của tài khoản.
+**Mục đích:** `EditProfileFragment` cho người dùng cập nhật thông tin hiển thị với công chúng. `AccountSettingsFragment` gom các thiết lập riêng tư của tài khoản. Tài khoản đăng nhập bằng Google không có mật khẩu, nên phần "Đổi mật khẩu" bị ẩn với tài khoản đó.
 
 **Thành phần chính của `EditProfileFragment`:**
 - Nút quay lại góc trái trên, tiêu đề "Chỉnh sửa hồ sơ"
@@ -167,12 +182,12 @@
 - Khu vực ảnh đại diện: hình tròn lớn kèm nút bấm thay đổi ảnh (icon camera)
 - Ô nhập "Tên hiển thị" (có giới hạn ký tự)
 - Ô nhập "Giới thiệu ngắn" (bio) cho người dùng khác xem
-- Ô nhập "Số điện thoại" (chưa có ảnh)
+- Ô nhập "Số điện thoại" (chưa có ảnh), sửa được
 - Chọn "Tỉnh hoặc thành phố" và "Quận hoặc huyện" (chưa có ảnh)
 
 **Thành phần chính của `AccountSettingsFragment` (chưa có ảnh):**
-- Phần "Thông tin định danh": số CCCD 12 chữ số, ngày sinh, giới tính, địa chỉ thường trú; nút "Lưu". Chỉ chủ tài khoản và admin xem được
-- Phần "Đổi mật khẩu": ô "Mật khẩu hiện tại", ô "Mật khẩu mới", ô "Xác nhận mật khẩu mới"; nút "Đổi mật khẩu"
+- Phần "Thông tin định danh": số CCCD 12 chữ số (đã khai báo thì chỉ xem, không sửa được), ngày sinh, giới tính, địa chỉ thường trú; nút "Lưu". Chỉ chủ tài khoản và admin xem được
+- Phần "Đổi mật khẩu": ô "Mật khẩu hiện tại", ô "Mật khẩu mới", ô "Xác nhận mật khẩu mới"; nút "Đổi mật khẩu". Mật khẩu mới tối thiểu 8 ký tự, gồm chữ và số. Ẩn cả phần này với tài khoản đăng nhập bằng Google
 - Phần "Cài đặt thông báo": công tắc bật hoặc tắt từng loại: tin nhắn mới, đề nghị giá mới, cập nhật giao dịch. Mục khuyến mãi và tin tức không làm
 - Phần "Xóa tài khoản": mô tả hậu quả (ẩn hồ sơ và tin đăng, xóa thông tin đăng nhập, giữ lịch sử giao dịch và đánh giá cho đối tác), nút "Xóa tài khoản" màu đỏ
 
@@ -180,8 +195,8 @@
 - Bấm icon camera: mở thư viện ảnh máy hoặc camera để đổi ảnh đại diện (ảnh được nén trước khi lưu)
 - Bấm "Lưu": lưu các thay đổi và quay về màn đã gọi (A04 hoặc D02)
 - Bấm nút quay lại: quay về màn đã gọi (A04 hoặc D02), không lưu thay đổi
-- "Đổi mật khẩu": nhập lại mật khẩu hiện tại cùng mật khẩu mới, hợp lệ thì đổi và báo thành công
-- "Xóa tài khoản": hộp thoại xác nhận, yêu cầu nhập lại mật khẩu (tài khoản Google thì đăng nhập lại bằng Google). Đồng ý thì vô hiệu hóa tài khoản, đăng xuất, về A01
+- "Đổi mật khẩu": nhập lại mật khẩu hiện tại cùng mật khẩu mới, hợp lệ thì đổi và báo thành công. Tài khoản đăng nhập bằng Google không thấy phần này
+- "Xóa tài khoản": hộp thoại xác nhận, yêu cầu nhập lại mật khẩu (tài khoản Google thì đăng nhập lại bằng Google). Đồng ý thì vô hiệu hóa tài khoản, đăng xuất, về B01 Trang chủ ở chế độ khách
 
 **Chức năng liên quan:** STT 4, 5 (`EditProfileFragment`), STT 9, 10, 11, 12 (`AccountSettingsFragment`).
 
@@ -190,6 +205,8 @@
 - Thoát khi chưa lưu: hiện thông báo "Bạn có thay đổi chưa lưu. Bạn có muốn thoát?"
 - Đang tải ảnh: hiển thị vòng xoay tải (loading spinner) trên ảnh đại diện
 - Mật khẩu hiện tại sai: báo lỗi dưới ô mật khẩu hiện tại
+- Tài khoản đăng nhập bằng Google: không hiện phần "Đổi mật khẩu" (tài khoản không có mật khẩu)
+- Sửa số CCCD đã khai báo: không cho, ô chỉ để xem
 - Xóa tài khoản khi còn giao dịch chưa kết thúc: không cho xóa, nêu rõ lý do
 
 **Khác với ảnh:**

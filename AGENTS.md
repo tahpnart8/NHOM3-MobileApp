@@ -103,6 +103,7 @@ sh workflow/scripts/tests/policy-test.sh                          # after touchi
 Details are in `workflow/docs/conventions/android-java.md`.
 
 - Code is split by layer: `com.nhom3.pubgapp.model` (domain), `.model.enums`, `.data` (repositories), `.data.local` (Room), `.util`, `.viewmodel`. Matches the class diagram in `workflow/docs/diagrams/so-do-lop/`. Screens (Fragments, Adapters, Activities) live in `com.nhom3.pubgapp.ui.<module>` with module one of `account`, `notification`, `listing`, `trade`, `profile`, `trust`, `admin`, `common`, `main` (`workflow/plan/so-huu.md` section 2). There is no per-feature package.
+- Giao diện theo hệ thống thiết kế trong `workflow/docs/conventions/giao-dien.md`: màu, khoảng cách, cỡ chữ lấy từ token, không viết thẳng giá trị. Mỗi màn hình có đủ bốn trạng thái: đang tải, có dữ liệu, rỗng, lỗi. Chi tiết trong skill `pubg-ui`.
 - Use ViewBinding, not `findViewById`. Every user visible string is a resource; a module's strings go in its own `strings_<module>.xml` (`account`, `listing`, `trade`, `profile`, `admin`, `common`).
 - No network or disk work on the main thread. Every screen must survive rotation without losing its state.
 - Plain, explicit Java (R15): no lambdas, streams or `var`; comments of one or two lines; lasting knowledge in `workflow/memory/code/`. Detail in the `pubg-code` skill and `workflow/docs/conventions/android-java.md`.
@@ -120,6 +121,7 @@ Issue, then branch, then pull request, then the leader or the code owner (`.gith
 | `pubg-start-task` | Begin an issue: read it, create the branch, state the scope fence |
 | `pubg-code` | Write Java the PUBGApp way: plain, explicit, short comments, notes in `workflow/memory/code/` |
 | `pubg-sync-branch` | Merge the latest `main` into your branch and resolve conflicts without dropping anyone's code |
+| `pubg-ui` | Build a screen so all 31 look like one app: design tokens, the four states, naming, rotation, the shared-file fence |
 | `pubg-open-pr` | Verify, then open the pull request from the template |
 | `pubg-review-pr` | Leader or code owner: judge a pull request against its issue on the merged tree |
 | `pubg-record-decision` | Append a decision to `workflow/memory/decisions.md` |

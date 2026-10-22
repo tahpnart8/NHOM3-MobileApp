@@ -24,7 +24,7 @@ Ngoài ra, mỗi module có test cho các quy tắc của mình.
 
 ## Danh sách kiểm tra
 
-- [ ] Xoay từng màn trong 30 màn: không tải lại dữ liệu, không mất chữ đang nhập, không mất vị trí cuộn.
+- [ ] Xoay từng màn trong 33 màn: không tải lại dữ liệu, không mất chữ đang nhập, không mất vị trí cuộn.
 - [ ] Bật chế độ máy bay sau khi đã xem: trang chủ, chi tiết tin đã xem, danh sách chat, tin nhắn đã xem, lịch sử giao dịch vẫn hiện, có dải báo offline. Các nút ghi bị khóa.
 - [ ] Đăng xuất thì bộ nhớ đệm Room bị xóa.
 - [ ] Tài khoản thường không đọc được `users/{uid khác}/private/identity` và `complaints/*/adminNote/*`.

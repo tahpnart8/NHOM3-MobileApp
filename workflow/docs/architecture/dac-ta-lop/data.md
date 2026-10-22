@@ -9,7 +9,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | [`DataCallback`](#datacallback) | interface | Giao diện gọi lại chung: repository báo kết quả hoặc lỗi cho ViewModel. |
 | [`BaseRepository`](#baserepository) | lớp trừu tượng | Lớp cha của mọi repository: giữ kết nối Firebase, ghi nhật ký, xử lý lỗi chung. |
 | [`AuthRepository`](#authrepository) | lớp (repository) | Đăng ký, đăng nhập, quên mật khẩu, xác thực email, đổi mật khẩu, xóa thông tin đăng nhập. |
-| [`UserRepository`](#userrepository) | lớp (repository) | Hồ sơ, địa chỉ, thông tin định danh, cài đặt thông báo, theo dõi, lưu tin, yêu cầu xác minh, vô hiệu hóa tài khoản. |
+| [`UserRepository`](#userrepository) | lớp (repository) | Hồ sơ, địa chỉ, thông tin định danh, cài đặt thông báo, theo dõi, lưu tin, yêu cầu xác thực tài khoản, vô hiệu hóa tài khoản. |
 | [`CategoryRepository`](#categoryrepository) | lớp (repository) | Danh mục và danh mục con; admin thêm, sửa, xóa. |
 | [`ListingRepository`](#listingrepository) | lớp (repository) | Tin đăng, tìm kiếm, kênh xem; đọc bộ nhớ đệm trước rồi mới gọi mạng. |
 | [`MediaRepository`](#mediarepository) | lớp (repository) | Nén ảnh, lưu dạng Base64 trong Firestore, tạo ảnh thu nhỏ, đọc ảnh kèm bộ nhớ đệm. |
@@ -19,7 +19,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | [`ReportRepository`](#reportrepository) | lớp (repository) | Báo cáo vi phạm; người dùng xem, hủy và xuất lịch sử. |
 | [`ComplaintRepository`](#complaintrepository) | lớp (repository) | Khiếu nại; ghi chú nội bộ nằm ở tài liệu con chỉ admin đọc được. |
 | [`NotificationRepository`](#notificationrepository) | lớp (repository) | Thông báo cho từng người dùng. |
-| [`AdminRepository`](#adminrepository) | lớp (repository) | Thao tác dành riêng cho admin: người dùng, xác minh, kiểm duyệt, từ khóa cấm. |
+| [`AdminRepository`](#adminrepository) | lớp (repository) | Thao tác dành riêng cho admin: người dùng, xác thực tài khoản, kiểm duyệt, từ khóa cấm, danh sách tài khoản admin và việc cấp hoặc gỡ quyền admin. |
 
 ### DataCallback
 
@@ -30,6 +30,12 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | Lưu trữ | Không lưu |
 | Trách nhiệm | Giao diện gọi lại chung: repository báo kết quả hoặc lỗi cho ViewModel. |
 | Chức năng liên quan (STT) | hạ tầng dùng chung |
+
+**Thuộc tính**
+
+| Tên | Kiểu | Truy cập | Ý nghĩa |
+| --- | --- | --- | --- |
+| `NOT_READY` | `String` | public |  |
 
 **Phương thức**
 
@@ -66,7 +72,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
 | `protected String currentUserId()` | Trả `uid` của người đang đăng nhập; rỗng khi chưa đăng nhập. |  |
-| `protected void logActivity(String action, String targetType, String targetId)` | Ghi một `ActivityLog` cho hành động quan trọng. | 74 |
+| `protected void logActivity(String action, String targetType, String targetId)` | Ghi một `ActivityLog`. `action` là chuỗi hằng viết hoa có gạch dưới, ví dụ `LISTING_CREATED`, `USER_LOCKED`, `USER_WARNED`, `LISTING_HIDDEN`, `LISTING_REMOVED`, `CATEGORY_CREATED`, `KEYWORD_ADDED`, `ADMIN_GRANTED`, `ADMIN_REVOKED`. `targetType` là chuỗi tự do (`listing`, `user`, `message`, `category`, `keyword`, `admin`, `deal`, `complaint`, `report`), không phải enum, vì nhật ký trỏ tới nhiều loại hơn `ReportTarget`. | 74 |
 | `protected void fail(DataCallback, Exception)` | Dịch ngoại lệ Firebase thành câu báo lỗi và gọi `onError`. |  |
 
 **Quan hệ trên sơ đồ lớp**
@@ -96,7 +102,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | Kế thừa | [`BaseRepository`](data.md#baserepository) |
 | Lưu trữ | Không lưu |
 | Trách nhiệm | Đăng ký, đăng nhập, quên mật khẩu, xác thực email, đổi mật khẩu, xóa thông tin đăng nhập. |
-| Chức năng liên quan (STT) | 1 đến 3, 11, 12 |
+| Chức năng liên quan (STT) | 1 đến 3, 11, 12, 104 |
 
 **Phương thức**
 
@@ -108,11 +114,13 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void signInWithGoogle(String idToken, DataCallback<User> cb)` | Đăng nhập bằng mã của Google Sign-In. Trả `User`, hoặc `null` khi chưa có tài liệu `users/{uid}` (lần đầu): khi đó ứng dụng mở bước hoàn tất hồ sơ. | 1 đến 3 |
 | `public void sendPasswordReset(String email, DataCallback<Void> cb)` | Gửi email đặt lại mật khẩu. | 1 đến 3 |
 | `public void changePassword(String current, String next, DataCallback<Void> cb)` | Xác thực lại bằng mật khẩu hiện tại rồi đổi sang mật khẩu mới. | 11 |
+| `public String getCurrentUserId()` | Mã người dùng của phiên Firebase hiện tại, hoặc rỗng khi chưa đăng nhập; `AuthViewModel.restoreSession` cần nó. |  |
+| `public boolean isGoogleAccount()` | True khi phiên hiện tại đăng nhập bằng Google, nên không có mật khẩu để đổi. |  |
 | `public void deleteLogin(DataCallback<Void> cb)` | Xóa tài khoản đăng nhập trên Firebase Authentication; phải gọi ngay sau khi xác thực lại. | 12 |
 | `public void reauthenticate(String password, DataCallback<Void> cb)` | Xác thực lại bằng mật khẩu hiện tại; cần trước khi đổi mật khẩu hoặc xóa đăng nhập. |  |
 | `public void reauthenticateWithGoogle(String idToken, DataCallback<Void> cb)` | Xác thực lại bằng mã Google mới cho tài khoản đăng nhập bằng Google. |  |
 | `public void reloadUser(DataCallback<Boolean> cb)` | Tải lại thông tin đăng nhập để cờ email đã xác thực là mới nhất. |  |
-| `public void signOut()` | Đăng xuất; người gọi phải xóa bộ nhớ đệm Room và `SessionManager`. |  |
+| `public void signOut()` | Đăng xuất; người gọi phải xóa bộ nhớ đệm Room và `SessionManager`. | 104 |
 | `public boolean isEmailVerified()` | True khi email đã xác thực. |  |
 
 **Quan hệ trên sơ đồ lớp**
@@ -131,16 +139,17 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | Loại | lớp (repository) |
 | Kế thừa | [`BaseRepository`](data.md#baserepository) |
 | Lưu trữ | Không lưu |
-| Trách nhiệm | Hồ sơ, địa chỉ, thông tin định danh, cài đặt thông báo, theo dõi, lưu tin, yêu cầu xác minh, vô hiệu hóa tài khoản. |
-| Chức năng liên quan (STT) | 4, 6, 8 đến 10, 12, 30, 39 đến 42, 46, 73 |
+| Trách nhiệm | Hồ sơ, địa chỉ, thông tin định danh, cài đặt thông báo, theo dõi, lưu tin, yêu cầu xác thực tài khoản, vô hiệu hóa tài khoản. |
+| Chức năng liên quan (STT) | 4, 6, 8 đến 10, 12, 30, 39 đến 42, 46, 73, 103 |
 
 **Phương thức**
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public void createProfile(User user, UserIdentity identity, DataCallback<Void> cb)` | Tạo `users/{uid}` (ACTIVE, `verificationStatus` NONE, `ratingSum` và `ratingCount` bằng 0, `termsAcceptedAt`) và `users/{uid}/private/identity` trong một lô ghi. |  |
+| `public void createProfile(User user, UserIdentity identity, DataCallback<Void> cb)` | Tạo `users/{uid}` (ACTIVE, `verificationStatus` NONE, `ratingSum` và `ratingCount` bằng 0, `termsAcceptedAt`, `searchKeywords` từ `User.buildSearchKeywords`) và `users/{uid}/private/identity` trong một lô ghi. |  |
 | `public void getProfile(String uid, DataCallback<User> cb)` | Đọc `users/{uid}`. |  |
-| `public void updateProfile(User user, DataCallback<Void> cb)` | Ghi các trường hồ sơ mà chính chủ được sửa (tên, điện thoại, khu vực, giới thiệu, ảnh, danh mục quan tâm). | 4 |
+| `public void updateProfile(User user, DataCallback<Void> cb)` | Ghi các trường hồ sơ mà chính chủ được sửa (tên, điện thoại, khu vực, giới thiệu, ảnh, danh mục quan tâm); gọi `User.buildSearchKeywords` lại khi `displayName` đổi. | 4 |
+| `public void searchUsers(String keyword, DataCallback<List<User>> cb)` | Tìm người dùng theo tên: `searchKeywords array-contains` từ dài nhất trong ô tìm kiếm (đã bỏ dấu), `status == ACTIVE`, sắp `ratingCount` giảm, tối đa 20 người, không phân trang. Chỉ khớp nguyên từ. | 103 |
 | `public void getStats(String uid, DataCallback<ProfileStats> cb)` | Đếm bằng truy vấn tổng hợp `count()`: giao dịch đã bán, người theo dõi, giao dịch tham gia, giao dịch hoàn tất. Trả `ProfileStats`. | 8 |
 | `public void clearExpiredLock(String uid, DataCallback<Void> cb)` | Chủ tài khoản ghi lại ACTIVE khi khóa tạm đã hết hạn; Security Rules chỉ cho phép khi giờ máy chủ đã qua `lockedUntil`. |  |
 | `public void saveAddress(String uid, UserAddress address, DataCallback<Void> cb)` | Tạo hoặc sửa một địa chỉ; nếu đặt mặc định thì bỏ cờ mặc định của địa chỉ khác. | 6 |
@@ -152,7 +161,8 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void saveListing(String uid, String listingId, DataCallback<Void> cb)` | Tạo `users/{uid}/saved/{listingId}`. | 40 đến 42 |
 | `public void unsaveListing(String uid, String listingId, DataCallback<Void> cb)` | Xóa `users/{uid}/saved/{listingId}`. | 40 đến 42 |
 | `public void getSavedIds(String uid, DataCallback<List<String>> cb)` | Mã các tin đã lưu, mới lưu trước. | 40 đến 42 |
-| `public void requestVerification(String uid, DataCallback<Void> cb)` | Tạo hoặc gửi lại `sellerVerifications/{uid}` với trạng thái PENDING. | 73 |
+| `public void requestVerification(String uid, SellerVerification verification, DataCallback<Void> cb)` | Tạo hoặc gửi lại `sellerVerifications/{uid}` với trạng thái PENDING, kèm số CCCD và hai mã ảnh; lần gửi lại tăng `resubmitCount` và bị chặn khi `canResubmit()` false. | 73 |
+| `public void getVerification(String uid, DataCallback<SellerVerification> cb)` | Đọc `sellerVerifications/{uid}` của chính người dùng, để D01 hiện trạng thái và lý do từ chối. |  |
 | `public void saveIdentity(String uid, UserIdentity identity, DataCallback<Void> cb)` | Ghi `users/{uid}/private/identity`. | 9 |
 | `public void getIdentity(String uid, DataCallback<UserIdentity> cb)` | Đọc `users/{uid}/private/identity`; chỉ chính chủ và admin đọc được. | 9 |
 | `public void updateNotificationPrefs(String uid, Map<String,Boolean> prefs, DataCallback<Void> cb)` | Ghi `notificationPrefs`. | 10 |
@@ -163,9 +173,9 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 
 - `UserRepository` kế thừa `BaseRepository`. Trang 5. Tầng dữ liệu.
 
-**Dùng tới:** [`DataCallback`](data.md#datacallback), [`ProfileStats`](model.md#profilestats), [`User`](model.md#user), [`UserAddress`](model.md#useraddress), [`UserIdentity`](model.md#useridentity)
+**Dùng tới:** [`DataCallback`](data.md#datacallback), [`ProfileStats`](model.md#profilestats), [`SellerVerification`](model.md#sellerverification), [`User`](model.md#user), [`UserAddress`](model.md#useraddress), [`UserIdentity`](model.md#useridentity)
 
-**Được dùng bởi:** [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`AuthViewModel`](viewmodel.md#authviewmodel), [`ChatViewModel`](viewmodel.md#chatviewmodel), [`DealViewModel`](viewmodel.md#dealviewmodel), [`FeedViewModel`](viewmodel.md#feedviewmodel), [`ListingDetailViewModel`](viewmodel.md#listingdetailviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel)
+**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`AdminDealViewModel`](viewmodel.md#admindealviewmodel), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`AuthViewModel`](viewmodel.md#authviewmodel), [`ChatViewModel`](viewmodel.md#chatviewmodel), [`DealViewModel`](viewmodel.md#dealviewmodel), [`FeedViewModel`](viewmodel.md#feedviewmodel), [`ListingDetailViewModel`](viewmodel.md#listingdetailviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`SearchViewModel`](viewmodel.md#searchviewmodel)
 
 ### CategoryRepository
 
@@ -195,7 +205,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 
 **Dùng tới:** [`Category`](model.md#category), [`DataCallback`](data.md#datacallback)
 
-**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`SearchViewModel`](viewmodel.md#searchviewmodel), [`ShopViewModel`](viewmodel.md#shopviewmodel)
+**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`AuthViewModel`](viewmodel.md#authviewmodel), [`FeedViewModel`](viewmodel.md#feedviewmodel), [`SearchViewModel`](viewmodel.md#searchviewmodel), [`ShopViewModel`](viewmodel.md#shopviewmodel)
 
 ### ListingRepository
 
@@ -236,7 +246,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 
 **Dùng tới:** [`BannedKeyword`](model.md#bannedkeyword), [`DataCallback`](data.md#datacallback), [`HistoryDao`](data-local.md#historydao), [`Listing`](model.md#listing), [`ListingDao`](data-local.md#listingdao), [`ListingStatus`](enums.md#listingstatus), [`SearchFilter`](model.md#searchfilter)
 
-**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`FeedViewModel`](viewmodel.md#feedviewmodel), [`HistoryDao`](data-local.md#historydao), [`ListingDao`](data-local.md#listingdao), [`ListingDetailViewModel`](viewmodel.md#listingdetailviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`SearchViewModel`](viewmodel.md#searchviewmodel), [`ShopViewModel`](viewmodel.md#shopviewmodel)
+**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`ChatViewModel`](viewmodel.md#chatviewmodel), [`FeedViewModel`](viewmodel.md#feedviewmodel), [`HistoryDao`](data-local.md#historydao), [`ListingDao`](data-local.md#listingdao), [`ListingDetailViewModel`](viewmodel.md#listingdetailviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`SearchViewModel`](viewmodel.md#searchviewmodel), [`ShopViewModel`](viewmodel.md#shopviewmodel)
 
 ### MediaRepository
 
@@ -264,7 +274,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 
 **Dùng tới:** [`DataCallback`](data.md#datacallback), [`ImagePurpose`](enums.md#imagepurpose)
 
-**Được dùng bởi:** [`ChatViewModel`](viewmodel.md#chatviewmodel), [`DealViewModel`](viewmodel.md#dealviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`ShopViewModel`](viewmodel.md#shopviewmodel), [`TrustViewModel`](viewmodel.md#trustviewmodel)
+**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`ChatViewModel`](viewmodel.md#chatviewmodel), [`DealViewModel`](viewmodel.md#dealviewmodel), [`ListingDetailViewModel`](viewmodel.md#listingdetailviewmodel), [`ProfileViewModel`](viewmodel.md#profileviewmodel), [`ShopViewModel`](viewmodel.md#shopviewmodel), [`TrustViewModel`](viewmodel.md#trustviewmodel)
 
 ### ChatRepository
 
@@ -290,6 +300,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void sendImage(String id, Uri uri, DataCallback<Void> cb)` | Lưu ảnh qua `MediaRepository`, ghi tin nhắn IMAGE với mã ảnh, ghi thông báo NEW_MESSAGE. | 43, 44 |
 | `public void sendOffer(Offer offer, DataCallback<String> cb)` | Kiểm tra `Listing.acceptsOffer`, ghi `Offer` PENDING và một tin nhắn loại OFFER, ghi thông báo NEW_OFFER. Security Rules từ chối nếu tin không còn AVAILABLE. | 47 đến 49 |
 | `public void respondToOffer(String offerId, boolean accept, DataCallback<String> cb)` | Trong một lô ghi: offer ACCEPTED hoặc REJECTED; nếu chấp nhận thì các offer PENDING khác của tin sang REJECTED, giao dịch dựng bằng `DealRepository.buildFromOffer`, tin sang RESERVED và ghi `reservedDealId`. Ghi thông báo OFFER_RESULT. Tin không còn AVAILABLE thì từ chối offer và báo lỗi. | 47 đến 50 |
+| `public ListenerRegistration observeOffers(String conversationId, DataCallback<Void> cb)` | Lắng nghe các `Offer` của một cuộc trò chuyện theo thời gian thực, để thẻ đề nghị trong chat đổi theo khi người bán chấp nhận hoặc từ chối. Nhớ gỡ `ListenerRegistration` khi màn hình đóng. |  |
 
 **Quan hệ trên sơ đồ lớp**
 
@@ -298,7 +309,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 
 **Dùng tới:** [`ChatDao`](data-local.md#chatdao), [`ChatMessage`](model.md#chatmessage), [`Conversation`](model.md#conversation), [`DataCallback`](data.md#datacallback), [`Offer`](model.md#offer)
 
-**Được dùng bởi:** [`AdminComplaintViewModel`](viewmodel.md#admincomplaintviewmodel), [`ChatDao`](data-local.md#chatdao), [`ChatViewModel`](viewmodel.md#chatviewmodel)
+**Được dùng bởi:** [`AdminComplaintViewModel`](viewmodel.md#admincomplaintviewmodel), [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`ChatDao`](data-local.md#chatdao), [`ChatViewModel`](viewmodel.md#chatviewmodel)
 
 ### DealRepository
 
@@ -315,14 +326,14 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public Deal buildFromOffer(Offer offer)` | Dựng đối tượng `Deal` PENDING_CONFIRM từ offer (không ghi): ITEM thành EXCHANGE, MONEY và MONEY_AND_ITEM thành SELL, giá bằng `offer.amount`; chụp tiêu đề và ảnh bìa tin; `sellerConfirmed` true; dòng lịch sử đầu tiên. `ChatRepository.respondToOffer` ghi nó trong cùng lô với việc chấp nhận offer. | 50 |
+| `public Deal buildFromOffer(Offer offer, Listing listing)` | Dựng một `Deal` từ đề nghị đã được chấp nhận, chụp `itemTitle` và `itemThumb` từ `Listing` truyền vào; chưa ghi lên Firestore. | 50 |
 | `public void getById(String dealId, DataCallback<Deal> cb)` | Đọc một giao dịch. |  |
 | `public void getPayment(String dealId, DataCallback<Payment> cb)` | Đọc `payments/{dealId}`; rỗng khi chưa thanh toán. |  |
 | `public void updateTerms(Deal deal, DataCallback<Void> cb)` | Sửa điều khoản khi còn PENDING_CONFIRM; xóa cả hai cờ xác nhận để hai bên xác nhận lại. | 51 |
 | `public void confirm(String dealId, DataCallback<Void> cb)` | Gọi `Deal.confirmBy`. Từ chối nếu chưa chọn phương thức giao nhận, hoặc giao qua vận chuyển mà chưa có địa chỉ. | 52 |
-| `public void pay(String dealId, DataCallback<Void> cb)` | Tạo `payments/{dealId}` HELD; chỉ người mua, chỉ khi CONFIRMED và `needsPayment`. | 56 |
+| `public void pay(String dealId, PaymentMethod method, DataCallback<Void> cb)` | Tạo `payments/{dealId}` HELD; chỉ người mua, chỉ khi CONFIRMED và `needsPayment`. | 56 |
 | `public void markShipped(String dealId, String carrier, String trackingCode, String imageId, DataCallback<Void> cb)` | Kiểm tra `Payment` đang HELD nếu `needsPayment()`, gọi `Deal.markShipped`, ghi `shippedAt` giờ máy chủ và `autoReleaseAt` sau 7 ngày, ghi lịch sử, thông báo DEAL_UPDATE cho người mua. | 54 |
-| `public void markReceived(String dealId, DataCallback<Void> cb)` | Kiểm tra `Payment` đang HELD nếu `needsPayment()`, gọi `Deal.markReceived`, `Payment` sang RELEASED trong cùng lô ghi, thông báo PAYMENT_UPDATE cho người bán. | 53, 84 |
+| `public void markReceived(String dealId, String imageId, DataCallback<Void> cb)` | Nhận mã ảnh đã được ViewModel lưu trước qua `MediaRepository` (giống `markShipped`); kiểm tra `Payment` đang HELD nếu `needsPayment()`, gọi `Deal.markReceived`, `Payment` sang RELEASED trong cùng lô ghi, thông báo PAYMENT_UPDATE cho người bán. | 53, 84 |
 | `public void completeDeal(String dealId, DataCallback<Void> cb)` | Nơi duy nhất chuyển RECEIVED sang COMPLETED: giao dịch COMPLETED, tin SOLD, thông báo DEAL_UPDATE cho hai bên. Gọi từ `ReviewRepository.create` và `completeDueDeals`. |  |
 | `public void releaseDueDeals(DataCallback<Integer> cb)` | Tìm giao dịch SHIPPED của người dùng hiện tại (ở cả hai vai trò) đã qua `autoReleaseAt`, chuyển sang RECEIVED và giải ngân. | 84 |
 | `public void completeDueDeals(DataCallback<Integer> cb)` | Tìm giao dịch RECEIVED đã quá 3 ngày từ `receivedAt` và gọi `completeDeal`. | 53 |
@@ -337,7 +348,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 - `DealRepository` kế thừa `BaseRepository`. Trang 5. Tầng dữ liệu.
 - Phụ thuộc: `ChatRepository` dùng `DealRepository` (tạo giao dịch khi chấp nhận offer). Trang 5. Tầng dữ liệu.
 
-**Dùng tới:** [`DataCallback`](data.md#datacallback), [`Deal`](model.md#deal), [`DealDao`](data-local.md#dealdao), [`DealStatus`](enums.md#dealstatus), [`Offer`](model.md#offer), [`Payment`](model.md#payment)
+**Dùng tới:** [`DataCallback`](data.md#datacallback), [`Deal`](model.md#deal), [`DealDao`](data-local.md#dealdao), [`DealStatus`](enums.md#dealstatus), [`Listing`](model.md#listing), [`Offer`](model.md#offer), [`Payment`](model.md#payment), [`PaymentMethod`](enums.md#paymentmethod)
 
 **Được dùng bởi:** [`AdminComplaintViewModel`](viewmodel.md#admincomplaintviewmodel), [`AdminDealViewModel`](viewmodel.md#admindealviewmodel), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`AutoReleaseWorker`](util.md#autoreleaseworker), [`DealDao`](data-local.md#dealdao), [`DealViewModel`](viewmodel.md#dealviewmodel)
 
@@ -388,7 +399,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void cancel(String reportId, DataCallback<Void> cb)` | Người báo cáo hủy báo cáo còn OPEN. | 62 |
 | `public void getMyReports(String uid, DataCallback<List<Report>> cb)` | Báo cáo người dùng đã gửi. | 63 |
 | `public File exportCsv(List<Report> reports)` | Ghi danh sách báo cáo ra tệp CSV trong bộ nhớ của ứng dụng; chạy ngoài luồng chính. | 63 |
-| `public void getByStatus(ReportStatus status, DataCallback<List<Report>> cb)` | Admin: báo cáo theo trạng thái. | 75 |
+| `public void getByStatus(ReportStatus status, ReportTarget targetType, DataCallback<List<Report>> cb)` | Admin: báo cáo theo trạng thái. | 75 |
 | `public void countByTarget(String targetId, DataCallback<Integer> cb)` | Số báo cáo OPEN của một đối tượng. | 75 |
 | `public void closeByTarget(String targetId, boolean dismissed, String adminId, DataCallback<Void> cb)` | Đóng mọi báo cáo OPEN của một đối tượng: RESOLVED hoặc DISMISSED. | 75 |
 
@@ -396,9 +407,9 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 
 - `ReportRepository` kế thừa `BaseRepository`. Trang 5. Tầng dữ liệu.
 
-**Dùng tới:** [`DataCallback`](data.md#datacallback), [`Report`](model.md#report), [`ReportStatus`](enums.md#reportstatus)
+**Dùng tới:** [`DataCallback`](data.md#datacallback), [`Report`](model.md#report), [`ReportStatus`](enums.md#reportstatus), [`ReportTarget`](enums.md#reporttarget)
 
-**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`TrustViewModel`](viewmodel.md#trustviewmodel)
+**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`TrustViewModel`](viewmodel.md#trustviewmodel)
 
 ### ComplaintRepository
 
@@ -450,7 +461,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | --- | --- | --- |
 | `public void getForUser(String uid, DataCallback<List<AppNotification>> cb)` | Thông báo của người dùng, mới nhất trước. | 67, 91 |
 | `public void markRead(String id, DataCallback<Void> cb)` | Đánh dấu đã đọc. | 67, 91 |
-| `public void create(AppNotification notification, DataCallback<Void> cb)` | Ghi một thông báo cho người nhận, bỏ qua nếu người nhận đã tắt loại này. Chỉ repository gọi, ngay trong thao tác làm đổi trạng thái; ViewModel không gọi. | 91 |
+| `public void create(AppNotification notification, WriteBatch batch, DataCallback<Void> cb)` | Ghi một thông báo cho người nhận, bỏ qua nếu người nhận đã tắt loại này. Chỉ repository gọi, ngay trong thao tác làm đổi trạng thái; ViewModel không gọi. Tham số `batch`: khác null thì phương thức **chỉ thêm lệnh ghi vào lô đó rồi gọi lại ngay**, bên gọi mới commit, nên thông báo và việc đổi trạng thái cùng thành công hoặc cùng thất bại (`trang-thai.md` mục 9); bằng null thì phương thức tự ghi và tự commit. Gửi cho nhiều người thì gọi nhiều lần vào cùng một lô rồi commit một lần. | 91 |
 
 **Quan hệ trên sơ đồ lớp**
 
@@ -468,34 +479,40 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | Loại | lớp (repository) |
 | Kế thừa | [`BaseRepository`](data.md#baserepository) |
 | Lưu trữ | Không lưu |
-| Trách nhiệm | Thao tác dành riêng cho admin: người dùng, xác minh, kiểm duyệt, từ khóa cấm. |
-| Chức năng liên quan (STT) | 68 đến 74, 76 đến 78 |
+| Trách nhiệm | Thao tác dành riêng cho admin: người dùng, xác thực tài khoản, kiểm duyệt, từ khóa cấm, danh sách tài khoản admin và việc cấp hoặc gỡ quyền admin. |
+| Chức năng liên quan (STT) | 68 đến 74, 76 đến 78, 105, 106 |
 
 **Phương thức**
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public void isAdmin(String uid, DataCallback<Boolean> cb)` | True khi tồn tại `admins/{uid}`. |  |
-| `public void listUsers(UserStatus status, Timestamp from, Timestamp to, String province, DataCallback<List<User>> cb)` | Người dùng lọc theo trạng thái, khoảng ngày tham gia, khu vực. | 68 |
+| `public void isAdmin(String uid, DataCallback<Boolean> cb)` | True khi tồn tại `admins/{uid}`. | 106 |
+| `public void listUsers(UserStatus status, Timestamp from, Timestamp to, String province, String keyword, DataCallback<List<User>> cb)` | Người dùng lọc theo trạng thái, khoảng ngày tham gia, khu vực, và từ khóa tên hoặc email. | 68 |
 | `public void lockUser(String id, Timestamp until, String reason, DataCallback<Void> cb)` | Đặt TEMP_LOCKED kèm hạn, hoặc PERM_LOCKED khi hạn rỗng; ghi `lockReason`; thông báo WARNING. | 70, 71 |
 | `public void unlockUser(String id, DataCallback<Void> cb)` | Đặt lại ACTIVE, xóa `lockedUntil` và `lockReason`; không đổi `warningCount`. | 70, 71 |
 | `public void warnUser(String id, Warning warning, Timestamp until, DataCallback<Void> cb)` | Tăng `warningCount`, ghi `Warning`, áp `Warning.resultingStatus` (bậc 2 dùng hạn `until` admin chọn), ghi `lockReason`, thông báo WARNING. | 72 |
 | `public void getWarnings(String id, DataCallback<List<Warning>> cb)` | Các lần cảnh báo của một người dùng. | 69 |
-| `public void getVerificationRequests(DataCallback<List<SellerVerification>> cb)` | Yêu cầu xác minh đang PENDING. | 73 |
+| `public void getVerificationRequests(DataCallback<List<SellerVerification>> cb)` | Yêu cầu xác thực tài khoản đang PENDING. | 73 |
 | `public void reviewVerification(String id, boolean approve, String note, DataCallback<Void> cb)` | Duyệt hoặc từ chối kèm ghi chú, cập nhật `User.verificationStatus`, thông báo VERIFICATION_RESULT. | 73 |
 | `public void getActivityLogs(String id, DataCallback<List<ActivityLog>> cb)` | Nhật ký hoạt động của một tài khoản. | 74 |
 | `public void hideListing(String id, String reason, DataCallback<Void> cb)` | Đặt tin HIDDEN kèm lý do bắt buộc, từ chối offer PENDING của tin, thông báo LISTING_MODERATED cho người đăng. | 76 |
 | `public void restoreListing(String id, DataCallback<Void> cb)` | Đưa tin HIDDEN về AVAILABLE, gửi thông báo. | 76 |
+| `public void removeListing(String id, String reason, DataCallback<Void> cb)` | Đặt một tin sang REMOVED kèm lý do, gửi thông báo LISTING_MODERATED cho người đăng; nặng hơn ẩn tin vì người bán không khôi phục được (UC37). | 76 |
 | `public void removeAllListingsOf(String userId, DataCallback<Void> cb)` | Đặt mọi tin của tài khoản sang REMOVED. | 77 |
 | `public void getKeywords(DataCallback<List<BannedKeyword>> cb)` | Danh sách từ khóa cấm. | 78 |
 | `public void addKeyword(String word, DataCallback<Void> cb)` | Thêm từ khóa cấm (lưu dạng đã bỏ dấu). | 78 |
 | `public void removeKeyword(String id, DataCallback<Void> cb)` | Xóa từ khóa cấm. | 78 |
 | `public void clearFlag(String listingId, DataCallback<Void> cb)` | Admin bỏ cờ từ khóa cấm của một tin sau khi xem và thấy không vi phạm. | 78 |
+| `public void getFlaggedListings(DataCallback<List<Listing>> cb)` | Tin có `flagged` bằng true, cho tab Tin bị gắn cờ của E04. |  |
+| `public void listAdmins(DataCallback<List<User>> cb)` | Đọc `admins`, rồi đọc hồ sơ tương ứng để hiện tên và email. | 105 |
+| `public void findUserByEmail(String email, DataCallback<User> cb)` | Tìm một tài khoản theo email để cấp quyền admin; chỉ trả tài khoản ACTIVE. | 105 |
+| `public void grantAdmin(String userId, DataCallback<Void> cb)` | Tạo `admins/{userId}` và ghi nhật ký; từ chối khi tài khoản đã là admin. | 105 |
+| `public void revokeAdmin(String userId, DataCallback<Void> cb)` | Xóa `admins/{userId}` và ghi nhật ký; từ chối khi `userId` là chính người đang thao tác, và khi đó là admin cuối cùng. | 105 |
 
 **Quan hệ trên sơ đồ lớp**
 
 - `AdminRepository` kế thừa `BaseRepository`. Trang 5. Tầng dữ liệu.
 
-**Dùng tới:** [`ActivityLog`](model.md#activitylog), [`BannedKeyword`](model.md#bannedkeyword), [`DataCallback`](data.md#datacallback), [`SellerVerification`](model.md#sellerverification), [`User`](model.md#user), [`UserStatus`](enums.md#userstatus), [`Warning`](model.md#warning)
+**Dùng tới:** [`ActivityLog`](model.md#activitylog), [`BannedKeyword`](model.md#bannedkeyword), [`DataCallback`](data.md#datacallback), [`Listing`](model.md#listing), [`SellerVerification`](model.md#sellerverification), [`User`](model.md#user), [`UserStatus`](enums.md#userstatus), [`Warning`](model.md#warning)
 
 **Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`AuthViewModel`](viewmodel.md#authviewmodel)

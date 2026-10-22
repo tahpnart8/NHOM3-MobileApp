@@ -1,6 +1,6 @@
 # Nhóm C: Kết nối và giao dịch
 
-6 màn hình, nộp theo 3 đợt: đợt 1 một màn (C01), đợt 2 hai màn (C02, C03), đợt 3 ba màn (C04, C05, C06). Số trong tài liệu là STT của [bảng đặc tả chức năng](../../product/dac-ta-chuc-nang.md). Trạng thái giao dịch, offer, ký quỹ theo [trang-thai.md](../../architecture/trang-thai.md). Điều hướng chung ở [README giao diện](../README.md#điều-hướng).
+7 mã màn hình: 6 màn hình có ảnh (C01 đến C06) nộp theo 3 đợt (đợt 1 một màn C01, đợt 2 hai màn C02 và C03, đợt 3 ba màn C04, C05 và C06), cộng C07 là màn hình bổ sung chưa có ảnh. Số trong tài liệu là STT của [bảng đặc tả chức năng](../../product/dac-ta-chuc-nang.md). Trạng thái giao dịch, offer, thanh toán theo [trang-thai.md](../../architecture/trang-thai.md). Điều hướng chung ở [README giao diện](../README.md#điều-hướng).
 
 ## C01. Danh sách tin nhắn
 
@@ -30,6 +30,8 @@
 - Tin chưa đọc: tên và nội dung in đậm, kèm chấm tròn màu cam
 - Mất mạng: hiện lại danh sách đã tải trước đó từ bộ nhớ đệm, kèm dải báo đang xem ngoại tuyến
 - Tìm không ra kết quả: hiện dòng báo không có cuộc trò chuyện nào khớp
+- Khách chưa đăng nhập: không vào được màn này, bấm tab "Tin nhắn" thì được đưa tới A01 Đăng nhập (`action_global_sign_in`; Khách chỉ xem được trang chủ, tìm kiếm tin đăng và chi tiết tin đăng)
+- Tài khoản chưa được duyệt xác thực: vẫn xem danh sách và nhắn tin bình thường
 
 **Khác với ảnh:** không có chỗ khác đáng kể. Cuộc trò chuyện luôn gắn với một tin đăng (mỗi người mua một cuộc cho mỗi tin).
 
@@ -37,7 +39,7 @@
 
 **Ảnh:** ![C02 Trò chuyện và đề nghị giá](c02-tro-chuyen-de-nghi-gia.png)
 
-**Lớp:** `ChatFragment` trong `MainActivity`. Màn hình chi tiết: có nút quay lại, ẩn thanh dưới. Mở từ C01, từ B03 (nút "Nhắn tin" hoặc sau khi gửi đề nghị), hoặc từ thông báo.
+**Lớp:** `ChatFragment` trong `MainActivity`. Màn hình chi tiết: có nút quay lại, ẩn thanh dưới. Mở từ C01, từ B03 (nút "Nhắn tin" hoặc sau khi gửi đề nghị), hoặc từ thông báo. Khách chưa đăng nhập bấm "Nhắn tin" ở B03 thì được đưa tới A01 Đăng nhập (`action_global_sign_in`).
 
 **Mục đích:** Cho phép người dùng trao đổi chi tiết về sản phẩm và thực hiện thương lượng bằng đề nghị một chạm trong khung chat.
 
@@ -45,14 +47,14 @@
 - Thanh tiêu đề trên cùng: nút quay lại, ảnh đại diện, tên người đối thoại, trạng thái hoạt động ("Đang hoạt động" hoặc thời điểm hoạt động gần nhất), nút tùy chọn (3 chấm)
 - Banner sản phẩm đang trao đổi: ảnh thu nhỏ, tên sản phẩm, mức giá
 - Khung nội dung chat: các bong bóng tin nhắn của mình và đối phương
-- Thẻ "Đề nghị giá" trong luồng chat: hiện loại đề nghị (Tiền, Vật trao đổi, Tiền và vật), số tiền (ví dụ 6.800.000đ), món đồ đem đổi nếu có, và trạng thái (chờ trả lời, đã chấp nhận, đã từ chối). Với người bán, khi còn chờ trả lời, thẻ có hai nút "Từ chối" và "Chấp nhận"
+- Thẻ "Đề nghị giá" trong luồng chat: hiện loại đề nghị (Tiền, Vật trao đổi, Tiền và vật), số tiền (ví dụ 6.800.000đ), món đồ đem đổi nếu có, và trạng thái (chờ người bán trả lời, đã chấp nhận, đã từ chối). Với người bán, khi còn chờ trả lời, thẻ có hai nút "Từ chối" và "Chấp nhận"
 - Thanh nhập liệu dưới cùng: nút đính kèm ảnh, ô nhập tin nhắn, nút gửi
 
 **Hành động và điều hướng:**
 - Bấm nút quay lại: về màn đã gọi (thường là C01)
 - Bấm tên hoặc ảnh người đối thoại: sang D02 Trang cá nhân của người đó
 - Bấm nút menu 3 chấm: mở menu "Xem trang cá nhân" (sang D02) và "Báo cáo người dùng" (sang D04)
-- Bấm giữ một tin nhắn của đối phương (chưa có ảnh): "Báo cáo tin nhắn" (sang D04)
+- Bấm giữ một tin nhắn của đối phương (chưa có ảnh): "Báo cáo tin nhắn" (sang D04 bằng `action_global_report`, `targetType` là MESSAGE, `targetId` là mã tin nhắn, kèm `conversationId` của cuộc trò chuyện đang mở để Admin đọc được ngữ cảnh)
 - Bấm vào banner sản phẩm: sang B03 Chi tiết tin đăng
 - Bấm "Chấp nhận" trên thẻ đề nghị: tạo giao dịch ở trạng thái chờ xác nhận, tin chuyển sang đang giữ chỗ, các đề nghị chờ khác của tin đó tự bị từ chối, người mua nhận thông báo. Người bán được đưa sang C03
 - Bấm "Từ chối": đề nghị chuyển sang đã từ chối, người mua nhận thông báo
@@ -62,9 +64,10 @@
 **Chức năng liên quan:** STT 43, 44 (gửi chữ, gửi ảnh), 46 (trạng thái hoạt động), 47, 48, 49 (gửi, chấp nhận, từ chối đề nghị).
 
 **Trạng thái đặc biệt:**
-- Người gửi đề nghị: thẻ chỉ hiện "Đang chờ phản hồi", không có nút nào. Không hủy được đề nghị và không có đề xuất lại; muốn đổi giá thì đợi người bán từ chối rồi gửi đề nghị mới ở B03
+- Người gửi đề nghị: thẻ chỉ hiện "Chờ người bán trả lời" (nhãn chuẩn của `OfferStatus.PENDING`, xem `giao-dien.md` mục 4), không có nút nào. Không hủy được đề nghị và không có đề xuất lại; muốn đổi giá thì đợi người bán từ chối rồi gửi đề nghị mới ở B03
 - Tin không còn đang bán (đã giữ chỗ, đã bán, bị ẩn): thẻ đề nghị chờ không chấp nhận được, báo lỗi rõ ràng
 - Khi mất mạng: nút gửi bị mờ hoặc tin nhắn vừa gửi hiện biểu tượng đang gửi (xoay vòng)
+- Tài khoản chưa được duyệt xác thực: vẫn nhắn tin được bình thường. Gửi đề nghị giá (từ B03) bị chặn, và với người bán thì hai nút "Từ chối" và "Chấp nhận" trên thẻ đề nghị bị chặn (chấp nhận là tạo giao dịch). Màn hiện lời giải thích cần được admin duyệt xác thực trước khi mua bán, kèm lối "Đăng ký xác thực" sang D01 (`action_global_my_profile`)
 
 **Khác với ảnh:**
 - Ảnh vẽ nút "Hủy đề nghị" cho người gửi; không làm (đề nghị chỉ được chấp nhận hoặc từ chối).
@@ -83,11 +86,11 @@
 
 **Thành phần chính:**
 - Thanh tiêu đề: nút quay lại, mã giao dịch (ví dụ "#DL2049")
-- Thanh tiến trình 5 bước: Chờ xác nhận, Đã xác nhận, Đang giao, Đã nhận, Hoàn tất. Bước hiện tại được đánh dấu nổi bật. Giao dịch gặp trực tiếp bỏ qua bước "Đang giao" (hiện mờ). Giao dịch đã hủy hiện nhãn "Đã hủy" kèm lý do; giao dịch đang khiếu nại hiện nhãn "Đang khiếu nại"
+- Thanh tiến trình 5 bước: Chờ xác nhận, Đã xác nhận, Đã giao, Đã nhận, Hoàn tất. Bước hiện tại được đánh dấu nổi bật. Giao dịch gặp trực tiếp bỏ qua bước "Đã giao" (hiện mờ). Giao dịch đã hủy hiện nhãn "Đã hủy" kèm lý do; giao dịch đang tranh chấp hiện nhãn "Tranh chấp"
 - Thẻ sản phẩm: ảnh thu nhỏ, tên, giá chốt
-- Khối "Thông tin giao dịch": phương thức giao nhận (Gặp trực tiếp hoặc Gửi vận chuyển), địa điểm hoặc địa chỉ giao, thời gian hẹn, điều kiện khác hai bên thống nhất, món đồ trao đổi (nếu có). Khi đã giao: đơn vị vận chuyển, mã vận đơn, ảnh vận đơn
-- Khối đếm ngược khi đang giao: "Còn N ngày để xác nhận" (7 ngày kể từ lúc giao, sau đó hệ thống tự chuyển sang đã nhận)
-- Hộp thông tin ký quỹ: nhắc tiền đang được giữ an toàn ở ví trung gian (mô phỏng). Ẩn khi giá thống nhất bằng 0 (trao đổi hoặc cho tặng)
+- Khối "Thông tin giao dịch": phương thức giao nhận (Gặp trực tiếp hoặc Gửi vận chuyển), địa điểm hoặc địa chỉ giao, thời gian hẹn, điều kiện khác hai bên thống nhất, món đồ trao đổi (nếu có). Khi đã giao: đơn vị vận chuyển, mã vận đơn, ảnh vận đơn. Khi đã nhận: ảnh nhận hàng do người mua chụp hoặc chọn lúc xác nhận
+- Khối đếm ngược khi đã giao: "Còn N ngày để xác nhận" (7 ngày kể từ lúc giao, sau đó hệ thống tự chuyển sang đã nhận)
+- Hộp nhắc giữ tiền: nhắc tiền được hệ thống giữ an toàn dưới dạng khoản thanh toán "đang giữ" (thanh toán mô phỏng, không có tiền thật) cho tới khi người mua xác nhận đã nhận hoặc hết đếm ngược. Ẩn khi giá thống nhất bằng 0 (trao đổi hoặc cho tặng)
 - Các nút hành động ở dưới, đổi theo trạng thái và vai trò (bảng dưới)
 
 **Hành động theo trạng thái và vai trò:**
@@ -97,37 +100,44 @@
 | Chờ xác nhận | "Sửa điều khoản", "Xác nhận", "Hủy giao dịch" (bắt buộc lý do) | "Sửa điều khoản", "Xác nhận", "Hủy giao dịch" (bắt buộc lý do) |
 | Đã xác nhận, giá lớn hơn 0 | "Thanh toán" (nếu chưa thanh toán), "Hủy giao dịch" | "Hủy giao dịch" |
 | Đã xác nhận, gửi vận chuyển | Chờ người bán giao | "Xác nhận đã giao": bắt buộc ảnh vận đơn, tên đơn vị vận chuyển, mã vận đơn; chỉ làm được sau khi người mua đã thanh toán (nếu giá lớn hơn 0) |
-| Đã xác nhận, gặp trực tiếp | "Xác nhận đã nhận hàng" (sau khi đã thanh toán nếu giá lớn hơn 0), "Khiếu nại giao dịch" | Chờ người mua |
-| Đang giao | "Xác nhận đã nhận hàng", "Khiếu nại giao dịch" | Xem đếm ngược, "Khiếu nại giao dịch" |
-| Đang khiếu nại | Xem khiếu nại (sang D07) | Xem khiếu nại (sang D07) |
+| Đã xác nhận, gặp trực tiếp | "Xác nhận đã nhận hàng" kèm một ảnh (sau khi đã thanh toán nếu giá lớn hơn 0), "Khiếu nại giao dịch" | Chờ người mua |
+| Đã giao | "Xác nhận đã nhận hàng" kèm một ảnh, "Khiếu nại giao dịch" | Xem đếm ngược, "Khiếu nại giao dịch" |
+| Tranh chấp | Xem khiếu nại (sang D07) | Xem khiếu nại (sang D07) |
 | Đã nhận | "Viết đánh giá" (sang C05) nếu chưa đánh giá | "Viết đánh giá" nếu chưa đánh giá |
 | Hoàn tất | "Viết đánh giá" nếu chưa đánh giá | "Viết đánh giá" nếu chưa đánh giá |
 | Đã hủy | Chỉ xem, hiện lý do hủy | Chỉ xem, hiện lý do hủy |
 
-- Không hủy được giao dịch từ "Đang giao" trở đi; có vấn đề thì khiếu nại.
-- Sau "Đã nhận" tiền đã chuyển cho người bán nên không khiếu nại được nữa (vẫn báo cáo được).
+- Không hủy được giao dịch từ "Đã giao" trở đi; có vấn đề thì khiếu nại.
+- Sau "Đã nhận" khoản thanh toán đã chuyển sang "đã giải ngân" cho người bán nên không khiếu nại được nữa (vẫn báo cáo được).
 - Giao dịch ở "Chờ xác nhận" quá 3 ngày mà hai bên chưa xác nhận thì hệ thống tự hủy.
 - "Sửa điều khoản" xóa cả hai xác nhận, hai bên xác nhận lại.
 
 **Hành động và điều hướng:**
 - Bấm nút quay lại: về màn đã gọi (C02, C04 hoặc thông báo)
-- Bấm "Xác nhận đã nhận hàng": giao dịch sang "Đã nhận", tiền ký quỹ chuyển ngay cho người bán
+- Bấm "Thanh toán": sang C07 Thanh toán giao dịch bằng `action_global_deal_payment` (tham số `dealId`), luồng thanh toán mô phỏng giống ứng dụng thanh toán thật (chọn phương thức, màn xác nhận, biên lai). Không gọi dịch vụ bên ngoài và không có tiền thật; xác nhận xong, hệ thống tạo khoản thanh toán "đang giữ" kèm phương thức đã chọn và thông báo cho người bán
+- Bấm "Xác nhận đã nhận hàng": hiện hộp thoại nhắc xác nhận không thể thu hồi và yêu cầu chụp hoặc chọn một ảnh món đồ đã nhận (bắt buộc, chỉ một ảnh, ảnh được nén trước khi lưu). Bấm "Xác nhận" trong hộp thoại: lưu ảnh nhận hàng, giao dịch sang "Đã nhận", hệ thống chuyển khoản thanh toán từ "đang giữ" sang "đã giải ngân" cho người bán
 - Bấm "Khiếu nại giao dịch": sang D05 Tạo khiếu nại
 - Bấm "Viết đánh giá": sang C05 Viết đánh giá
 - Bấm tên người bên kia: sang D02
 
-**Chức năng liên quan:** STT 50 (xem thông tin giao dịch), 51 (sửa điều khoản), 52 (xác nhận giao dịch), 53 (xác nhận đã nhận), 54 (xác nhận đã giao), 55 (hủy có lý do), 56 (thanh toán qua bên thứ ba, mô phỏng), 64 (khiếu nại), 59 (nút viết đánh giá), 84 (tự giải ngân khi hết đếm ngược).
+**Chức năng liên quan:** STT 50 (xem thông tin giao dịch), 51 (sửa điều khoản), 52 (xác nhận giao dịch), 53 (xác nhận đã nhận kèm một ảnh), 54 (xác nhận đã giao), 55 (hủy có lý do), 56 (thanh toán mô phỏng, tiền được giữ trong hệ thống), 64 (khiếu nại), 59 (nút viết đánh giá), 84 (tự giải ngân khi hết đếm ngược: hệ thống tự chuyển khoản thanh toán sang "đã giải ngân" cho người bán).
 
 **Trạng thái đặc biệt:**
-- Giá thống nhất bằng 0: không có thanh toán, ẩn hộp ký quỹ và nút "Thanh toán"
+- Giá thống nhất bằng 0: không có thanh toán, ẩn hộp nhắc giữ tiền và nút "Thanh toán"
 - Thiếu ảnh, tên đơn vị hoặc mã vận đơn: nút "Xác nhận đã giao" chưa bấm được
+- Chưa chọn ảnh nhận hàng: nút "Xác nhận" trong hộp thoại xác nhận đã nhận hàng chưa bấm được
 - Mất mạng: hiện lại giao dịch đã tải từ bộ nhớ đệm, các nút hành động bị khóa
+- Tài khoản chưa được duyệt xác thực: các nút "Sửa điều khoản", "Xác nhận", "Thanh toán", "Xác nhận đã giao" và "Xác nhận đã nhận hàng" bị chặn. Màn hiện lời giải thích cần được admin duyệt xác thực trước khi tạo hoặc tham gia giao dịch, kèm lối "Đăng ký xác thực" sang D01 (`action_global_my_profile`). Hai nút "Hủy giao dịch" và "Khiếu nại giao dịch" không bị chặn: ai đã vào được giao dịch thì phải thoát ra được
+- Khách chưa đăng nhập: không vào được màn này (giao dịch chỉ dành cho hai bên đã đăng nhập)
 
 **Khác với ảnh:**
 - Ảnh chỉ vẽ hai nút "Xác nhận đã nhận hàng" và "Khiếu nại giao dịch"; thực tế các nút đổi theo trạng thái và vai trò như bảng trên.
-- Ảnh vẽ "Phương thức thanh toán (Ví trung gian)" như một dòng thông tin; không có lựa chọn "thanh toán trực tiếp". Ký quỹ áp dụng cho mọi giao dịch có giá lớn hơn 0, gặp trực tiếp hay gửi vận chuyển.
-- Ảnh vẽ thanh tiến trình 5 bước đang ở bước "Đã xác nhận"; thực tế còn hai nhãn "Đã hủy" và "Đang khiếu nại" và đường gặp trực tiếp.
+- Ảnh vẽ "Phương thức thanh toán (Ví trung gian)" như một dòng thông tin; không có ví trung gian và không có lựa chọn "thanh toán trực tiếp". Thanh toán là mô phỏng và áp dụng cho mọi giao dịch có giá lớn hơn 0, gặp trực tiếp hay gửi vận chuyển: người mua chọn phương thức mô phỏng ở màn thanh toán, tiền được giữ bằng khoản thanh toán "đang giữ" trong hệ thống.
+- Ảnh vẽ thanh tiến trình 5 bước đang ở bước "Đã xác nhận"; thực tế còn hai nhãn "Đã hủy" và "Tranh chấp" và đường gặp trực tiếp.
 - Ảnh không vẽ khối đếm ngược 7 ngày và form giao hàng (ảnh vận đơn); vẫn phải làm.
+- Ảnh ghi nhãn "Đang giao" ở bước thứ ba của thanh tiến trình; chữ đúng theo trạng thái hệ thống là "Đã giao". Giao dịch tranh chấp hiện "Tranh chấp", không phải "Đang khiếu nại".
+- Ảnh không vẽ bước chụp hoặc chọn ảnh khi xác nhận đã nhận hàng; vẫn phải làm (ảnh nhận hàng bắt buộc).
+- Hộp thông tin trong ảnh ghi "Tiền được giữ tại ví trung gian"; chữ đúng theo mục hộp nhắc giữ tiền ở trên: tiền được hệ thống giữ dưới dạng khoản thanh toán "đang giữ", không có ví trung gian.
 
 ## C04. Lịch sử giao dịch và thanh toán
 
@@ -135,19 +145,21 @@
 
 **Lớp:** `DealHistoryFragment` trong `MainActivity`. Màn hình chi tiết mở từ D01: có nút quay lại, ẩn thanh dưới.
 
-**Mục đích:** Giúp người dùng xem lại toàn bộ các giao dịch đã thực hiện (cả vai trò người mua và người bán), và xem lịch sử thanh toán ký quỹ.
+**Mục đích:** Giúp người dùng xem lại toàn bộ các giao dịch đã thực hiện (cả vai trò người mua và người bán), và xem lịch sử thanh toán (mô phỏng).
 
 **Thành phần chính:**
 - Thanh tiêu đề: nút quay lại, tiêu đề "Lịch sử giao dịch"
 - Hai tab: "Giao dịch" (như ảnh) và "Thanh toán" (chưa có ảnh)
 - Tab "Giao dịch":
-  - Thanh bộ lọc trạng thái (dạng chip): Tất cả, Đang xử lý (chờ xác nhận, đã xác nhận, đang giao), Hoàn tất (đã nhận, hoàn tất), Khiếu nại, Đã hủy
-  - Danh sách giao dịch: mỗi thẻ hiển thị ảnh sản phẩm, tên sản phẩm, giá tiền (màu cam), nhãn trạng thái (ví dụ "Hoàn tất" xanh lục, "Đang giao" cam, "Đã hủy" xám, "Khiếu nại" đỏ) và dòng "Vai trò: Người mua" hoặc "Người bán"
-- Tab "Thanh toán": danh sách khoản ký quỹ, mỗi dòng có tên món đồ, số tiền, trạng thái (Đang giữ, Đã giải ngân, Đã hoàn), thời điểm giữ và giải ngân hoặc hoàn, và vai trò (đã trả hoặc đã nhận)
+  - Thanh bộ lọc trạng thái (dạng chip): Tất cả, Đang xử lý (chờ xác nhận, đã xác nhận, đã giao), Hoàn tất (đã nhận, hoàn tất), Tranh chấp, Đã hủy
+  - Thanh bộ lọc loại giao dịch (dạng chip): Tất cả, Mua bán, Trao đổi, Cho tặng
+  - Thanh bộ lọc vai trò (dạng chip): Tất cả, Đã mua, Đã bán
+  - Danh sách giao dịch: mỗi thẻ hiển thị ảnh sản phẩm, tên sản phẩm, giá tiền (màu cam), nhãn trạng thái (ví dụ "Hoàn tất" xanh lục, "Đã giao" cam, "Đã hủy" xám, "Tranh chấp" đỏ) và dòng "Vai trò: Người mua" hoặc "Người bán"
+- Tab "Thanh toán": danh sách khoản thanh toán, mỗi dòng có tên món đồ, số tiền, trạng thái (Đang giữ, Đã giải ngân cho người bán, Đã hoàn cho người mua), thời điểm giữ và giải ngân hoặc hoàn, và vai trò (đã trả hoặc đã nhận)
 
 **Hành động và điều hướng:**
 - Bấm nút quay lại: về D01 Hồ sơ cá nhân
-- Bấm chọn các chip lọc trạng thái: lọc danh sách giao dịch ngay trên màn hình
+- Bấm chọn các chip lọc trạng thái, loại giao dịch hoặc vai trò: lọc danh sách giao dịch ngay trên màn hình; ba bộ lọc dùng cùng lúc, danh sách chỉ giữ giao dịch khớp cả ba
 - Bấm vào một thẻ giao dịch hoặc một dòng thanh toán: sang C03 Chi tiết giao dịch đó
 
 **Chức năng liên quan:** STT 57 (xem lịch sử giao dịch), STT 58 (xem lịch sử thanh toán).
@@ -155,10 +167,13 @@
 **Trạng thái đặc biệt:**
 - Danh sách trống: hiện thông báo "Bạn chưa có giao dịch nào" hoặc "Bạn chưa có thanh toán nào"
 - Mất mạng: hiện lại danh sách đã tải từ bộ nhớ đệm, kèm dải báo ngoại tuyến
+- Khách chưa đăng nhập: không vào được màn này (mở từ D01)
 
 **Khác với ảnh:**
-- Ảnh chỉ có 4 chip (Tất cả, Hoàn tất, Đang xử lý, Đã hủy); thêm chip "Khiếu nại" vì có nhãn Khiếu nại.
-- Ảnh không vẽ tab "Thanh toán" (STT 58); vẫn phải làm.
+- Ảnh chỉ có 4 chip trạng thái (Tất cả, Hoàn tất, Đang xử lý, Đã hủy); thêm chip "Tranh chấp" vì có giao dịch ở trạng thái tranh chấp.
+- Ảnh chưa vẽ bộ lọc loại giao dịch (Mua bán, Trao đổi, Cho tặng) và bộ lọc vai trò (Đã mua, Đã bán); vẫn phải làm (STT 57).
+- Ảnh ghi nhãn "Đang giao" và "Khiếu nại" trên thẻ giao dịch; chữ đúng theo trạng thái hệ thống là "Đã giao" và "Tranh chấp".
+- Ảnh không vẽ tab "Thanh toán" (STT 58); vẫn phải làm. Các khoản thanh toán chỉ là bản ghi trong hệ thống: "đang giữ" rồi "đã giải ngân" cho người bán hoặc "đã hoàn" cho người mua, không có ngân hàng hay tiền thật.
 
 ## C05. Viết đánh giá
 
@@ -198,7 +213,7 @@
 
 **Lớp:** `NotificationListFragment` trong `MainActivity`. Màn hình chi tiết mở từ chuông ở B01: có nút quay lại, ẩn thanh dưới.
 
-**Mục đích:** Hiển thị các thông báo cập nhật về tin nhắn, đề nghị giá, giao dịch, đánh giá, khiếu nại, cảnh báo, kết quả xác minh và tin bị admin xử lý. Không có thông báo hệ thống do admin gửi hàng loạt (STT 99 là phát triển sau).
+**Mục đích:** Hiển thị các thông báo cập nhật về tin nhắn, đề nghị giá, giao dịch, đánh giá, khiếu nại, cảnh báo, kết quả xác thực tài khoản và tin bị admin xử lý. Không có thông báo hệ thống do admin gửi hàng loạt (STT 99 là phát triển sau).
 
 **Thành phần chính:**
 - Thanh tiêu đề: nút quay lại, tiêu đề "Thông báo"
@@ -219,7 +234,7 @@
 | COMPLAINT_RESULT (kết quả khiếu nại) | D07, thẻ "Khiếu nại của tôi" |
 | WARNING (bị cảnh báo hoặc khóa) | D01 |
 | LISTING_MODERATED (tin bị admin ẩn, gỡ hoặc khôi phục) | B05 |
-| VERIFICATION_RESULT (kết quả xác minh người bán) | D01 |
+| VERIFICATION_RESULT (kết quả xác thực tài khoản) | D01 |
 
 - Cuộn dọc danh sách: xem thêm các thông báo cũ hơn
 - Bấm nút quay lại: về màn đã gọi
@@ -233,3 +248,39 @@
 **Khác với ảnh:**
 - Ảnh vẽ thanh điều hướng dưới 5 mục; ở đây thanh dưới không hiện.
 - Ảnh vẽ chung "thông báo hệ thống"; không làm thông báo bảo trì hoặc broadcast do admin gửi.
+
+## C07. Thanh toán giao dịch
+
+**Ảnh:** chưa có ảnh
+
+**Lớp:** `DealPaymentFragment` trong `MainActivity`. Màn hình chi tiết: có nút quay lại, ẩn thanh dưới. Chỉ mở từ nút "Thanh toán" trên C03 bằng hành động toàn cục `action_global_deal_payment` (tham số `dealId`), và chỉ dành cho người mua của giao dịch.
+
+**Mục đích:** Cho người mua thanh toán cho giao dịch mua bán đã xác nhận bằng một luồng giống ứng dụng thanh toán thật (chọn phương thức, màn xác nhận, biên lai). Đây là thanh toán mô phỏng: không gọi dịch vụ bên ngoài, không có tiền thật, không có ngân hàng; hệ thống giữ tiền bằng khoản thanh toán "đang giữ" rồi chuyển "đã giải ngân" cho người bán hoặc "đã hoàn" cho người mua.
+
+**Thành phần chính:**
+- Thanh tiêu đề: nút quay lại, tiêu đề "Thanh toán"
+- Bước 1, chọn phương thức: tóm tắt giao dịch (ảnh thu nhỏ, tên món đồ, người bán), số tiền phải trả (bằng giá chốt, không sửa được) và ba phương thức mô phỏng chọn một: "Thẻ ngân hàng", "Ví điện tử", "Chuyển khoản". Nút "Tiếp tục", chưa bấm được khi chưa chọn phương thức
+- Bước 2, màn xác nhận: tóm tắt giao dịch, số tiền, phương thức đã chọn, lời lưu ý đây là thanh toán mô phỏng và tiền được giữ an toàn tới khi người mua nhận hàng. Nút "Xác nhận thanh toán", nút "Đổi phương thức" và nút "Hủy"
+- Bước 3, biên lai: số tiền, phương thức, thời điểm giữ, trạng thái "Đang giữ". Nút "Về chi tiết giao dịch"
+
+**Hành động và điều hướng:**
+- Bấm nút quay lại ở bước chọn phương thức: về C03, không tạo khoản thanh toán
+- Chọn một phương thức rồi bấm "Tiếp tục": sang màn xác nhận
+- Bấm "Đổi phương thức": về bước chọn phương thức
+- Bấm "Hủy": về C03, không tạo khoản thanh toán
+- Bấm "Xác nhận thanh toán": nút bị khóa trong lúc xử lý; hệ thống tạo khoản thanh toán "đang giữ" kèm phương thức đã chọn, thông báo cho người bán, rồi hiện biên lai
+- Bấm "Về chi tiết giao dịch" trên biên lai: về C03, nơi nút "Thanh toán" không còn
+
+**Chức năng liên quan:** STT 56 (thanh toán mô phỏng, tiền được giữ trong hệ thống). Khoản thanh toán vừa tạo hiện ở tab "Thanh toán" của C04 (STT 58).
+
+**Trạng thái đặc biệt:**
+- Đang xử lý: nút "Xác nhận thanh toán" bị khóa và hiện vòng xoay, để không tạo khoản thanh toán trùng
+- Giao dịch không còn ở trạng thái "Đã xác nhận" (đã bị hủy lúc đang thanh toán): báo không thể thanh toán, về C03
+- Giao dịch đã có khoản thanh toán (bấm trùng hoặc đã trả trên thiết bị khác): báo giao dịch đã được thanh toán, về C03, không tạo thêm
+- Mất mạng hoặc ghi dữ liệu lỗi: báo lỗi, không tạo khoản thanh toán, cho phép thử lại
+- Giá thống nhất bằng 0 (trao đổi hoặc cho tặng): không vào được màn này, vì C03 không có nút "Thanh toán"
+- Tài khoản chưa được duyệt xác thực: nút "Thanh toán" trên C03 bị chặn nên không vào được màn này
+- Khách chưa đăng nhập: không vào được màn này
+- Xoay màn hình: giữ nguyên phương thức đã chọn và bước đang xem
+
+**Khác với ảnh:** màn hình này chưa có ảnh; không có gì để so sánh. Giao diện làm theo hệ thống thiết kế chung như các màn khác; không có ví trung gian, số dư ví hay dịch vụ thanh toán bên ngoài.

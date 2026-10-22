@@ -1,27 +1,27 @@
 # Danh sách lớp dự kiến
 
-**92 lớp Java** chia theo tầng như đã chốt trong `AGENTS.md` mục 7. Danh sách này khớp từng lớp với sơ đồ lớp ở [`../diagrams/so-do-lop/`](../diagrams/so-do-lop/README.md). Cột "Chức năng liên quan" là số STT trong [bảng đặc tả chức năng](../product/dac-ta-chuc-nang.md).
+**93 lớp Java** chia theo tầng như đã chốt trong `AGENTS.md` mục 7. Danh sách này khớp từng lớp với sơ đồ lớp ở [`../diagrams/so-do-lop/`](../diagrams/so-do-lop/README.md). Cột "Chức năng liên quan" là số STT trong [bảng đặc tả chức năng](../product/dac-ta-chuc-nang.md).
 
 | Gói | Số lớp |
 | --- | ---: |
 | `com.nhom3.pubgapp.model` | 23 |
-| `com.nhom3.pubgapp.model.enums` | 22 |
+| `com.nhom3.pubgapp.model.enums` | 23 |
 | `com.nhom3.pubgapp.data` | 14 |
 | `com.nhom3.pubgapp.data.local` | 12 |
 | `com.nhom3.pubgapp.util` | 7 |
 | `com.nhom3.pubgapp.viewmodel` | 14 |
-| **Tổng** | **92** |
+| **Tổng** | **93** |
 
 ## Gói model, 23 lớp
 
 | Lớp | Trách nhiệm | Chức năng liên quan |
 | --- | --- | --- |
 | `BaseDocument` | Lớp cha của mọi tài liệu Firestore: mã, thời điểm tạo và sửa. | hạ tầng dùng chung |
-| `User` | Người dùng: hồ sơ công khai, khu vực, trạng thái tài khoản, tổng điểm đánh giá, cài đặt thông báo. | 1 đến 5, 7, 10, 12, 31 đến 35, 46, 59, 70 đến 73 |
+| `User` | Người dùng: hồ sơ công khai, khu vực, trạng thái tài khoản, tổng điểm đánh giá, cài đặt thông báo. | 1 đến 5, 7, 10, 12, 31 đến 35, 46, 59, 70 đến 73, 103 |
 | `ProfileStats` | Số liệu hồ sơ đếm bằng truy vấn tổng hợp của Firestore lúc mở hồ sơ; không lưu thành trường. | 8 |
 | `UserAddress` | Địa chỉ giao nhận của một người dùng (mỗi người có nhiều địa chỉ). | 6 |
 | `UserIdentity` | Thông tin định danh riêng tư (số CCCD, ngày sinh, giới tính, địa chỉ thường trú); chỉ chủ tài khoản và admin đọc được. | 1 đến 3, 9 |
-| `SellerVerification` | Yêu cầu xác minh để trở thành người bán, do admin duyệt. | 73 |
+| `SellerVerification` | Yêu cầu xác thực tài khoản (số CCCD, ảnh giấy tờ và ảnh chân dung cầm giấy tờ), do admin duyệt; đây là cửa mở quyền mua và bán. | 73 |
 | `Warning` | Một lần cảnh báo vi phạm; bậc 1 cảnh báo, bậc 2 khóa tạm, bậc 3 khóa vĩnh viễn. | 72 |
 | `AppNotification` | Thông báo gửi cho một người dùng (offer, giao dịch, kết quả khiếu nại, cảnh báo). | 67, 91 |
 | `Category` | Danh mục sản phẩm, có danh mục con và danh sách thuộc tính tình trạng riêng. | 21, 79, 80 |
@@ -40,12 +40,12 @@
 | `BannedKeyword` | Một từ khóa cấm; tin đăng chứa nó bị gắn cờ cần chú ý. | 78 |
 | `MediaImage` | Một ảnh đã nén, lưu dạng Base64 trong Firestore (gói Spark không có Cloud Storage). | 17 |
 
-## Gói model.enums, 22 lớp
+## Gói model.enums, 23 lớp
 
 | Lớp | Trách nhiệm | Chức năng liên quan |
 | --- | --- | --- |
 | `UserStatus` | Trạng thái tài khoản. | 12, 68 |
-| `VerificationStatus` | Trạng thái xác minh người bán. | 73 |
+| `VerificationStatus` | Trạng thái xác thực tài khoản; APPROVED là điều kiện để đăng tin, gửi đề nghị và tạo giao dịch. | 73 |
 | `Gender` | Giới tính trong thông tin định danh. | 9 |
 | `NotificationType` | Loại thông báo. | 47 đến 49, 67 |
 | `ListingStatus` | Trạng thái tin đăng. | 13, 22 |
@@ -59,6 +59,7 @@
 | `DealStatus` | Trạng thái giao dịch. | 52 |
 | `DeliveryMethod` | Phương thức giao nhận. | 50 |
 | `PaymentStatus` | Trạng thái khoản ký quỹ. | 56, 84 |
+| `PaymentMethod` | Phương thức thanh toán mô phỏng người mua chọn; không gọi dịch vụ bên ngoài. | 56 |
 | `ReportTarget` | Đối tượng bị báo cáo. | 61 |
 | `ReportReason` | Lý do báo cáo chọn sẵn. | 61 |
 | `ReportStatus` | Trạng thái báo cáo. | 62 |
@@ -73,8 +74,8 @@
 | --- | --- | --- |
 | `DataCallback` | Giao diện gọi lại chung: repository báo kết quả hoặc lỗi cho ViewModel. | hạ tầng dùng chung |
 | `BaseRepository` | Lớp cha của mọi repository: giữ kết nối Firebase, ghi nhật ký, xử lý lỗi chung. | 74 |
-| `AuthRepository` | Đăng ký, đăng nhập, quên mật khẩu, xác thực email, đổi mật khẩu, xóa thông tin đăng nhập. | 1 đến 3, 11, 12 |
-| `UserRepository` | Hồ sơ, địa chỉ, thông tin định danh, cài đặt thông báo, theo dõi, lưu tin, yêu cầu xác minh, vô hiệu hóa tài khoản. | 4, 6, 8 đến 10, 12, 30, 39 đến 42, 46, 73 |
+| `AuthRepository` | Đăng ký, đăng nhập, quên mật khẩu, xác thực email, đổi mật khẩu, xóa thông tin đăng nhập. | 1 đến 3, 11, 12, 104 |
+| `UserRepository` | Hồ sơ, địa chỉ, thông tin định danh, cài đặt thông báo, theo dõi, lưu tin, yêu cầu xác thực tài khoản, vô hiệu hóa tài khoản. | 4, 6, 8 đến 10, 12, 30, 39 đến 42, 46, 73, 103 |
 | `CategoryRepository` | Danh mục và danh mục con; admin thêm, sửa, xóa. | 21, 24, 79 |
 | `ListingRepository` | Tin đăng, tìm kiếm, kênh xem; đọc bộ nhớ đệm trước rồi mới gọi mạng. | 13 đến 15, 22, 23, 29, 36, 38, 78 |
 | `MediaRepository` | Nén ảnh, lưu dạng Base64 trong Firestore, tạo ảnh thu nhỏ, đọc ảnh kèm bộ nhớ đệm. | 5, 17, 43, 44, 54 |
@@ -84,13 +85,13 @@
 | `ReportRepository` | Báo cáo vi phạm; người dùng xem, hủy và xuất lịch sử. | 61 đến 63, 75 |
 | `ComplaintRepository` | Khiếu nại; ghi chú nội bộ nằm ở tài liệu con chỉ admin đọc được. | 64 đến 66, 87 đến 91 |
 | `NotificationRepository` | Thông báo cho từng người dùng. | 67, 91 |
-| `AdminRepository` | Thao tác dành riêng cho admin: người dùng, xác minh, kiểm duyệt, từ khóa cấm. | 68 đến 74, 76 đến 78 |
+| `AdminRepository` | Thao tác dành riêng cho admin: người dùng, xác thực tài khoản, kiểm duyệt, từ khóa cấm, danh sách tài khoản admin và việc cấp hoặc gỡ quyền admin. | 68 đến 74, 76 đến 78, 105, 106 |
 
 ## Gói data.local, 12 lớp
 
 | Lớp | Trách nhiệm | Chức năng liên quan |
 | --- | --- | --- |
-| `AppDatabase` | Cơ sở dữ liệu SQLite cục bộ; bị xóa sạch khi đăng xuất. | hạ tầng dùng chung |
+| `AppDatabase` | Cơ sở dữ liệu SQLite cục bộ; bị xóa sạch khi đăng xuất. | 104 |
 | `Converters` | Đổi kiểu danh sách và thời gian sang kiểu SQLite lưu được. | hạ tầng dùng chung |
 | `ListingEntity` | Bản sao tin đăng đã xem hoặc trong bảng tin để xem lại khi mất mạng. | hạ tầng dùng chung |
 | `ConversationEntity` | Bản sao danh sách cuộc trò chuyện. | 43, 44 |
@@ -107,29 +108,29 @@
 
 | Lớp | Trách nhiệm | Chức năng liên quan |
 | --- | --- | --- |
-| `SessionManager` | Giữ người dùng đang đăng nhập và cờ admin cho toàn ứng dụng. | 1 đến 3 |
+| `SessionManager` | Giữ người dùng đang đăng nhập và cờ admin cho toàn ứng dụng. | 1 đến 3, 104, 106 |
 | `NetworkMonitor` | Theo dõi kết nối mạng để chọn dữ liệu cục bộ hay dữ liệu mạng. | hạ tầng dùng chung |
 | `KeywordFilter` | So khớp chuỗi với từ khóa cấm để gắn cờ tin đăng. | 78 |
 | `RecommendationEngine` | Chấm điểm trên máy để gợi ý sản phẩm tương tự, mục Dành cho bạn và khoảng giá tham khảo. | 29, 36 đến 38 |
 | `GeoUtils` | Tính khoảng cách và lọc theo bán kính (Firestore không truy vấn được theo bán kính). | 27 |
-| `FormatUtils` | Định dạng giá, thời gian; bỏ dấu tiếng Việt để tìm kiếm. | 23 |
+| `FormatUtils` | Định dạng giá, thời gian; bỏ dấu tiếng Việt để tìm kiếm. | 23, 103 |
 | `AutoReleaseWorker` | Việc chạy nền định kỳ trên máy: tự chuyển giao dịch hết đếm ngược sang Đã nhận và giải ngân; tự hoàn tất giao dịch Đã nhận sau 3 ngày. | 84 |
 
 ## Gói viewmodel, 14 lớp
 
 | Lớp | Trách nhiệm | Chức năng liên quan |
 | --- | --- | --- |
-| `AuthViewModel` | Đăng ký (kèm đồng ý điều khoản và số CCCD), đăng nhập, quên mật khẩu, đổi mật khẩu, chọn danh mục quan tâm. | 1 đến 3, 11, 35 |
-| `ProfileViewModel` | Hồ sơ, ảnh, địa chỉ, thông tin định danh, cài đặt thông báo, theo dõi, danh sách đã lưu, yêu cầu xác minh, xóa tài khoản. | 4 đến 10, 12, 39 đến 42, 73 |
+| `AuthViewModel` | Đăng ký (kèm đồng ý điều khoản và số CCCD), đăng nhập, quên mật khẩu, đổi mật khẩu, chọn danh mục quan tâm. | 1 đến 3, 11, 35, 104, 106 |
+| `ProfileViewModel` | Hồ sơ, ảnh, địa chỉ, thông tin định danh, cài đặt thông báo, theo dõi, danh sách đã lưu, yêu cầu xác thực tài khoản, xóa tài khoản. | 4 đến 10, 12, 39 đến 42, 73 |
 | `ShopViewModel` | Kệ hàng của người bán: đăng, lưu nháp, sửa, ẩn hoặc hiện, đổi trạng thái, sắp xếp. | 13 đến 15, 17, 22, 78 |
 | `FeedViewModel` | Kênh chung, kênh đang theo dõi, sắp xếp, mục Dành cho bạn. | 29, 30, 38 |
-| `SearchViewModel` | Từ khóa, bộ lọc và lịch sử tìm kiếm. | 23, 38 |
+| `SearchViewModel` | Từ khóa, bộ lọc, lịch sử tìm kiếm, và kết quả tìm người dùng. | 23, 38, 103 |
 | `ListingDetailViewModel` | Chi tiết tin, người bán, tin tương tự, giá tham khảo, lưu tin. | 36, 37, 40 đến 42 |
 | `ChatViewModel` | Danh sách chat, trạng thái hoạt động của người đối thoại, gửi chữ, ảnh và offer. | 43, 44, 46 đến 49 |
 | `DealViewModel` | Tạo, sửa, xác nhận, thanh toán, giao (kèm vận đơn), nhận, hoàn tất, hủy, đếm ngược và lịch sử giao dịch. | 50 đến 58, 84 |
 | `TrustViewModel` | Đánh giá, báo cáo và khiếu nại phía người dùng. | 59 đến 66 |
 | `NotificationViewModel` | Danh sách thông báo và số chưa đọc. | 67, 91 |
-| `AdminUserViewModel` | Admin: người dùng, hồ sơ, khóa, cảnh báo, xác minh, nhật ký. | 68 đến 74 |
+| `AdminUserViewModel` | Admin: người dùng, hồ sơ, khóa, cảnh báo, xác thực tài khoản, nhật ký. | 68 đến 74, 105 |
 | `AdminContentViewModel` | Admin: tin bị báo cáo, ẩn và gỡ, từ khóa cấm, danh mục. | 75 đến 80 |
 | `AdminDealViewModel` | Admin: theo dõi danh sách và chi tiết giao dịch. | 81, 82 |
 | `AdminComplaintViewModel` | Admin: xử lý khiếu nại, ra quyết định, ghi chú nội bộ, thông báo. | 87 đến 90 |

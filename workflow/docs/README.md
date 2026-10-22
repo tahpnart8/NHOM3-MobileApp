@@ -5,9 +5,9 @@ Thư mục này mô tả **hệ thống là gì**. Lý do đằng sau các lựa
 | Chủ đề | Tài liệu sở hữu | Nội dung |
 | --- | --- | --- |
 | Sản phẩm là gì, cho ai | [product/brief.md](product/brief.md) | Mục tiêu, người dùng, phạm vi |
-| Danh sách tính năng | [product/features.md](product/features.md) | 14 mã `F-xx` gom từ 87 chức năng Đợt này, trạng thái, người làm. **AI chỉ làm tính năng có mã ở đây** |
+| Danh sách tính năng | [product/features.md](product/features.md) | 14 mã `F-xx` gom từ 91 chức năng Đợt này, trạng thái, người làm. **AI chỉ làm tính năng có mã ở đây** |
 | Kiến trúc ứng dụng | [architecture/overview.md](architecture/overview.md) | Theo khung arc42: mục tiêu, ràng buộc, ngữ cảnh, tầng, triển khai, khái niệm xuyên suốt, rủi ro |
-| Đặc tả từng lớp | [architecture/dac-ta-lop/](architecture/dac-ta-lop/README.md) | Bản chữ của sơ đồ lớp: 89 lớp, thuộc tính, phương thức, quan hệ, Mermaid |
+| Đặc tả từng lớp | [architecture/dac-ta-lop/](architecture/dac-ta-lop/README.md) | Bản chữ của sơ đồ lớp: 93 lớp, thuộc tính, phương thức, quan hệ, Mermaid |
 | Ai dùng ai | [architecture/thanh-phan.md](architecture/thanh-phan.md) | ViewModel, repository, collection, DAO |
 | Thuật toán gợi ý | [architecture/goi-y.md](architecture/goi-y.md) | Cách chấm điểm tin tương tự, giá tham khảo, mục Dành cho bạn |
 | Máy trạng thái | [architecture/trang-thai.md](architecture/trang-thai.md) | Chuyển trạng thái của tin, offer, giao dịch, ký quỹ, báo cáo, khiếu nại, tài khoản |
@@ -29,8 +29,9 @@ Ba giai đoạn đầu của đồ án, trước khi vào giai đoạn code.
 | --- | --- | --- |
 | Phân tích đề bài | [analysis/README.md](analysis/README.md) | BACCM, nền tảng tương tự, nhu cầu người dùng, thuật ngữ, dự kiến lớp |
 | Đặc tả chức năng | [product/dac-ta-chuc-nang.md](product/dac-ta-chuc-nang.md) | Bảng chi tiết từng chức năng: STT, User, Module, Tên chức năng, Chức năng con, Đặc tả, Phạm vi (Đợt này hoặc Phát triển sau), Ghi chú |
-| Sơ đồ chức năng, sơ đồ lớp, ERD | [diagrams/README.md](diagrams/README.md) | File `.drawio` và ảnh xuất của 3 sơ đồ |
-| Giao diện (mockup) | [ui/README.md](ui/README.md) | 31 mã màn hình (30 có ảnh), chia 5 nhóm theo luồng nghiệp vụ, kèm 3 Activity |
+| Use case | [product/use-case/README.md](product/use-case/README.md) | 43 use case theo 5 module: tác nhân, tiền điều kiện, luồng chính và thay thế, ngoại lệ, lớp và phương thức |
+| Các sơ đồ | [diagrams/README.md](diagrams/README.md) | Phân rã chức năng, tính năng, use case, lớp, ERD, máy trạng thái: tệp `.drawio`, ảnh và đường dẫn tới bản chữ |
+| Giao diện (mockup) | [ui/README.md](ui/README.md) | 33 mã màn hình (30 có ảnh), chia 5 nhóm theo luồng nghiệp vụ, kèm 3 Activity |
 | Cách nộp tài liệu ba giai đoạn trên | [workflow/nop-tai-lieu.md](workflow/nop-tai-lieu.md) | Quy trình nhánh, commit, Pull Request cho việc tài liệu |
 
 Cách nói chuyện với AI (prompt, vòng lặp Explore, Plan, Implement, Review) nằm ở [`workflow/guide/`](../guide/README.md). Luật cho AI nằm ở [`AGENTS.md`](../../AGENTS.md) (tiếng Anh). Quy tắc đặt tên nằm ở [`.github/NAMING.md`](../../.github/NAMING.md).

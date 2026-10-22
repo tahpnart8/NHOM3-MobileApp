@@ -2,19 +2,21 @@
 
 Ai làm phần nào, ai được sửa file nào. Mục tiêu: không ai phải chờ ai và hai Pull Request không sửa cùng một chỗ. Mỗi issue code ghi rõ danh sách file được sửa; file không có trong danh sách thì không sửa, kể cả khi AI đề nghị "sửa luôn cho tiện".
 
+> **Đợt rút gọn 2026-10-22: mục 5 của tệp này không còn hiệu lực.** [`ke-hoach-rut-gon.md`](ke-hoach-rut-gon.md) mục 2 thay nó bằng một bảng **một tệp một người** thay vì chia theo từng phương thức của một lớp dùng chung. Lý do: ba người cùng mở `UserRepository.java` là điểm xung đột nặng nhất của cả kế hoạch. Bốn chỗ đổi chủ cần biết: `UserRepository` và `NotificationRepository` về Ngân trọn vẹn; màn **A05 về Phúc** (không phải Ngân); màn **B06 về Phúc** (không phải Tú); `TrustViewModel.submitReview` về Phúc. Entity và DAO của Room thuộc người sở hữu model tương ứng, không dồn cho một người. Mục 1 đến 4 và mục 6 của tệp này vẫn đúng, trừ hai chỗ đổi chủ màn vừa nêu. Luật R20 của `AGENTS.md` (leader tạo sẵn thân `NOT_READY`) được thực hiện bằng **issue 2 của đợt 0**: Phát dựng khung toàn bộ 93 lớp một lượt.
+
 ## 1. Năm module
 
 | Module | Người sở hữu | GitHub | Chức năng (STT) | Màn hình |
 | --- | --- | --- | --- | --- |
 | **A. Tài khoản và thông báo** | Nguyễn Thùy Ngân | `loopy-tnw` | 1 đến 6, 9 đến 12, 35, 67 | A01 đến A06, C06 |
 | **B. Tin đăng và khám phá** | Trần Anh Tú | `tranannhtu21012006` | 13 đến 34, 36 đến 38, 40 đến 42 | B01 đến B06 |
-| **C. Chat và giao dịch** | Nguyễn Lê Hải Long | `Contest451` | 43, 44, 46 đến 59 | C01 đến C05 |
+| **C. Chat và giao dịch** | Nguyễn Lê Hải Long | `Contest451` | 43, 44, 46 đến 59 | C01 đến C05, C07 |
 | **D. Hồ sơ và tin cậy** | Nguyễn Hoàng Phúc | `PmSubin` | 7, 8, 39, 60 đến 66, 87 đến 91 | D01 đến D07 |
-| **E. Quản trị và nền móng** | Trần Đức Phát (leader) | `tahpnart8` | 68 đến 82, 84 | E01 đến E06, khung ứng dụng |
+| **E. Quản trị và nền móng** | Trần Đức Phát (leader) | `tahpnart8` | 68 đến 82, 84, 105, 106 | E01 đến E07, khung ứng dụng |
 
 - STT 45 (gửi video) là **Phát triển sau** từ ngày 2026-10-12 vì không dùng Cloud Storage.
 - Các STT Phát triển sau khác (83, 85, 86, 92 đến 102) không thuộc ai.
-- STT 73 (xác minh người bán): Phúc làm phía người dùng (nút gửi yêu cầu trên D01), Phát làm phía admin (duyệt trên E03).
+- STT 73 (xác thực tài khoản): Phúc làm phía người dùng (nút gửi yêu cầu trên D01), Phát làm phía admin (duyệt trên E03).
 
 ## 2. Gói và file theo module
 
@@ -54,6 +56,7 @@ Tên lớp chốt ở đây để đồ thị điều hướng và lối tắt g
 | C03 | `DealDetailFragment` | `MainActivity` | Hải Long |
 | C04 | `DealHistoryFragment` | `MainActivity` | Hải Long |
 | C05 | `WriteReviewFragment` | `MainActivity` | Hải Long |
+| C07 | `DealPaymentFragment` | `MainActivity` | Hải Long |
 | D01 | `MyProfileFragment` | `MainActivity` (tab Cá nhân) | Phúc |
 | D02 | `UserProfileFragment` | `MainActivity` | Phúc |
 | D03 | `SellerTrustFragment` | `MainActivity` | Phúc |
@@ -64,6 +67,7 @@ Tên lớp chốt ở đây để đồ thị điều hướng và lối tắt g
 | E01 | `AdminDashboardFragment` | `AdminActivity` | Phát |
 | E02 | `AdminUserListFragment` | `AdminActivity` | Phát |
 | E03 | `AdminUserDetailFragment` | `AdminActivity` | Phát |
+| E07 | `AdminAccountFragment` | `AdminActivity` | Phát |
 | E04 | `AdminModerationFragment`, `AdminListingDetailFragment` | `AdminActivity` | Phát |
 | E05 | `AdminCategoryFragment` | `AdminActivity` | Phát |
 | E06 | `AdminDealMonitorFragment`, `AdminDealDetailFragment` | `AdminActivity` | Phát |
@@ -86,7 +90,7 @@ Không ai sửa đồ thị điều hướng của người khác. Mọi lối �
 | `action_global_write_review` | C05 | `dealId` | C03 |
 | `action_global_user_profile` | D02 | `userId` | B03, C02, C03 |
 | `action_global_seller_trust` | D03 | `userId` | B03, D02 |
-| `action_global_report` | D04 | `targetType`, `targetId` | B03, C02, D02 |
+| `action_global_report` | D04 | `targetType`, `targetId`, `conversationId` (chỉ khi `targetType` là MESSAGE) | B03, C02, D02, D03 |
 | `action_global_create_complaint` | D05 | `dealId` | C03 |
 | `action_global_my_shop` | B05 | | D01 |
 | `action_global_saved_listings` | B06 | | D01 |
@@ -94,12 +98,17 @@ Không ai sửa đồ thị điều hướng của người khác. Mọi lối �
 | `action_global_my_reports` | D07 | | D01 |
 | `action_global_personal_info`, `action_global_edit_profile`, `action_global_address_list`, `action_global_account_settings` | A04, A05, A06 | | D01 |
 | `action_global_notifications` | C06 | | Thanh trên của `MainActivity` |
+| `action_global_sign_in` | A01 trong `AuthActivity` | | Mọi màn khi Khách bấm một thao tác cần đăng nhập (quyết định 2026-10-22) |
+| `action_global_my_profile` | D01 | | Mọi màn có nút "Đăng ký xác thực" khi tài khoản chưa được duyệt |
+| `action_global_tab` | Một trong 5 tab gốc | `tabId`: một trong `home` (B01), `search` (B02), `post` (B04), `chat` (C01), `profile` (D01) | Ô tìm kiếm của B01 sang B02, ảnh đại diện sang D01, nút "về Trang chủ" của ô trống |
+| `action_global_deal_payment` | C07 | `dealId` | C03 |
+| `action_global_admin_accounts` | E07 trong `AdminActivity` | | E01 |
 
 Cần thêm một hành động toàn cục thì mở issue cho Phát; không tự thêm.
 
 ## 5. Lớp dùng chung: ai sửa phương thức nào
 
-Các lớp ở `model`, `model.enums`, `data`, `data.local`, `util` được Phát tạo **đầy đủ chữ ký** ở P1, đúng như `workflow/docs/architecture/dac-ta-lop/`.
+Các lớp ở `model`, `model.enums`, `data`, `data.local`, `util` được Phát tạo **đầy đủ chữ ký** ở **issue 2 của đợt 0** (xem [`ke-hoach-rut-gon.md`](ke-hoach-rut-gon.md) mục 3), đúng như `workflow/docs/architecture/dac-ta-lop/`. Hằng `DataCallback.NOT_READY` có trong đặc tả tại [`dac-ta-lop/data.md`](../docs/architecture/dac-ta-lop/data.md#datacallback).
 
 - Phương thức chưa làm có thân gọi `cb.onError(...)` với hằng `DataCallback.NOT_READY`, để màn hình báo lỗi rõ ràng thay vì chạy sai.
 - Ở P2, mỗi người **chỉ thay thân các phương thức được giao** trong issue của mình. Không đổi chữ ký, không thêm phương thức công khai mới, không sửa phương thức của người khác.
@@ -108,20 +117,15 @@ Các lớp ở `model`, `model.enums`, `data`, `data.local`, `util` được Ph�
 | Lớp | Phương thức | Chủ |
 | --- | --- | --- |
 | `AuthRepository` | tất cả | Ngân |
-| `UserRepository` | `getProfile`, `updateProfile`, `saveAddress`, `deleteAddress`, `getAddresses`, `saveIdentity`, `getIdentity`, `updateNotificationPrefs`, `touchLastActive`, `deactivate` | Ngân |
-| `UserRepository` | `saveListing`, `unsaveListing`, `getSavedIds` | Tú |
-| `UserRepository` | `follow`, `unfollow`, `getFollowingIds`, `requestVerification` | Phúc |
-| `NotificationRepository` | `getForUser`, `markRead` | Ngân |
-| `NotificationRepository` | `create` | Phát (P1, mọi người dùng) |
-| `MediaRepository` | tất cả | Phát (P1, mọi người dùng) |
-| `CategoryRepository` | `getAll`, `getChildren` | Phát (P1) |
-| `CategoryRepository` | `add`, `update`, `delete` | Phát |
+| `UserRepository` | **tất cả** (đợt rút gọn 2026-10-22 gộp cả tệp về một chủ, xem [`ke-hoach-rut-gon.md`](ke-hoach-rut-gon.md) mục 2): gồm `createProfile`, `clearExpiredLock`, `getStats`, `searchUsers`, `getVerification`, `saveListing`, `unsaveListing`, `getSavedIds`, `follow`, `unfollow`, `getFollowingIds`, `requestVerification` | Ngân |
+| `NotificationRepository` | **tất cả**, kể cả `create` | Ngân (mọi repository khác chỉ gọi) |
+| `MediaRepository` | tất cả | Tú (mọi người khác chỉ gọi) |
+| `CategoryRepository` | **tất cả**, kể cả `getAllForAdmin` | Tú |
 | `ListingRepository` | tất cả | Tú |
 | `ChatRepository` | tất cả | Hải Long |
 | `DealRepository` | tất cả trừ hai dòng dưới | Hải Long |
 | `DealRepository` | `releaseDueDeals`, `completeDueDeals`, `listAll` | Phát |
-| `ReviewRepository` | `create` | Hải Long |
-| `ReviewRepository` | `getReceived`, `getGiven` | Phúc |
+| `ReviewRepository` | **tất cả**, kể cả `getByDeal` | Hải Long (Phúc chỉ gọi `getReceived` và `getGiven` ở D03) |
 | `ReportRepository` | `create`, `cancel`, `getMyReports`, `exportCsv` | Phúc |
 | `ReportRepository` | `getByStatus`, `countByTarget`, `closeByTarget` | Phát |
 | `ComplaintRepository` | tất cả | Phúc |
@@ -129,9 +133,7 @@ Các lớp ở `model`, `model.enums`, `data`, `data.local`, `util` được Ph�
 | `RecommendationEngine`, `GeoUtils` | tất cả | Tú |
 | `KeywordFilter`, `SessionManager`, `NetworkMonitor`, `FormatUtils`, `AutoReleaseWorker` | tất cả | Phát |
 | `AuthViewModel`, `NotificationViewModel` | tất cả | Ngân |
-| `ProfileViewModel` | `updateProfile`, `changeAvatar`, `saveAddress`, `deleteAddress`, `loadIdentity`, `saveIdentity`, `updateNotificationPrefs`, `deactivateAccount` | Ngân |
-| `ProfileViewModel` | `loadProfile`, `follow`, `unfollow`, `requestVerification` | Phúc |
-| `ProfileViewModel` | `loadSaved` | Tú |
+| `ProfileViewModel` | **tất cả** (đợt rút gọn gộp cả tệp về một chủ): gồm `loadAddresses`, `loadUserListings`, `loadVerification`, `unsaveListing`, `deactivateWithGoogle`, `clearError`, `clearDone` | Phúc |
 | `ShopViewModel`, `FeedViewModel`, `SearchViewModel`, `ListingDetailViewModel` | tất cả | Tú |
 | `ChatViewModel`, `DealViewModel` | tất cả trừ `checkAutoRelease` | Hải Long |
 | `DealViewModel` | `checkAutoRelease` | Phát |

@@ -16,6 +16,7 @@ Các hàm mô tả dưới đây dùng lặp lại ở mọi bảng:
 | `me` | `request.auth.uid` |
 | `isAdmin()` | Tồn tại tài liệu `admins/{me}` (`exists`) |
 | `writerActive()` | `get(users/{me}).data.status == 'ACTIVE'` |
+| `verified()` | `get(users/{me}).data.verificationStatus == 'APPROVED'`: tài khoản đã được admin duyệt xác thực (quyết định 2026-10-22) |
 | `onlyKeys([...])` | `request.resource.data.diff(resource.data).affectedKeys().hasOnly([...])`: lần sửa chỉ được đụng các trường liệt kê |
 | `now` | `request.time`, giờ của máy chủ Firestore |
 | `serverStamp(f)` | Trường `f` trong dữ liệu mới bằng `request.time`, tức ứng dụng đã ghi `FieldValue.serverTimestamp()` |
@@ -32,6 +33,8 @@ Luật chung:
 6. Hằng thời gian viết `duration.value(N, 'd')` (kiểm lại cú pháp).
 7. Mỗi yêu cầu có giới hạn số lần `get()`/`exists()`/`getAfter()` (khoảng 10 lần cho một yêu cầu đơn, 20 cho một lô; kiểm lại). Vì vậy lô ghi phải gọn: hàm `writerActive()` chỉ đếm một lần khi cùng đường dẫn (kiểm lại), và mỗi lệnh ghi trong lô được đánh giá riêng.
 8. Không có dòng nào cho phép `list` hay `get` rộng hơn bảng; mặc định mọi đường dẫn không nêu là **từ chối**. Rules không phải bộ lọc: truy vấn của ứng dụng phải tự mang đủ điều kiện (ví dụ `status in [AVAILABLE, RESERVED, SOLD]`), không thì cả truy vấn bị từ chối.
+9. **Khách chưa đăng nhập** đọc được đúng ba thứ (quyết định 2026-10-22): tin đăng đang mở (`listings` với `status` thuộc AVAILABLE, RESERVED, SOLD), danh mục (`categories`) và ảnh (`images`). Mọi collection khác vẫn đòi `signedIn()`, kể cả `users`: vì vậy màn chi tiết tin đăng ở chế độ khách không hiện khối thông tin người bán.
+10. **Xác thực tài khoản là điều kiện ghi** (quyết định 2026-10-22): mọi lệnh tạo tin đăng đã đăng, tạo offer và tạo giao dịch đòi thêm `verified()`. Xem, tìm kiếm, nhắn tin, lưu tin và theo dõi không đòi.
 
 ## Mục lục
 
@@ -69,13 +72,13 @@ Luật chung:
 | Thao tác | Ai | Điều kiện | Lý do |
 | --- | --- | --- | --- |
 | Đọc | Người đã đăng nhập | `signedIn()` | Hiện tên, ảnh, điểm của người bán và đối tác; truy vấn `count()` |
-| Tạo | Chính chủ | `me == uid`; `writerActive()` **không** áp dụng vì tài liệu chưa có (thay bằng `me == uid`); khóa chỉ gồm các trường hồ sơ trong `email, displayName, phone, avatarBase64, bio, province, district, interestedCategoryIds, termsAcceptedAt, notificationPrefs, lastActiveAt, lockedUntil, lockReason, status, verificationStatus, ratingSum, ratingCount, warningCount, createdAt, updatedAt`; **giá trị khởi tạo cố định:** `status == 'ACTIVE'`, `verificationStatus == 'NONE'`, `ratingSum == 0`, `ratingCount == 0`, `warningCount == 0`, `lockedUntil == null`, `lockReason == ''`; `email == request.auth.token.email`; `avatarBase64.size()` dưới mức 20 KB sau mã hóa (khoảng 28.000 ký tự, kiểm lại); `serverStamp(createdAt)` | Chặn tự tạo hồ sơ với điểm 5 sao, đã xác minh hoặc số cảnh báo giả |
-| Sửa hồ sơ | Chính chủ | `me == uid`; `writerActive()`; `onlyKeys([displayName, phone, avatarBase64, bio, province, district, interestedCategoryIds, notificationPrefs, lastActiveAt, updatedAt])`; `avatarBase64.size()` như trên | Người dùng chỉ sửa phần hồ sơ của mình |
-| Xin xác minh | Chính chủ | `me == uid`; `writerActive()`; `onlyKeys([verificationStatus, updatedAt])`; trước `NONE` hoặc `REJECTED`, sau `PENDING`; `after(sellerVerifications/uid).status == 'PENDING'` | Hai trường xác minh luôn cùng giá trị, ghi cùng lô |
+| Tạo | Chính chủ | `me == uid`; `writerActive()` **không** áp dụng vì tài liệu chưa có (thay bằng `me == uid`); khóa chỉ gồm các trường hồ sơ trong `email, displayName, phone, avatarBase64, bio, province, district, interestedCategoryIds, termsAcceptedAt, notificationPrefs, lastActiveAt, lockedUntil, lockReason, status, verificationStatus, ratingSum, ratingCount, warningCount, searchKeywords, createdAt, updatedAt`; **giá trị khởi tạo cố định:** `status == 'ACTIVE'`, `verificationStatus == 'NONE'`, `ratingSum == 0`, `ratingCount == 0`, `warningCount == 0`, `lockedUntil == null`, `lockReason == ''`; `email == request.auth.token.email`; `avatarBase64.size()` dưới mức 20 KB sau mã hóa (khoảng 28.000 ký tự, kiểm lại); `serverStamp(createdAt)` | Chặn tự tạo hồ sơ với điểm 5 sao, đã xác thực hoặc số cảnh báo giả |
+| Sửa hồ sơ | Chính chủ | `me == uid`; `writerActive()`; `onlyKeys([displayName, phone, avatarBase64, bio, province, district, interestedCategoryIds, notificationPrefs, lastActiveAt, searchKeywords, updatedAt])`; `avatarBase64.size()` như trên; `searchKeywords` là list và `searchKeywords.size()` tối đa 20 | Người dùng chỉ sửa phần hồ sơ của mình. Rules không kiểm được `searchKeywords` có đúng là các từ của `displayName`, chỉ chặn nhồi quá 20 từ; xem Giới hạn |
+| Xin xác thực | Chính chủ | `me == uid`; `writerActive()`; `onlyKeys([verificationStatus, updatedAt])`; trước `NONE` hoặc `REJECTED`, sau `PENDING`; `after(sellerVerifications/uid).status == 'PENDING'` | Hai trường xác thực luôn cùng giá trị, ghi cùng lô |
 | Hết hạn khóa | Chính chủ | `me == uid`; **không** đòi `writerActive()`; trước `TEMP_LOCKED` và `now > resource.data.lockedUntil`; sau `ACTIVE`; `onlyKeys([status, lockedUntil, lockReason, updatedAt])`; `lockedUntil == null`, `lockReason == ''` | Cho người bị khóa tạm tự vào lại khi đã hết hạn; mốc so với giờ Firestore nên chỉnh giờ máy không giúp được |
 | Tự vô hiệu hóa | Chính chủ | `me == uid`; `writerActive()`; trước `ACTIVE`, sau `DELETED`; `onlyKeys([status, updatedAt])` | DELETED là cuối; việc "không còn giao dịch chưa kết thúc" kiểm ở ứng dụng (xem Giới hạn) |
 | Khóa, mở khóa, cảnh báo | Admin | `isAdmin()`; `writerActive()`; `onlyKeys([status, lockedUntil, lockReason, warningCount, updatedAt])`; `status` sau là ACTIVE, TEMP_LOCKED hoặc PERM_LOCKED (không DELETED); TEMP_LOCKED thì `lockedUntil > now`; PERM_LOCKED thì `lockedUntil == null`; có `lockReason` khác rỗng khi khóa; nếu `warningCount` đổi thì `warningCount == resource.data.warningCount + 1` và `after(users/uid/warnings/{wid}).level == warningCount` | Khóa theo bậc; số cảnh báo chỉ tăng 1 kèm một tài liệu `Warning` |
-| Duyệt xác minh | Admin | `isAdmin()`; `writerActive()`; `onlyKeys([verificationStatus, updatedAt])`; trước `PENDING`, sau `APPROVED` hoặc `REJECTED`; `after(sellerVerifications/uid).status == verificationStatus sau` | Hai tài liệu cùng giá trị |
+| Duyệt xác thực | Admin | `isAdmin()`; `writerActive()`; `onlyKeys([verificationStatus, updatedAt])`; trước `PENDING`, sau `APPROVED` hoặc `REJECTED`; `after(sellerVerifications/uid).status == verificationStatus sau` | Hai tài liệu cùng giá trị |
 | Ghi điểm đánh giá | Người đánh giá (bất kỳ người đã đăng nhập khác `uid`) | `writerActive()`; `me != uid`; `onlyKeys([ratingSum, ratingCount, updatedAt])`; `ratingCount == resource.data.ratingCount + 1`; gọi `rv = after(reviews/{dealId}_{me})` (mã đánh giá khớp `me`): `rv.data.revieweeId == uid`, `rv.data.reviewerId == me`, `ratingSum == resource.data.ratingSum + rv.data.rating` | Điểm chỉ cộng đúng bằng điểm của đánh giá ghi cùng lô; `dealId` lấy từ đường dẫn đánh giá, kiểm lại cách truyền vào Rules |
 | Đổi cờ khác | Bất kỳ ai khác ngoài các dòng trên | Từ chối | Mọi trường còn lại (`status`, `warningCount`...) không do chính chủ ghi |
 | Xóa | Không ai | Từ chối | DELETED thay cho xóa hẳn; lịch sử giữ cho đối tác |
@@ -98,7 +101,7 @@ Rules không đảm bảo "mỗi người một địa chỉ mặc định"; ứ
 
 | Thao tác | Ai | Điều kiện | Lý do |
 | --- | --- | --- | --- |
-| Đọc | Chính chủ hoặc admin | `me == uid || isAdmin()` | Quyết định 2026-10-11: chỉ chủ tài khoản và admin xem được; màn E03 của admin đọc khi duyệt xác minh |
+| Đọc | Chính chủ hoặc admin | `me == uid || isAdmin()` | Quyết định 2026-10-11: chỉ chủ tài khoản và admin xem được; màn E03 của admin đọc khi duyệt xác thực tài khoản |
 | Tạo | Chính chủ | `me == uid`; `writerActive()` (khi đăng ký lần đầu, hồ sơ `users/{uid}` đã có trong cùng lô hoặc `after(users/uid).status == 'ACTIVE'`); `userId == uid`; `nationalId.matches('[0-9]{12}')` (kiểm lại cú pháp regex); `gender` thuộc MALE, FEMALE, OTHER | CCCD đủ 12 chữ số |
 | Sửa | Chính chủ | `me == uid`; `writerActive()`; cùng ràng buộc dữ liệu như tạo; `userId` không đổi | |
 | Xóa | Không ai | Từ chối | Giữ cho đối tác sau khi xóa tài khoản |
@@ -134,9 +137,9 @@ Admin **không** ghi được tài liệu này. (`firestore-schema.md` mục ide
 | Thao tác | Ai | Điều kiện | Lý do |
 | --- | --- | --- | --- |
 | Đọc | Chính chủ hoặc admin | `me == userId || isAdmin()` | Người gửi xem trạng thái; admin duyệt |
-| Gửi lần đầu | Chính chủ | `me == userId`; `writerActive()`; `request.auth.token.email_verified == true` (kiểm lại thời điểm token được làm mới); `status == 'PENDING'`; `reviewedBy == null`; `after(users/userId).verificationStatus == 'PENDING'` | Chỉ người đã xác thực email xin xác minh |
-| Gửi lại | Chính chủ | Như trên; trước `REJECTED`, sau `PENDING`; `onlyKeys([status, note, reviewedBy, reviewedAt, updatedAt])` với `note` rỗng, `reviewedBy == null` | Sau khi bị từ chối được gửi lại |
-| Duyệt | Admin | `isAdmin()`; `writerActive()`; trước `PENDING`, sau `APPROVED`; `onlyKeys([status, reviewedBy, reviewedAt, updatedAt])`; `reviewedBy == me`; `serverStamp(reviewedAt)`; `after(users/userId).verificationStatus == 'APPROVED'` | |
+| Gửi lần đầu | Chính chủ | `me == userId`; `writerActive()`; `request.auth.token.email_verified == true` (kiểm lại thời điểm token được làm mới); `status == 'PENDING'`; `reviewedBy == null`; `resubmitCount == 0`; `nationalId.matches('[0-9]{12}')` (kiểm lại cú pháp regex); `imageIds.size() == 2`; `after(users/userId).verificationStatus == 'PENDING'` | Chỉ người đã xác thực email xin xác thực tài khoản. Hai ảnh là ảnh giấy tờ và ảnh chân dung cầm giấy tờ; Rules không kiểm được `purpose` của từng ảnh, xem Giới hạn |
+| Gửi lại | Chính chủ | Như trên; trước `REJECTED`, sau `PENDING`; `onlyKeys([nationalId, imageIds, status, note, resubmitCount, reviewedBy, reviewedAt, updatedAt])` với `note` rỗng, `reviewedBy == null`; `resubmitCount == resource.data.resubmitCount + 1` và `resubmitCount <= 3` | Sau khi bị từ chối được sửa và gửi lại, tối đa 3 lần (`SellerVerification.MAX_RESUBMIT`); hết lượt thì phải liên hệ admin |
+| Duyệt | Admin | `isAdmin()`; `writerActive()`; trước `PENDING`, sau `APPROVED`; `onlyKeys([status, reviewedBy, reviewedAt, updatedAt])` (admin không sửa `nationalId` hay `imageIds`); `reviewedBy == me`; `serverStamp(reviewedAt)`; `after(users/userId).verificationStatus == 'APPROVED'` | |
 | Từ chối | Admin | Như duyệt nhưng sau `REJECTED`, thêm `note` khác rỗng trong `onlyKeys` và `note.size() > 0` | Từ chối bắt buộc có lý do |
 | Xóa | Không ai | Từ chối | |
 
@@ -152,12 +155,14 @@ Admin **không** ghi được tài liệu này. (`firestore-schema.md` mục ide
 
 ## 8. admins
 
-Đường dẫn `admins/{uid}`. Chỉ cần tồn tại.
+Đường dẫn `admins/{uid}`. Chỉ cần tồn tại. Tài liệu admin đầu tiên do leader tạo tay trên Firebase Console, vì phải đã là admin mới cấp được quyền admin.
 
 | Thao tác | Ai | Điều kiện | Lý do |
 | --- | --- | --- | --- |
-| Đọc | Chính chủ | `me == uid` | Ứng dụng đọc để biết có hiện khu quản trị không; không liệt kê được danh sách admin |
-| Tạo, sửa, xóa | **Không ai từ ứng dụng** | Luôn từ chối | Leader tạo tay trên Firebase Console; ứng dụng không bao giờ tự khai quyền (R12). Rules khác chỉ `exists()` tài liệu này |
+| Đọc | Chính chủ hoặc admin | `me == uid \|\| isAdmin()` | Chính chủ đọc để biết có hiện khu quản trị không; admin liệt kê cả collection cho màn Quản lý tài khoản admin (UC42) |
+| Cấp quyền admin | Admin | `isAdmin()`; `writerActive()`; `uid != me`; khóa chỉ gồm `uid, createdAt`; `uid` bằng mã trong đường dẫn; `serverStamp(createdAt)`; `before(users/uid).data.status == 'ACTIVE'` | Quyết định 2026-10-22 (UC42): admin cấp quyền cho một tài khoản đang hoạt động ngay trong ứng dụng. Tài khoản tự khai quyền vẫn bị chặn vì người ghi phải đã là admin |
+| Sửa | Không ai | Từ chối | Tài liệu chỉ có hai trạng thái: có và không có |
+| Gỡ quyền admin | Admin | `isAdmin()`; `writerActive()`; `uid != me` | UC42 BR3: admin không tự gỡ quyền của chính mình. BR4 "phải còn ít nhất một Admin" **không** ép được trong Rules vì không đếm được, xem Giới hạn |
 
 ## 9. categories
 
@@ -165,7 +170,7 @@ Admin **không** ghi được tài liệu này. (`firestore-schema.md` mục ide
 
 | Thao tác | Ai | Điều kiện | Lý do |
 | --- | --- | --- | --- |
-| Đọc | Người đã đăng nhập | `signedIn()` | Chọn danh mục khi đăng tin, lọc tìm kiếm |
+| Đọc | Mọi người, kể cả khách | Không điều kiện | Khách lọc tìm kiếm và xem chi tiết tin đăng được (quyết định 2026-10-22); danh mục không phải dữ liệu riêng tư |
 | Tạo | Admin | `isAdmin()`; `writerActive()`; khóa chỉ gồm `name, parentId, conditionFields, isActive, createdAt, updatedAt`; `name.size() > 0`; nếu `parentId` khác rỗng thì `before(categories/parentId).data.parentId == ''` (chỉ hai cấp) | |
 | Sửa | Admin | `isAdmin()`; `writerActive()`; `onlyKeys([name, parentId, conditionFields, isActive, updatedAt])` | Sửa tên, thuộc tính tình trạng, ẩn danh mục |
 | Xóa | Admin | `isAdmin()`; `writerActive()` | "Không xóa khi còn tin hoặc danh mục con" kiểm ở ứng dụng bằng `count()` (xem Giới hạn) |
@@ -176,12 +181,12 @@ Không còn trường `listingCount`, nên người dùng thường không ghi v
 
 Đường dẫn `listings/{id}`. Phần phức tạp nhất vì nhiều bên ghi.
 
-**Đọc.** Người đã đăng nhập đọc được tin có `status` thuộc AVAILABLE, RESERVED, SOLD. Tin DRAFT, HIDDEN, REMOVED chỉ chủ tin và admin đọc. Truy vấn của người xem khác phải mang `status in [AVAILABLE, RESERVED, SOLD]`.
+**Đọc.** Mọi người, **kể cả khách chưa đăng nhập**, đọc được tin có `status` thuộc AVAILABLE, RESERVED, SOLD (quyết định 2026-10-22: khách xem được trang chủ, tìm kiếm tin đăng và chi tiết tin đăng). Tin DRAFT, HIDDEN, REMOVED chỉ chủ tin và admin đọc. Truy vấn của người xem khác phải mang `status in [AVAILABLE, RESERVED, SOLD]`.
 
 | Thao tác | Ai | Điều kiện | Lý do |
 | --- | --- | --- | --- |
 | Tạo bản nháp | Người bán | `writerActive()`; `sellerId == me`; `status == 'DRAFT'`; `statusReason == ''`; `serverStamp(createdAt)` | |
-| Tạo và đăng | Người bán | `writerActive()`; `request.auth.token.email_verified == true` (kiểm lại); `sellerId == me`; `status == 'AVAILABLE'`; `statusReason == ''`; `imageIds.size()` từ 1 đến 5; `coverThumb.size()` dưới mức 20 KB sau mã hóa; `tradeTypes` không rỗng; nếu có GIVEAWAY thì `price == 0`; `title.size() > 0` | Điều kiện đăng của `User.canSell` và `Listing.publish` |
+| Tạo và đăng | Người bán | `writerActive()`; `verified()`; `request.auth.token.email_verified == true` (kiểm lại); `sellerId == me`; `status == 'AVAILABLE'`; `statusReason == ''`; `imageIds.size()` từ 1 đến 5; `coverThumb.size()` dưới mức 20 KB sau mã hóa; `tradeTypes` không rỗng; nếu có GIVEAWAY thì `price == 0`; `title.size() > 0` | Điều kiện đăng của `User.canSell` và `Listing.publish`. `verified()` là cửa mới từ 2026-10-22: tài khoản chưa được admin duyệt xác thực không đăng tin được |
 | Đăng bản nháp | Người bán | `resource.data.sellerId == me`; trước `DRAFT`, sau `AVAILABLE`; `onlyKeys` gồm các trường nội dung và `status, searchKeywords, flagged, updatedAt`; như "Tạo và đăng" | |
 | Sửa nội dung | Người bán | `resource.data.sellerId == me`; `writerActive()`; trước thuộc DRAFT, AVAILABLE, hoặc HIDDEN với `statusReason == ''`; `onlyKeys([categoryId, title, description, imageIds, coverThumb, itemCondition, conditionValues, tradeTypes, price, acceptedOfferTypes, minOfferPrice, province, location, searchKeywords, flagged, updatedAt])`; `flagged` chỉ được giữ nguyên hoặc đổi false thành true, không đổi true về false | Bỏ cờ chỉ do admin; cờ do máy người đăng tính nên chỉ cho siết thêm |
 | Tự ẩn | Người bán | `resource.data.sellerId == me`; `writerActive()`; trước `AVAILABLE`, sau `HIDDEN`; `statusReason` sau bằng `''`; `onlyKeys([status, statusReason, updatedAt])` | Cùng lô từ chối offer PENDING (ứng dụng, xem Giới hạn) |
@@ -230,7 +235,7 @@ Không có `type == 'VIDEO'`: video trong chat không làm (STT 45 Phát triển
 | Thao tác | Ai | Điều kiện | Lý do |
 | --- | --- | --- | --- |
 | Đọc | Người mua, người bán của offer, hoặc admin | `resource.data.buyerId == me \|\| resource.data.sellerId == me \|\| isAdmin()` | |
-| Tạo | Người mua | `writerActive()`; `buyerId == me`; `status == 'PENDING'`; đặt `l = before(listings/listingId).data`: `l.status == 'AVAILABLE'`, `sellerId == l.sellerId`, `buyerId != sellerId`; `conversationId == listingId + '_' + me`; `offerType` thuộc `l.acceptedOfferTypes`; nếu offer có tiền thì `amount >= l.minOfferPrice`; nếu offer chỉ có vật thì `amount == 0` và `exchangeItem.size() > 0`; `serverStamp(createdAt)` | Chỉ gửi khi tin AVAILABLE; đúng loại và mức giá người bán chấp nhận |
+| Tạo | Người mua | `writerActive()`; `verified()`; `buyerId == me`; `status == 'PENDING'`; đặt `l = before(listings/listingId).data`: `l.status == 'AVAILABLE'`, `sellerId == l.sellerId`, `buyerId != sellerId`; `conversationId == listingId + '_' + me`; `offerType` thuộc `l.acceptedOfferTypes`; nếu offer có tiền thì `amount >= l.minOfferPrice`; nếu offer chỉ có vật thì `amount == 0` và `exchangeItem.size() > 0`; `serverStamp(createdAt)` | Chỉ gửi khi tin AVAILABLE; đúng loại và mức giá người bán chấp nhận |
 | Chấp nhận | Người bán | `writerActive()`; `resource.data.sellerId == me`; trước `PENDING`, sau `ACCEPTED`; `onlyKeys([status, updatedAt])`; `after(listings/listingId).status == 'RESERVED'`; `after(deals/{reservedDealId})` tồn tại với `offerId == id` | Chấp nhận luôn đi cùng giữ chỗ tin và tạo giao dịch |
 | Từ chối | Người bán | `writerActive()`; `resource.data.sellerId == me`; trước `PENDING`, sau `REJECTED`; `onlyKeys([status, updatedAt])` | Cũng dùng khi hệ thống từ chối các offer khác hoặc khi tin rời AVAILABLE, vì ở các lô đó người ghi là người bán |
 | Admin từ chối khi ẩn tin | Admin | `isAdmin()`; `writerActive()`; trước `PENDING`, sau `REJECTED`; `onlyKeys([status, updatedAt])`; `after(listings/listingId).status` thuộc HIDDEN, REMOVED | Cùng lô với `hideListing` hoặc `removeAllListingsOf` |
@@ -245,16 +250,16 @@ Ký hiệu: `D` là `resource.data`; `D'` là `request.resource.data`; "một b�
 | Thao tác | Ai | Điều kiện | Lý do |
 | --- | --- | --- | --- |
 | Đọc | Hai bên, hoặc admin | `D.buyerId == me \|\| D.sellerId == me \|\| isAdmin()` | |
-| Tạo | Người bán | `writerActive()`; `D'.sellerId == me`; `D'.status == 'PENDING_CONFIRM'`; `D'.sellerConfirmed == true`, `D'.buyerConfirmed == false`; `o = after(offers/D'.offerId).data`: `o.status == 'ACCEPTED'`, `o.sellerId == me`, `D'.buyerId == o.buyerId`, `D'.listingId == o.listingId`; `after(listings/D'.listingId).status == 'RESERVED'`; `D'.agreedPrice == o.amount`; `D'.tradeType` là EXCHANGE khi `o.offerType == 'ITEM'`, ngược lại SELL; `statusHistory.size() == 1`; không có `shippedAt`, `autoReleaseAt`, `receivedAt` | Chỉ tạo cùng lô chấp nhận offer; giá lấy từ offer |
+| Tạo | Người bán | `writerActive()`; `verified()`; `D'.sellerId == me`; `D'.status == 'PENDING_CONFIRM'`; `D'.sellerConfirmed == true`, `D'.buyerConfirmed == false`; `o = after(offers/D'.offerId).data`: `o.status == 'ACCEPTED'`, `o.sellerId == me`, `D'.buyerId == o.buyerId`, `D'.listingId == o.listingId`; `after(listings/D'.listingId).status == 'RESERVED'`; `D'.agreedPrice == o.amount`; `D'.tradeType` là EXCHANGE khi `o.offerType == 'ITEM'`, ngược lại SELL; `statusHistory.size() == 1`; không có `shippedAt`, `autoReleaseAt`, `receivedAt` | Chỉ tạo cùng lô chấp nhận offer; giá lấy từ offer |
 | Sửa điều khoản | Một bên | Trước `PENDING_CONFIRM`, sau `PENDING_CONFIRM`; `onlyKeys([deliveryMethod, deliveryAddress, scheduledAt, agreedTerms, exchangeItem, agreedPrice, buyerConfirmed, sellerConfirmed, updatedAt])`; `D'.buyerConfirmed == false` và `D'.sellerConfirmed == false`; `statusHistory` không đổi | Sửa xóa cả hai cờ |
 | Xác nhận (bên thứ nhất) | Một bên | Trước `PENDING_CONFIRM`, sau `PENDING_CONFIRM`; `onlyKeys([cờ của chính mình, updatedAt])`: người mua chỉ bật `buyerConfirmed`, người bán chỉ bật `sellerConfirmed`; cờ của bên kia đang false; `deliveryMethod` khác rỗng | Mỗi bên chỉ bật cờ của mình |
 | Xác nhận (bên thứ hai) | Một bên | Như trên nhưng cờ của bên kia đang true; `D'.status == 'CONFIRMED'`; `onlyKeys([cờ của mình, status, statusHistory, updatedAt])`; nếu `deliveryMethod == 'SHIPPING'` thì `deliveryAddress.size() > 0` | Sang CONFIRMED khi đủ hai xác nhận |
 | Hết hạn xác nhận | Một bên (đại diện hệ thống) | Trước `PENDING_CONFIRM`, sau `CANCELLED`; `now > D.createdAt + duration.value(3, 'd')`; `onlyKeys([status, statusHistory, updatedAt])`; `after(listings/D.listingId).status == 'AVAILABLE'` | Giải phóng tin bị giữ chỗ mãi mãi; người đổi ghi `system` (chuỗi do ứng dụng ghi, Rules không dựa vào) |
 | Hủy | Một bên | Trước `PENDING_CONFIRM` hoặc `CONFIRMED`; sau `CANCELLED`; `onlyKeys([status, cancelReason, statusHistory, updatedAt])`; `D'.cancelReason.size() > 0`; nếu `exists(payments/id)` và đang `HELD` thì `after(payments/id).status == 'REFUNDED'` | Bắt buộc lý do; hoàn tiền cùng lô |
 | Giao hàng | Người bán | `me == D.sellerId`; trước `CONFIRMED`, sau `SHIPPED`; `D.deliveryMethod == 'SHIPPING'`; `onlyKeys([status, carrierName, trackingCode, trackingImageId, shippedAt, autoReleaseAt, statusHistory, updatedAt])`; `carrierName` và `trackingCode` khác rỗng; `get(images/trackingImageId).data.ownerId == me`; **`serverStamp(shippedAt)`** và **`D'.autoReleaseAt == request.time + duration.value(7, 'd')`**; nếu `D.agreedPrice > 0` thì `get(payments/id).data.status == 'HELD'` | Đồng hồ đếm ngược không thể rút ngắn: `autoReleaseAt` bắt buộc đúng 7 ngày kể từ giờ máy chủ |
-| Nhận hàng (gặp trực tiếp) | Người mua | `me == D.buyerId`; trước `CONFIRMED`, sau `RECEIVED`; `D.deliveryMethod == 'MEET_UP'`; `onlyKeys([status, receivedAt, statusHistory, updatedAt])`; `serverStamp(receivedAt)`; nếu `D.agreedPrice > 0` thì `get(payments/id).data.status == 'HELD'` và `after(payments/id).status == 'RELEASED'` | |
+| Nhận hàng (gặp trực tiếp) | Người mua | `me == D.buyerId`; trước `CONFIRMED`, sau `RECEIVED`; `D.deliveryMethod == 'MEET_UP'`; `onlyKeys([status, receivedAt, receivedImageId, statusHistory, updatedAt])`; `serverStamp(receivedAt)`; `receivedImageId.size() > 0`; nếu `D.agreedPrice > 0` thì `get(payments/id).data.status == 'HELD'` và `after(payments/id).status == 'RELEASED'` | Người mua xác nhận bằng tay thì bắt buộc kèm một ảnh chụp lúc nhận |
 | Nhận hàng (giao qua vận chuyển) | Người mua | `me == D.buyerId`; trước `SHIPPED`, sau `RECEIVED`; như dòng trên | |
-| Hết đếm ngược | Một bên (đại diện hệ thống) | Trước `SHIPPED`, sau `RECEIVED`; **`now >= D.autoReleaseAt`**; `onlyKeys([status, receivedAt, statusHistory, updatedAt])`; `serverStamp(receivedAt)`; nếu `D.agreedPrice > 0` thì `after(payments/id).status == 'RELEASED'` | Người bán cũng chạy được, vì mốc là giờ máy chủ |
+| Hết đếm ngược | Một bên (đại diện hệ thống) | Trước `SHIPPED`, sau `RECEIVED`; **`now >= D.autoReleaseAt`**; `onlyKeys([status, receivedAt, statusHistory, updatedAt])`; `serverStamp(receivedAt)`; `receivedImageId` không đổi (vẫn rỗng); nếu `D.agreedPrice > 0` thì `after(payments/id).status == 'RELEASED'` | Người bán cũng chạy được, vì mốc là giờ máy chủ. Không có ảnh vì không ai bấm nhận |
 | Mở khiếu nại | Một bên | Trước `SHIPPED` và `now < D.autoReleaseAt`, hoặc trước `CONFIRMED` và `D.deliveryMethod == 'MEET_UP'`; sau `DISPUTED`; `onlyKeys([status, statusHistory, updatedAt])`; `after(complaints/id)` tồn tại với `complainantId == me` | Chỉ trong thời gian đếm ngược; khiếu nại ghi cùng lô |
 | Rút khiếu nại | Người khiếu nại | Trước `DISPUTED`; sau bằng `fromStatus` của phần tử cuối cùng của `D.statusHistory` (đó là dòng có `toStatus == 'DISPUTED'`, kiểm lại cách lấy phần tử cuối); `onlyKeys([status, statusHistory, updatedAt])`; `after(complaints/id).status == 'WITHDRAWN'` và `complainantId == me` | `autoReleaseAt` giữ nguyên |
 | Quyết định hoàn tiền, trả hàng, hủy | Admin | `isAdmin()`; trước `DISPUTED`, sau `CANCELLED`; `after(complaints/id).decision` thuộc REFUND, RETURN_ITEM, CANCEL_DEAL và `.status == 'RESOLVED'`; `onlyKeys([status, statusHistory, updatedAt])`; nếu `exists(payments/id)` thì `after(payments/id).status == 'REFUNDED'`; `after(listings/D.listingId).status == 'AVAILABLE'` | |
@@ -284,7 +289,7 @@ Mảng lồng `deals/{id}.statusHistory`, không phải collection riêng, nên 
 | Thao tác | Ai | Điều kiện | Lý do |
 | --- | --- | --- | --- |
 | Đọc | Người trả, người nhận, hoặc admin | `resource.data.payerId == me \|\| resource.data.payeeId == me \|\| isAdmin()` | Lịch sử thanh toán (STT 58) |
-| Tạo (giữ tiền) | Người mua | `writerActive()`; `d = before(deals/dealId).data`; `me == d.buyerId`; `d.status == 'CONFIRMED'`; `d.agreedPrice > 0`; `amount == d.agreedPrice`; `payerId == d.buyerId`; `payeeId == d.sellerId`; `status == 'HELD'`; `serverStamp(heldAt)`; `releasedAt == null` | Tiền chỉ được giữ khi giao dịch đã xác nhận, đúng số tiền thỏa thuận |
+| Tạo (giữ tiền) | Người mua | `writerActive()`; `d = before(deals/dealId).data`; `me == d.buyerId`; `d.status == 'CONFIRMED'`; `d.agreedPrice > 0`; `amount == d.agreedPrice`; `payerId == d.buyerId`; `payeeId == d.sellerId`; `status == 'HELD'`; `method` thuộc CARD, E_WALLET, BANK_TRANSFER; `serverStamp(heldAt)`; `releasedAt == null` | Tiền chỉ được giữ khi giao dịch đã xác nhận, đúng số tiền thỏa thuận. `method` chỉ để hiện lại trên biên lai; không lệnh ghi nào sau đó được sửa nó |
 | Giải ngân khi người mua nhận | Người mua | `me == payerId`; trước `HELD`, sau `RELEASED`; `onlyKeys([status, releasedAt, updatedAt])`; `serverStamp(releasedAt)`; `after(deals/dealId).status == 'RECEIVED'` và `before(deals/dealId).data.status` thuộc SHIPPED, CONFIRMED (CONFIRMED chỉ khi `deliveryMethod == 'MEET_UP'`) | Cùng lô giao dịch sang RECEIVED |
 | Giải ngân khi hết đếm ngược | Một bên của giao dịch | `me` là `payerId` hoặc `payeeId`; trước `HELD`, sau `RELEASED`; `before(deals/dealId).data.status == 'SHIPPED'`; **`now >= before(deals/dealId).data.autoReleaseAt`**; `after(deals/dealId).status == 'RECEIVED'`; `serverStamp(releasedAt)` | Người bán chạy được vì mốc là giờ máy chủ; không có trường nào do người ghi tự khai |
 | Giải ngân khi bác khiếu nại | Admin | `isAdmin()`; trước `HELD`, sau `RELEASED`; `after(complaints/dealId).decision == 'REJECT'`; `after(deals/dealId).status == 'RECEIVED'` | |
@@ -311,7 +316,7 @@ Tiền ở đây chỉ là bản ghi mô phỏng, nhưng Rules vẫn giữ các 
 | Thao tác | Ai | Điều kiện | Lý do |
 | --- | --- | --- | --- |
 | Đọc | Người báo cáo, hoặc admin | `resource.data.reporterId == me \|\| isAdmin()` | Xem lịch sử báo cáo của mình (STT 63); admin xử lý (STT 75) |
-| Tạo | Người dùng | `writerActive()`; `reporterId == me`; `status == 'OPEN'`; `handledBy == null`; `targetType` thuộc LISTING, USER, MESSAGE; `reason` thuộc năm lý do định sẵn; `description.size()` không quá 1000; `serverStamp(createdAt)` | |
+| Tạo | Người dùng | `writerActive()`; `reporterId == me`; `status == 'OPEN'`; `handledBy == null`; `targetType` thuộc LISTING, USER, MESSAGE; `reason` thuộc năm lý do định sẵn; `description.size()` không quá 1000; `evidenceImageIds.size()` không quá 3; `conversationId` khác rỗng khi và chỉ khi `targetType == 'MESSAGE'`; `serverStamp(createdAt)` | Ảnh đính kèm là tùy chọn, tối đa 3 (quyết định 2026-10-22). Báo cáo tin nhắn phải mang mã cuộc trò chuyện, không thì admin mở ra không đọc được gì |
 | Hủy | Người báo cáo | `resource.data.reporterId == me`; trước `OPEN`, sau `CANCELLED`; `onlyKeys([status, updatedAt])` | |
 | Xử lý | Admin | `isAdmin()`; `writerActive()`; trước `OPEN`, sau `RESOLVED` hoặc `DISMISSED`; `onlyKeys([status, handledBy, updatedAt])`; `handledBy == me` | |
 | Xóa | Không ai | Từ chối | |
@@ -382,8 +387,8 @@ Tạo báo cáo không sửa tài liệu người bị báo cáo, nên không c�
 
 | Thao tác | Ai | Điều kiện | Lý do |
 | --- | --- | --- | --- |
-| Đọc | Người đã đăng nhập | `signedIn()` | Mã ảnh là mã ngẫu nhiên khó đoán nhưng không phải bí mật: ai đã đăng nhập và biết mã đều đọc được (xem Giới hạn) |
-| Tạo | Người tải lên | `writerActive()`; `ownerId == me`; `purpose` thuộc LISTING, CHAT, WAYBILL, EVIDENCE; `data is string` và `data.size() < 600000` (khoảng 400 KB Base64 cho ảnh 300 KB, còn dư an toàn dưới 1 MiB); `width` và `height` không quá 1024; `sizeBytes` không quá 307200 (300 KB); `serverStamp(createdAt)` | Giới hạn dung lượng thay cho luật của Storage; chống lấp đầy hạn mức Spark |
+| Đọc | Mọi người, kể cả khách | Không điều kiện | Khách phải xem được ảnh tin đăng (quyết định 2026-10-22). Mã ảnh là mã ngẫu nhiên khó đoán nhưng không phải bí mật: ai biết mã đều đọc được, kể cả ảnh chat, vận đơn và bằng chứng (xem Giới hạn) |
+| Tạo | Người tải lên | `writerActive()`; `ownerId == me`; `purpose` thuộc LISTING, CHAT, WAYBILL, RECEIVED, EVIDENCE, VERIFICATION; `data is string` và `data.size() < 600000` (khoảng 400 KB Base64 cho ảnh 300 KB, còn dư an toàn dưới 1 MiB); `width` và `height` không quá 1024; `sizeBytes` không quá 307200 (300 KB); `serverStamp(createdAt)` | Giới hạn dung lượng thay cho luật của Storage; chống lấp đầy hạn mức Spark |
 | Sửa | Không ai | Từ chối | Ảnh bất biến; muốn đổi thì tải ảnh mới |
 | Xóa | Người tải lên | `resource.data.ownerId == me`; `writerActive()` | Dọn ảnh khi lưu thất bại hoặc bỏ ảnh khỏi tin |
 
@@ -399,15 +404,19 @@ Tạo báo cáo không sửa tài liệu người bị báo cáo, nên không c�
 | Đảm bảo duy nhất khi mã tài liệu là mã ngẫu nhiên | Chỉ các collection có mã cố định (`follows`, `conversations`, `payments`, `reviews`, `complaints`, `sellerVerifications`) giữ được "mỗi cặp một tài liệu"; báo cáo (`reports`) và offer cùng người, cùng tin có thể trùng | Chấp nhận trùng báo cáo; chặn offer PENDING trùng ở ứng dụng |
 | Biết giao dịch nào đang giữ một tin | Người mua không thể nhả giữ chỗ, và hoàn tất không thể đặt SOLD, nếu không có `reservedDealId` | Đề xuất thêm trường `Listing.reservedDealId` (đổi collection đã có nên phải hỏi leader theo R6). Nếu không thêm: chỉ người bán và admin được đổi trạng thái tin, và nhả giữ chỗ khi người mua hủy sẽ phụ thuộc máy người bán |
 | Tin vào giờ máy | `StatusChange.changedAt`, `lastActiveAt`, `scheduledAt`, `User.isLocked` trên giao diện dùng giờ máy, nên chỉnh được | Rules không dựa vào chúng; mọi mốc có hậu quả (`shippedAt`, `autoReleaseAt`, `receivedAt`, `lockedUntil`, hết hạn xác nhận 3 ngày) so với `request.time` |
-| Kiểm từng phần tử của mảng mã ảnh | Chỉ kiểm được phần tử đầu và số lượng; người dùng có thể trỏ `imageIds` hoặc `evidenceImageIds` vào ảnh của người khác | Chấp nhận: ảnh đã công khai với người đăng nhập (mục 24) |
+| Kiểm từng phần tử của mảng mã ảnh | Chỉ kiểm được phần tử đầu và số lượng; người dùng có thể trỏ `imageIds` (tin đăng và yêu cầu xác thực) hoặc `evidenceImageIds` vào ảnh của người khác, và Rules không kiểm được `purpose` của từng ảnh | Chấp nhận: ảnh đã công khai (mục 24). Với yêu cầu xác thực, admin nhìn ảnh rồi mới duyệt nên ảnh sai sẽ bị từ chối |
 | Giữ bí mật ảnh chat, vận đơn, bằng chứng | Mọi người đã đăng nhập biết mã ảnh là đọc được | Mã ngẫu nhiên khó đoán; chấp nhận. Muốn kín hơn cần tách ảnh thành tài liệu con của cuộc trò chuyện hoặc giao dịch (đổi thiết kế) |
 | Ngăn giả mạo thông báo | Người dùng gửi thông báo tùy ý cho người khác | Chấp nhận (overview.md mục 11); có thể tăng cứng ở mục 21 nếu còn dư giới hạn đọc |
 | Kiểm đúng `flagged` | Cờ từ khóa cấm do máy người đăng tính; Rules chỉ chặn hạ cờ | Admin xem danh sách tin có cờ và bỏ cờ |
+| Kiểm `users.searchKeywords` đúng là các từ của `displayName` | Người dùng có thể nhồi tới 20 từ bất kỳ để lọt vào kết quả tìm người dùng (STT 103) | Chấp nhận trong phạm vi đồ án; Rules chặn quá 20 từ, kết quả chỉ hiện tài khoản ACTIVE |
 | Chống lạm dụng khối lượng | Mỗi người có thể tạo nhiều offer, báo cáo, ảnh trong hạn mức Spark | Chấp nhận; theo dõi mức dùng trước buổi demo |
 | Chứng minh bằng chứng vận đơn thật | Ảnh và mã vận đơn có thể giả | Đây là rủi ro nghiệp vụ, khiếu nại trong thời gian đếm ngược là cách xử lý |
 | Kiểm điểm ba tiêu chí con của đánh giá | Chỉ kiểm giá trị 1 đến 5; chỉ điểm tổng thể (`rating`) được cộng vào `ratingSum` | Ba tiêu chí con chỉ để hiển thị |
 | Số lần đọc trong một lô | Lô chấp nhận offer (offer, các offer khác, giao dịch, tin, thông báo) và lô tạo đánh giá có thể vượt giới hạn số lần `get()` (kiểm lại giới hạn hiện hành) | Giữ lô gọn; cắt bớt kiểm tra tăng cứng (mục 21) nếu vượt; thử trên Rules Playground |
 | Mốc `request.auth.token.email_verified` | Token đăng nhập chỉ mang giá trị mới sau khi làm mới | Ứng dụng gọi `AuthRepository.reloadUser` và buộc làm mới token sau khi xác thực email (kiểm lại) |
 | Quyền admin dùng chung | Mọi admin có quyền như nhau (quyết định 2026-10-11); không có nhật ký thao tác admin (STT 100 là Phát triển sau) | Chấp nhận |
+| Đếm số admin còn lại | UC42 BR4 "phải còn ít nhất một Admin" không ép được, vì Rules không đếm được tài liệu | Ứng dụng đếm trước khi gỡ quyền; một admin cố tình vẫn gỡ được hết. Chấp nhận trong phạm vi đồ án |
+| Giấu thông tin người bán với khách | Khách đọc được `listings` và `images` nhưng không đọc được `users`, nên màn chi tiết tin ở chế độ khách thiếu tên và điểm người bán | Giao diện ẩn khối người bán khi chưa đăng nhập và mời đăng nhập; không chép tên người bán vào tài liệu tin |
+| Ảnh chat, vận đơn, bằng chứng nay công khai | Từ khi `images` cho khách đọc, ai biết mã ảnh đều đọc được dù chưa đăng nhập | Mã ngẫu nhiên khó đoán; chấp nhận. Muốn kín hơn phải tách ảnh tin đăng thành collection riêng |
 
 Khi viết file `firebase/firestore.rules`: mỗi bảng ở trên thành một khối `match`; các hàm ở "Quy ước chung" thành hàm trong file luật; mỗi chuyển trạng thái thành một nhánh `allow update` riêng để lỗi từ chối dễ truy ra. Luật nào ghi "(kiểm lại)" phải thử trên Rules Playground hoặc bằng bộ kiểm thử của Firebase Emulator trước khi gộp.
