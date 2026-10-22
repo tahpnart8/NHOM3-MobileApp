@@ -26,40 +26,65 @@ Lệnh này bật `.githooks/`. Không bật thì hook không chặn, và bạn 
 >
 > Issue [#81](https://github.com/tahpnart8/NHOM3-MobileApp/issues/81), [#82](https://github.com/tahpnart8/NHOM3-MobileApp/issues/82), [#83](https://github.com/tahpnart8/NHOM3-MobileApp/issues/83) là của Phát và phải vào `main` trước tất cả, vì chúng dựng khung 93 lớp để Pull Request của mọi người biên dịch được. Trong lúc chờ, cứ đọc issue của mình và bản nháp của nó, đừng viết code.
 >
-> Phát vào `main` xong sẽ nhắn. Từ lúc đó mỗi người làm issue đợt 1 của mình, không ai chờ ai.
+> Phát vào `main` xong sẽ nhắn. Từ lúc đó mỗi người dán đoạn prompt ở mục 2 của trang guide trên vào một phiên chat mới, trợ lý AI sẽ tự tra issue của bạn và làm tuần tự. Không ai chờ ai.
 >
 > Một nguyên tắc duy nhất phải nhớ: **gọi phương thức của người khác thì được, sửa tệp của người khác thì không.**
 
-## 2. Prompt một lần, dán cái này
+## 2. Prompt kích hoạt phiên làm việc, dán cái này
 
-Một khối, dùng chung cho cả bốn người và mọi issue. Thay `<SỐ>` bằng số issue của bạn, dán vào **phiên chat mới**, rồi để trợ lý AI tự chạy tới lúc mở Pull Request. Nó tự lên repo lấy luật và quy trình, nên prompt không chép lại luật: sửa luật trong repo là cả nhóm nhận được bản mới.
+Một khối, dùng chung cho cả bốn người, **không có số issue**. Dán vào một phiên chat mới và trợ lý AI tự tra xem issue nào được gán cho bạn, tự sắp thứ tự theo kế hoạch, rồi làm liên tục hết issue này sang issue khác, mỗi issue một Pull Request.
+
+Prompt không chép luật vào mà bảo nó lên repo đọc. Sửa luật trong repo là cả nhóm nhận bản mới, không có hai bản lệch nhau.
 
 ```
-Repo này là đồ án Android PUBGApp. Làm giúp tôi issue #<SỐ> từ đầu đến hết, tự chạy, đừng hỏi lại từng bước.
+Repo này là đồ án Android PUBGApp. Phiên này bạn làm liên tục hết các issue đang gán cho tôi, theo đúng thứ tự, mỗi issue một Pull Request. Đừng hỏi tôi từng bước, cứ chạy.
 
 BƯỚC 1, NẠP LUẬT VÀ QUY TRÌNH. Đọc trong repo, theo thứ tự:
-- AGENTS.md ở gốc repo. Đây là luật, không phải gợi ý; mục 6 có 23 luật và áp dụng cho mọi bước bạn làm.
+- AGENTS.md ở gốc repo. Đây là luật, không phải gợi ý; 23 luật ở mục 6 áp dụng cho mọi bước bạn làm.
 - .agents/rules/ cả bốn tệp.
-- .agents/skills/pubg-start-task/SKILL.md, pubg-sync-branch, pubg-code, pubg-ui, pubg-open-pr. Đây là quy trình bạn sẽ chạy, làm theo đúng từng bước trong đó.
+- .agents/skills/pubg-start-task/SKILL.md, pubg-sync-branch, pubg-code, pubg-ui, pubg-open-pr. Đây là quy trình bạn chạy cho từng issue, làm theo đúng từng bước trong đó.
+- workflow/plan/ke-hoach-rut-gon.md đọc hết, và workflow/plan/issues/README.md.
 
-BƯỚC 2, NẠP VIỆC. Chạy gh issue view <SỐ>. Rồi mở bản nháp mà issue trỏ tới trong workflow/plan/issues/, đọc workflow/plan/issues/README.md, và workflow/plan/ke-hoach-rut-gon.md mục 2 và mục 3. Mở mọi mục tài liệu mà issue nhắc tên, bắt buộc có workflow/docs/architecture/dac-ta-lop/ cho mọi lớp bạn sẽ chạm.
+BƯỚC 2, LẬP DANH SÁCH VIỆC CỦA TÔI. Chạy:
+  gh issue list --assignee @me --state open --limit 50
+Đối chiếu từng issue với bảng ở ke-hoach-rut-gon.md mục 3 để biết nó thuộc đợt nào: issue GitHub số N là số thứ tự N trừ 80 trong kế hoạch. Rồi sắp thứ tự làm, theo ba quy tắc này:
+- Đợt nhỏ làm trước đợt lớn: đợt 1, rồi 2, rồi 3, rồi 4.
+- Trong cùng một đợt thì theo thứ tự số tăng dần.
+- Tôn trọng các chuỗi phụ thuộc mà kế hoạch nêu, và cả ghi chú chuyển người ở đầu một số issue.
+Đưa tôi xem danh sách đã sắp, một dòng một issue, rồi làm luôn, không chờ tôi trả lời.
 
-BƯỚC 3, CHẠY HẾT. Lấy main mới nhất, tạo nhánh <type>/<SỐ>-<slug>, chia việc thành 4 đến 8 bước nhỏ, mỗi bước build được một mình và có một commit riêng, rồi mở Pull Request theo .github/PULL_REQUEST_TEMPLATE.md với dòng Closes #<SỐ>. Issue và Pull Request viết tiếng Việt.
+BƯỚC 3, KIỂM CỬA TRƯỚC KHI CODE. Khung 93 lớp phải có trên main rồi, nếu không thì mọi thứ bạn viết sẽ không biên dịch được. Chạy git fetch origin && git switch main && git pull, rồi tìm tệp DataCallback.java trong PUBGApp/app/src/main/java/com/nhom3/pubgapp/. Không thấy thì dừng hẳn, nói tôi "khung lớp chưa vào main", và đừng tự tạo lớp nào.
+
+BƯỚC 4, VÒNG LẶP. Với từng issue trong danh sách, theo thứ tự, làm xong hẳn rồi mới sang issue sau:
+ 1. git switch main && git pull
+ 2. gh issue view <số>. Mở bản nháp mà issue trỏ tới trong workflow/plan/issues/, và mọi mục tài liệu issue nhắc tên, bắt buộc có workflow/docs/architecture/dac-ta-lop/ cho mọi lớp bạn sẽ chạm.
+ 3. Tạo nhánh <type>/<số>-<slug> từ main.
+ 4. Chia việc thành 4 đến 8 bước nhỏ. Mỗi bước build được một mình và có một commit riêng, tiêu đề dạng type(scope): câu mô tả.
+ 5. Chạy cd PUBGApp && ./gradlew assembleDebug testDebugUnitTest lintDebug, và sh workflow/scripts/check-java-style.sh.
+ 6. Mở Pull Request theo .github/PULL_REQUEST_TEMPLATE.md, tiếng Việt, có dòng Closes #<số>.
+ 7. Báo tôi một đoạn ngắn: số Pull Request, danh sách tệp đã sửa, kết quả thật của lệnh build, và mọi lớp hoặc phương thức hoặc trường công khai mới kèm dòng tài liệu định nghĩa nó.
+ 8. Sang issue tiếp theo. Đừng merge Pull Request nào, leader merge.
+
+HAI TÌNH HUỐNG PHỤ THUỘC:
+- Issue tiếp theo cần code của một Pull Request của chính tôi còn chưa merge: tạo nhánh từ nhánh đó thay vì từ main, và ghi rõ chuyện đó trong Pull Request.
+- Issue tiếp theo cần code của người khác còn chưa vào main: bỏ qua nó, làm issue sau đó, và nói tôi biết issue nào đang treo và chờ cái gì.
 
 HAI THỨ QUYẾT ĐỊNH ĐÚNG SAI:
 - Danh sách tệp trong issue là hàng rào. Tệp không có trong danh sách thì không sửa, kể cả lỗi một dòng: ghi nó vào Pull Request cho tôi.
 - Mọi tên lớp, trường, phương thức, enum, collection phải chép đúng từ workflow/docs/architecture/dac-ta-lop/, workflow/docs/data/ hoặc workflow/docs/architecture/trang-thai.md. Tên không có ở đó thì dừng, đừng bịa và đừng đổi tên tài liệu có sẵn.
 
-CHỈ DỪNG VÀ HỎI TÔI TRONG BA TRƯỜNG HỢP: thiếu một tên hoặc một phương thức thuộc người khác (luật R20), tài liệu mâu thuẫn nhau (R23), hoặc bạn cần sửa một tệp đóng băng ở ke-hoach-rut-gon.md mục 2. Lúc đó comment vào issue bằng tiếng Việt, gắn nhãn blocked, rồi nhắn tôi. Mọi chỗ mơ hồ khác thì tự chọn cách hợp lý và ghi một dòng lý do vào Pull Request.
+CHỈ DỪNG VÀ HỎI TÔI TRONG BA TRƯỜNG HỢP: thiếu một tên hoặc một phương thức thuộc người khác (luật R20), tài liệu mâu thuẫn nhau (R23), hoặc bạn cần sửa một tệp đóng băng ở ke-hoach-rut-gon.md mục 2. Lúc đó comment vào issue bằng tiếng Việt, gắn nhãn blocked, nói tôi, rồi chuyển sang issue tiếp theo chứ đừng ngồi chờ. Mọi chỗ mơ hồ khác thì tự chọn cách hợp lý, ghi một dòng lý do vào Pull Request, và đi tiếp.
 
 VIỆC TÔI LÀM, KHÔNG PHẢI BẠN: thử trên máy ảo. Gradle và check-java-style.sh thì bạn chạy, dán lệnh và kết quả thật; chưa chạy được thì nói chưa chạy, đừng viết là đã test.
 
-XONG THÌ BÁO TÔI BỐN THỨ: số Pull Request, danh sách tệp đã sửa, kết quả thật của lệnh build, và mọi lớp hoặc phương thức hoặc trường công khai mới kèm dòng tài liệu định nghĩa nó; cái nào không có thì nói thẳng là không có.
+HẾT PHIÊN: khi không còn issue nào làm được nữa, liệt kê cho tôi ba thứ: issue nào đã mở Pull Request, issue nào đang treo và chờ cái gì, và chỗ nào bạn đã tự quyết mà tôi nên xem lại.
 ```
 
-Trợ lý AI nào có lệnh gạch chéo đọc `.agents/workflows/` thì bước 1 và bước 3 nó tự gọi `/start-task`, `/code`, `/open-pr`. Không có thì nó đọc thẳng các tệp `SKILL.md` ở trên, kết quả như nhau.
+Trợ lý AI nào có lệnh gạch chéo đọc `.agents/workflows/` thì nó tự gọi `/start-task`, `/code`, `/open-pr` ở bước 4. Không có thì nó đọc thẳng các tệp `SKILL.md`, kết quả như nhau.
 
-Nếu công cụ của bạn không đọc được tệp trong repo, dán mục 3 thay cho khối này.
+Phiên dài thì model hay quên luật. Hết mỗi hai ba issue nên mở phiên mới và dán lại khối này: nó tự tra `gh issue list --assignee @me` nên biết đi tiếp từ đâu, không cần bạn nhắc.
+
+Nếu công cụ của bạn không đọc được tệp trong repo, dán mục 3 thay cho khối này, và làm một issue một phiên.
 
 ## 3. Prompt đầy đủ, khi công cụ không đọc được tệp trong repo, hoặc khi bạn muốn duyệt từng bước
 
