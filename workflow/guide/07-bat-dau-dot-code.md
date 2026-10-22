@@ -20,7 +20,7 @@ Lệnh này bật `.githooks/`. Không bật thì hook không chặn, và bạn 
 
 > Tài liệu và kế hoạch đã lên `main`. 33 issue đã có trên GitHub, mỗi người đã được gán tên, xem ở tab Issues và lọc theo `assignee:@me`.
 >
-> Đọc trước khi code, đúng ba tệp này: `workflow/plan/ke-hoach-rut-gon.md` (ai làm gì, ai mở tệp nào), `workflow/plan/issues/README.md` (ba loại dòng trong bản nháp đã lạc hậu), `workflow/guide/07-bat-dau-dot-code.md` (mục 2 là đoạn prompt ngắn dán vào trợ lý AI, dùng chung cho cả nhóm).
+> Đọc trước khi code, đúng ba tệp này: `workflow/plan/ke-hoach-rut-gon.md` (ai làm gì, ai mở tệp nào), `workflow/plan/issues/README.md` (ba loại dòng trong bản nháp đã lạc hậu), `workflow/guide/07-bat-dau-dot-code.md` (mục 2 là đoạn prompt dán vào trợ lý AI, dùng chung cho cả nhóm).
 >
 > Chạy `sh workflow/scripts/setup-dev.sh` một lần để bật hook.
 >
@@ -30,28 +30,40 @@ Lệnh này bật `.githooks/`. Không bật thì hook không chặn, và bạn 
 >
 > Một nguyên tắc duy nhất phải nhớ: **gọi phương thức của người khác thì được, sửa tệp của người khác thì không.**
 
-## 2. Prompt ngắn, dán cái này
+## 2. Prompt một lần, dán cái này
 
-Bốn dòng, dùng chung cho mọi người và mọi issue. Thay `<SỐ>` bằng số issue của bạn. Dán vào **phiên chat mới**.
+Một khối, dùng chung cho cả bốn người và mọi issue. Thay `<SỐ>` bằng số issue của bạn, dán vào **phiên chat mới**, rồi để trợ lý AI tự chạy tới lúc mở Pull Request. Nó tự lên repo lấy luật và quy trình, nên prompt không chép lại luật: sửa luật trong repo là cả nhóm nhận được bản mới.
 
 ```
-Repo này là đồ án Android PUBGApp. Tôi làm issue #<SỐ>.
+Repo này là đồ án Android PUBGApp. Làm giúp tôi issue #<SỐ> từ đầu đến hết, tự chạy, đừng hỏi lại từng bước.
 
-Đọc ba thứ này trước, đúng thứ tự, và chưa viết dòng code nào:
-1. AGENTS.md ở gốc repo. Đó là luật, không phải gợi ý.
-2. workflow/guide/07-bat-dau-dot-code.md. Mục 3 của tệp đó là prompt đầy đủ dành cho bạn: đọc hết và coi từng dòng trong đó là lệnh của tôi.
-3. gh issue view <SỐ>
+BƯỚC 1, NẠP LUẬT VÀ QUY TRÌNH. Đọc trong repo, theo thứ tự:
+- AGENTS.md ở gốc repo. Đây là luật, không phải gợi ý; mục 6 có 23 luật và áp dụng cho mọi bước bạn làm.
+- .agents/rules/ cả bốn tệp.
+- .agents/skills/pubg-start-task/SKILL.md, pubg-sync-branch, pubg-code, pubg-ui, pubg-open-pr. Đây là quy trình bạn sẽ chạy, làm theo đúng từng bước trong đó.
 
-Rồi làm đúng theo mục 3 đó, bắt đầu từ giai đoạn 1, và dừng ở mọi chỗ nó bảo chờ tôi duyệt.
+BƯỚC 2, NẠP VIỆC. Chạy gh issue view <SỐ>. Rồi mở bản nháp mà issue trỏ tới trong workflow/plan/issues/, đọc workflow/plan/issues/README.md, và workflow/plan/ke-hoach-rut-gon.md mục 2 và mục 3. Mở mọi mục tài liệu mà issue nhắc tên, bắt buộc có workflow/docs/architecture/dac-ta-lop/ cho mọi lớp bạn sẽ chạm.
+
+BƯỚC 3, CHẠY HẾT. Lấy main mới nhất, tạo nhánh <type>/<SỐ>-<slug>, chia việc thành 4 đến 8 bước nhỏ, mỗi bước build được một mình và có một commit riêng, rồi mở Pull Request theo .github/PULL_REQUEST_TEMPLATE.md với dòng Closes #<SỐ>. Issue và Pull Request viết tiếng Việt.
+
+HAI THỨ QUYẾT ĐỊNH ĐÚNG SAI:
+- Danh sách tệp trong issue là hàng rào. Tệp không có trong danh sách thì không sửa, kể cả lỗi một dòng: ghi nó vào Pull Request cho tôi.
+- Mọi tên lớp, trường, phương thức, enum, collection phải chép đúng từ workflow/docs/architecture/dac-ta-lop/, workflow/docs/data/ hoặc workflow/docs/architecture/trang-thai.md. Tên không có ở đó thì dừng, đừng bịa và đừng đổi tên tài liệu có sẵn.
+
+CHỈ DỪNG VÀ HỎI TÔI TRONG BA TRƯỜNG HỢP: thiếu một tên hoặc một phương thức thuộc người khác (luật R20), tài liệu mâu thuẫn nhau (R23), hoặc bạn cần sửa một tệp đóng băng ở ke-hoach-rut-gon.md mục 2. Lúc đó comment vào issue bằng tiếng Việt, gắn nhãn blocked, rồi nhắn tôi. Mọi chỗ mơ hồ khác thì tự chọn cách hợp lý và ghi một dòng lý do vào Pull Request.
+
+VIỆC TÔI LÀM, KHÔNG PHẢI BẠN: thử trên máy ảo. Gradle và check-java-style.sh thì bạn chạy, dán lệnh và kết quả thật; chưa chạy được thì nói chưa chạy, đừng viết là đã test.
+
+XONG THÌ BÁO TÔI BỐN THỨ: số Pull Request, danh sách tệp đã sửa, kết quả thật của lệnh build, và mọi lớp hoặc phương thức hoặc trường công khai mới kèm dòng tài liệu định nghĩa nó; cái nào không có thì nói thẳng là không có.
 ```
 
-Vì sao ngắn: luật nằm trong repo và được cập nhật ở đó, nên prompt không cần chép lại. Chép lại là có hai bản và một bản sẽ cũ.
+Trợ lý AI nào có lệnh gạch chéo đọc `.agents/workflows/` thì bước 1 và bước 3 nó tự gọi `/start-task`, `/code`, `/open-pr`. Không có thì nó đọc thẳng các tệp `SKILL.md` ở trên, kết quả như nhau.
 
-Nếu trợ lý AI của bạn không mở được tệp trong repo (vài công cụ web không có quyền đọc tệp), thì dán nguyên mục 3 dưới đây thay cho prompt ngắn.
+Nếu công cụ của bạn không đọc được tệp trong repo, dán mục 3 thay cho khối này.
 
-## 3. Prompt đầy đủ, khi công cụ không đọc được tệp trong repo
+## 3. Prompt đầy đủ, khi công cụ không đọc được tệp trong repo, hoặc khi bạn muốn duyệt từng bước
 
-Khối này là bản đầy đủ mà prompt ngắn ở mục 2 trỏ tới. Trợ lý AI đọc được tệp thì nó tự đọc chỗ này; không đọc được thì bạn dán tay. Thay `<SỐ>` bằng số issue. **Mỗi issue một phiên chat mới.**
+Khối này chép sẵn luật vào prompt, và dừng lại ở ba chặng để bạn duyệt. Trợ lý AI đọc được tệp thì nó tự đọc chỗ này; không đọc được thì bạn dán tay. Thay `<SỐ>` bằng số issue. **Mỗi issue một phiên chat mới.**
 
 ```
 Tôi làm issue #<SỐ> của repo PUBGApp. Bạn là trợ lý code. Làm theo đúng thứ tự sau, dừng lại ở chỗ tôi phải duyệt.
