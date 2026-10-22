@@ -25,7 +25,7 @@ Tên lớp lấy từ [bản đồ sở hữu](../../plan/so-huu.md) mục 3. M�
 | B05 | Kệ hàng của tôi | `MyShopFragment` | `MainActivity` | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
 | B06 | Tin đã lưu | `SavedListingsFragment` | `MainActivity` | [b-kham-pha-tin-dang](b-kham-pha-tin-dang/README.md) |
 | C01 | Danh sách tin nhắn | `ConversationListFragment` | `MainActivity` (tab Tin nhắn) | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
-| C02 | Trò chuyện và đề nghị giá | `ChatFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
+| C02 | Trò chuyện và đề nghị giá | `ChatFragment`, `MakeOfferFragment` (bảng trượt, mở từ B03) | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
 | C03 | Chi tiết giao dịch | `DealDetailFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
 | C04 | Lịch sử giao dịch và thanh toán | `DealHistoryFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
 | C05 | Viết đánh giá | `WriteReviewFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
