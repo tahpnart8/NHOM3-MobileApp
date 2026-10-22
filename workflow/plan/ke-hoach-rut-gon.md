@@ -56,6 +56,8 @@ Bốn chỗ đổi so với `so-huu.md`, đổi vì chúng là bốn điểm xun
 
 Mỗi dòng là một issue, một Pull Request, **một người**. Cột "Tra ở" là bản nháp trong [`issues/`](issues/README.md) để lấy tên lớp, chữ ký và tiêu chí nghiệm thu. Đọc [`issues/README.md`](issues/README.md) một lần trước khi mở bản nháp đầu tiên: nó nói ba loại dòng trong bản nháp đã lạc hậu.
 
+**Số issue trên GitHub:** issue số `N` trong các bảng dưới đây là GitHub issue **#(N + 80)**. Issue 1 là [#81](https://github.com/tahpnart8/NHOM3-MobileApp/issues/81), issue 33 là [#113](https://github.com/tahpnart8/NHOM3-MobileApp/issues/113). Riêng [#80](https://github.com/tahpnart8/NHOM3-MobileApp/issues/80) là đợt tài liệu, không phải việc code. Nhánh đặt tên `<type>/<số GitHub>-<slug>`, ví dụ `feat/89-dang-nhap-email-google`.
+
 **Hai điều phải biết khi đọc bản nháp:**
 
 - Bản nháp viết trước kế hoạch này. Chỗ nào nó ghi "điền thân `XRepository.y`" mà `XRepository` không phải của bạn thì **bỏ qua dòng đó**: đợt 1 đã làm. Issue đợt 2 và 3 chỉ còn Fragment, layout, adapter, ViewModel.
