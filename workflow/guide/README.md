@@ -28,6 +28,7 @@ Issue  ->  [Khởi tạo phiên]  ->  Explore  ->  Plan  ->  Implement  ->  Revi
 | Đang gặp lỗi hoặc bị từ chối, không biết làm gì | [04-tinh-huong.md](04-tinh-huong.md) |
 | Biết cái gì được bỏ qua, cái gì không | [05-khi-nao-duoc-pha-le.md](05-khi-nao-duoc-pha-le.md) |
 | Bạn là leader | [06-danh-cho-leader.md](06-danh-cho-leader.md) |
+| Bắt đầu đợt code: tin nhắn gửi nhóm và prompt mở đầu một issue | [07-bat-dau-dot-code.md](07-bat-dau-dot-code.md) |
 
 Khi gặp lỗi hoặc không biết bước tiếp theo, gõ `/guide` (hoặc bảo AI dùng skill `pubg-guide`): AI sẽ chỉ bạn đúng trang cần đọc.
 
