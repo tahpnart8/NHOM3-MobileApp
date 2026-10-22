@@ -20,7 +20,7 @@ Lệnh này bật `.githooks/`. Không bật thì hook không chặn, và bạn 
 
 > Tài liệu và kế hoạch đã lên `main`. 33 issue đã có trên GitHub, mỗi người đã được gán tên, xem ở tab Issues và lọc theo `assignee:@me`.
 >
-> Đọc trước khi code, đúng ba tệp này: `workflow/plan/ke-hoach-rut-gon.md` (ai làm gì, ai mở tệp nào), `workflow/plan/issues/README.md` (ba loại dòng trong bản nháp đã lạc hậu), `workflow/guide/07-bat-dau-dot-code.md` (prompt để ra lệnh cho AI).
+> Đọc trước khi code, đúng ba tệp này: `workflow/plan/ke-hoach-rut-gon.md` (ai làm gì, ai mở tệp nào), `workflow/plan/issues/README.md` (ba loại dòng trong bản nháp đã lạc hậu), `workflow/guide/07-bat-dau-dot-code.md` (mục 2 là đoạn prompt ngắn dán vào trợ lý AI, dùng chung cho cả nhóm).
 >
 > Chạy `sh workflow/scripts/setup-dev.sh` một lần để bật hook.
 >
@@ -30,9 +30,28 @@ Lệnh này bật `.githooks/`. Không bật thì hook không chặn, và bạn 
 >
 > Một nguyên tắc duy nhất phải nhớ: **gọi phương thức của người khác thì được, sửa tệp của người khác thì không.**
 
-## 2. Prompt mở đầu một issue
+## 2. Prompt ngắn, dán cái này
 
-Dán nguyên khối dưới đây vào **phiên chat mới** của trợ lý AI (Antigravity, Claude Code, Codex đều được), thay `<SỐ>` bằng số issue. Mỗi issue một phiên mới.
+Bốn dòng, dùng chung cho mọi người và mọi issue. Thay `<SỐ>` bằng số issue của bạn. Dán vào **phiên chat mới**.
+
+```
+Repo này là đồ án Android PUBGApp. Tôi làm issue #<SỐ>.
+
+Đọc ba thứ này trước, đúng thứ tự, và chưa viết dòng code nào:
+1. AGENTS.md ở gốc repo. Đó là luật, không phải gợi ý.
+2. workflow/guide/07-bat-dau-dot-code.md. Mục 3 của tệp đó là prompt đầy đủ dành cho bạn: đọc hết và coi từng dòng trong đó là lệnh của tôi.
+3. gh issue view <SỐ>
+
+Rồi làm đúng theo mục 3 đó, bắt đầu từ giai đoạn 1, và dừng ở mọi chỗ nó bảo chờ tôi duyệt.
+```
+
+Vì sao ngắn: luật nằm trong repo và được cập nhật ở đó, nên prompt không cần chép lại. Chép lại là có hai bản và một bản sẽ cũ.
+
+Nếu trợ lý AI của bạn không mở được tệp trong repo (vài công cụ web không có quyền đọc tệp), thì dán nguyên mục 3 dưới đây thay cho prompt ngắn.
+
+## 3. Prompt đầy đủ, khi công cụ không đọc được tệp trong repo
+
+Khối này là bản đầy đủ mà prompt ngắn ở mục 2 trỏ tới. Trợ lý AI đọc được tệp thì nó tự đọc chỗ này; không đọc được thì bạn dán tay. Thay `<SỐ>` bằng số issue. **Mỗi issue một phiên chat mới.**
 
 ```
 Tôi làm issue #<SỐ> của repo PUBGApp. Bạn là trợ lý code. Làm theo đúng thứ tự sau, dừng lại ở chỗ tôi phải duyệt.
@@ -75,7 +94,7 @@ Liệt kê mọi lớp, phương thức, trường công khai mới kèm dòng t
 Rồi soạn nội dung Pull Request theo .github/PULL_REQUEST_TEMPLATE.md, tiếng Việt, có dòng Closes #<SỐ>. Tôi tự thử máy ảo rồi dán kết quả thật vào.
 ```
 
-## 3. Khi bị chặn
+## 4. Khi bị chặn
 
 Trợ lý AI nói thiếu một phương thức, một tên, một tệp không thuộc bạn: **đừng cho nó tự tạo**. Comment vào issue bằng tiếng Việt, nói rõ bạn cần gì và vì sao, gắn nhãn `blocked`, rồi nhắn nhóm. Đây là luật R20 và nó là thứ giữ cho năm nhánh ghép được vào nhau.
 
@@ -83,7 +102,7 @@ Trợ lý AI muốn sửa một tệp ngoài danh sách: nói không, ghi lại 
 
 Hook hoặc CI từ chối: gõ `/guide`, hoặc đọc [04-tinh-huong.md](04-tinh-huong.md).
 
-## 4. Hai thói quen phải giữ hằng ngày
+## 5. Hai thói quen phải giữ hằng ngày
 
 1. **Mỗi lần bắt đầu issue mới, lấy `main` mới nhất trước.** Dùng skill `pubg-sync-branch`, hoặc `git switch main && git pull`. Nhánh dựng từ `main` cũ là nguồn xung đột lớn nhất.
 2. **Commit nhỏ và nhiều.** Một bước một commit. Dễ đọc khi review, dễ bỏ một bước sai, và là bằng chứng cho dòng barem về phân chia công việc.
