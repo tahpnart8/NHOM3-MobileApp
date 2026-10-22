@@ -15,18 +15,57 @@ Tính năng đã có ở đây được **bảo vệ**: xóa hoặc đổi tên 
 
 ## Danh sách
 
-Các dòng bên dưới là **gợi ý ban đầu** để leader duyệt, ngoại trừ F-01 đến F-03 là yêu cầu bắt buộc của môn học (nhưng vẫn ở `proposed` cho đến khi leader duyệt cách làm).
+14 tính năng, gom từ 91 chức năng "Đợt này" của [bảng đặc tả chức năng](dac-ta-chuc-nang.md) (106 chức năng trừ 15 chức năng Phát triển sau). 15 chức năng Phát triển sau (STT 45, 83, 85, 86, 92 đến 102) không có mã ở đây và không ai làm. Ba chức năng thêm ngày 2026-10-22 (104 Đăng xuất, 105 Thêm gỡ quyền admin, 106 Đăng nhập khu vực quản trị) đã được xếp vào F-01 và F-14. Mọi dòng đã được leader duyệt ở trạng thái `planned`.
 
-| Mã | Tính năng | Trạng thái | Người làm | Issue | Chạm tới |
-| --- | --- | --- | --- | --- | --- |
-| F-01 | Đăng nhập và tài khoản, gồm đăng nhập Google (Firebase Authentication) | proposed | | | Firebase Auth; Firestore `users` |
-| F-02 | Bộ nhớ đệm offline bằng Room: xem lại trang đã xem khi mất mạng | proposed | | | Room; mọi màn hình có danh sách hoặc chi tiết |
-| F-03 | Giao diện thích ứng khi xoay màn hình, giữ nguyên trạng thái | proposed | | | Layout `layout-land`, ViewModel |
-| F-04 | Đăng bán và quản lý tin của người bán | proposed | | | Firestore `listings`; Storage (ảnh) |
-| F-05 | Bảng tin và tìm kiếm | proposed | | | Firestore `listings` |
-| F-06 | Nhắn tin giữa người mua và người bán | proposed | | | Firestore `chats` |
-| F-07 | Đơn hàng và giao dịch | proposed | | | Firestore `orders` |
-| F-08 | Hồ sơ người dùng và đánh giá | proposed | | | Firestore `users`, `reviews` |
-| F-09 | Quản trị đơn giản | proposed | | | Firestore `listings`, `users` |
+| Mã | Tính năng | STT | Trạng thái | Người làm | Issue | Chạm tới |
+| --- | --- | --- | --- | --- | --- | --- |
+| F-01 | Đăng ký, đăng nhập (email và Google), đăng xuất, quên và đổi mật khẩu, chọn danh mục quan tâm | 1, 2, 3, 11, 35, 104 | planned | Nguyễn Thùy Ngân | | Firebase Auth; `users`, `identity`, `categories` |
+| F-02 | Hồ sơ cá nhân, ảnh, địa chỉ, định danh, cài đặt thông báo, vô hiệu hóa tài khoản | 4, 5, 6, 9, 10, 12 | planned | Nguyễn Thùy Ngân | | `users`, `addresses`, `identity`, `images` |
+| F-03 | Thông báo trong ứng dụng | 67 | planned | Nguyễn Thùy Ngân | | `notifications` |
+| F-04 | Đăng tin, lưu nháp, kệ hàng | 13 đến 22 | planned | Trần Anh Tú | | `listings`, `categories`, `images` |
+| F-05 | Tìm kiếm tin đăng và người dùng, bộ lọc, sắp xếp, kênh xem | 23 đến 34, 103 | planned | Trần Anh Tú | | `listings`, `users`, `follows`; Room `listing_cache`, `recent_search` |
+| F-06 | Gợi ý: tin tương tự, giá tham khảo, Dành cho bạn | 36, 37, 38 | planned | Trần Anh Tú | | `listings`; Room `recent_view`, `recent_search` |
+| F-07 | Lưu tin | 40, 41, 42 | planned | Trần Anh Tú | | `savedListings` |
+| F-08 | Chat chữ và ảnh, trạng thái hoạt động | 43, 44, 46 | planned | Nguyễn Lê Hải Long | | `conversations`, `messages`, `images`; Room `conversation_cache`, `message_cache` |
+| F-09 | Offer một chạm và giao dịch | 47 đến 55 | planned | Nguyễn Lê Hải Long | | `offers`, `deals`, `images`; Room `deal_cache` |
+| F-10 | Thanh toán mô phỏng trong ứng dụng, lịch sử giao dịch và thanh toán, đánh giá | 56 đến 59 | planned | Nguyễn Lê Hải Long | | `payments`, `deals`, `reviews` |
+| F-11 | Hồ sơ công khai, uy tín, theo dõi | 7, 8, 39, 60 | planned | Nguyễn Hoàng Phúc | | `users`, `follows`, `reviews` |
+| F-12 | Báo cáo và khiếu nại | 61 đến 66 | planned | Nguyễn Hoàng Phúc | | `reports`, `complaints`, `images` |
+| F-13 | Admin xử lý khiếu nại | 87 đến 91 | planned | Nguyễn Hoàng Phúc | | `complaints`, `adminNote`, `notifications` |
+| F-14 | Admin người dùng, nội dung, danh mục, giao dịch, chuyển tiền tự động, tài khoản admin | 68 đến 82, 84, 105, 106 | planned | Trần Đức Phát | | `users`, `warnings`, `sellerVerifications`, `admins`, `activityLogs`, `reports`, `bannedKeywords`, `categories`, `listings`, `deals`, `payments` |
 
-Cột "Chạm tới" cho biết tính năng đụng những collection hoặc bảng nào, để biết khi nào phải cập nhật `workflow/docs/data/`. Tên collection chỉ là dự kiến cho đến khi có trong [firestore-schema.md](../data/firestore-schema.md).
+STT 73 (duyệt yêu cầu xác thực tài khoản) thuộc F-14 ở phía admin; phía người dùng (biểu mẫu gửi yêu cầu) do Phúc làm cùng F-11, theo [so-huu.md](../../plan/so-huu.md).
+
+## Phạm vi đợt rút gọn 2026-10-22
+
+Còn 4 ngày code, nên đợt này làm 24 trong 33 màn hình. Bảng dưới ghi phần **bị bỏ lại** của từng tính năng. Tính năng không có trong bảng thì làm trọn vẹn.
+
+Cột STT dùng số của [bảng đặc tả chức năng](dac-ta-chuc-nang.md). Các STT bị bỏ **vẫn mang Phạm vi "Đợt này"** trong bảng đó, nên luật R17 không chặn được chúng; bảng này là chỗ duy nhất nói chúng bị bỏ. Ai code thì đọc [`ke-hoach-rut-gon.md`](../../plan/ke-hoach-rut-gon.md) mục 4 trước khi bắt đầu.
+
+| Mã | Phần bỏ lại | STT bỏ |
+| --- | --- | --- |
+| F-02 | Quản lý thông tin cá nhân (A04), địa chỉ giao nhận (A06), cài đặt thông báo, vô hiệu hóa tài khoản | 4, 6, 10, 12 |
+| F-01 | Đổi mật khẩu khi đang đăng nhập | 11 |
+| F-05 | Lọc theo bán kính (vì bỏ A06 nên không có nguồn tọa độ), tìm kiếm người dùng | 27 phần bán kính, 103 |
+| F-06 | Toàn bộ: tin tương tự, giá tham khảo, mục Dành cho bạn, `RecommendationEngine` | 36, 37, 38 |
+| F-10 | Lịch sử giao dịch và lịch sử thanh toán (C04) | 57, 58 |
+| F-12 | Toàn bộ khiếu nại (D05) và màn Báo cáo của tôi (D07) | 64, 65, 66 |
+| F-13 | Toàn bộ: admin xử lý khiếu nại (D06) | 87 đến 91 |
+| F-14 | Quản lý danh mục (E05), giám sát giao dịch (E06), tài khoản admin (E07), giải ngân tự động nếu không còn giờ | 79, 80, 81, 82, 84, 105 |
+
+Phần giữ lại chạy trọn mạch demo: khách xem tin khi tắt mạng, đăng nhập Google, gửi yêu cầu xác thực, admin duyệt, đăng tin kèm ảnh chụp, nhắn tin, gửi đề nghị, chấp nhận, thanh toán mô phỏng, giao, nhận, đánh giá, admin khóa tài khoản và ẩn tin.
+
+Báo cáo cuối kỳ phải nói thẳng phần bỏ lại này, đừng viết là đã làm.
+
+## Yêu cầu môn học
+
+Ba yêu cầu này cắt ngang mọi tính năng, không có mã `F-xx` và không phải chức năng trong bảng đặc tả (trừ đăng nhập Google).
+
+| Yêu cầu | Cách đáp ứng |
+| --- | --- |
+| Dùng Firebase | Authentication, Firestore, gói Spark (không dùng Cloud Storage) |
+| Giao diện thích ứng khi xoay màn hình, giữ nguyên trạng thái | Layout `layout-land` hoặc `ConstraintLayout`; trạng thái nằm trong ViewModel |
+| Xem lại trang đã xem khi mất mạng (SQLite) | Room làm bộ nhớ đệm, xem [room-schema.md](../data/room-schema.md) |
+| Đăng nhập bằng tài khoản Google | STT 2, thuộc F-01 |
+
+Cột "Chạm tới" dùng tên collection và bảng thật trong [firestore-schema.md](../data/firestore-schema.md) và [room-schema.md](../data/room-schema.md); đổi chúng cần hỏi leader (`AGENTS.md`, luật R6).

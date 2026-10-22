@@ -7,8 +7,36 @@ body:
     id: feature_id
     attributes:
       label: Mã tính năng
-      description: Tính năng mà lỗi thuộc về, trong workflow/docs/product/features.md.
+      description: Tính năng mà lỗi thuộc về, mã F-xx trong workflow/docs/product/features.md.
       placeholder: F-04
+    validations:
+      required: true
+  - type: input
+    id: plan_item
+    attributes:
+      label: Mã việc kế hoạch
+      description: Mã trong workflow/plan/ của việc đã làm ra phần bị lỗi, ví dụ P2-B3.
+      placeholder: P2-B3
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      description: Module sở hữu các file ở mục "File được tạo hoặc sửa".
+      options:
+        - A. Tài khoản và thông báo (Ngân)
+        - B. Tin đăng và khám phá (Tú)
+        - C. Chat và giao dịch (Hải Long)
+        - D. Hồ sơ và tin cậy (Phúc)
+        - E. Quản trị và nền móng (Phát)
+    validations:
+      required: true
+  - type: input
+    id: stt
+    attributes:
+      label: STT trong bảng đặc tả
+      description: Chức năng bị lỗi, số STT trong workflow/docs/product/dac-ta-chuc-nang.md (chỉ "Đợt này").
     validations:
       required: true
   - type: textarea
@@ -25,6 +53,7 @@ body:
     id: expected
     attributes:
       label: Kết quả mong đợi và kết quả thực tế
+      description: Nêu mong đợi theo tài liệu (dòng nào của đặc tả, trang-thai.md hoặc mockup).
     validations:
       required: true
   - type: input
@@ -35,9 +64,14 @@ body:
     validations:
       required: true
   - type: textarea
-    id: scope
+    id: files
     attributes:
-      label: Gói hoặc file được phép sửa
-      description: Nơi bạn nghĩ chỗ sửa nằm ở. Mọi thứ khác nằm ngoài phạm vi.
+      label: File được tạo hoặc sửa
+      description: Đường dẫn đầy đủ, mỗi dòng một file, đánh dấu [sửa]. Mọi thứ khác nằm ngoài phạm vi.
     validations:
       required: true
+  - type: textarea
+    id: forbidden
+    attributes:
+      label: Cấm đụng
+      description: Lớp và file của module khác, kể cả khi lỗi nằm ở đó. Lỗi ở phần của người khác thì ghi vào issue và nhắn chủ module.

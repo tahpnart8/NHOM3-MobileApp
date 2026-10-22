@@ -16,7 +16,7 @@
 6. git push -u origin <tên nhánh>
 7. Mở Pull Request, tiêu đề giống commit, chọn template ngắn dành cho
    tài liệu, mục "Issue liên quan" ghi "Closes #<số issue>"
-8. Chờ leader duyệt và merge. Không tự merge.
+8. Chờ leader hoặc Hải Long duyệt và merge. Không tự merge Pull Request của chính mình.
 ```
 
 ## Dùng AI cho nhanh

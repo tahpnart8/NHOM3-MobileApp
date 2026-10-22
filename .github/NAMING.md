@@ -24,7 +24,7 @@ Branch from the latest `main`. One issue, one branch, one pull request. The only
 <type>(<scope>): <imperative summary>
 ```
 
-The `type` and `scope` stay English. The summary may be English or Vietnamese (a pull request title must be Vietnamese, see below). It does not start with a capital letter, has no trailing period, and the whole subject is at most 100 bytes: about 72 English characters or 55 Vietnamese ones. The scope is optional and names an area: `auth`, `listing`, `feed`, `chat`, `order`, `profile`, `admin`, `offline`, `ui`, `build`, `docs`, `repo`. The type list is closed.
+The `type` and `scope` stay English. The summary may be English or Vietnamese (a pull request title must be Vietnamese, see below). It does not start with a capital letter, has no trailing period, and the whole subject is at most 100 bytes: about 72 English characters or 55 Vietnamese ones. The scope is optional and names an area: `auth`, `account`, `notification`, `listing`, `feed`, `chat`, `deal`, `trade`, `profile`, `trust`, `complaint`, `admin`, `offline`, `ui`, `plan`, `build`, `docs`, `repo`. The type list is closed.
 
 ```text
 feat(auth): thêm nút đăng nhập bằng Google
@@ -54,12 +54,12 @@ The body, when there is one, says why. It never contains a `Co-authored-by` line
 
 ## Issues
 
-**Written in Vietnamese**, title and body, using a form: `feature`, `bug`, `chore`, or `removal` (leader only). The title is an imperative sentence, no prefix and no identifier: `Thêm đăng nhập bằng Google vào màn hình đăng nhập`. The form fields are already in Vietnamese; fill them in as they are. Code names, paths and quoted error messages stay as they are. This is a rule for the person and the AI that writes the issue; no automatic check reads issues.
+**Written in Vietnamese**, title and body, using a form: `feature`, `bug`, `chore`, or `removal` (leader only). The title is an imperative sentence, no prefix and no identifier: `Thêm đăng nhập bằng Google vào màn hình đăng nhập`. The form fields are already in Vietnamese; fill them in as they are. Code names, paths and quoted error messages stay as they are. This is a rule for the person and the AI that writes the issue; no automatic check reads issues. A code issue also carries the plan item (`Plan item: P2-B3`, a code from `workflow/plan/`) and one `module:` label. The title has no code; the body does.
 
 ## Labels
 
-`type:feature type:bug type:chore type:docs type:removal`, `area:auth area:listing area:feed area:chat area:order area:profile area:admin area:offline area:ui area:build area:docs`, `priority:p0 p1 p2`, `needs-leader-decision`, `blocked`. Created by `workflow/scripts/create-labels.sh`.
+`type:feature type:bug type:chore type:docs type:removal`, `area:auth area:account area:notification area:listing area:feed area:chat area:deal area:trade area:order area:profile area:trust area:complaint area:admin area:offline area:ui area:build area:docs`, `module:a module:b module:c module:d module:e` (the owner module of the files, `workflow/plan/so-huu.md`), `priority:p0 p1 p2`, `needs-leader-decision`, `blocked`. Created by `workflow/scripts/create-labels.sh`.
 
 ## Code
 
-Java packages `com.nhom3.pubgapp.feature.<name>`. Layout files `<screen>_<feature>.xml` style is in `workflow/docs/conventions/android-java.md`.
+Java packages are split by layer (`com.nhom3.pubgapp.{model,model.enums,data,data.local,util,viewmodel}`) and `com.nhom3.pubgapp.ui.<module>` for screens, with module one of `account`, `notification`, `listing`, `trade`, `profile`, `trust`, `admin`, `common`, `main`. Layout and resource naming is in `workflow/docs/conventions/android-java.md` and `.agents/rules/android-resources.md`.

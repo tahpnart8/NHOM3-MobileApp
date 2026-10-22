@@ -1,13 +1,13 @@
 # Đặc tả lớp: gói `com.nhom3.pubgapp.model.enums`
 
-Bản chữ của sơ đồ lớp cho gói này: 21 lớp. Mục lục và cách đọc ở [README.md](README.md).
+Bản chữ của sơ đồ lớp cho gói này: 23 lớp. Mục lục và cách đọc ở [README.md](README.md).
 
 Các kiểu liệt kê. Thêm giá trị mới là đổi cấu trúc dữ liệu: cần hỏi leader trước (`AGENTS.md`, luật R6).
 
 | Lớp | Loại | Trách nhiệm |
 | --- | --- | --- |
 | [`UserStatus`](#userstatus) | enum | Trạng thái tài khoản. |
-| [`VerificationStatus`](#verificationstatus) | enum | Trạng thái xác minh người bán. |
+| [`VerificationStatus`](#verificationstatus) | enum | Trạng thái xác thực tài khoản; APPROVED là điều kiện để đăng tin, gửi đề nghị và tạo giao dịch. |
 | [`Gender`](#gender) | enum | Giới tính trong thông tin định danh. |
 | [`NotificationType`](#notificationtype) | enum | Loại thông báo. |
 | [`ListingStatus`](#listingstatus) | enum | Trạng thái tin đăng. |
@@ -15,11 +15,13 @@ Các kiểu liệt kê. Thêm giá trị mới là đổi cấu trúc dữ liệ
 | [`ItemCondition`](#itemcondition) | enum | Tình trạng món đồ: mới, như mới, đã sử dụng, đã sửa chữa, có lỗi. |
 | [`SortOrder`](#sortorder) | enum | Cách sắp xếp kết quả. |
 | [`MessageType`](#messagetype) | enum | Loại tin nhắn. |
+| [`ImagePurpose`](#imagepurpose) | enum | Ảnh dùng cho việc gì. |
 | [`OfferType`](#offertype) | enum | Loại offer: tiền, vật, hoặc cả hai. |
 | [`OfferStatus`](#offerstatus) | enum | Trạng thái offer. |
 | [`DealStatus`](#dealstatus) | enum | Trạng thái giao dịch. |
 | [`DeliveryMethod`](#deliverymethod) | enum | Phương thức giao nhận. |
 | [`PaymentStatus`](#paymentstatus) | enum | Trạng thái khoản ký quỹ. |
+| [`PaymentMethod`](#paymentmethod) | enum | Phương thức thanh toán mô phỏng người mua chọn; không gọi dịch vụ bên ngoài. |
 | [`ReportTarget`](#reporttarget) | enum | Đối tượng bị báo cáo. |
 | [`ReportReason`](#reportreason) | enum | Lý do báo cáo chọn sẵn. |
 | [`ReportStatus`](#reportstatus) | enum | Trạng thái báo cáo. |
@@ -56,14 +58,14 @@ Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị l
 | Định danh | `com.nhom3.pubgapp.model.enums.VerificationStatus` |
 | Loại | enum |
 | Lưu trữ | Không lưu |
-| Trách nhiệm | Trạng thái xác minh người bán. |
+| Trách nhiệm | Trạng thái xác thực tài khoản; APPROVED là điều kiện để đăng tin, gửi đề nghị và tạo giao dịch. |
 | Chức năng liên quan (STT) | 73 |
 
 | Giá trị | Nghĩa |
 | --- | --- |
 | `NONE` | Chưa gửi yêu cầu |
 | `PENDING` | Đang chờ duyệt |
-| `APPROVED` | Đã xác minh |
+| `APPROVED` | Đã xác thực |
 | `REJECTED` | Bị từ chối |
 
 Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị lấy từ string resource, không dùng tên hằng.
@@ -111,7 +113,7 @@ Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị l
 | `COMPLAINT_RESULT` | Kết quả khiếu nại |
 | `WARNING` | Bị cảnh báo hoặc khóa |
 | `LISTING_MODERATED` | Tin bị admin ẩn, gỡ hoặc khôi phục |
-| `VERIFICATION_RESULT` | Kết quả xác minh người bán |
+| `VERIFICATION_RESULT` | Kết quả xác thực tài khoản |
 
 Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị lấy từ string resource, không dùng tên hằng.
 
@@ -138,7 +140,7 @@ Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị l
 
 Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị lấy từ string resource, không dùng tên hằng.
 
-**Được dùng bởi:** [`Listing`](model.md#listing), [`ShopViewModel`](viewmodel.md#shopviewmodel)
+**Được dùng bởi:** [`Listing`](model.md#listing), [`ListingRepository`](data.md#listingrepository), [`ShopViewModel`](viewmodel.md#shopviewmodel)
 
 ### TradeType
 
@@ -211,18 +213,40 @@ Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị l
 | Loại | enum |
 | Lưu trữ | Không lưu |
 | Trách nhiệm | Loại tin nhắn. |
-| Chức năng liên quan (STT) | 43 đến 45 |
+| Chức năng liên quan (STT) | 43, 44 |
 
 | Giá trị | Nghĩa |
 | --- | --- |
 | `TEXT` | Chữ |
 | `IMAGE` | Ảnh |
-| `VIDEO` | Video |
 | `OFFER` | Đề nghị giá |
 
 Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị lấy từ string resource, không dùng tên hằng.
 
-**Được dùng bởi:** [`ChatMessage`](model.md#chatmessage), [`ChatRepository`](data.md#chatrepository)
+**Được dùng bởi:** [`ChatMessage`](model.md#chatmessage)
+
+### ImagePurpose
+
+| Mục | Nội dung |
+| --- | --- |
+| Định danh | `com.nhom3.pubgapp.model.enums.ImagePurpose` |
+| Loại | enum |
+| Lưu trữ | Không lưu |
+| Trách nhiệm | Ảnh dùng cho việc gì. |
+| Chức năng liên quan (STT) | 17 |
+
+| Giá trị | Nghĩa |
+| --- | --- |
+| `LISTING` | Ảnh tin đăng |
+| `CHAT` | Ảnh gửi trong chat |
+| `WAYBILL` | Ảnh vận đơn |
+| `RECEIVED` | Ảnh người mua chụp lúc nhận hàng |
+| `EVIDENCE` | Ảnh bằng chứng khiếu nại |
+| `VERIFICATION` | Ảnh giấy tờ và ảnh chân dung cầm giấy tờ trong yêu cầu xác thực |
+
+Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị lấy từ string resource, không dùng tên hằng.
+
+**Được dùng bởi:** [`MediaImage`](model.md#mediaimage), [`MediaRepository`](data.md#mediarepository)
 
 ### OfferType
 
@@ -282,7 +306,7 @@ Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị l
 | `RECEIVED` | Đã nhận, tiền đã giải ngân |
 | `COMPLETED` | Hoàn tất |
 | `CANCELLED` | Đã hủy |
-| `DISPUTED` | Đang khiếu nại |
+| `DISPUTED` | Tranh chấp (đang khiếu nại) |
 
 Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị lấy từ string resource, không dùng tên hằng.
 
@@ -327,6 +351,26 @@ Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị l
 
 **Được dùng bởi:** [`Payment`](model.md#payment)
 
+### PaymentMethod
+
+| Mục | Nội dung |
+| --- | --- |
+| Định danh | `com.nhom3.pubgapp.model.enums.PaymentMethod` |
+| Loại | enum |
+| Lưu trữ | Không lưu |
+| Trách nhiệm | Phương thức thanh toán mô phỏng người mua chọn; không gọi dịch vụ bên ngoài. |
+| Chức năng liên quan (STT) | 56 |
+
+| Giá trị | Nghĩa |
+| --- | --- |
+| `CARD` | Thẻ ngân hàng |
+| `E_WALLET` | Ví điện tử |
+| `BANK_TRANSFER` | Chuyển khoản |
+
+Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị lấy từ string resource, không dùng tên hằng.
+
+**Được dùng bởi:** [`DealRepository`](data.md#dealrepository), [`DealViewModel`](viewmodel.md#dealviewmodel), [`Payment`](model.md#payment)
+
 ### ReportTarget
 
 | Mục | Nội dung |
@@ -345,7 +389,7 @@ Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị l
 
 Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị lấy từ string resource, không dùng tên hằng.
 
-**Được dùng bởi:** [`Report`](model.md#report)
+**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`Report`](model.md#report), [`ReportRepository`](data.md#reportrepository)
 
 ### ReportReason
 
@@ -388,7 +432,7 @@ Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị l
 
 Lưu trên Firestore và Room bằng tên hằng (chuỗi). Chữ hiển thị lấy từ string resource, không dùng tên hằng.
 
-**Được dùng bởi:** [`Report`](model.md#report), [`ReportRepository`](data.md#reportrepository)
+**Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`Report`](model.md#report), [`ReportRepository`](data.md#reportrepository)
 
 ### ComplaintStatus
 

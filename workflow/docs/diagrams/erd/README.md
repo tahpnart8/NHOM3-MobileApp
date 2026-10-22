@@ -4,7 +4,7 @@ Mô hình dữ liệu cho Cloud Firestore và Room (SQLite cục bộ), khớp c
 
 | Mục | Số lượng |
 | --- | ---: |
-| Collection Firestore (kể cả collection con) | 22 |
+| Collection Firestore (kể cả collection con) | 23 |
 | Mảng lồng (`deals.statusHistory`) | 1 |
 | Bảng Room | 6 |
 
@@ -22,14 +22,13 @@ Firestore không có khóa ngoại thật: cột FK là mã tài liệu khác, �
 | --- | --- | --- |
 | `addresses` | `users/{uid}/addresses/{id}` | Địa chỉ giao nhận. |
 | `warnings` | `users/{uid}/warnings/{id}` | Cảnh báo vi phạm theo bậc. |
-| `sellerVerifications` | `sellerVerifications/{userId}` | Yêu cầu xác minh người bán. |
-| `admins` | `admins/{uid}` | Chỉ cần tồn tại: Security Rules dùng nó để nhận diện admin. |
+| `sellerVerifications` | `sellerVerifications/{userId}` | Yêu cầu xác thực tài khoản: số CCCD, ảnh giấy tờ và ảnh chân dung cầm giấy tờ. |
+| `admins` | `admins/{uid}` | Chỉ cần tồn tại: Security Rules dùng nó để nhận diện admin. Từ 2026-10-22 admin thêm và gỡ được tài liệu này ngay trong ứng dụng (UC42). |
 | `users` | `users/{uid}` | Hồ sơ người dùng. |
 | `follows` | `follows/{followerId_followedId}` | Theo dõi (quan hệ nhiều-nhiều tự thân của users). |
 | `savedListings` | `users/{uid}/saved/{listingId}` | Tin đã lưu (quan hệ nhiều-nhiều). |
 | `listings` | `listings/{id}` | Tin đăng. |
 | `categories` | `categories/{id}` | Danh mục và danh mục con. |
-| `identity` | `users/{uid}/private/identity` | Thông tin định danh riêng tư; Security Rules chỉ cho chủ tài khoản và admin đọc. |
 
 | Khóa ngoại | Trỏ tới |
 | --- | --- |
@@ -45,8 +44,8 @@ Firestore không có khóa ngoại thật: cột FK là mã tài liệu khác, �
 | `savedListings.listingId` | listings |
 | `listings.sellerId` | users |
 | `listings.categoryId` | categories |
+| `listings.reservedDealId` | deals |
 | `categories.parentId` | categories |
-| `identity.userId` | users |
 
 ## Trang 2. Chat và offer
 
@@ -65,6 +64,7 @@ Firestore không có khóa ngoại thật: cột FK là mã tài liệu khác, �
 | `conversations.sellerId` | users |
 | `messages.conversationId` | conversations |
 | `messages.senderId` | users |
+| `messages.imageId` | images |
 | `messages.offerId` | offers |
 | `offers.listingId` | listings |
 | `offers.conversationId` | conversations |
@@ -79,7 +79,7 @@ Firestore không có khóa ngoại thật: cột FK là mã tài liệu khác, �
 | --- | --- | --- |
 | `deals` | `deals/{id}` | Giao dịch. |
 | `statusHistory` | `deals/{id}.statusHistory[ ]` | Mảng nhúng trong deals, không phải collection riêng. |
-| `payments` | `payments/{dealId}` | Khoản ký quỹ mô phỏng. |
+| `payments` | `payments/{dealId}` | Khoản thanh toán mô phỏng do hệ thống giữ, không có ngân hàng. |
 | `reviews` | `reviews/{id}` | Đánh giá đối tác. |
 
 | Khóa ngoại | Trỏ tới |
@@ -88,6 +88,8 @@ Firestore không có khóa ngoại thật: cột FK là mã tài liệu khác, �
 | `deals.offerId` | offers |
 | `deals.buyerId` | users |
 | `deals.sellerId` | users |
+| `deals.trackingImageId` | images |
+| `deals.receivedImageId` | images |
 | `payments.dealId` | deals |
 | `payments.payerId` | users |
 | `payments.payeeId` | users |
@@ -111,6 +113,7 @@ Firestore không có khóa ngoại thật: cột FK là mã tài liệu khác, �
 | Khóa ngoại | Trỏ tới |
 | --- | --- |
 | `reports.reporterId` | users |
+| `reports.conversationId` | conversations |
 | `reports.handledBy` | users |
 | `complaints.complainantId` | users |
 | `complaints.dealId` | deals |

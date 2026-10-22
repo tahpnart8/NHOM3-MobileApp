@@ -29,7 +29,7 @@ Phần mạng xã hội lo việc theo dõi, trò chuyện và đánh giá lẫn
 - **Đăng bán & quản lý tin** — tạo tin đăng với hình ảnh, tình trạng món đồ, hình thức giao dịch (bán / trao đổi / cho tặng, kết hợp được).
 - **Tìm kiếm & đề xuất** — lọc theo từ khóa, danh mục, khoảng giá, tình trạng, khu vực; gợi ý sản phẩm theo sở thích.
 - **Kết nối** — theo dõi người dùng, lưu tin yêu thích, trò chuyện trực tiếp, gửi đề nghị giá (offer một chạm).
-- **Giao dịch & thanh toán** — xác nhận giao dịch, thanh toán qua ký quỹ mô phỏng, tự động giải ngân cho người bán sau khi giao hàng thành công.
+- **Giao dịch & thanh toán** — xác nhận giao dịch, thanh toán qua ký quỹ mô phỏng, tự động giải ngân cho người bán khi người mua xác nhận đã nhận hàng hoặc khi hết đếm ngược 7 ngày kể từ lúc gửi hàng.
 - **Tin cậy & cộng đồng** — đánh giá đối tác giao dịch, báo cáo vi phạm, khiếu nại và tranh chấp.
 - **Quản trị** — kiểm duyệt nội dung, quản lý người dùng và danh mục, giám sát giao dịch ở mức cơ bản.
 
@@ -41,7 +41,7 @@ Phần mạng xã hội lo việc theo dõi, trò chuyện và đánh giá lẫn
 | Giao diện | XML Views + ViewBinding (không Kotlin, không Compose) |
 | Tương thích | minSdk 30 · compileSdk / targetSdk 37 |
 | Build | Gradle Kotlin DSL |
-| Backend (dự kiến) | Firebase Authentication, Cloud Firestore, Cloud Storage |
+| Backend (dự kiến) | Firebase Authentication, Cloud Firestore, gói Spark miễn phí (ảnh nén dạng Base64 trong Firestore, không dùng Cloud Storage) |
 | Offline (dự kiến) | Room (SQLite) |
 
 ## Chạy thử

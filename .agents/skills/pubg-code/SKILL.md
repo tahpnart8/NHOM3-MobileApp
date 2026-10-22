@@ -13,11 +13,13 @@ These rules apply to **the lines you write or change**. Do not rewrite existing 
 - **Listeners are anonymous classes or named methods.** For a click handler write `new View.OnClickListener() { @Override public void onClick(View view) { ... } }`, and move a long body into a private method the handler calls.
 - **Loops are `for` loops.** Use the enhanced `for (Listing listing : listings)`.
 - **Small methods that do one thing.** About 30 lines at most, at most two levels of nesting, and return early instead of nesting `else`. More than three parameters means you probably need a model object.
-- **Small classes with one job.** About 300 lines at most. A Fragment or Activity only shows things and forwards events; logic lives in the ViewModel and the Repository; Firebase and Room calls live in the `data` package. Follow `workflow/docs/architecture/overview.md` for the layers.
+- **Small classes with one job.** About 300 lines at most. A Fragment or Activity only shows things and forwards events; logic lives in the ViewModel and the Repository; Firebase and Room calls live in the `data` package; screens live in `ui.<module>` (AGENTS.md section 7). Follow `workflow/docs/architecture/overview.md` for the layers.
 - **Names are whole words.** Methods start with a verb (`loadListings`), booleans read as a question (`isSoldOut`, `hasPhotos`), no abbreviations except `id` and `url`.
-- **No magic values.** Numbers and Firestore field names are `private static final` constants (`MAX_PHOTOS = 5`), defined once.
+- **No magic values.** Numbers and Firestore field names are `private static final` constants, defined once. A limit (photo count, image size, offer cap) takes its value from the specification, never from memory.
 - **Handle errors where you can tell the user.** Pass a failure back to the caller (a callback or a result object), show a clear message, and never leave a `catch` empty (AGENTS.md R12). Check for `null` where it can happen, and mark it with `@Nullable` or `@NonNull`.
 - **Leave a small check behind** for non-trivial logic: the smallest JUnit test that fails if the logic breaks (AGENTS.md R13). Formatters, validators and mappers get one.
+- **Names come from the specification (AGENTS.md R16).** Before you write a class, method, field, enum value, collection or status, find it in `workflow/docs/architecture/dac-ta-lop/`, `workflow/docs/data/` or `workflow/docs/architecture/trang-thai.md`. If it is not there, stop and ask in the issue. Fill only the method bodies your issue assigns to you (R20); do not add a public method or change a signature.
+- **Do not build "Phát triển sau" (R17), Cloud Storage or video (R21).** Images go through `MediaImage` as Base64.
 
 ## Do not
 
@@ -70,4 +72,5 @@ private void saveListingsWithPrice() {
 
 1. Run `sh workflow/scripts/check-java-style.sh`. It lists the lambdas, streams, long comments and the other patterns above on the lines you added. Fix each finding, or say in your report why a line is better as it is. It is a checker, not a judge: it cannot tell whether a name is good or a method too long, so read your own diff once with that in mind.
 2. Run `./gradlew assembleDebug testDebugUnitTest lintDebug` from `PUBGApp/` (AGENTS.md R1).
-3. Write any lasting knowledge into `workflow/memory/code/` and tell the person you did.
+3. List every new public class, method and field with the document line that defines it; anything without a line is reported as "not in the specification" (R16).
+4. Write any lasting knowledge into `workflow/memory/code/` and tell the person you did.

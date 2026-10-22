@@ -7,8 +7,14 @@ Closes #
 
 ## Tính năng và phạm vi
 - Mã tính năng (workflow/docs/product/features.md):
-- Gói hoặc file đã thay đổi:
+- Mã việc kế hoạch (workflow/plan/, ví dụ P2-B3):
+- Module (A đến E) và STT đã làm:
+- File đã đổi (khớp danh sách "File được tạo hoặc sửa" của issue):
+- File ngoài danh sách của issue: không có
+<!-- Nếu có, liệt kê từng file và lý do. Thông thường phải bỏ file đó ra khỏi Pull Request. -->
 - Cố ý không đụng tới:
+- [ ] Không làm chức năng "Phát triển sau" và không dùng Cloud Storage hay video
+- [ ] Mọi tên lớp, trường, phương thức, trạng thái đều có trong tài liệu đặc tả (dac-ta-lop, data, trang-thai); tôi chỉ thay thân các phương thức được giao
 
 ## Tiêu chí nghiệm thu
 <!-- Chép danh sách từ issue. Chỉ đánh dấu ô nào đã thật sự kiểm. Để trống ô chưa làm xong. -->

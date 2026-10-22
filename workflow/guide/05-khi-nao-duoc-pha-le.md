@@ -27,7 +27,10 @@ Không cần xin phép và không cần giải thích, trừ khi bạn thấy n�
 | Nói đúng lệnh và kết quả thật trong PR | Cả nhóm dựa vào đó để biết cái gì đã được kiểm |
 | Tự chạy trên emulator luồng chính, xoay màn hình và chế độ máy bay | AI không làm được, và đây là yêu cầu của môn học |
 | Hỏi leader khi đụng cấu trúc Firestore hoặc Room đã có, thư viện, hoặc xóa tính năng (R6) | Thiệt hại lan sang việc của người khác |
-| Một issue, một branch, một PR | Để leader đọc nổi và để hoàn tác được từng việc |
+| Một issue, một branch, một PR | Để người duyệt đọc nổi và để hoàn tác được từng việc |
+| Chỉ sửa file có trong danh sách "File được tạo hoặc sửa" của issue; file dùng chung và phương thức của module khác là của người khác | Hai PR sửa cùng một chỗ gây xung đột và làm mất code của nhau (`workflow/plan/so-huu.md`) |
+| Tên lớp, trường, phương thức, trạng thái lấy từ tài liệu đặc tả; thiếu thì hỏi trong issue | AI bịa tên rồi code của các module không khớp nhau |
+| Không làm chức năng "Phát triển sau", không dùng Cloud Storage hay video | Ngoài phạm vi môn học và ngoài gói Firebase miễn phí |
 
 Những điều này không có máy nào ép, nên nếu bạn phá thì phần lớn chỉ mình bạn thấy hậu quả. Cũng vì vậy, nếu phá, hãy làm có chủ ý (xem cách ở dưới).
 

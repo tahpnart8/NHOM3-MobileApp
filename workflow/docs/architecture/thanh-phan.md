@@ -6,37 +6,37 @@ Mức 3 của mô hình C4 (Component): bên trong ứng dụng Android, ViewMod
 
 | ViewModel | Repository và tiện ích | Màn hình phục vụ |
 | --- | --- | --- |
-| [`AuthViewModel`](dac-ta-lop/viewmodel.md#authviewmodel) | AuthRepository, UserRepository, SessionManager | Đăng ký (kèm đồng ý điều khoản và số CCCD), đăng nhập, quên mật khẩu, đổi mật khẩu, chọn danh mục quan tâm. |
-| [`ProfileViewModel`](dac-ta-lop/viewmodel.md#profileviewmodel) | UserRepository, ListingRepository, MediaRepository, AuthRepository | Hồ sơ, ảnh, địa chỉ, thông tin định danh, cài đặt thông báo, theo dõi, danh sách đã lưu, yêu cầu xác minh, xóa tài khoản. |
+| [`AuthViewModel`](dac-ta-lop/viewmodel.md#authviewmodel) | AuthRepository, UserRepository, AdminRepository, CategoryRepository, SessionManager | Đăng ký (kèm đồng ý điều khoản và số CCCD), đăng nhập, quên mật khẩu, đổi mật khẩu, chọn danh mục quan tâm. |
+| [`ProfileViewModel`](dac-ta-lop/viewmodel.md#profileviewmodel) | UserRepository, ListingRepository, MediaRepository, AuthRepository | Hồ sơ, ảnh, địa chỉ, thông tin định danh, cài đặt thông báo, theo dõi, danh sách đã lưu, yêu cầu xác thực tài khoản, xóa tài khoản. |
 | [`ShopViewModel`](dac-ta-lop/viewmodel.md#shopviewmodel) | ListingRepository, MediaRepository, CategoryRepository, KeywordFilter | Kệ hàng của người bán: đăng, lưu nháp, sửa, ẩn hoặc hiện, đổi trạng thái, sắp xếp. |
-| [`FeedViewModel`](dac-ta-lop/viewmodel.md#feedviewmodel) | ListingRepository, UserRepository, RecommendationEngine, NetworkMonitor | Kênh chung, kênh đang theo dõi, sắp xếp, mục Dành cho bạn. |
-| [`SearchViewModel`](dac-ta-lop/viewmodel.md#searchviewmodel) | ListingRepository, CategoryRepository, GeoUtils, FormatUtils | Từ khóa, bộ lọc và lịch sử tìm kiếm. |
-| [`ListingDetailViewModel`](dac-ta-lop/viewmodel.md#listingdetailviewmodel) | ListingRepository, UserRepository, RecommendationEngine | Chi tiết tin, người bán, tin tương tự, giá tham khảo, lưu tin. |
-| [`ChatViewModel`](dac-ta-lop/viewmodel.md#chatviewmodel) | ChatRepository, DealRepository, MediaRepository, UserRepository, NotificationRepository | Danh sách chat, trạng thái hoạt động của người đối thoại, gửi chữ, ảnh, video và offer. |
-| [`DealViewModel`](dac-ta-lop/viewmodel.md#dealviewmodel) | DealRepository, UserRepository, NotificationRepository, MediaRepository | Tạo, sửa, xác nhận, thanh toán, giao (kèm vận đơn), nhận, hoàn tất, hủy, đếm ngược và lịch sử giao dịch. |
+| [`FeedViewModel`](dac-ta-lop/viewmodel.md#feedviewmodel) | ListingRepository, UserRepository, CategoryRepository, RecommendationEngine, NetworkMonitor | Kênh chung, kênh đang theo dõi, sắp xếp, mục Dành cho bạn. |
+| [`SearchViewModel`](dac-ta-lop/viewmodel.md#searchviewmodel) | ListingRepository, UserRepository, CategoryRepository, GeoUtils, FormatUtils | Từ khóa, bộ lọc, lịch sử tìm kiếm, và kết quả tìm người dùng. |
+| [`ListingDetailViewModel`](dac-ta-lop/viewmodel.md#listingdetailviewmodel) | ListingRepository, UserRepository, MediaRepository, RecommendationEngine | Chi tiết tin, người bán, tin tương tự, giá tham khảo, lưu tin. |
+| [`ChatViewModel`](dac-ta-lop/viewmodel.md#chatviewmodel) | ChatRepository, MediaRepository, UserRepository, ListingRepository | Danh sách chat, trạng thái hoạt động của người đối thoại, gửi chữ, ảnh và offer. |
+| [`DealViewModel`](dac-ta-lop/viewmodel.md#dealviewmodel) | DealRepository, ReviewRepository, UserRepository, MediaRepository | Tạo, sửa, xác nhận, thanh toán, giao (kèm vận đơn), nhận, hoàn tất, hủy, đếm ngược và lịch sử giao dịch. |
 | [`TrustViewModel`](dac-ta-lop/viewmodel.md#trustviewmodel) | ReviewRepository, ReportRepository, ComplaintRepository, MediaRepository | Đánh giá, báo cáo và khiếu nại phía người dùng. |
 | [`NotificationViewModel`](dac-ta-lop/viewmodel.md#notificationviewmodel) | NotificationRepository | Danh sách thông báo và số chưa đọc. |
-| [`AdminUserViewModel`](dac-ta-lop/viewmodel.md#adminuserviewmodel) | AdminRepository, UserRepository, ListingRepository, DealRepository, ReviewRepository, NotificationRepository | Admin: người dùng, hồ sơ, khóa, cảnh báo, xác minh, nhật ký. |
-| [`AdminContentViewModel`](dac-ta-lop/viewmodel.md#admincontentviewmodel) | ReportRepository, AdminRepository, CategoryRepository, ListingRepository, NotificationRepository | Admin: tin bị báo cáo, ẩn và gỡ, từ khóa cấm, danh mục. |
-| [`AdminDealViewModel`](dac-ta-lop/viewmodel.md#admindealviewmodel) | DealRepository | Admin: theo dõi danh sách và chi tiết giao dịch. |
-| [`AdminComplaintViewModel`](dac-ta-lop/viewmodel.md#admincomplaintviewmodel) | ComplaintRepository, NotificationRepository, DealRepository, ChatRepository | Admin: xử lý khiếu nại, ra quyết định, ghi chú nội bộ, thông báo. |
+| [`AdminUserViewModel`](dac-ta-lop/viewmodel.md#adminuserviewmodel) | AdminRepository, UserRepository, ListingRepository, DealRepository, ReviewRepository, ReportRepository, MediaRepository | Admin: người dùng, hồ sơ, khóa, cảnh báo, xác thực tài khoản, nhật ký. |
+| [`AdminContentViewModel`](dac-ta-lop/viewmodel.md#admincontentviewmodel) | ReportRepository, AdminRepository, CategoryRepository, ListingRepository, UserRepository, ChatRepository, MediaRepository | Admin: tin bị báo cáo, ẩn và gỡ, từ khóa cấm, danh mục. |
+| [`AdminDealViewModel`](dac-ta-lop/viewmodel.md#admindealviewmodel) | DealRepository, UserRepository | Admin: theo dõi danh sách và chi tiết giao dịch. |
+| [`AdminComplaintViewModel`](dac-ta-lop/viewmodel.md#admincomplaintviewmodel) | ComplaintRepository, DealRepository, ChatRepository | Admin: xử lý khiếu nại, ra quyết định, ghi chú nội bộ, thông báo. |
 
 ## Repository chạm dữ liệu nào
 
 | Repository | Firebase | Room | Được dùng bởi |
 | --- | --- | --- | --- |
 | [`AuthRepository`](dac-ta-lop/data.md#authrepository) | Firebase Authentication |  | AuthViewModel, ProfileViewModel |
-| [`UserRepository`](dac-ta-lop/data.md#userrepository) | users, users/addresses, users/private, users/saved, follows, sellerVerifications |  | AdminUserViewModel, AuthViewModel, ChatViewModel, DealViewModel, FeedViewModel, ListingDetailViewModel, ProfileViewModel |
-| [`CategoryRepository`](dac-ta-lop/data.md#categoryrepository) | categories |  | AdminContentViewModel, SearchViewModel, ShopViewModel |
-| [`ListingRepository`](dac-ta-lop/data.md#listingrepository) | listings | ListingDao, HistoryDao | AdminContentViewModel, AdminUserViewModel, FeedViewModel, ListingDetailViewModel, ProfileViewModel, SearchViewModel, ShopViewModel |
-| [`MediaRepository`](dac-ta-lop/data.md#mediarepository) | Cloud Storage |  | ChatViewModel, DealViewModel, ProfileViewModel, ShopViewModel, TrustViewModel |
-| [`ChatRepository`](dac-ta-lop/data.md#chatrepository) | conversations, conversations/messages, offers | ChatDao | AdminComplaintViewModel, ChatViewModel |
-| [`DealRepository`](dac-ta-lop/data.md#dealrepository) | deals, payments | DealDao | AdminComplaintViewModel, AdminDealViewModel, AdminUserViewModel, ChatViewModel, DealViewModel, AutoReleaseWorker |
-| [`ReviewRepository`](dac-ta-lop/data.md#reviewrepository) | reviews |  | AdminUserViewModel, TrustViewModel |
-| [`ReportRepository`](dac-ta-lop/data.md#reportrepository) | reports |  | AdminContentViewModel, TrustViewModel |
+| [`UserRepository`](dac-ta-lop/data.md#userrepository) | users, users/addresses, users/private, users/saved, follows, sellerVerifications |  | AdminContentViewModel, AdminDealViewModel, AdminUserViewModel, AuthViewModel, ChatViewModel, DealViewModel, FeedViewModel, ListingDetailViewModel, ProfileViewModel, SearchViewModel |
+| [`CategoryRepository`](dac-ta-lop/data.md#categoryrepository) | categories |  | AdminContentViewModel, AuthViewModel, FeedViewModel, SearchViewModel, ShopViewModel |
+| [`ListingRepository`](dac-ta-lop/data.md#listingrepository) | listings | ListingDao, HistoryDao | AdminContentViewModel, AdminUserViewModel, ChatViewModel, FeedViewModel, ListingDetailViewModel, ProfileViewModel, SearchViewModel, ShopViewModel |
+| [`MediaRepository`](dac-ta-lop/data.md#mediarepository) | images |  | AdminContentViewModel, AdminUserViewModel, ChatViewModel, DealViewModel, ListingDetailViewModel, ProfileViewModel, ShopViewModel, TrustViewModel |
+| [`ChatRepository`](dac-ta-lop/data.md#chatrepository) | conversations, conversations/messages, offers | ChatDao | AdminComplaintViewModel, AdminContentViewModel, ChatViewModel |
+| [`DealRepository`](dac-ta-lop/data.md#dealrepository) | deals, payments | DealDao | AdminComplaintViewModel, AdminDealViewModel, AdminUserViewModel, DealViewModel, AutoReleaseWorker |
+| [`ReviewRepository`](dac-ta-lop/data.md#reviewrepository) | reviews |  | AdminUserViewModel, DealViewModel, TrustViewModel |
+| [`ReportRepository`](dac-ta-lop/data.md#reportrepository) | reports |  | AdminContentViewModel, AdminUserViewModel, TrustViewModel |
 | [`ComplaintRepository`](dac-ta-lop/data.md#complaintrepository) | complaints, complaints/adminNote |  | AdminComplaintViewModel, TrustViewModel |
-| [`NotificationRepository`](dac-ta-lop/data.md#notificationrepository) | notifications |  | AdminComplaintViewModel, AdminContentViewModel, AdminUserViewModel, ChatViewModel, DealViewModel, NotificationViewModel |
-| [`AdminRepository`](dac-ta-lop/data.md#adminrepository) | admins, sellerVerifications, users/warnings, activityLogs, bannedKeywords |  | AdminContentViewModel, AdminUserViewModel |
+| [`NotificationRepository`](dac-ta-lop/data.md#notificationrepository) | notifications |  | NotificationViewModel |
+| [`AdminRepository`](dac-ta-lop/data.md#adminrepository) | admins, sellerVerifications, users/warnings, activityLogs, bannedKeywords |  | AdminContentViewModel, AdminUserViewModel, AuthViewModel |
 
 ## Ma trận ViewModel và repository
 
@@ -44,20 +44,20 @@ Mức 3 của mô hình C4 (Component): bên trong ứng dụng Android, ViewMod
 
 | ViewModel | Auth | User | Category | Listing | Media | Chat | Deal | Review | Report | Complaint | Notification | Admin |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| AuthViewModel | x | x |  |  |  |  |  |  |  |  |  |  |
+| AuthViewModel | x | x | x |  |  |  |  |  |  |  |  | x |
 | ProfileViewModel | x | x |  | x | x |  |  |  |  |  |  |  |
 | ShopViewModel |  |  | x | x | x |  |  |  |  |  |  |  |
-| FeedViewModel |  | x |  | x |  |  |  |  |  |  |  |  |
-| SearchViewModel |  |  | x | x |  |  |  |  |  |  |  |  |
-| ListingDetailViewModel |  | x |  | x |  |  |  |  |  |  |  |  |
-| ChatViewModel |  | x |  |  | x | x | x |  |  |  | x |  |
-| DealViewModel |  | x |  |  | x |  | x |  |  |  | x |  |
+| FeedViewModel |  | x | x | x |  |  |  |  |  |  |  |  |
+| SearchViewModel |  | x | x | x |  |  |  |  |  |  |  |  |
+| ListingDetailViewModel |  | x |  | x | x |  |  |  |  |  |  |  |
+| ChatViewModel |  | x |  | x | x | x |  |  |  |  |  |  |
+| DealViewModel |  | x |  |  | x |  | x | x |  |  |  |  |
 | TrustViewModel |  |  |  |  | x |  |  | x | x | x |  |  |
 | NotificationViewModel |  |  |  |  |  |  |  |  |  |  | x |  |
-| AdminUserViewModel |  | x |  | x |  |  | x | x |  |  | x | x |
-| AdminContentViewModel |  |  | x | x |  |  |  |  | x |  | x | x |
-| AdminDealViewModel |  |  |  |  |  |  | x |  |  |  |  |  |
-| AdminComplaintViewModel |  |  |  |  |  | x | x |  |  | x | x |  |
+| AdminUserViewModel |  | x |  | x | x |  | x | x | x |  |  | x |
+| AdminContentViewModel |  | x | x | x | x | x |  |  | x |  |  | x |
+| AdminDealViewModel |  | x |  |  |  |  | x |  |  |  |  |  |
+| AdminComplaintViewModel |  |  |  |  |  | x | x |  |  | x |  |  |
 
 ## Sơ đồ
 
@@ -65,6 +65,8 @@ Mức 3 của mô hình C4 (Component): bên trong ứng dụng Android, ViewMod
 flowchart LR
     AuthViewModel --> AuthRepository
     AuthViewModel --> UserRepository
+    AuthViewModel --> CategoryRepository
+    AuthViewModel --> AdminRepository
     ProfileViewModel --> AuthRepository
     ProfileViewModel --> UserRepository
     ProfileViewModel --> ListingRepository
@@ -73,20 +75,22 @@ flowchart LR
     ShopViewModel --> ListingRepository
     ShopViewModel --> MediaRepository
     FeedViewModel --> UserRepository
+    FeedViewModel --> CategoryRepository
     FeedViewModel --> ListingRepository
+    SearchViewModel --> UserRepository
     SearchViewModel --> CategoryRepository
     SearchViewModel --> ListingRepository
     ListingDetailViewModel --> UserRepository
     ListingDetailViewModel --> ListingRepository
+    ListingDetailViewModel --> MediaRepository
     ChatViewModel --> UserRepository
+    ChatViewModel --> ListingRepository
     ChatViewModel --> MediaRepository
     ChatViewModel --> ChatRepository
-    ChatViewModel --> DealRepository
-    ChatViewModel --> NotificationRepository
     DealViewModel --> UserRepository
     DealViewModel --> MediaRepository
     DealViewModel --> DealRepository
-    DealViewModel --> NotificationRepository
+    DealViewModel --> ReviewRepository
     TrustViewModel --> MediaRepository
     TrustViewModel --> ReviewRepository
     TrustViewModel --> ReportRepository
@@ -94,20 +98,23 @@ flowchart LR
     NotificationViewModel --> NotificationRepository
     AdminUserViewModel --> UserRepository
     AdminUserViewModel --> ListingRepository
+    AdminUserViewModel --> MediaRepository
     AdminUserViewModel --> DealRepository
     AdminUserViewModel --> ReviewRepository
-    AdminUserViewModel --> NotificationRepository
+    AdminUserViewModel --> ReportRepository
     AdminUserViewModel --> AdminRepository
+    AdminContentViewModel --> UserRepository
     AdminContentViewModel --> CategoryRepository
     AdminContentViewModel --> ListingRepository
+    AdminContentViewModel --> MediaRepository
+    AdminContentViewModel --> ChatRepository
     AdminContentViewModel --> ReportRepository
-    AdminContentViewModel --> NotificationRepository
     AdminContentViewModel --> AdminRepository
+    AdminDealViewModel --> UserRepository
     AdminDealViewModel --> DealRepository
     AdminComplaintViewModel --> ChatRepository
     AdminComplaintViewModel --> DealRepository
     AdminComplaintViewModel --> ComplaintRepository
-    AdminComplaintViewModel --> NotificationRepository
     AutoReleaseWorker --> DealRepository
     AuthRepository --> FB[(Firebase)]
     UserRepository --> FB[(Firebase)]

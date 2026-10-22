@@ -28,7 +28,7 @@ Nguồn thông tin: trang chính thức và trung tâm trợ giúp của từng 
 | 1\. Tài khoản, hồ sơ | Đăng ký, xác thực tài khoản, hồ sơ người bán tùy biến | Dùng tài khoản Facebook có sẵn, tín hiệu tin cậy từ bạn chung | Đăng ký email hoặc liên kết mạng xã hội, hồ sơ có rating | Hồ sơ Shop, phân hạng thành viên | Hồ sơ người bán, yêu cầu xác minh giấy tờ và xác minh định kỳ | Có |
 | 2\. Đăng, quản lý sản phẩm | Đăng miễn phí, không giới hạn, sửa không cần duyệt | Đăng nhanh, tích hợp kênh bán bên thứ ba cho seller lớn | Đăng bằng ảnh, mô tả, có dịch vụ xác thực món hàng giá trị cao | Quản lý shop, tồn kho, biến thể sản phẩm | Gắn sản phẩm vào video, livestream, hồ sơ cá nhân | Có |
 | 3\. Tìm kiếm, khám phá | Từ khóa, bộ lọc, ưu tiên theo vị trí | Từ khóa, bộ lọc, ưu tiên theo vị trí | Từ khóa, bộ lọc danh mục, giá, tình trạng | Từ khóa, bộ lọc, gợi ý thuật toán, flash sale | Khám phá qua nội dung, livestream, ít phụ thuộc tìm kiếm chủ động | Có |
-| 4\. Kết nối, thương lượng | Chat trực tiếp | Chat qua Messenger, có thể thương lượng | Chat, có nút đề nghị giá một chạm | Chat có sẵn nhưng giá niêm yết là chủ đạo | Chủ yếu qua bình luận, livestream, ít cơ chế thương lượng 1-1 chính thức | Có, thêm offer một chạm mà cả năm nền tảng đều chưa có đầy đủ |
+| 4\. Kết nối, thương lượng | Chat trực tiếp | Chat qua Messenger, có thể thương lượng | Chat, có nút đề nghị giá một chạm | Chat có sẵn nhưng giá niêm yết là chủ đạo | Chủ yếu qua bình luận, livestream, ít cơ chế thương lượng 1-1 chính thức | Có, thêm offer một chạm cho cả mua, trao đổi và cho tặng, điều mà năm nền tảng khảo sát chưa có đầy đủ |
 | 5\. Quy trình đặt hàng | Có thể ngoài nền tảng hoặc qua Thanh Toán Đảm Bảo | Hai luồng: tại chỗ hoặc Checkout | Bắt buộc qua nền tảng | Chuẩn hóa hoàn toàn, có trạng thái đơn hàng | Chuẩn hóa hoàn toàn, có trạng thái đơn hàng | Có |
 | 6\. Thanh toán | Có, tùy chọn: ví điện tử qua Thanh Toán Đảm Bảo, hoặc tiền mặt | Tiền mặt (không bảo vệ) hoặc thẻ, PayPal qua Checkout (có bảo vệ) | Bắt buộc qua nền tảng, giữ tiền đến khi người mua xác nhận | Bắt buộc qua sàn, giữ tiền đến hết thời hạn xử lý | Bắt buộc qua sàn, giữ tiền đến hết thời hạn xử lý | Có, nhưng ký quỹ mô phỏng nội bộ, không có cổng thanh toán thật |
 | 7\. Vận chuyển, giao nhận | Tự thỏa thuận gặp mặt hoặc qua đối tác vận chuyển | Gặp trực tiếp hoặc ship qua Checkout | Tích hợp, tem vận chuyển in sẵn, theo dõi thời gian thực | Tích hợp mạng lưới vận chuyển, theo dõi đầy đủ | Tích hợp mạng lưới vận chuyển, theo dõi đầy đủ | Có ở mức tối thiểu: người bán tự điền đơn vị vận chuyển và mã vận đơn kèm ảnh, chưa tích hợp API hãng vận chuyển thật |
@@ -39,30 +39,29 @@ Nguồn thông tin: trang chính thức và trung tâm trợ giúp của từng 
 
 Từ bảng so sánh, tập tính năng mà phần lớn năm nền tảng đều có, gọi là baseline, gồm: tài khoản và xác thực, đăng và quản lý tin, tìm kiếm và bộ lọc, chat giữa hai bên, trạng thái đơn hàng hoặc giao dịch, đánh giá sau giao dịch, cơ chế báo cáo vi phạm và xử lý khiếu nại hoàn tiền.
 
-Đối chiếu với file 03, các nhóm này đã có feature tương ứng: F-U01 đến F-U04 (tài khoản, hồ sơ uy tín), F-A01, F-A03, F-A04 (đăng, sửa, tìm kiếm), F-B01 (chat), F-C03, F-C04 (trạng thái, xác nhận giao dịch), F-D01 đến F-D04 (đánh giá, báo cáo, khiếu nại). Phạm vi chức năng hiện tại của đồ án bao phủ đủ baseline, không có nhóm nào trong chín nhóm bị bỏ trống hoàn toàn.
+Đối chiếu với [bảng đặc tả chức năng](../product/dac-ta-chuc-nang.md), các nhóm này đã có chức năng tương ứng: tài khoản và hồ sơ uy tín (STT 1 đến 12), đăng và sửa tin (STT 13 đến 22), tìm kiếm và bộ lọc (STT 23 đến 34), chat (STT 43, 44, 46), trạng thái và xác nhận giao dịch (STT 50 đến 55), đánh giá, báo cáo, khiếu nại (STT 59 đến 66). Phạm vi chức năng hiện tại của đồ án bao phủ đủ baseline, không có nhóm nào trong chín nhóm bị bỏ trống hoàn toàn.
 
 Hai điểm khác biệt của đồ án so với năm nền tảng tham chiếu, và đây là khác biệt hợp lý nên giữ nguyên chứ không phải thiếu sót:
 
-* F-B02, cho phép đề nghị theo ba hình thức mua, trao đổi, cho tặng. Trong năm nền tảng khảo sát, không nền tảng nào có luồng trao đổi hiện vật hoặc cho tặng chính thức, chỉ có cơ chế đề nghị giá một chiều cho việc mua. Đây là điểm đặc thù của đề tài, đúng với định hướng BACCM đã chốt.  
-* F-C05, thanh toán trung gian mô phỏng. Bốn trong năm nền tảng, trừ Chợ Tốt coi đây là tùy chọn, đều coi escrow là cơ chế bắt buộc hoặc mặc định chứ không phải tính năng phụ. Điều này củng cố thêm lý do nên cân nhắc nâng mức ưu tiên của F-C05, hiện đang ở mức S, tùy vào năng lực triển khai của team trong học kỳ.
+* Offer một chạm (STT 47 đến 49), cho phép đề nghị bằng tiền, bằng vật trao đổi, hoặc cả hai. Tin đăng cũng có ba hình thức bán, trao đổi, cho tặng (STT 18). Trong năm nền tảng khảo sát, không nền tảng nào có luồng trao đổi hiện vật hoặc cho tặng chính thức, chỉ có cơ chế đề nghị giá một chiều cho việc mua. Đây là điểm đặc thù của đề tài, đúng với định hướng BACCM đã chốt.  
+* Thanh toán trung gian mô phỏng (STT 56). Bốn trong năm nền tảng, trừ Chợ Tốt coi đây là tùy chọn, đều coi escrow là cơ chế bắt buộc hoặc mặc định chứ không phải tính năng phụ. Vì vậy escrow nằm trong phạm vi Đợt này, ở dạng mô phỏng nội bộ: không có cổng thanh toán thật và không có ví.
 
-Các tính năng ở nền tảng tham chiếu mà file 03 chưa thể hiện rõ, có thể cân nhắc bổ sung ở mức tinh chỉnh, không phải bổ sung module mới:
+Các tính năng ở nền tảng tham chiếu mà đồ án chưa thể hiện, có thể cân nhắc bổ sung ở mức tinh chỉnh, không phải bổ sung module mới:
 
-* Cơ chế đề nghị giá nhanh một chạm, khác với luồng thương lượng nhiều bước hiện có ở F-B03.  
-* Dịch vụ xác thực bổ sung cho sản phẩm giá trị cao, như Vinted đang làm, có thể gắn thêm vào F-A02.  
-* Nhánh xử lý khi khiếu nại có dấu hiệu lạm dụng chính sách hoàn tiền, như Shopee đang áp dụng, hiện F-D04 chưa đề cập.  
-* Mốc thời gian cụ thể cho từng bước khiếu nại, ví dụ hạn gửi khiếu nại sau khi nhận hàng, hạn phản hồi của bên bị khiếu nại. F-D03 và F-D04 hiện mô tả chức năng nhưng chưa có con số, cần bổ sung khi viết Use Case.
+* Dịch vụ xác thực bổ sung cho sản phẩm giá trị cao, như Vinted đang làm: không có trong bảng đặc tả chức năng, **không làm**.
+* Nhánh xử lý khi khiếu nại có dấu hiệu lạm dụng chính sách hoàn tiền, như Shopee đang áp dụng: không có trong bảng đặc tả chức năng, **không làm** (bậc cảnh báo cố định ở STT 72 là cơ chế gần nhất).
+* Mốc thời gian cho từng bước khiếu nại: **đã chốt** bằng quy tắc cố định, không cấu hình được. Đếm ngược 7 ngày kể từ lúc gửi hàng, tự hoàn tất sau 3 ngày kể từ lúc nhận, khiếu nại chỉ gửi được khi giao dịch đang ở trạng thái "Đã giao". Xem [trang-thai.md](../architecture/trang-thai.md). Phần cho admin cấu hình các thời hạn này (STT 97) là phát triển sau.
 
-## **5\. Khuyến nghị bổ sung cho file Function**
+## **5\. Khuyến nghị đối chiếu với bảng đặc tả chức năng**
 
-| Mã đề xuất | Mô tả | Gắn vào feature |
-| :---: | ----- | :---: |
-| R1 | Bổ sung luồng đề nghị giá nhanh một chạm, song song với thương lượng nhiều bước | F-B03 |
-| R2 | Bổ sung tùy chọn yêu cầu xác thực tình trạng qua ảnh hoặc video bổ sung cho sản phẩm giá trị cao | F-A02 |
-| R3 | Bổ sung nhánh xử lý khi khiếu nại có dấu hiệu lạm dụng, dựa trên lịch sử vi phạm của tài khoản | F-D04 |
-| R4 | Quy định mốc thời gian cụ thể cho khiếu nại: hạn gửi sau khi nhận hàng, hạn phản hồi, hạn admin ra quyết định | F-D03, F-D04 |
+| Mã đề xuất | Mô tả | Chức năng liên quan | Kết luận |
+| :---: | ----- | :---: | ----- |
+| R1 | Luồng đề nghị giá nhanh một chạm | STT 47 đến 49 | Đã có trong thiết kế |
+| R2 | Yêu cầu xác thực tình trạng qua ảnh hoặc video bổ sung cho sản phẩm giá trị cao | (không có) | Không làm |
+| R3 | Nhánh xử lý khiếu nại có dấu hiệu lạm dụng, dựa trên lịch sử vi phạm | (không có) | Không làm |
+| R4 | Mốc thời gian cụ thể cho khiếu nại | STT 64 đến 66, 97 | Đã chốt quy tắc cố định; cho admin cấu hình là phát triển sau (STT 97) |
 
-Nhận định chung: phạm vi chức năng hiện tại của đồ án đã bao phủ đủ baseline của một nền tảng giao dịch, không phát hiện thiếu sót ở mức nghiêm trọng. Các đề xuất trên đều là tinh chỉnh, ở mức ưu tiên S hoặc C, riêng R4 nên xử lý sớm vì ảnh hưởng trực tiếp đến độ rõ ràng khi đặc tả Use Case cho nhóm D.
+Nhận định chung: phạm vi chức năng hiện tại của đồ án đã bao phủ đủ baseline của một nền tảng giao dịch, không phát hiện thiếu sót ở mức nghiêm trọng. Các đề xuất trên hoặc đã được thiết kế, hoặc không nằm trong phạm vi giai đoạn này.
 
 ## **Nguồn tham khảo**
 

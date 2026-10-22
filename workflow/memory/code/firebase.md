@@ -15,7 +15,12 @@
 - **Why it matters here:** an example or an AI answer that names a `-ktx` artifact is out of date. Look the BoM version up when adding it (AGENTS.md R5).
 - **Source:** https://firebase.google.com/docs/android/learn-more. **Checked:** 2026-09-25.
 
-### Cloud Storage needs the Blaze plan
-- **Fact:** Since 2026-02-03 Cloud Storage for Firebase works only on the Blaze plan. On the Spark plan every call returns 402 or 403. No-cost usage remains on Blaze within the Always Free limits: 5 GB-months of storage, 5,000 Class A and 50,000 Class B operations, 100 GB egress from North America per month, only for buckets in `us-central1`, `us-east1` or `us-west1`, and a billing account is still required.
-- **Why it matters here:** a Storage error in a member's build with a fresh project is usually billing, not code. The project owner set this up (`workflow/docs/workflow/firebase-setup.md`, step 1).
-- **Source:** https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024 and https://docs.cloud.google.com/free/docs/free-cloud-features. **Checked:** 2026-09-25.
+### Cloud Storage is not used: the project stays on the Spark plan
+- **Fact:** Since 2026-02-03 Cloud Storage for Firebase works only on the Blaze plan. On the Spark plan every call returns 402 or 403. Cloud Functions also needs Blaze.
+- **Why it matters here:** the project runs on Spark with no billing card (decision of 2026-10-12, `workflow/docs/workflow/firebase-setup.md`, step 1). Do not add `firebase-storage` or `firebase-functions`. Images are compressed and stored as Base64 in the `images` collection of Firestore, one document under 1 MiB each (`workflow/docs/data/firestore-schema.md`). A Storage error in a copied example is expected; change the approach instead of the plan.
+- **Source:** https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024. **Checked:** 2026-09-25.
+
+### Firestore POJO mapping: four rules for model classes
+- **Fact:** `@DocumentId` on a `String` property makes the SDK fill it with the document id; the id is then not stored as a field. `@Exclude` keeps a getter or field out of serialization. Firestore reads and writes a property for every public getter and setter, so a computed method named `isX()` or `getX()` would be written as a field unless it is excluded. A boolean field whose name starts with `is` (for example `isDefault`) is mapped through its getter `isDefault()` to the property name `default`, so it needs `@PropertyName("isDefault")` on the getter and setter to keep the stored name. `createdAt` and `updatedAt` are written with `FieldValue.serverTimestamp()` so the Security Rules and every device agree on time.
+- **Why it matters here:** `BaseDocument.id` carries `@DocumentId`; computed methods such as `Complaint.isOpen()` carry `@Exclude`; `UserAddress.isDefault`, `Category.isActive` and `AppNotification.isRead` carry `@PropertyName`. The rules are listed in `workflow/docs/conventions/android-java.md`.
+- **Source:** `@DocumentId` and `@Exclude` exist in the Firebase Android SDK (https://github.com/firebase/firebase-android-sdk, firestore CHANGELOG 20.2.0 for `@DocumentId`). **Unverified:** the exact `isX` property-name behaviour and the `@PropertyName` fix; a unit test that writes and reads one `UserAddress` against the emulator or a mapper call would verify it.

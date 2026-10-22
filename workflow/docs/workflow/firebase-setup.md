@@ -1,31 +1,19 @@
 # Cài đặt Firebase
 
-Hướng dẫn tạo và cấu hình Firebase project cho cả nhóm. **Trạng thái: chưa thực hiện.** Leader làm các bước 1 đến 6 một lần; mỗi thành viên chỉ làm bước 7. Tên nút trong Firebase Console có thể khác chút so với bên dưới vì giao diện thay đổi; các thuật ngữ là chính xác.
+Hướng dẫn tạo và cấu hình Firebase project cho cả nhóm. **Trạng thái: chưa thực hiện.** Leader làm các bước 1 đến 6 và 8 đến 10; mỗi thành viên chỉ làm bước 7. Tên nút trong Firebase Console có thể khác chút so với bên dưới vì giao diện thay đổi; các thuật ngữ là chính xác.
 
 **Cả nhóm dùng chung một Firebase project.** Không ai tạo project riêng.
 
-## 1. Gói Blaze và thẻ thanh toán (đọc trước)
+## 1. Gói Spark, không gắn thẻ (đọc trước)
 
-Từ **03/02/2026**, Cloud Storage for Firebase chỉ dùng được khi project ở gói **Blaze** (trả theo mức dùng, phải gắn tài khoản thanh toán). Với gói Spark, mọi lời gọi Storage trả lỗi 402 hoặc 403. Blaze vẫn có mức miễn phí: bucket mới dạng `PROJECT_ID.firebasestorage.app` hưởng mức "Always Free" của Google Cloud Storage nếu đặt ở vùng `us-central1`, `us-east1` hoặc `us-west1`. Nguồn: [Firebase FAQ về thay đổi Storage](https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024).
+Project chạy ở gói **Spark** (miễn phí), **không gắn thẻ thanh toán và không bao giờ nâng lên Blaze**. Hệ quả:
 
-Chỉ một người (nên là leader) gắn thẻ. Quyết định dùng Cloud Storage nằm ở `workflow/memory/decisions.md`.
+- **Không dùng Cloud Storage.** Từ 03/02/2026, Cloud Storage for Firebase chỉ dùng được ở gói Blaze; ở gói Spark mọi lời gọi Storage trả lỗi 402 hoặc 403 ([Firebase FAQ về thay đổi Storage](https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024)). Ảnh được nén rồi lưu dạng Base64 trong Firestore (collection `images`, ảnh thu nhỏ nằm sẵn trong tài liệu chứa nó). Không gửi video.
+- **Không dùng Cloud Functions** (cũng cần Blaze). Các việc nền như tự giải ngân chạy trên máy bằng `AutoReleaseWorker`; luật chặn gian lận nằm ở Security Rules.
+- **Gói Spark có hạn mức mỗi ngày và mỗi tháng.** Hạn mức cụ thể của Firestore và Authentication, và việc vượt hạn mức thì báo lỗi hay tính phí: chưa xác minh, kiểm trên trang giá của Firebase trước buổi demo.
+- Mỗi tài liệu Firestore tối đa 1 MiB, nên mỗi ảnh phải nhỏ. Mức giới hạn ảnh nằm ở mục `images` của [firestore-schema.md](../data/firestore-schema.md).
 
-**Leader đã xác nhận: giữ Cloud Storage cho mọi tệp media, gồm cả ảnh và video.** Chi phí bằng 0 khi dùng trong hạn mức miễn phí "Always Free" của Google Cloud Storage ([nguồn](https://docs.cloud.google.com/free/docs/free-cloud-features), kiểm ngày 2026-09-25), **nhưng vẫn phải gắn thẻ** vào tài khoản thanh toán, kể cả khi không mất đồng nào:
-
-| Hạn mức mỗi tháng | Con số | Điều kiện |
-| --- | --- | --- |
-| Dung lượng lưu | 5 GB-tháng | Chỉ tính ở `us-central1`, `us-east1`, `us-west1`; các vùng khác **không** được miễn phí |
-| Thao tác ghi, liệt kê (Class A), gồm mỗi lần tải một tệp lên | 5.000 | |
-| Thao tác đọc (Class B), gồm mỗi lần tải một tệp xuống | 50.000 | |
-| Dữ liệu ra ngoài | 100 GB | Tính từ Bắc Mỹ tới nơi nhận (trừ Trung Quốc và Úc) |
-
-Vượt hạn mức nào thì phần vượt tính tiền theo bảng giá của Google Cloud. Vì vậy:
-
-- **Chọn vùng của bucket là một trong ba vùng Mỹ ở trên** khi tạo Storage. Vùng không đổi được sau khi tạo.
-- **Đặt cảnh báo ngân sách thấp** (ví dụ vài đô). Cảnh báo chỉ nhắn tin cho bạn, **không tự chặn** chi tiêu.
-- **Luật Storage phải giới hạn kích thước và loại tệp** (ảnh nhỏ, video có trần dung lượng) và bắt buộc đăng nhập. Ai cũng tự đăng ký được tài khoản trong ứng dụng và `google-services.json` nằm công khai trong repo, nên luật là thứ duy nhất ngăn một người lạ đẩy đầy 5 GB.
-- Video tốn nhiều hơn ảnh: mỗi lần xem là một lần tải xuống (tính vào 50.000 thao tác đọc và 100 GB dữ liệu ra). Với đồ án và buổi demo thì rất dư, nhưng nên giới hạn thời lượng hoặc dung lượng mỗi video khi thiết kế tính năng.
-- Chưa xác minh: hạn mức miễn phí chính xác của Firestore và Authentication theo vùng.
+Quyết định này thay các quyết định ngày 2026-09-25 về Cloud Storage trong `workflow/memory/decisions.md`.
 
 ## 2. Tạo project và mời thành viên
 
@@ -34,15 +22,15 @@ Vượt hạn mức nào thì phần vượt tính tiền theo bảng giá của
 
 ## 3. Bật đăng nhập
 
-Build, mục Authentication, tab Sign-in method: bật **Email/Password** và **Google**. Khi bật Google, chọn email hỗ trợ của project.
+Build, mục Authentication, tab Sign-in method: bật **Email/Password** và **Google**. Khi bật Google, chọn email hỗ trợ của project. Không bật đăng nhập bằng số điện thoại.
 
 ## 4. Tạo Firestore
 
-Build, mục Firestore Database, Create database. Chọn chế độ **production** (khóa hết; luật bảo mật sẽ nạp sau). **Vị trí (location) không đổi được sau khi tạo**: leader chọn và ghi vào `workflow/memory/decisions.md`.
+Build, mục Firestore Database, Create database. Chọn chế độ **production** (khóa hết; luật bảo mật nạp ở bước 5). **Vị trí (location) không đổi được sau khi tạo**: leader chọn vùng tùy ý, ưu tiên vùng gần Việt Nam để chậm trễ thấp, và ghi vào `workflow/memory/decisions.md`. Ở gói Spark không có ràng buộc vùng miễn phí như Storage từng có.
 
-## 5. Tạo Cloud Storage
+## 5. Nạp Security Rules và chỉ mục
 
-Sau khi đã ở gói Blaze: Build, mục Storage, Get started. Chọn vùng theo mục 1.
+Luật và chỉ mục nằm trong repo, thư mục `firebase/` (`firestore.rules`, `firestore.indexes.json`), thiết kế theo [security-rules.md](../data/security-rules.md). Leader nạp bằng Firebase CLI (`firebase deploy --only firestore`) hoặc dán vào Console, mục Firestore Database, tab Rules và Indexes. Mỗi lần luật đổi trong repo thì nạp lại. Chỉ leader sửa thư mục `firebase/`.
 
 ## 6. Đăng ký ứng dụng Android
 
@@ -73,9 +61,16 @@ Cách khác nếu không có `keytool`: chạy `gradlew.bat signingReport` trong
 `google-services.json` chứa khóa API. Khóa này là định danh, không phải bí mật, nhưng repo công khai nên cần giới hạn:
 
 - Trong Google Cloud Console, mục APIs and Services, Credentials: giới hạn khóa Android theo **package `com.nhom3.pubgapp` và SHA-1**.
-- Dữ liệu được bảo vệ bằng **Security Rules**, không phải bằng khóa. Không đưa ứng dụng vào dùng thật khi Firestore và Storage còn ở chế độ mở.
+- Dữ liệu được bảo vệ bằng **Security Rules**, không phải bằng khóa. Không đưa ứng dụng vào dùng thật khi Firestore còn ở chế độ mở.
 - GitHub secret scanning có thể cảnh báo về khóa API của Google; sau khi giới hạn khóa, đóng cảnh báo với lý do "used in tests" hoặc tương đương.
 
 ## 10. Quản trị viên
 
-Ứng dụng nhận diện quản trị viên bằng dữ liệu phía server, không bằng trường ứng dụng gửi lên (`AGENTS.md` R12). Cách cụ thể sẽ được chốt khi có yêu cầu chức năng quản trị.
+Ứng dụng nhận diện quản trị viên bằng dữ liệu phía server, không bằng trường ứng dụng gửi lên (`AGENTS.md` R12): một người dùng là admin khi có tài liệu `admins/{uid}`. Mọi admin có quyền như nhau.
+
+Security Rules không cho ứng dụng ghi vào `admins`, nên **leader tạo tay**:
+
+1. Người cần làm admin đăng ký tài khoản trong ứng dụng.
+2. Leader mở Authentication, tab Users, chép **User UID** của tài khoản đó.
+3. Leader mở Firestore Database, tạo collection `admins` (lần đầu), thêm tài liệu có mã bằng đúng UID đó. Tài liệu chỉ cần tồn tại; có thể để một trường tùy ý, ví dụ `note`.
+4. Người đó đăng xuất rồi đăng nhập lại; D01 hiện nút vào khu quản trị.

@@ -9,7 +9,7 @@ Explore  ->  [bạn kiểm]  ->  Plan  ->  [bạn duyệt]  ->  Implement (từn
 
 Chuẩn bị: một phiên chat **mới** cho mỗi issue, đã dán prompt mở đầu ở [01-khoi-tao.md](01-khoi-tao.md) mục B. Thay `<N>` bằng số issue của bạn.
 
-**Ghi nhớ ra file.** Bảo AI lưu kế hoạch vào `.agents/tmp/plan-<N>.md`. Thư mục này không bị commit. Nếu chat quá dài hoặc AI quên, mở phiên mới, đọc lại file đó và làm tiếp; bạn không phải giải thích lại từ đầu.
+**Ghi nhớ ra file.** Bảo AI lưu kế hoạch vào `.agents/tmp/steps-<N>.md`. Thư mục này không bị commit. Đây là ghi chú các bước của riêng bạn, khác với kế hoạch dự án trong `workflow/plan/`. Nếu chat quá dài hoặc AI quên, mở phiên mới, đọc lại file đó và làm tiếp; bạn không phải giải thích lại từ đầu.
 
 ## Bước 0. Nhận task
 
@@ -26,7 +26,8 @@ Nó cũng gộp phần Explore và Plan cho việc nhỏ. Với việc lớn, d�
 ```
 Issue #<N>. CHƯA ĐƯỢC SỬA FILE NÀO. Hãy khám phá:
 1. Chạy gh issue view <N> và đọc mọi tài liệu mà issue nhắc tới (workflow/docs/...).
-2. Tìm trong PUBGApp/ những gì ĐÃ CÓ liên quan: lớp, layout, string, nav graph mà issue sẽ đụng hoặc có thể tái sử dụng. Dùng tìm kiếm thật (grep, glob), không đoán tên.
+2. Liệt kê MỌI tên lớp, trường, phương thức, giá trị enum và trạng thái bạn sẽ dùng, kèm tệp và mục của dac-ta-lop/, data/ hoặc trang-thai.md chứa tên đó. Tên nào không có trong tài liệu thì ghi "không có trong đặc tả" và DỪNG, không tự đặt.
+   Rồi tìm trong PUBGApp/ những gì ĐÃ CÓ liên quan: lớp, layout, string, nav graph mà issue sẽ đụng hoặc có thể tái sử dụng. Dùng tìm kiếm thật (grep, glob), không đoán tên.
 3. Trả lời bằng danh sách:
    a) file sẽ phải sửa
    b) file, lớp hoặc hàm có thể tái sử dụng
@@ -36,18 +37,18 @@ Issue #<N>. CHƯA ĐƯỢC SỬA FILE NÀO. Hãy khám phá:
 Mỗi đường dẫn phải là file bạn đã mở thật. Chỗ chưa mở thì ghi "chưa kiểm tra".
 ```
 
-**Bạn kiểm (2 phút):** mở thử 2 hoặc 3 đường dẫn AI nêu. Có tồn tại không, có đúng như nó mô tả không? Mục d) có nội dung nào không? Nếu AI nói "issue rõ ràng, không có gì mơ hồ" trong khi bạn thấy chỗ chưa rõ, hãy chỉ ra cho nó. Nếu AI nêu tên lớp không có thật, bảo nó tìm lại và nhắc rằng `AGENTS.md` R2 cấm bịa.
+**Bạn kiểm (2 phút):** mở thử 2 hoặc 3 đường dẫn AI nêu. Có tồn tại không, có đúng như nó mô tả không? Mục d) có nội dung nào không? Nếu AI nói "issue rõ ràng, không có gì mơ hồ" trong khi bạn thấy chỗ chưa rõ, hãy chỉ ra cho nó. Nếu AI nêu tên lớp không có thật, bảo nó tìm lại và nhắc rằng `AGENTS.md` R2 và R16 cấm bịa: tên phải có trong tài liệu đặc tả. Việc cần file ngoài danh sách của issue thì dừng và hỏi trong issue.
 
 ## Bước 2. Plan (chưa code)
 
 ```
 Dựa trên phần khám phá, lập kế hoạch cho issue #<N>. CHƯA CODE. Kế hoạch gồm:
-1. Các bước nhỏ theo thứ tự. Mỗi bước tối đa khoảng 100 dòng thay đổi và build được sau bước đó.
+1. Các bước nhỏ theo thứ tự, tối đa khoảng 5 bước cho một issue. Mỗi bước khoảng 100 dòng thay đổi và build được sau bước đó. Danh sách file phải chép nguyên từ mục "File được tạo hoặc sửa" của issue, không thêm file.
 2. Với mỗi bước: file sẽ chạm, và lệnh kiểm tra bạn sẽ chạy.
 3. Bảng đối chiếu: mỗi dòng tiêu chí nghiệm thu của issue thuộc về bước nào. Tiêu chí nào chưa có bước, nói rõ.
 4. Điều bạn cần tôi quyết định, đặc biệt ba trường hợp hỏi trước ở AGENTS.md R6: đổi cấu trúc Firestore hoặc Room đã có, thêm hoặc đổi thư viện, xóa hoặc đổi tên tính năng.
 5. Tài liệu phải sửa cùng PR (workflow/docs/data, workflow/docs/product/features.md).
-Lưu kế hoạch vào .agents/tmp/plan-<N>.md rồi DỪNG, chờ tôi duyệt.
+Lưu kế hoạch vào .agents/tmp/steps-<N>.md rồi DỪNG, chờ tôi duyệt.
 ```
 
 **Bạn duyệt (3 phút).** Kiểm ba điều:
@@ -63,7 +64,7 @@ Trả lời "duyệt" hoặc nêu chỗ sửa. Nếu AI đưa ra chọn lựa �
 Lặp lại cho từng bước `<k>` của kế hoạch:
 
 ```
-Duyệt. Làm BƯỚC <k> trong .agents/tmp/plan-<N>.md và chỉ bước đó. Viết code theo skill pubg-code: kiểu ghi rõ, không lambda, không stream, không var, hàm ngắn, chú thích tối đa 2 dòng và chỉ nói vì sao; điều đáng nhớ ghi vào workflow/memory/code/ thay vì chú thích dài.
+Duyệt. Làm BƯỚC <k> trong .agents/tmp/steps-<N>.md và chỉ bước đó. Viết code theo skill pubg-code: kiểu ghi rõ, không lambda, không stream, không var, hàm ngắn, chú thích tối đa 2 dòng và chỉ nói vì sao; điều đáng nhớ ghi vào workflow/memory/code/ thay vì chú thích dài.
 Khi xong: chạy sh workflow/scripts/check-java-style.sh và sửa các dòng nó báo; chạy build (nói đúng lệnh bạn chạy, từ thư mục PUBGApp), cho tôi xem git diff --stat, rồi nêu ngắn gọn: đã sửa gì, và điều gì bạn CHƯA kiểm chứng. Nếu build xanh, commit với subject theo .github/NAMING.md. Sau đó dừng.
 ```
 

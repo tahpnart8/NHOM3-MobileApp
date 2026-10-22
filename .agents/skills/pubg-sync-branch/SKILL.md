@@ -14,7 +14,7 @@ Resolving a conflict is where designed features most often disappear: a tool pic
    - Read both sides and the common base: `git show :1:<file>` (base), `:2:` (this branch), `:3:` (main).
    - Work out what each side intended. The default result **keeps both changes**. Code that main added belongs to someone else's merged feature and must survive.
    - Never resolve a whole file with `git checkout --ours` or `--theirs`, and never delete a conflict block to make it go away.
-   - `AndroidManifest.xml`, `strings_*.xml`, `libs.versions.toml`: keep every entry from both sides, no duplicates, no reordering.
+   - `AndroidManifest.xml`, `strings_*.xml`, `nav_*.xml`, the bottom-bar menu, `libs.versions.toml`: keep every entry from both sides, no duplicates, no reordering. These are shared files with one owner (`workflow/plan/so-huu.md` section 6); if your branch should not have touched one, say so.
    - If the two sides contradict each other (both changed the same logic differently), stop and ask the user, showing both versions. Do not pick one yourself.
 5. **Finish the merge.** Stage the resolved files and `git commit` (keep Git's default `Merge ...` message; no attribution lines).
 6. **Verify the result.** From `PUBGApp/`: `./gradlew assembleDebug testDebugUnitTest lintDebug`. Then `git diff --stat origin/main...HEAD` and confirm only this issue's files differ from main; any file of another feature showing up there means a resolution went wrong.

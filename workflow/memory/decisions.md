@@ -435,3 +435,338 @@ Writing the state machines and data dictionary as text showed transitions with n
 
 ### Owner
 tahpnart8
+
+## 2026-10-12 - Free Spark plan: images as Base64 in Firestore, no video
+
+### Decision
+The Firebase project stays on the free Spark plan with no billing card. Cloud Storage and Cloud Functions are not used. Images are compressed on the phone and stored as Base64 strings in Firestore:
+
+- **Full images** (long edge 1024 px, at most 300 KB of JPEG) each go in their own document of the new collection `images` (class `MediaImage`, enum `ImagePurpose`).
+- **Small thumbnails** (320 px for a listing cover, 256 px for an avatar, at most 20 KB) sit inline in `listings.coverThumb`, `deals.itemThumb` and `users.avatarBase64`. Lists and the Room cache therefore never load full images.
+
+Fields that held Storage URLs now hold image ids: `Listing.imageIds`, `ChatMessage.imageId`, `Deal.trackingImageId` and `Complaint.evidenceImageIds`.
+
+Sending video in chat (function STT 45) moves to "Phát triển sau", and `MessageType.VIDEO` is removed. That leaves 87 functions in "Đợt này" and 15 in "Phát triển sau".
+
+This supersedes three earlier entries:
+
+- 2026-09-25 "Product images are stored in Cloud Storage on the Blaze plan".
+- 2026-09-25 "Media files, images and videos, stay in Cloud Storage within the free tier".
+- The mention of Cloud Storage in "Backend and offline strategy".
+
+### Context
+On 2026-10-12 the leader confirmed that the project must cost nothing and that no card will be attached. Cloud Storage has required the Blaze plan since 2026-02-03. Three options were offered: Blaze with a card, Base64 in Firestore, or an outside image host. The leader chose Base64 in Firestore.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Blaze plan with a card, usage kept in the free tier | The leader will not attach a card |
+| Outside image host with an unsigned upload preset | Adds a second service and SDK, and has no Security Rules: anyone who reads the preset from the public repository can upload |
+| Full images inside the listing document | The 1 MiB document limit allows about two images, and every list page would download them |
+
+### Impact
+- Changed: the class diagram (92 classes), the ERD (23 collections), `workflow/docs/data/*`, `workflow/docs/architecture/*`, `workflow/docs/workflow/firebase-setup.md` and the mockup notes for chat.
+- The Spark quotas (stored data, reads and writes per day) become the limit to watch.
+
+### Owner
+tahpnart8
+
+## 2026-10-12 - Navigation, UI packages, module owners and code review
+
+### Decision
+- **Navigation:**
+  - Three Activities. `AuthActivity` holds sign in, sign up and password reset. `MainActivity` holds a bottom bar with five tabs: Trang chủ, Tìm kiếm, Đăng tin, Tin nhắn and Cá nhân. `AdminActivity` is opened from the personal page when the user is an admin.
+  - Every screen is a Fragment, using the Navigation component, with one nested graph per module.
+  - Cross-module links go only through global actions in `nav_main.xml`.
+- **UI packages:** the layer packages of 2026-09-27 gain `ui.<module>`: `ui.account`, `ui.notification`, `ui.listing`, `ui.trade`, `ui.profile`, `ui.trust`, `ui.admin`, `ui.admin.complaint`, `ui.common` and `ui.main`.
+- **Module owners:**
+  - A: Nguyen Thuy Ngan.
+  - B: Tran Anh Tu.
+  - C: Nguyen Le Hai Long.
+  - D: Nguyen Hoang Phuc.
+  - E: Tran Duc Phat.
+
+  Each person owns a module from data to screens, matching the mockup group they drew. `workflow/plan/so-huu.md` maps who may edit which file and which repository method.
+- **Shared classes are pre-built:** in phase 1 the leader creates every class with its full signature. Methods not yet written fail with `DataCallback.NOT_READY`. Members only replace the bodies of the methods assigned to them.
+- **Code review:** Hai Long becomes a code owner of `PUBGApp/` alongside the leader, except for Gradle files, `google-services.json`, `firebase/` and `AndroidManifest.xml`. Either of them may approve and merge a code pull request they did not author.
+- **Issues:** each issue is one vertical slice of half a day to one day, with an exact list of the files it may touch.
+- **Dates:** code freeze on 2026-10-26, submission on 2026-10-30.
+- **Sample data:** a debug-only button writes it through the repositories, with document ids that start with `demo_`.
+
+### Context
+Thirty-odd pull requests in ten days would all wait on the leader. Five people working with AI tools will also collide on shared files unless ownership is decided in advance. Navigation and the UI packages were the last open questions blocking interface code.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Many Activities, one per screen | Hard to keep one bottom bar and the state across tabs |
+| Split the work by layer (data, UI) | People would wait on each other for every screen |
+| The leader alone reviews code | The leader becomes the bottleneck in a two-week build |
+
+### Impact
+`AGENTS.md`, `.github/CODEOWNERS`, `workflow/plan/`, `workflow/docs/conventions/android-java.md`, `workflow/docs/architecture/overview.md`, `workflow/memory/people.md` and `workflow/memory/preferences.md`.
+
+### Owner
+tahpnart8
+
+## 2026-10-12 - Data and behaviour fixes from the second documentation audit
+
+### Decision
+- **No cross-user counters:**
+  - Removed: `User.soldCount`, `followerCount`, `dealCount`, `completedDealCount`, `reportCount` and `Category.listingCount`.
+  - Firestore aggregation queries count them when a screen needs them. `UserRepository.getStats` returns the new value class `ProfileStats`.
+  - Only the rating stays stored, as `ratingSum` and `ratingCount`, incremented in the same batch as the review.
+- **One owner per side effect:**
+  - The repository that changes a state writes the notification for it. ViewModels never create notifications.
+  - `DealRepository.completeDeal` is the only place where a deal becomes COMPLETED.
+- **Uniqueness through document ids:**
+  - A review is `reviews/{dealId}_{reviewerId}`.
+  - A complaint is `complaints/{dealId}`. A deal therefore has at most one complaint ever, and withdrawing it is final.
+  - A complaint can be opened only before `autoReleaseAt`.
+- **Deals that stall:**
+  - A deal still in PENDING_CONFIRM after 3 days is cancelled by the automatic sweep (`DealRepository.expirePendingDeals`).
+  - When a listing leaves AVAILABLE for any reason other than an accepted offer, its pending offers are rejected in the same batch.
+  - Only DRAFT listings can be deleted. Other listings are hidden.
+- **Accounts:**
+  - `User.lockReason` is added.
+  - A warning of level 3 or more locks the account permanently, and unlocking does not reset `warningCount`.
+  - `User.canSell` takes the email-verified flag.
+  - Deleting an account requires signing in again first.
+  - A first Google sign-in goes through a profile completion step.
+- **Firestore mapping rules:**
+  - `BaseDocument.id` uses `@DocumentId` and is not stored.
+  - Computed `isX()` and `getX()` methods use `@Exclude`.
+  - Booleans named `isX` use `@PropertyName`.
+  - `createdAt`, `updatedAt` and `shippedAt` use server time.
+- **Paging:**
+  - Paging uses a cursor on `createdAt`, not page numbers.
+  - Sorting by price is done on the server.
+  - Sorting by seller rating is done on the device, within the loaded page.
+- **Security Rules** are specified in `workflow/docs/data/security-rules.md` before coding starts.
+
+### Context
+The second audit (2026-10-12) read the architecture and data documents as the engineers who will code from them would. It found five problems:
+
+- counters that any client could forge;
+- side effects with two owners;
+- states that could wait forever;
+- methods that the flows needed but no class had;
+- Firestore mapping traps that silently store wrong field names.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep the counters and guard each one with a Security Rule | Needs one rule per counter and per cross-user write, which is easy to get wrong; aggregation queries are cheap at this scale |
+| Leave timeouts to an admin override | The override (STT 85) is "Phát triển sau" |
+
+### Impact
+The class diagram, the ERD, `workflow/docs/architecture/*`, `workflow/docs/data/*` and `workflow/plan/phase-2-tinh-nang.md`.
+
+### Owner
+tahpnart8
+
+## 2026-10-22 - Guest browsing, verification as a trading gate, admin accounts in the app
+
+### Decision
+- **Guests** (not signed in) may read exactly three things: the home feed, listing search and a listing's detail page. Security Rules therefore make `listings` (AVAILABLE, RESERVED, SOLD), `categories` and `images` world readable; `users` still needs `signedIn()`, so the seller block of a listing is hidden from guests. Every other action sends the guest to the sign in screen.
+- **Seller verification is a gate, not a badge.** An account posts a listing, sends an offer or creates a deal only when `User.verificationStatus` is `APPROVED`. The model gets `User.canBuy(boolean)` beside `User.canSell(boolean)`, with the same condition; Rules add `verified()` to the create rules of `listings`, `offers` and `deals`. An unverified account still browses, searches, chats, saves and follows.
+- **Admin accounts are managed inside the app** (UC42, row 105). `AdminRepository` gets `listAdmins`, `findUserByEmail`, `grantAdmin`, `revokeAdmin`; `AdminUserViewModel` gets `loadAdmins`, `grantAdmin`, `revokeAdmin`; screen E07 `AdminAccountFragment` is added with no mockup yet. Rules let an admin create and delete `admins/{uid}` for someone else, never for themselves. The first admin document is still made by hand in the Firebase Console.
+- **Admin sign in (UC43, row 106) gets no screen of its own.** An admin signs in on A01 like everyone else and opens the admin area from the button on D01.
+- **Payment is simulated inside Firestore.** No bank, no payment gateway: a `Payment` document held at HELD and moved to RELEASED. Feature F-10 is renamed from "ký quỹ mô phỏng" accordingly.
+
+### Context
+On 2026-10-22 the team redrew the use case model (43 use cases) and the leader settled 14 points; four of them (Q4, Q7, Q9, Q10) change system behaviour, so the architecture, data and interface documents had to follow.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Let guests read `users` too, so the seller block works | Decision Q7 keeps profiles behind sign in; the listing page hides the block instead |
+| Rename `canSell` to one method for both sides | Six documents reference `canSell`; two named methods keep each call site readable and let the two conditions diverge later |
+| A separate admin sign in screen for UC43 | UC43's flow is the ordinary sign in; a second screen would duplicate A01 and invite a client side role claim |
+| Keep `admins/{uid}` write only from the Firebase Console | UC42 is in scope this round, and the console is not available to the admin using the app |
+
+### Impact
+`workflow/docs/architecture/trang-thai.md`, `workflow/docs/data/security-rules.md`, `workflow/docs/product/features.md`, every `workflow/docs/ui/` README, the generated `dac-ta-lop/`, `firestore-schema.md` and `dac-ta-chuc-nang.md`, and the sources `local/diagram-tools/model.py`, `erd_model.py`, `data_text.py`, `tech_text.py`, `tech_text_v3.py`. Class diagram pages 1, 5 and 7 re-rendered.
+
+### Owner
+tahpnart8
+
+## 2026-10-22 - The 31 open points the leader settled after the use case rewrite
+
+### Decision
+Data shape:
+- `sellerVerifications` gains `nationalId` (the number the user types in the request, kept beside the copy in `users/{uid}/private/identity`), `imageIds` (two images: the document and a portrait holding it) and `resubmitCount`. A rejected request may be resent 3 times (`SellerVerification.MAX_RESUBMIT`); after that the user must contact an admin.
+- `payments` gains `method`, a new enum `PaymentMethod` with `CARD`, `E_WALLET`, `BANK_TRANSFER`. It is shown on the receipt only; the payment itself stays simulated.
+- `deals` gains `receivedImageId`: the buyer must attach one photo when confirming receipt. An automatic receipt at the end of the countdown leaves it empty.
+- `ImagePurpose` gains `VERIFICATION` and `RECEIVED`.
+- No price range on an offer: `minOfferPrice` stays the only limit.
+
+Behaviour:
+- Password: at least 8 characters, letters and digits. No "user name" sign in: email or Google only.
+- Phone number is editable, the national ID number is not. A Google account has no password, so the change password section is hidden for it.
+- Signing out goes to the home feed in guest mode, not to the sign in screen.
+- An unverified account still opens B04 and B05 and saves drafts; only the Publish button is blocked. Cancelling a deal and filing a complaint never require verification.
+- Warnings keep the three tiers of `trang-thai.md`, not "three warnings then locked".
+- An admin may hide one listing, remove one listing (`AdminRepository.removeListing`, new) and remove all listings of an account. The national ID number is shown only inside a verification request, never on the general profile.
+- Reporting a message stays. Keyword filtering does not run on review comments. Only a draft listing can be deleted. "Cảnh cáo" is not a complaint decision.
+- Display names of statuses come from `trang-thai.md`; the whole interface says "xác thực tài khoản", not "xác minh người bán".
+- New screens, no mockup yet: C07 `DealPaymentFragment` (payment) and E07 `AdminAccountFragment` (admin accounts), making 33 screen codes. B02 gains a "Người dùng" tab for UC15, UC14 gains the area, radius and four sort orders, C04 gains the deal type and role filters, UC39 gains sub categories and condition fields.
+
+### Context
+The use case rewrite of 2026-10-22 left 31 places where the specification, the mockups and the system documents disagreed. The leader answered all of them in one pass.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep the national ID only in `users/{uid}/private/identity` | The admin must compare what the user typed in the request with the photos; the profile copy can be edited independently |
+| Drop the photo at receipt instead of adding a field | The leader kept it: it is the buyer's own evidence if a complaint follows |
+| Give an unverified account no access to the posting screens at all | They may prepare and save drafts while waiting for approval |
+
+### Impact
+Sources `local/diagram-tools/model.py`, `erd_model.py`, `functions.py`, `data_text.py`, `tech_text*.py`, `build_tech_docs.py`; all five use case files and all five interface READMEs plus their index; `trang-thai.md`, `security-rules.md`. Class diagram pages 1, 2, 3, 5 and 7 re-rendered and a `PaymentMethod` box added; the ERD rebuilt from `erd_model.py`.
+
+### Owner
+tahpnart8
+
+## 2026-10-22 - Colour values read out of the mockups
+
+### Decision
+The colour table of `workflow/docs/conventions/giao-dien.md` is filled from the 30 mockup PNGs, counted pixel by pixel, not from the Figma file (which this session did not have):
+
+- `colorPrimary` and `colorSuccess` `#1F6F54`, `colorOnPrimary` and `colorSurface` `#FFFFFF`, `colorOnSurface` `#1E1E1C`, `colorOnSurfaceVariant` `#6E6B62`, `colorBackground` `#FAF8F4`, `colorOutline` `#E7E2D6`, `colorError` `#B2412F`, `colorWarning` `#9E5223`, `colorInfo` `#27628C`.
+- Chip fills, declared directly in `colors.xml`: `#E4F0EA` under green text, `#F5E4D8` under warning text; an error label is filled with `colorError` and white text, because the mockups have no pale red.
+- `colorSuccess` is deliberately the same value as `colorPrimary`: the mockups contain one green.
+- `colorInfo` is invented. The mockups use three meaningful colours only (green, orange, brick red) and the design system needs a fourth for CONFIRMED and SHIPPED.
+- `colorWarning` is the mockup orange `#C0632B` darkened to `#9E5223`, because `#C0632B` on the beige chip is 3.35:1, under the 4.5 that WCAG AA asks of small text. Every other pair in the table was checked and passes.
+
+### Context
+Step 4 of the 2026-10-22 plan. The token names were already fixed; only the values were missing, and layouts cannot be written without them.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Wait for the Figma file | It blocks every layout; the mockups are exports of that same file, so the values match unless Figma says otherwise, and the document says Figma wins |
+| Keep `#C0632B` exactly as drawn | Warning text on the beige chip would fail contrast; the darkened value is the same hue and saturation |
+| Add a separate `colorOnWarningContainer` token | The token list is already agreed and copied into the pubg-ui skill; one darker value solves it without a twelfth token |
+
+### Impact
+`workflow/docs/conventions/giao-dien.md` sections 1 and 9. `PUBGApp/app/src/main/res/values/colors.xml` and `themes.xml` will copy this table when P1-03 is done.
+
+### Owner
+tahpnart8
+
+## 2026-10-22 - One naming rule for view ids and strings
+
+### Decision
+A view id is `<type><Thing>` in lowerCamelCase (`buttonSignIn`, `textPrice`, `recyclerListings`), and a string key is
+`<module>_<screen>_<what>` (`listing_detail_price_label`). `workflow/docs/conventions/android-java.md`,
+`.agents/rules/android-resources.md` and the `pubg-ui` skill now all say this.
+
+### Context
+The three documents disagreed: two said `btn_sign_in` and `account_sign_in`, the skill said `buttonSubmit` and
+`listing_detail_price_label`. Five people writing 33 screens from three rulebooks would have produced three styles. An
+issue-drafting pass found the conflict before any layout existed.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep `btn_sign_in`, the older Android habit | ViewBinding renames it to `binding.btnSignIn`, so the XML and the Java read differently; the camelCase id makes them identical, which is one less thing for a first-year student to hold in their head |
+| Let each module choose | The shared `view_*.xml` pieces are included by every module |
+
+### Impact
+`workflow/docs/conventions/android-java.md` rows "Id view" and "Chuỗi", `.agents/rules/android-resources.md`, and the
+mirror in `.claude/skills/`. No code exists yet, so nothing has to be renamed.
+
+### Owner
+tahpnart8
+
+## 2026-10-22 - The 14 gaps the issue drafting pass uncovered
+
+### Decision
+Spec:
+- Every one of the 14 ViewModels gains the same three fields: `loading: LiveData<Boolean>`, `error: LiveData<String>`, `done: LiveData<Boolean>`. They are the data behind the four states (loading, data, empty, error) that `giao-dien.md` section 6 demands, and `done` fires once per completed write so a screen can close a dialog without keeping its own flag.
+- Each ViewModel also gains the data its screen actually shows and the methods to load it: the full list is in `dac-ta-lop/viewmodel.md`. The biggest ones are `ProfileViewModel.verification`, `userListings` and `following`; `ListingDetailViewModel.images`, `sellerStats` and `followingSeller`; `AdminUserViewModel.selectedUser`, `verifications` and `pendingAdmin`; `AdminContentViewModel.reports`, `selectedListing` and `flagged`.
+- `AuthViewModel.register` is replaced by `startSignUp(email, password)`, `resendVerificationLink()` and `checkEmailVerified()`, because the registration order changed on 2026-10-22 and the old single method could not express it.
+- `NotificationRepository.create(notification, batch, cb)` takes the write batch, so a notification really is written in the same batch as the status change `trang-thai.md` section 9 requires; pass `null` for a standalone write.
+- New rule methods, because R18 forbids writing a status field directly: `Listing.remove(reason)`, `Listing.release()`, `Deal.dispute()`, `Deal.resolveDispute(DealStatus)`. Also `AuthRepository.isGoogleAccount()`, `UserRepository.getVerification(uid, cb)`, `AdminRepository.getFlaggedListings(cb)`, and `NetworkMonitor.getInstance()`.
+- New fields: `reports.evidenceImageIds` (at most 3, optional) and `reports.conversationId` (only when the target is a message); Room `deal_cache.tradeType`. No Room table for payments: the payment history says "needs a connection" when offline.
+- Five global navigation actions: `action_global_sign_in`, `action_global_my_profile`, `action_global_tab`, `action_global_deal_payment`, `action_global_admin_accounts`.
+
+Behaviour, where a use case asked for something the design cannot do:
+- A level 3 warning locks the account; removing that account's listings stays a separate button the admin presses.
+- Removing one listing is a button on the admin's listing detail screen, not in the E04 list.
+- Dropped: auto hiding a listing after 20 reports, cancelling open deals when an account is locked, refusing a national ID already used by another account, and the "new follower" notification. None of them can be enforced without Cloud Functions or a field that does not exist.
+
+### Context
+Five agents drafted 57 issues against the specification and each of them hit the same walls. A gap that stops five readers is a gap in the specification, not five misunderstandings.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Let each module add the LiveData it needs | Five people would invent five names and R16 would reject all of them at review |
+| Keep `NotificationRepository.create` asynchronous and call it after the batch | A crash between the two writes loses the notification silently, and the state machine already promised one batch |
+| Keep the four dropped rules and implement them "best effort" on the client | A rule the client can skip is not a rule; better to say plainly that the free plan cannot enforce it |
+
+### Impact
+`local/diagram-tools/model.py`, `erd_model.py`, `tech_text*.py`; the generated `dac-ta-lop/`, `firestore-schema.md`, `room-schema.md`; `trang-thai.md`, `security-rules.md`, `so-huu.md` section 4; the use case files of modules D and E and the interface READMEs. Class diagram pages 1, 3, 4, 5, 6, 7 rebuilt and the ERD regenerated.
+
+### Owner
+tahpnart8
+
+## 2026-10-22 - Grading rubric mapped, and the plumbing the refresh pass proved missing
+
+### Decision
+- `workflow/docs/product/barem-diem.md` is new: it maps the teacher's 11 grading rows to the lecture chapters in `Mobile_App/lecture` and to the exact place in this project that answers each one. Every issue now names, in one sentence, the rubric row it serves and the technique it demonstrates, using the teacher's own words (RecyclerView, implicit Intent, menu and picker, adaptive layouts, async, connectivity check, JUnit).
+- **Getter convention**, written into the generated `dac-ta-lop/viewmodel.md`: every LiveData is `private` with exactly one public `get<Name>()` returning `LiveData<...>`, never `MutableLiveData`. R16 treats that paragraph as the line defining all of them, so the documents do not list a hundred getters. The same applies to `NetworkMonitor.online`.
+- Every ViewModel gains `clearError()` and `clearDone()`, because the convention says the screen clears those two fields and a private LiveData gave it no way to.
+- Other plumbing the five drafting agents each hit independently: `AuthRepository.getCurrentUserId()`, `AuthViewModel.isGoogleAccount()`, `SessionManager.getCurrentUser()`, `ChatDao.clearAll()`, `DealDao.clearAll()`, `Listing.reserve(dealId)`, `SellerVerification.remainingResubmits()`, and `DealRepository.buildFromOffer(offer, listing)` so the deal can snapshot the listing's title and thumbnail.
+- `AdminUserViewModel` and `AdminContentViewModel` gain the data their screens show but had no source for: the viewed user's listings, deals, reviews and report count, the two verification photos, a report's attached images, the reported conversation, and the per-category listing counts.
+- `BaseRepository.logActivity(action, targetType, targetId)` takes a plain `String` target type, not `ReportTarget`: the activity log points at categories, keywords and admin accounts too, which that enum does not cover. `ReportRepository.getByStatus` and `AdminContentViewModel.loadReports` keep `ReportTarget`.
+- `action_global_tab` takes `tabId` out of `home`, `search`, `post`, `chat`, `profile`.
+- `NotificationRepository.create(notification, batch, cb)`: a non-null batch means the method only adds its write to that batch and calls back at once, and the caller commits, so the notification and the status change succeed or fail together.
+- Colour rows added for `VerificationStatus.NONE` and the three `Priority` values.
+
+### Context
+Five agents drafted 58 issues, then refreshed them against the updated specification. The refresh is what surfaced the plumbing: a gap that stops one reader is a misunderstanding, a gap that stops five is a hole in the specification.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| List every getter in `viewmodel.md` | A hundred table rows that say nothing, and R16 is satisfied just as well by one paragraph stating the rule |
+| Let screens keep their own loading and error flags | Then rotating the screen loses them, which is exactly what the course requires to survive |
+| Type `logActivity`'s target as `ReportTarget` | Was tried and produced `logActivity(String, ReportTarget, String)` in the generated docs, which cannot log a category or an admin change |
+
+### Impact
+`workflow/docs/product/barem-diem.md` (new), the generated `dac-ta-lop/` and `firestore-schema.md`, `trang-thai.md`, `luong-xu-ly.md`, `conventions/giao-dien.md`, `plan/so-huu.md` section 4, and all 58 issue drafts in `local/issues/`. Class diagram pages 1, 2, 3, 5, 6, 7 rebuilt; ERD regenerated.
+
+### Owner
+tahpnart8
+
+## 2026-10-22 - A trimmed plan of 33 issues, and skeletons before bodies
+
+### Decision
+Four days of coding are left, so `workflow/plan/ke-hoach-rut-gon.md` replaces the phase files for this round: 24 of 33 screens, 33 issues, one person per issue.
+
+- **Skeletons first.** Issue 2 of wave 0 creates all 93 classes at once from `dac-ta-lop/`: fields, getters, 23 enums, every repository signature with a `DataCallback.NOT_READY` body, every ViewModel with its LiveData, getters, `clearError` and `clearDone`. After it lands, every later pull request compiles whatever order it arrives in. This is what makes five people working in parallel safe, and it is the kind of mechanical generation an AI assistant does well.
+- **One file, one person.** `so-huu.md` section 5 split the methods of a shared class between people, which meant three people opening `UserRepository.java`. For this round each file has exactly one owner: `UserRepository` and `NotificationRepository` go to Ngân whole, `MediaRepository` and `CategoryRepository` to Tú, `ReviewRepository` to Hải Long, `ProfileViewModel` and `TrustViewModel` to Phúc. Screen A05 moves to Phúc and B06 to Phúc, because both use `ProfileViewModel`. A Room entity and its DAO belong to whoever owns the model they convert.
+- **Calling someone else's method is fine; editing their file is not.** That sentence is the whole scheduling rule.
+- **Cut, and said so.** A04, A06, account settings, `RecommendationEngine` with similar listings and the price hint, user search, the radius filter (no coordinate source once A06 goes), C04, complaints with D05, D06 and D07, E05, E06, E07. `features.md` now has a section naming every dropped row, because the function table still marks them "Đợt này" and R17 therefore cannot protect them.
+- **`DataCallback.NOT_READY` is now in the specification.** R20 and `so-huu.md` both relied on a constant no document defined.
+- Defaults settled so nobody waits: `autoReleaseAt` is written as device time plus 7 days with a 5 minute tolerance in the Rules; the repository appends the `StatusChange` row, not the `Deal` method; notification text is a Vietnamese constant inside `NotificationRepository`; a non-null `batch` means the method only adds its write and the caller commits.
+
+### Context
+Three independent audit passes over the plan and the 58 issue drafts. The first version of this plan said wave 1 would write every repository body, which collided with 58 drafts written on the opposite assumption (that P1 pre-created everything and each issue fills in a few bodies). Two issues would have written the same method, and nobody would have created the Fragment frames, the seven shared `view_*.xml` pieces, the sub navigation graphs or the ViewModel classes. The audits also found the base Rules would have blocked guests, contradicting the decision made the same day, and that `FileProvider` was needed by three screens but owned by no issue.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep the per-method split of `so-huu.md` | It is the single largest source of merge conflicts, and four days leave no room for gỡ merge |
+| Have each person create their own classes in wave 1 | `Deal` references `Listing`, `ChatRepository` calls `NotificationRepository`, `AppDatabase` lists other people's entities: no branch would compile until the others merged, and CI builds every pull request |
+| Rewrite all 58 drafts to match the new plan | The drafts are still the best record of names and acceptance criteria; the plan says which lines to ignore instead |
+| Keep all 33 screens | Nothing is built yet; a demo that runs end to end on 24 screens scores better than 33 half-finished ones |
+
+### Impact
+`workflow/plan/ke-hoach-rut-gon.md` (new), `so-huu.md` (an override note plus the ownership rows), `features.md` (the cut scope), `barem-diem.md`, `luong-xu-ly.md` (three signatures), `thuat-ngu.md`, `conventions/giao-dien.md`, the generated `dac-ta-lop/`, and the stale counts in `docs/README.md`, `overview.md`, `brief.md`, `phase-0`, `phase-3`. The class diagram's Firebase box no longer claims Cloud Storage.
+
+### Owner
+tahpnart8

@@ -1,5 +1,5 @@
 ---
-description: Leader only: review a pull request on the merged tree and recommend
+description: Leader or code owner: review a pull request on the merged tree and recommend
 ---
 
 Follow the skill in `.agents/skills/pubg-review-pr/SKILL.md` exactly, step by step. Read `AGENTS.md` first if you have not in this session; its rules apply to every step.

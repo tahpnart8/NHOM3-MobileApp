@@ -12,13 +12,14 @@
 
 | Thứ | Quy ước | Ví dụ |
 | --- | --- | --- |
-| Gói | Chia theo tầng: `com.nhom3.pubgapp.{model,model.enums,data,data.local,util,viewmodel}` | `...model.Listing`, `...viewmodel.ListingViewModel` |
+| Gói dữ liệu và logic | Chia theo tầng: `com.nhom3.pubgapp.{model,model.enums,data,data.local,util,viewmodel}` | `...model.Listing`, `...viewmodel.ShopViewModel` |
+| Gói giao diện | Chia theo module: `com.nhom3.pubgapp.ui.<account\|notification\|listing\|trade\|profile\|trust\|admin\|common\|main>`; màn quản trị khiếu nại ở `ui.admin.complaint`. Mỗi module một gói, không đặt file vào gói của module khác ([so-huu.md](../../plan/so-huu.md)) | `...ui.listing.ListingDetailFragment` |
 | Lớp | `PascalCase` | `ListingRepository` |
 | Hàm, biến | `camelCase` | `loadListings()` |
 | Hằng | `UPPER_SNAKE_CASE` | `MAX_PHOTOS` |
-| Layout | `<loại>_<tính-năng>_<tên>.xml` | `activity_auth_login.xml`, `item_listing_card.xml` |
-| Id view | `<viết-tắt>_<tên>` chữ thường có gạch dưới | `btn_sign_in`, `tv_price`, `rv_listings` |
-| Chuỗi | `<tính-năng>_<tên>` trong `strings_<tính-năng>.xml` | `auth_sign_in` |
+| Layout | Màn hình là Fragment: `fragment_<tiền-tố><màn>.xml`; mục trong danh sách: `item_<tiền-tố><mục>.xml`. Chỉ ba Activity có `activity_auth.xml`, `activity_main.xml`, `activity_admin.xml` | `fragment_listing_detail.xml`, `item_listing_card.xml` |
+| Id view | `<loại><Việc>` kiểu lowerCamelCase, trùng luôn tên trường ViewBinding sinh ra | `buttonSignIn`, `textPrice`, `recyclerListings` |
+| Chuỗi | `<module>_<màn>_<việc>` trong `strings_<module>.xml` | `listing_detail_price_label` trong `strings_listing.xml` |
 
 Định danh và chú thích trong code viết tiếng Anh, chú thích ngắn (xem "Phong cách viết code" bên dưới).
 
@@ -60,10 +61,28 @@ saveButton.setOnClickListener(new View.OnClickListener() {
 ## Tài nguyên và xoay màn hình
 
 - Không ghi chữ cứng trong layout hoặc code. Mọi chữ hiển thị là string resource; ngôn ngữ mặc định là tiếng Việt.
-- Mỗi tính năng có file `strings_<tính-năng>.xml` riêng để hai người không cùng sửa `strings.xml`.
-- Mỗi màn hình phải dùng được khi xoay: dùng `ConstraintLayout`, hoặc thêm `layout-land`, hoặc `sw600dp`. Trạng thái để trong `ViewModel`, không để trong Activity.
+- Mỗi module có file `strings_<module>.xml` riêng (`strings_account.xml`, `strings_listing.xml`, `strings_trade.xml`, `strings_profile.xml`, `strings_admin.xml`, `strings_common.xml`) để hai người không cùng sửa `strings.xml`.
+- Mỗi màn hình phải dùng được khi xoay: dùng `ConstraintLayout`, hoặc thêm `layout-land`, hoặc `sw600dp`. Trạng thái để trong `ViewModel`, không để trong Activity hay Fragment.
 - Màu và kiểu chữ lấy từ `themes.xml` và `colors.xml`. Chỉ sửa file dùng chung này qua issue `area:ui`.
 - `AndroidManifest.xml`: chỉ thêm dòng cần thiết, không sắp xếp lại.
+
+## Điều hướng
+
+- Ba Activity: `AuthActivity` (đăng nhập, đăng ký, quên mật khẩu), `MainActivity` (thanh điều hướng dưới gồm 5 tab Trang chủ, Tìm kiếm, Đăng tin, Tin nhắn, Cá nhân) và `AdminActivity` (mở từ màn Cá nhân khi người dùng là admin). Mọi màn hình khác là Fragment, dùng Navigation component.
+- Mỗi module có đồ thị điều hướng riêng (`nav_account.xml`, `nav_listing.xml`, `nav_trade.xml`, `nav_profile.xml`, `nav_admin.xml`...). Đi từ module này sang module khác chỉ qua **hành động toàn cục** trong `nav_main.xml`; không sửa đồ thị của người khác.
+- Hai nơi đăng ký dùng chung, chỉ leader sửa: `nav_main.xml` (hành động toàn cục) và file menu của thanh điều hướng dưới. Cần thêm một hành động toàn cục hoặc một tab thì mở issue cho leader.
+- Ứng dụng có một nút nạp dữ liệu mẫu, **chỉ có ở bản debug, không có trong bản release** (cách làm cụ thể, ví dụ thư mục `src/debug/` hoặc điều kiện `BuildConfig.DEBUG`, do issue của nút này chốt). Dữ liệu mẫu dùng mã có tiền tố `demo_` và phải thỏa [goi-y.md](../architecture/goi-y.md).
+
+## Ánh xạ Firestore sang Java
+
+Bốn luật cho mọi lớp trong `model`, để Firestore đọc và ghi đúng:
+
+1. `BaseDocument.id` gắn `@DocumentId`; mã tài liệu không được lưu thành trường.
+2. Mọi phương thức tính toán dạng `isX()` hoặc `getX()` không tương ứng một trường gắn `@Exclude`, nếu không Firestore sẽ ghi nó như một trường.
+3. Trường boolean có tên bắt đầu bằng `is` (ví dụ `isDefault`, `isActive`, `isRead`) gắn `@PropertyName` với tên trường đã ghi trong [firestore-schema.md](../data/firestore-schema.md).
+4. `createdAt` và `updatedAt` ghi bằng `FieldValue.serverTimestamp()`, không dùng giờ máy.
+
+Chi tiết và lý do ghi ở `workflow/memory/code/firebase.md`.
 
 ## Luồng và lỗi
 
@@ -77,4 +96,5 @@ saveButton.setOnClickListener(new View.OnClickListener() {
 | `AndroidManifest.xml` | Chỉ thêm dòng |
 | `libs.versions.toml`, `app/build.gradle.kts` | Chỉ qua issue `chore(deps)`, Pull Request nhỏ, merge nhanh |
 | `strings.xml`, `colors.xml`, `themes.xml` | Xem trên |
-| `MainActivity`, điều hướng | Gắn tính năng qua một điểm đăng ký duy nhất (sẽ chốt trong `architecture/overview.md`) |
+| `nav_main.xml`, file menu thanh điều hướng dưới | Chỉ leader sửa; xem mục "Điều hướng" |
+| `strings_<module>.xml`, đồ thị `nav_<module>.xml` | Chỉ chủ module sửa |

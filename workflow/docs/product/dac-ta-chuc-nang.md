@@ -2,8 +2,9 @@
 
 Nguồn sự thật về **hệ thống làm những gì**. Mọi tài liệu khác (sơ đồ chức năng, sơ đồ lớp, ERD, giao diện, sổ tính năng) nhắc tới một chức năng đều dùng **số STT của bảng này**.
 
-- **102 chức năng**: 88 chức năng **Đợt này**, làm trong giai đoạn phát triển sắp tới; 14 chức năng **Phát triển sau**, giữ lại làm hướng phát triển, **không code trong giai đoạn này**.
-- Nguồn: bảng chức năng gốc của nhóm (92 dòng) và 10 chức năng bổ sung theo mockup giao diện, ghi "Bổ sung theo mockup" ở cột Ghi chú. Đánh số lại ngày 2026-10-11; bảng đối chiếu với số dòng của bảng gốc nằm ở cuối tài liệu.
+- **106 chức năng**: 91 chức năng **Đợt này**, làm trong giai đoạn phát triển sắp tới; 15 chức năng **Phát triển sau**, giữ lại làm hướng phát triển, **không code trong giai đoạn này**.
+- Nguồn: bảng chức năng gốc của nhóm (92 dòng), 10 chức năng bổ sung theo mockup giao diện (ghi "Bổ sung theo mockup" ở cột Ghi chú) và 4 chức năng bổ sung theo quyết định sau đó (ghi ngày quyết định trong cột Ghi chú). Đánh số lại ngày 2026-10-11; bảng đối chiếu với số dòng của bảng gốc nằm ở cuối tài liệu.
+- Chức năng thêm sau ngày đánh số được **đánh số tiếp**, không chèn vào giữa, để số STT cũ không bao giờ đổi.
 - Cột **Ghi chú** ghi các quyết định thiết kế đã chốt (ví dụ giải ngân tự động, bằng chứng vận đơn). Khi ghi chú và mockup giao diện khác nhau, ghi chú đúng.
 
 | STT | User | Module | Tên chức năng | Chức năng con | Đặc tả | Phạm vi | Ghi chú |
@@ -16,7 +17,7 @@ Nguồn sự thật về **hệ thống làm những gì**. Mọi tài liệu kh
 | 6 | Người dùng | Quản lý tài khoản và hồ sơ | Quản lý trang cá nhân | Chỉnh sửa địa chỉ | CRUD địa chỉ giao nhận, chọn một địa chỉ mặc định | Đợt này |  |
 | 7 | Người dùng | Quản lý tài khoản và hồ sơ | Quản lý trang cá nhân | Xem đánh giá cá nhân | Hiển thị công khai điểm đánh giá bản thân | Đợt này |  |
 | 8 | Người dùng | Quản lý tài khoản và hồ sơ | Quản lý trang cá nhân | Xem số liệu hồ sơ | Hiển thị số món đã bán, số người theo dõi, số giao dịch và tỷ lệ hoàn tất | Đợt này | Bổ sung theo mockup D01, D02, D03. |
-| 9 | Người dùng | Quản lý tài khoản và hồ sơ | Quản lý trang cá nhân | Khai báo thông tin định danh | Khai báo số CCCD, ngày sinh, giới tính, địa chỉ thường trú để xác minh danh tính | Đợt này | Bổ sung theo mockup A02, A04. Cất riêng tư: chỉ chủ tài khoản và admin xem được. |
+| 9 | Người dùng | Quản lý tài khoản và hồ sơ | Quản lý trang cá nhân | Khai báo thông tin định danh | Khai báo số CCCD, ngày sinh, giới tính, địa chỉ thường trú để xác thực danh tính | Đợt này | Bổ sung theo mockup A02, A04. Cất riêng tư: chỉ chủ tài khoản và admin xem được. |
 | 10 | Người dùng | Quản lý tài khoản và hồ sơ | Cài đặt tài khoản | Cài đặt thông báo | Bật hoặc tắt từng loại thông báo: tin nhắn mới, đề nghị giá mới, cập nhật giao dịch | Đợt này | Bổ sung theo mockup A05. Mục khuyến mãi, tin tức chưa làm vì cần gửi broadcast (phát triển sau). |
 | 11 | Người dùng | Quản lý tài khoản và hồ sơ | Cài đặt tài khoản | Đổi mật khẩu | Đổi mật khẩu sau khi nhập lại mật khẩu hiện tại | Đợt này | Bổ sung theo mockup A05. |
 | 12 | Người dùng | Quản lý tài khoản và hồ sơ | Cài đặt tài khoản | Xóa tài khoản | Vô hiệu hóa tài khoản: ẩn hồ sơ và tin đăng, xóa thông tin đăng nhập, giữ lịch sử giao dịch và đánh giá cho đối tác | Đợt này | Bổ sung theo mockup A05. Không cho xóa khi còn giao dịch chưa kết thúc. |
@@ -52,7 +53,7 @@ Nguồn sự thật về **hệ thống làm những gì**. Mọi tài liệu kh
 | 42 | Người dùng | Kết nối | Lưu tin yêu thích | Bỏ lưu | Gỡ một tin khỏi danh sách đã lưu | Đợt này |  |
 | 43 | Người dùng | Kết nối | Chat | Gửi tin nhắn văn bản | Cho phép người dùng gửi tin nhắn chữ | Đợt này |  |
 | 44 | Người dùng | Kết nối | Chat | Gửi hình ảnh | Cho phép người dùng gửi hình ảnh | Đợt này |  |
-| 45 | Người dùng | Kết nối | Chat | Gửi video | Cho phép người dùng gửi video | Đợt này |  |
+| 45 | Người dùng | Kết nối | Chat | Gửi video | Cho phép người dùng gửi video | **Phát triển sau** | Chuyển sang Phát triển sau ngày 2026-10-12: gói Firebase Spark không có Cloud Storage, video không lưu được trong Firestore |
 | 46 | Người dùng | Kết nối | Chat | Trạng thái hoạt động | Hiển thị người đối thoại đang hoạt động hay thời điểm hoạt động gần nhất | Đợt này | Bổ sung theo mockup C02. |
 | 47 | Người dùng | Kết nối | Offer (đề nghị 1 chạm) | Gửi đề nghị | Gửi đề nghị cho người đăng bài theo loại người bán chấp nhận: tiền, vật trao đổi, hoặc cả hai | Đợt này | Đề nghị chỉ được chấp nhận hoặc từ chối; không có hủy, không có đề xuất lại |
 | 48 | Người dùng | Kết nối | Offer (đề nghị 1 chạm) | Chấp nhận đề nghị | Người bán chấp nhận đề nghị | Đợt này | Chấp nhận thì hệ thống tạo giao dịch |
@@ -60,10 +61,10 @@ Nguồn sự thật về **hệ thống làm những gì**. Mọi tài liệu kh
 | 50 | Người dùng | Giao dịch, thanh toán | Tạo giao dịch | Xem thông tin giao dịch | Kiểm tra hình ảnh, nội dung, mức giá, món đồ giao dịch, phương thức, mức giá thanh toán, địa điểm giao nhận, thời gian, điều kiện đã thống nhất giữa hai bên | Đợt này | Giao dịch được tạo khi người bán chấp nhận đề nghị |
 | 51 | Người dùng | Giao dịch, thanh toán | Tạo giao dịch | Chỉnh sửa thông tin giao dịch | Chỉnh sửa hình ảnh, nội dung, mức giá, phương thức, địa điểm giao nhận, thời gian | Đợt này |  |
 | 52 | Người dùng | Giao dịch, thanh toán | Tạo giao dịch | Xác nhận giao dịch | Xác nhận toàn bộ thông tin đã đúng với thoả thuận | Đợt này |  |
-| 53 | Người dùng | Giao dịch, thanh toán | Tạo giao dịch | Xác nhận đã nhận | Người mua hoặc người trao đổi xác nhận đã nhận món đồ | Đợt này | Giao dịch sang Đã nhận và tiền ký quỹ chuyển ngay cho người bán. Người mua không xác nhận thì hệ thống tự chuyển khi hết đếm ngược. Giao dịch Hoàn tất khi hai bên đã đánh giá hoặc sau 3 ngày |
+| 53 | Người dùng | Giao dịch, thanh toán | Tạo giao dịch | Xác nhận đã nhận | Người mua hoặc người trao đổi xác nhận đã nhận món đồ, kèm một ảnh chụp lúc nhận | Đợt này | Ảnh lưu ở `deals.receivedImageId` (quyết định 2026-10-22). Giao dịch sang Đã nhận và khoản thanh toán chuyển từ HELD sang RELEASED cho người bán. Người mua không xác nhận thì hệ thống tự chuyển khi hết đếm ngược, khi đó không có ảnh. Giao dịch Hoàn tất khi hai bên đã đánh giá hoặc sau 3 ngày |
 | 54 | Người dùng | Giao dịch, thanh toán | Tạo giao dịch | Xác nhận đã giao | Người bán hoặc người đăng bài xác nhận đã gửi món đồ | Đợt này | Bắt buộc ảnh mã vận đơn, tên đơn vị vận chuyển và mã vận đơn; bắt đầu đếm ngược tự giải ngân |
 | 55 | Người dùng | Giao dịch, thanh toán | Tạo giao dịch | Hủy giao dịch có lý do | Hủy giao dịch trước khi gửi món đồ, bắt buộc nêu lý do | Đợt này | Hoàn tiền nếu tiền đang được giữ |
-| 56 | Người dùng | Giao dịch, thanh toán | Thanh toán | Thanh toán qua bên thứ ba | Người mua gửi tiền vào bên thứ ba (ví trung gian), tiền được giữ tới khi giải ngân | Đợt này | Ký quỹ mô phỏng: không có cổng thanh toán thật, không có số dư ví. Giao dịch trao đổi hoặc cho tặng không cần thanh toán |
+| 56 | Người dùng | Giao dịch, thanh toán | Thanh toán | Thanh toán giao dịch | Người mua chọn phương thức thanh toán, hệ thống giữ khoản tiền tới khi người mua xác nhận đã nhận hàng hoặc hết đếm ngược | Đợt này | Thanh toán mô phỏng (quyết định 2026-10-22): giao diện giống ứng dụng thanh toán thật nhưng không gọi dịch vụ bên ngoài, không có ngân hàng, không có tiền thật và không có số dư ví. Tiền được giữ bằng một tài liệu `Payment` trạng thái HELD. Phương thức lưu ở `payments.method`: CARD, E_WALLET, BANK_TRANSFER. Giao dịch trao đổi hoặc cho tặng không cần thanh toán |
 | 57 | Người dùng | Giao dịch, thanh toán | Lịch sử giao dịch | Xem lịch sử giao dịch | Xem những giao dịch đã thực hiện, ở cả vai trò người mua và người bán | Đợt này |  |
 | 58 | Người dùng | Giao dịch, thanh toán | Lịch sử thanh toán | Xem lịch sử thanh toán | Xem lịch sử thanh toán | Đợt này |  |
 | 59 | Người dùng | Đánh giá & bảo vệ giao dịch | Đánh giá | Đánh giá đối tác | Người dùng có thể đánh giá người thực hiện giao dịch với mình | Đợt này | Chấm sao tổng thể và 3 tiêu chí: độ chính xác thông tin, thái độ giao dịch, đúng cam kết. Mỗi bên đánh giá một lần |
@@ -80,7 +81,7 @@ Nguồn sự thật về **hệ thống làm những gì**. Mọi tài liệu kh
 | 70 | Admin | Quản lý người dùng | Khóa/mở khóa tài khoản | Khóa tài khoản | Khóa các tài khoản vi phạm (tạm thời, vĩnh viễn) | Đợt này |  |
 | 71 | Admin | Quản lý người dùng | Khóa/mở khóa tài khoản | Mở khóa tài khoản | Mở khóa tài khoản bị khóa | Đợt này |  |
 | 72 | Admin | Quản lý người dùng | Khóa/mở khóa tài khoản | Cảnh báo theo bậc | Vi phạm lần 1 cảnh báo, lần 2 khóa tạm, lần 3 khóa vĩnh viễn | Đợt này | Quy tắc cố định 3 bậc, không cấu hình được |
-| 73 | Admin | Quản lý người dùng | Xác minh tài khoản | Duyệt yêu cầu xác minh | Áp dụng nếu người dùng đã xác thực email và muốn đăng ký trở thành người bán hàng | Đợt này |  |
+| 73 | Admin | Quản lý người dùng | Xác minh tài khoản | Duyệt yêu cầu xác thực tài khoản | Admin xem số CCCD và hai ảnh người dùng gửi, rồi duyệt hoặc từ chối kèm lý do | Đợt này | Quyết định 2026-10-22: xác thực tài khoản là điều kiện bắt buộc để đăng tin, gửi đề nghị và tạo giao dịch, không còn là huy hiệu. Tài khoản chưa được duyệt vẫn xem, tìm kiếm, nhắn tin và theo dõi bình thường. Bị từ chối thì được gửi lại tối đa 3 lần |
 | 74 | Admin | Quản lý người dùng | Nhật ký hoạt động | Xem nhật ký hoạt động | Theo dõi hành vi một tài khoản cụ thể | Đợt này |  |
 | 75 | Admin | Kiểm duyệt nội dung | Xử lý tin bị báo cáo | Danh sách tin bị báo cáo | Kèm số lượt báo cáo, lý do | Đợt này |  |
 | 76 | Admin | Kiểm duyệt nội dung | Xử lý tin bị báo cáo | Ẩn, gỡ tin vi phạm | Có lý do, có thể khôi phục nếu duyệt oan | Đợt này |  |
@@ -110,13 +111,18 @@ Nguồn sự thật về **hệ thống làm những gì**. Mọi tài liệu kh
 | 100 | Admin | Nhật ký, bảo mật quản trị | Nhật ký hoạt động admin | Ghi log thao tác admin | Ai làm gì, khi nào, trên đối tượng nào | **Phát triển sau** |  |
 | 101 | Admin | Nhật ký, bảo mật quản trị | Phân quyền admin | Phân vai trò | Ví dụ Moderator chỉ xử lý nội dung, không được duyệt giải ngân | **Phát triển sau** |  |
 | 102 | Admin | Nhật ký, bảo mật quản trị | Quản lý phiên đăng nhập | Quản lý phiên đăng nhập admin |  | **Phát triển sau** |  |
+| 103 | Người dùng | Tìm kiếm | Tìm kiếm người dùng | Tìm người dùng theo tên | Tìm người dùng khác theo tên hiển thị; mỗi kết quả mở trang cá nhân của người đó | Đợt này | Bổ sung ngày 2026-10-13 theo quyết định của leader. So khớp trên `users.searchKeywords` (từ đã bỏ dấu, viết thường), chỉ khớp nguyên từ, chỉ hiện tài khoản ACTIVE. Không tìm theo số điện thoại hay email |
+| 104 | Người dùng | Quản lý tài khoản và hồ sơ | Đăng ký / đăng nhập | Đăng xuất | Thoát khỏi phiên đăng nhập hiện tại trên thiết bị | Đợt này | Bổ sung ngày 2026-10-22 theo quyết định của leader: bảng gốc bỏ sót, trong khi thao tác này có thật trên màn hình D01 |
+| 105 | Admin | Nhật ký, bảo mật quản trị | Quản lý tài khoản admin | Thêm, gỡ quyền admin | Xem danh sách admin, thêm admin mới, gỡ quyền admin | Đợt này | Bổ sung ngày 2026-10-22 theo quyết định của leader. Khác với STT 101 Phân vai trò, vốn là phân quyền theo vai và vẫn để Phát triển sau |
+| 106 | Admin | Nhật ký, bảo mật quản trị | Đăng nhập quản trị | Đăng nhập khu vực quản trị | Admin đăng nhập vào khu vực quản trị bằng tài khoản có quyền admin | Đợt này | Bổ sung ngày 2026-10-22 theo quyết định của leader |
 
 ## Chức năng phát triển sau
 
-14 chức năng dưới đây **không được đưa vào giai đoạn phát triển sắp tới**: không có trong sổ tính năng, không có lớp riêng trên sơ đồ lớp, không có màn hình riêng. Mockup có vẽ phần nào thuộc nhóm này thì tài liệu giao diện ghi rõ "phát triển sau, chưa làm".
+15 chức năng dưới đây **không được đưa vào giai đoạn phát triển sắp tới**: không có trong sổ tính năng, không có lớp riêng trên sơ đồ lớp, không có màn hình riêng. Mockup có vẽ phần nào thuộc nhóm này thì tài liệu giao diện ghi rõ "phát triển sau, chưa làm".
 
 | STT | Chức năng |
 | --- | --- |
+| 45 | Chat: Gửi video |
 | 83 | Theo dõi giao dịch: Cảnh báo giao dịch bất thường |
 | 85 | Can thiệp giao dịch: Đổi trạng thái thủ công |
 | 86 | Phê duyệt giao dịch: Duyệt hoặc từ chối ở bước chờ duyệt |
@@ -138,37 +144,39 @@ Chỉ dùng để tra tài liệu cũ. Từ ngày 2026-10-11, mọi tài liệu 
 
 | STT | Dòng bảng gốc | STT | Dòng bảng gốc | STT | Dòng bảng gốc |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 3 | 35 | 30 | 69 | 61 |
-| 2 | 4 | 36 | 31 | 70 | 62 |
-| 3 | 5 | 37 | mới | 71 | 63 |
-| 4 | 6 | 38 | 32 | 72 | 64 |
-| 5 | 7 | 39 | 33 | 73 | 65 |
-| 6 | 8 | 40 | 34 | 74 | 66 |
-| 7 | 9 | 41 | 35 | 75 | 67 |
-| 8 | mới | 42 | 36 | 76 | 68 |
-| 9 | mới | 43 | 37 | 77 | 69 |
-| 10 | mới | 44 | 38 | 78 | 70 |
-| 11 | mới | 45 | 39 | 79 | 71 |
-| 12 | mới | 46 | mới | 80 | 72 |
-| 13 | 10 | 47 | 40 | 81 | 73 |
-| 14 | 11 | 48 | 41 | 82 | 74 |
-| 15 | mới | 49 | 42 | 83 | 75 |
-| 16 | 12 | 50 | 43 | 84 | 76 |
-| 17 | 13 | 51 | 44 | 85 | 77 |
-| 18 | 14 | 52 | 45 | 86 | 78 |
-| 19 | 15 | 53 | 46 | 87 | 79 |
-| 20 | 16 | 54 | 47 | 88 | 80 |
-| 21 | 17 | 55 | 48 | 89 | 81 |
-| 22 | mới | 56 | 49 | 90 | 82 |
-| 23 | 18 | 57 | 50 | 91 | 83 |
-| 24 | 19 | 58 | 51 | 92 | 84 |
-| 25 | 20 | 59 | 52 | 93 | 85 |
-| 26 | 21 | 60 | 53 | 94 | 86 |
-| 27 | 22 | 61 | 54 | 95 | 87 |
-| 28 | 23 | 62 | 55 | 96 | 88 |
-| 29 | 24 | 63 | 56 | 97 | 89 |
-| 30 | 25 | 64 | 57 | 98 | 90 |
-| 31 | 26 | 65 | 58 | 99 | 91 |
-| 32 | 27 | 66 | 59 | 100 | 92 |
-| 33 | 28 | 67 | mới | 101 | 93 |
-| 34 | 29 | 68 | 60 | 102 | 94 |
+| 1 | 3 | 37 | mới | 73 | 65 |
+| 2 | 4 | 38 | 32 | 74 | 66 |
+| 3 | 5 | 39 | 33 | 75 | 67 |
+| 4 | 6 | 40 | 34 | 76 | 68 |
+| 5 | 7 | 41 | 35 | 77 | 69 |
+| 6 | 8 | 42 | 36 | 78 | 70 |
+| 7 | 9 | 43 | 37 | 79 | 71 |
+| 8 | mới | 44 | 38 | 80 | 72 |
+| 9 | mới | 45 | 39 | 81 | 73 |
+| 10 | mới | 46 | mới | 82 | 74 |
+| 11 | mới | 47 | 40 | 83 | 75 |
+| 12 | mới | 48 | 41 | 84 | 76 |
+| 13 | 10 | 49 | 42 | 85 | 77 |
+| 14 | 11 | 50 | 43 | 86 | 78 |
+| 15 | mới | 51 | 44 | 87 | 79 |
+| 16 | 12 | 52 | 45 | 88 | 80 |
+| 17 | 13 | 53 | 46 | 89 | 81 |
+| 18 | 14 | 54 | 47 | 90 | 82 |
+| 19 | 15 | 55 | 48 | 91 | 83 |
+| 20 | 16 | 56 | 49 | 92 | 84 |
+| 21 | 17 | 57 | 50 | 93 | 85 |
+| 22 | mới | 58 | 51 | 94 | 86 |
+| 23 | 18 | 59 | 52 | 95 | 87 |
+| 24 | 19 | 60 | 53 | 96 | 88 |
+| 25 | 20 | 61 | 54 | 97 | 89 |
+| 26 | 21 | 62 | 55 | 98 | 90 |
+| 27 | 22 | 63 | 56 | 99 | 91 |
+| 28 | 23 | 64 | 57 | 100 | 92 |
+| 29 | 24 | 65 | 58 | 101 | 93 |
+| 30 | 25 | 66 | 59 | 102 | 94 |
+| 31 | 26 | 67 | mới | 103 | mới |
+| 32 | 27 | 68 | 60 | 104 | mới |
+| 33 | 28 | 69 | 61 | 105 | mới |
+| 34 | 29 | 70 | 62 | 106 | mới |
+| 35 | 30 | 71 | 63 |  |  |
+| 36 | 31 | 72 | 64 |  |  |
