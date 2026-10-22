@@ -52,7 +52,7 @@ Tên lớp chốt ở đây để đồ thị điều hướng và lối tắt g
 | B05 | `MyShopFragment` | `MainActivity` | Tú |
 | B06 | `SavedListingsFragment` | `MainActivity` | Tú |
 | C01 | `ConversationListFragment` | `MainActivity` (tab Tin nhắn) | Hải Long |
-| C02 | `ChatFragment` | `MainActivity` | Hải Long |
+| C02 | `ChatFragment`, `MakeOfferFragment` (bảng trượt gửi đề nghị giá, mở từ B03) | `MainActivity` | Hải Long |
 | C03 | `DealDetailFragment` | `MainActivity` | Hải Long |
 | C04 | `DealHistoryFragment` | `MainActivity` | Hải Long |
 | C05 | `WriteReviewFragment` | `MainActivity` | Hải Long |
@@ -71,6 +71,8 @@ Tên lớp chốt ở đây để đồ thị điều hướng và lối tắt g
 | E04 | `AdminModerationFragment`, `AdminListingDetailFragment` | `AdminActivity` | Phát |
 | E05 | `AdminCategoryFragment` | `AdminActivity` | Phát |
 | E06 | `AdminDealMonitorFragment`, `AdminDealDetailFragment` | `AdminActivity` | Phát |
+
+**`MakeOfferFragment` không phải một mã màn hình riêng.** Nó là biểu mẫu dạng bảng trượt lên, mở từ thanh hành động của B03, và gửi xong thì thẻ đề nghị hiện trong C02. Lớp nằm trong `com.nhom3.pubgapp.ui.trade`, layout `fragment_make_offer.xml`, chủ là Hải Long cùng với C02. Tú chỉ làm cái nút trên B03; Tú không tạo lớp này. Tên chốt ngày 2026-10-22 vì `dac-ta-lop/` không định nghĩa lớp Fragment nào và luật R16 sẽ chặn issue 20 lại.
 
 **Ba Activity:**
 
