@@ -73,6 +73,8 @@ HAI THỨ QUYẾT ĐỊNH ĐÚNG SAI:
 - Danh sách tệp trong issue là hàng rào. Tệp không có trong danh sách thì không sửa, kể cả lỗi một dòng: ghi nó vào Pull Request cho tôi.
 - Mọi tên lớp, trường, phương thức, enum, collection phải chép đúng từ workflow/docs/architecture/dac-ta-lop/, workflow/docs/data/ hoặc workflow/docs/architecture/trang-thai.md. Tên không có ở đó thì dừng, đừng bịa và đừng đổi tên tài liệu có sẵn.
 
+TUYỆT ĐỐI KHÔNG GHI CÔNG CHO AI, KHÔNG CÓ NGOẠI LỆ (luật R8). Trong mọi thông điệp commit, tiêu đề và nội dung Pull Request, comment issue: không dòng Co-authored-by, không dòng kiểu "Generated with" hay "Made with", không emoji robot, không nhắc tên bất cứ công cụ AI nào như tác giả hay người hỗ trợ. Commit mang tên người đang ngồi máy, tức tôi. Đừng chạy git config user.name hay user.email, đừng đổi danh tính tác giả. Hook và CI chặn những dòng này, nhưng chặn ở bước push nên tôi sẽ phải ngồi sửa lại commit: đừng viết ra ngay từ đầu.
+
 CHỈ DỪNG VÀ HỎI TÔI TRONG BA TRƯỜNG HỢP: thiếu một tên hoặc một phương thức thuộc người khác (luật R20), tài liệu mâu thuẫn nhau (R23), hoặc bạn cần sửa một tệp đóng băng ở ke-hoach-rut-gon.md mục 2. Lúc đó comment vào issue bằng tiếng Việt, gắn nhãn blocked, nói tôi, rồi chuyển sang issue tiếp theo chứ đừng ngồi chờ. Mọi chỗ mơ hồ khác thì tự chọn cách hợp lý, ghi một dòng lý do vào Pull Request, và đi tiếp.
 
 VIỆC TÔI LÀM, KHÔNG PHẢI BẠN: thử trên máy ảo. Gradle và check-java-style.sh thì bạn chạy, dán lệnh và kết quả thật; chưa chạy được thì nói chưa chạy, đừng viết là đã test.
@@ -122,7 +124,7 @@ LUẬT TÔI SẼ KIỂM, PHẠM LÀ LÀM LẠI:
 - Không ghi trạng thái trực tiếp. Đi qua Deal.canMoveTo, Listing.publish, Listing.reserve, Warning.resultingStatus.
 - Không viết thẳng mã màu hay số dp. Lấy token theo workflow/docs/conventions/giao-dien.md.
 - Mỗi màn có đủ bốn trạng thái: đang tải, có dữ liệu, rỗng, lỗi. Và có bản layout-land nếu issue yêu cầu.
-- Tuyệt đối không thêm dòng Co-authored-by, không "Generated with", không nhắc tên công cụ AI ở bất cứ đâu trong commit, Pull Request hay comment.
+- Tuyệt đối không ghi công cho AI (luật R8): không dòng Co-authored-by, không "Generated with" hay "Made with", không emoji robot, không nhắc tên công cụ AI như tác giả hay người hỗ trợ, ở bất cứ đâu trong commit, Pull Request hay comment. Commit mang tên người đang ngồi máy. Đừng chạy git config user.name hay user.email.
 - Nói đúng cái bạn đã chạy. Chưa chạy thì nói chưa chạy. Bạn không chạy được máy ảo, việc đó tôi làm.
 
 XONG THÌ:
@@ -143,3 +145,4 @@ Hook hoặc CI từ chối: gõ `/guide`, hoặc đọc [04-tinh-huong.md](04-ti
 
 1. **Mỗi lần bắt đầu issue mới, lấy `main` mới nhất trước.** Dùng skill `pubg-sync-branch`, hoặc `git switch main && git pull`. Nhánh dựng từ `main` cũ là nguồn xung đột lớn nhất.
 2. **Commit nhỏ và nhiều.** Một bước một commit. Dễ đọc khi review, dễ bỏ một bước sai, và là bằng chứng cho dòng barem về phân chia công việc.
+3. **Đọc thông điệp commit trước khi push.** Chỉ cần nhìn xuống dòng cuối: không có dòng Co-authored-by, không có dòng ghi công cụ nào. Chỉ năm người trong nhóm được xuất hiện với tư cách người đóng góp (luật R8). Hook chặn được, nhưng chặn lúc push thì bạn phải `git commit --amend` lại, mất thì giờ. Thấy trợ lý AI tự thêm dòng đó một lần thì nhắc nó ngay trong phiên, đừng để nó lặp.
