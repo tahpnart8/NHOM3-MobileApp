@@ -54,7 +54,7 @@ Bốn chỗ đổi so với `so-huu.md`, đổi vì chúng là bốn điểm xun
 
 ## 3. Ba mươi ba issue, chia năm đợt
 
-Mỗi dòng là một issue, một Pull Request, **một người**. Cột "Tra ở" là bản nháp trong `local/issues/` để lấy tên lớp, chữ ký và tiêu chí nghiệm thu.
+Mỗi dòng là một issue, một Pull Request, **một người**. Cột "Tra ở" là bản nháp trong [`issues/`](issues/README.md) để lấy tên lớp, chữ ký và tiêu chí nghiệm thu. Đọc [`issues/README.md`](issues/README.md) một lần trước khi mở bản nháp đầu tiên: nó nói ba loại dòng trong bản nháp đã lạc hậu.
 
 **Hai điều phải biết khi đọc bản nháp:**
 
@@ -124,15 +124,15 @@ Trong đợt này 20 phải xong trước 21, và 21 trước 22 và 23: ba khú
 
 ### Đợt 4: nối hệ thống, bảo mật, barem (7 issue)
 
-| # | Người | Việc | Dòng barem |
-| --- | --- | --- | --- |
-| 27 | Hải Long | C05 viết đánh giá, `completeDeal` chuyển giao dịch sang hoàn tất | C-Functions |
-| 28 | Ngân | C06 thông báo trong ứng dụng, số chưa đọc trên chuông | C-Functions |
-| 29 | Phát | **Nối `MainActivity`**: chuông và số chưa đọc, chặn tab khi là Khách, gọi `restoreSession` khi mở app, **gọi** `DealViewModel.checkAutoRelease` (thân do Hải Long viết ở issue 21) | R-Chapter 2 |
-| 30 | Phát | **Security Rules đầy đủ** theo `security-rules.md` và `firestore.indexes.json` đủ chỉ mục ghép; thử bằng tay các kịch bản ở `overview.md` mục 10 | C-APIs, QA |
-| 31 | Phát | E02 khóa, mở khóa, cảnh cáo ba bậc, gỡ toàn bộ tin; từ khóa cấm và tin bị gắn cờ | C-Functions |
-| 32 | Ngân | 3 kịch bản Espresso: đăng nhập, đăng tin, admin duyệt xác thực | R-Chapter 6 |
-| 33 | Phúc | D04 báo cáo tin, người, tin nhắn; B06 tin đã lưu | C-Functions |
+| # | Người | Việc | Tra ở | Dòng barem |
+| --- | --- | --- | --- | --- |
+| 27 | Hải Long | C05 viết đánh giá, `completeDeal` chuyển giao dịch sang hoàn tất | `P2-C7` | C-Functions |
+| 28 | Ngân | C06 thông báo trong ứng dụng, số chưa đọc trên chuông | `P2-A6` | C-Functions |
+| 29 | Phát | **Nối `MainActivity`**: chuông và số chưa đọc, chặn tab khi là Khách, gọi `restoreSession` khi mở app, **gọi** `DealViewModel.checkAutoRelease` (thân do Hải Long viết ở issue 21) | `P2-E6b` | R-Chapter 2 |
+| 30 | Phát | **Security Rules đầy đủ** theo `security-rules.md` và `firestore.indexes.json` đủ chỉ mục ghép; thử bằng tay các kịch bản ở `overview.md` mục 10 | `security-rules.md` | C-APIs, QA |
+| 31 | Phát | E02 khóa, mở khóa, cảnh cáo ba bậc, gỡ toàn bộ tin; từ khóa cấm và tin bị gắn cờ | `P2-E2c`, `P2-E3c` | C-Functions |
+| 32 | Ngân | 3 kịch bản Espresso: đăng nhập, đăng tin, admin duyệt xác thực | `barem-diem.md` mục 4 | R-Chapter 6 |
+| 33 | Phúc | D04 báo cáo tin, người, tin nhắn; B06 tin đã lưu | `P2-D4a`, `P2-B7` | C-Functions |
 
 Việc chạy nền (`AutoReleaseWorker`) và broadcast nội bộ: **làm nếu còn giờ**, gắn vào issue 29 của Phát. Không có nó thì giải ngân tự động chỉ chạy khi mở app, và báo cáo phải nói thẳng như vậy.
 
