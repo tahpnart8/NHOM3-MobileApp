@@ -74,6 +74,7 @@ public class ComplaintRepository extends BaseRepository {
     private static final String ERROR_CANNOT_COMPLAIN = "Giao dịch này không còn mở khiếu nại được.";
     private static final String ERROR_ALREADY_COMPLAINED =
             "Giao dịch này đã từng có khiếu nại, không mở lại được.";
+    private static final String ERROR_NOT_COMPLAINANT = "Chỉ người gửi khiếu nại mới rút được đơn.";
     private static final String ERROR_CLOSED = "Đơn khiếu nại này đã đóng.";
     private static final String ERROR_MESSAGE_REQUIRED = "Vui lòng nhập lời giải thích cho quyết định.";
 
@@ -127,6 +128,11 @@ public class ComplaintRepository extends BaseRepository {
                         Complaint complaint = snapshot.toObject(Complaint.class);
                         if (complaint == null) {
                             callback.onError(ERROR_NOT_FOUND);
+                            return;
+                        }
+                        // Early check for a Vietnamese message; the Security Rules still decide.
+                        if (!uid.equals(complaint.getComplainantId())) {
+                            callback.onError(ERROR_NOT_COMPLAINANT);
                             return;
                         }
                         if (!complaint.isOpen()) {
