@@ -104,4 +104,7 @@
     <string name="profile_user_profile_reviews_empty_received">Chưa ai đánh giá người này.</string>
     <string name="profile_user_profile_reviews_empty_given">Bạn chưa đánh giá ai.</string>
     <string name="profile_user_profile_reviews_failed_title">Không tải được đánh giá</string>
+
+    <!-- Review rows on D02 and D03 (ReviewAdapter); Review has no reviewer name -->
+    <string name="profile_review_item_reviewer">Người dùng</string>
 </resources>
