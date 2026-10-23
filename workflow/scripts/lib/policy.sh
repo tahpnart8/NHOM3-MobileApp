@@ -37,8 +37,11 @@ WEB_COMMITTER='web-flow'
 
 # subject_ok <subject>: conventional subject, at most SUBJECT_MAX_BYTES bytes.
 subject_ok() {
+    # A merge or revert commit is exempt whatever its wording: git writes "Merge branch ...", a person
+    # writes "merge: gop main vao nhanh", and squash merge keeps either off main anyway. Pattern matching
+    # only, no subshell: this runs once per commit of every pull request in CI.
     case "$1" in
-        Merge\ *|Revert\ *) return 0 ;;
+        [Mm]erge\ *|[Mm]erge:*|[Rr]evert\ *|[Rr]evert:*) return 0 ;;
     esac
     _bytes=$(printf '%s' "$1" | LC_ALL=C wc -c | tr -d ' ')
     [ "$_bytes" -le "$SUBJECT_MAX_BYTES" ] || return 1
