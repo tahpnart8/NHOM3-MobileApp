@@ -6,12 +6,19 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.MediaRepository;
+import com.nhom3.pubgapp.data.ReportRepository;
 import com.nhom3.pubgapp.data.ReviewRepository;
 import com.nhom3.pubgapp.model.Complaint;
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.model.Review;
+import com.nhom3.pubgapp.model.enums.ImagePurpose;
+import com.nhom3.pubgapp.model.enums.ReportTarget;
+import com.nhom3.pubgapp.util.NetworkMonitor;
+import com.nhom3.pubgapp.util.SessionManager;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 // State for reviews, reports and complaints on the user side. Action bodies report NOT_READY until the repositories are filled.
@@ -33,7 +40,23 @@ public class TrustViewModel extends ViewModel {
     private static final double ONE_DECIMAL = 10.0;
     private static final String MESSAGE_NOT_SIGNED_IN = "Bạn cần đăng nhập để xem đánh giá.";
 
+    static final int MAX_REPORT_IMAGES = 3;
+    static final int REPORT_OK = 0;
+    static final int REPORT_MISSING_REASON = 1;
+    static final int REPORT_SELF = 2;
+    static final int REPORT_TOO_MANY_IMAGES = 3;
+    static final int REPORT_MISSING_CONVERSATION = 4;
+    private static final String MESSAGE_REPORT_NOT_SIGNED_IN = "Bạn cần đăng nhập để gửi báo cáo.";
+    private static final String MESSAGE_MISSING_REASON = "Hãy chọn một lý do báo cáo.";
+    private static final String MESSAGE_REPORT_SELF = "Bạn không thể báo cáo chính mình.";
+    private static final String MESSAGE_TOO_MANY_IMAGES = "Chỉ đính kèm được tối đa 3 ảnh.";
+    private static final String MESSAGE_MISSING_CONVERSATION =
+            "Thiếu cuộc trò chuyện của tin nhắn bị báo cáo.";
+    private static final String MESSAGE_OFFLINE = "Không có kết nối.";
+
     private final ReviewRepository reviewRepository = new ReviewRepository();
+    private final ReportRepository reportRepository = new ReportRepository();
+    private final MediaRepository mediaRepository = new MediaRepository();
 
     // Which list is in reviews ("uid:received"), so a rotation does not read it again.
     private String loadedReviewsKey;
@@ -111,7 +134,29 @@ public class TrustViewModel extends ViewModel {
     }
 
     public void submitReport(Report report, List<Uri> imageUris) {
-        error.setValue(DataCallback.NOT_READY);
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null) {
+            error.setValue(MESSAGE_REPORT_NOT_SIGNED_IN);
+            return;
+        }
+        List<Uri> images = new ArrayList<Uri>();
+        if (imageUris != null) {
+            images.addAll(imageUris);
+        }
+        String formMessage = reportErrorMessage(checkReport(report, images.size(), uid));
+        if (formMessage != null) {
+            error.setValue(formMessage);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        loading.setValue(true);
+        saveEvidenceImages(report, images, new ArrayList<String>());
     }
 
     public void cancelReport(String id) {
@@ -144,6 +189,97 @@ public class TrustViewModel extends ViewModel {
 
     public void withdrawComplaint(String id) {
         error.setValue(DataCallback.NOT_READY);
+    }
+
+    // Rules section 18 also enforce the image cap and the conversation link; the self report rule is the app's.
+    static int checkReport(Report report, int imageCount, String currentUid) {
+        if (report == null || report.getReason() == null) {
+            return REPORT_MISSING_REASON;
+        }
+        ReportTarget target = report.getTargetType();
+        if (target == ReportTarget.USER && currentUid != null && currentUid.equals(report.getTargetId())) {
+            return REPORT_SELF;
+        }
+        if (imageCount > MAX_REPORT_IMAGES) {
+            return REPORT_TOO_MANY_IMAGES;
+        }
+        String conversationId = report.getConversationId();
+        boolean hasConversation = conversationId != null && !conversationId.isEmpty();
+        if (target == ReportTarget.MESSAGE && !hasConversation) {
+            return REPORT_MISSING_CONVERSATION;
+        }
+        return REPORT_OK;
+    }
+
+    private static String reportErrorMessage(int checkResult) {
+        if (checkResult == REPORT_MISSING_REASON) {
+            return MESSAGE_MISSING_REASON;
+        }
+        if (checkResult == REPORT_SELF) {
+            return MESSAGE_REPORT_SELF;
+        }
+        if (checkResult == REPORT_TOO_MANY_IMAGES) {
+            return MESSAGE_TOO_MANY_IMAGES;
+        }
+        if (checkResult == REPORT_MISSING_CONVERSATION) {
+            return MESSAGE_MISSING_CONVERSATION;
+        }
+        return null;
+    }
+
+    // One image at a time keeps evidenceImageIds in the order the user picked them.
+    private void saveEvidenceImages(Report report, List<Uri> imageUris, List<String> savedIds) {
+        if (savedIds.size() == imageUris.size()) {
+            sendReport(report, savedIds);
+            return;
+        }
+        Uri next = imageUris.get(savedIds.size());
+        mediaRepository.saveImage(next, ImagePurpose.EVIDENCE, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String imageId) {
+                savedIds.add(imageId);
+                saveEvidenceImages(report, imageUris, savedIds);
+            }
+
+            @Override
+            public void onError(String message) {
+                failReport(savedIds, message);
+            }
+        });
+    }
+
+    private void sendReport(Report report, List<String> imageIds) {
+        report.setEvidenceImageIds(imageIds);
+        reportRepository.create(report, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                failReport(imageIds, message);
+            }
+        });
+    }
+
+    // Images saved by a failed attempt are deleted so they do not stay in Firestore unused.
+    private void failReport(List<String> savedIds, String message) {
+        for (String imageId : savedIds) {
+            mediaRepository.delete(imageId, new DataCallback<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                }
+
+                @Override
+                public void onError(String deleteMessage) {
+                    error.postValue(deleteMessage);
+                }
+            });
+        }
+        loading.postValue(false);
+        error.postValue(message);
     }
 
     // Only the overall rating feeds ratingSum, so the three criteria are averaged here from the received reviews.

@@ -17,11 +17,13 @@ import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.UserAddress;
 import com.nhom3.pubgapp.model.UserIdentity;
 import com.nhom3.pubgapp.model.enums.ImagePurpose;
+import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -224,11 +226,54 @@ public class ProfileViewModel extends ViewModel {
     }
 
     public void loadSaved() {
-        error.setValue(DataCallback.NOT_READY);
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        loading.setValue(true);
+        userRepository.getSavedIds(uid, new DataCallback<List<String>>() {
+            @Override
+            public void onSuccess(List<String> savedIds) {
+                fetchSavedListings(savedIds);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
+    // The card leaves the list at once and comes back if the write fails.
     public void unsaveListing(String listingId) {
-        error.setValue(DataCallback.NOT_READY);
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        List<Listing> before = savedListings.getValue();
+        savedListings.setValue(withoutListing(before, listingId));
+        userRepository.unsaveListing(uid, listingId, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                savedListings.postValue(before);
+                error.postValue(message);
+            }
+        });
     }
 
     // Keeps AVAILABLE, RESERVED and SOLD as the repository returns them; each screen filters by tab.
@@ -383,6 +428,108 @@ public class ProfileViewModel extends ViewModel {
     private boolean isOwnPage(String uid) {
         String me = SessionManager.getInstance().getCurrentUserId();
         return me != null && !me.isEmpty() && me.equals(uid);
+    }
+
+    // Reads every saved listing at once and joins the answers in the saved order.
+    private void fetchSavedListings(List<String> savedIds) {
+        List<String> ids = new ArrayList<String>();
+        if (savedIds != null) {
+            ids.addAll(savedIds);
+        }
+        if (ids.isEmpty()) {
+            savedListings.postValue(new ArrayList<Listing>());
+            loading.postValue(false);
+            return;
+        }
+        SavedCollector collector = new SavedCollector(ids);
+        for (String id : ids) {
+            listingRepository.getById(id, new SavedListingCallback(collector, id));
+        }
+    }
+
+    private static List<Listing> withoutListing(List<Listing> listings, String listingId) {
+        List<Listing> result = new ArrayList<Listing>();
+        if (listings == null) {
+            return result;
+        }
+        for (Listing listing : listings) {
+            if (listingId == null || !listingId.equals(listing.getId())) {
+                result.add(listing);
+            }
+        }
+        return result;
+    }
+
+    // A listing that could not be read stays as a card holding only its id, so it can still be unsaved.
+    static List<Listing> buildSavedList(List<String> savedIds, Map<String, Listing> found) {
+        List<Listing> result = new ArrayList<Listing>();
+        if (savedIds == null) {
+            return result;
+        }
+        for (String id : savedIds) {
+            Listing listing = null;
+            if (found != null) {
+                listing = found.get(id);
+            }
+            if (listing == null) {
+                listing = new Listing();
+                listing.setId(id);
+            }
+            result.add(listing);
+        }
+        return result;
+    }
+
+    static boolean isUnavailable(Listing listing) {
+        if (listing == null || listing.getStatus() == null) {
+            return true;
+        }
+        ListingStatus status = listing.getStatus();
+        return status == ListingStatus.HIDDEN || status == ListingStatus.REMOVED || status == ListingStatus.DRAFT;
+    }
+
+    // Callbacks may come back on different threads, so the shared map and counter are synchronized.
+    private final class SavedCollector {
+        private final List<String> savedIds;
+        private final Map<String, Listing> found = new HashMap<String, Listing>();
+        private int answered;
+
+        SavedCollector(List<String> savedIds) {
+            this.savedIds = savedIds;
+        }
+
+        synchronized void answer(String id, Listing listing) {
+            if (listing != null) {
+                found.put(id, listing);
+            }
+            answered = answered + 1;
+            if (answered < savedIds.size()) {
+                return;
+            }
+            savedListings.postValue(buildSavedList(savedIds, found));
+            loading.postValue(false);
+        }
+    }
+
+    private static final class SavedListingCallback implements DataCallback<Listing> {
+        private final SavedCollector collector;
+        private final String id;
+
+        SavedListingCallback(SavedCollector collector, String id) {
+            this.collector = collector;
+            this.id = id;
+        }
+
+        @Override
+        public void onSuccess(Listing result) {
+            collector.answer(id, result);
+        }
+
+        // A hidden or removed listing is refused by the Rules; it becomes a "no longer available" card.
+        @Override
+        public void onError(String message) {
+            collector.answer(id, null);
+        }
     }
 
     // Only someone else's page has a Follow button, so the own profile skips this read.
