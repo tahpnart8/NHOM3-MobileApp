@@ -452,6 +452,74 @@ public class DealRepository extends BaseRepository {
         });
     }
 
+    static String validateShipping(Deal deal, Payment payment, String currentUid,
+                                  String carrier, String trackingCode, String imageId) {
+        if (deal == null) {
+            return "Không tìm thấy giao dịch.";
+        }
+        if (currentUid == null || !currentUid.equals(deal.getSellerId())) {
+            return "Chỉ người bán mới có quyền xác nhận giao hàng.";
+        }
+        if (deal.getStatus() != DealStatus.CONFIRMED) {
+            return "Giao dịch chưa ở trạng thái sẵn sàng giao.";
+        }
+        if (deal.getDeliveryMethod() != DeliveryMethod.SHIPPING) {
+            return "Chỉ giao dịch vận chuyển mới có thể xác nhận giao hàng.";
+        }
+        if (carrier == null || carrier.trim().isEmpty()
+                || trackingCode == null || trackingCode.trim().isEmpty()
+                || imageId == null || imageId.trim().isEmpty()) {
+            return "Vui lòng cung cấp đầy đủ thông tin vận chuyển và ảnh vận đơn.";
+        }
+        if (deal.needsPayment()) {
+            if (payment == null || !payment.isHeld()) {
+                return "Giao dịch cần được người mua thanh toán ký quỹ trước khi giao.";
+            }
+        }
+        return null;
+    }
+
+    static Timestamp calculateAutoReleaseAt(Timestamp shippedAt) {
+        if (shippedAt == null) {
+            return null;
+        }
+        long sevenDaysInMillis = 7L * 24 * 60 * 60 * 1000;
+        return new Timestamp(new Date(shippedAt.toDate().getTime() + sevenDaysInMillis));
+    }
+
+    static String validateReceiving(Deal deal, Payment payment, String currentUid, String imageId) {
+        if (deal == null) {
+            return "Không tìm thấy giao dịch.";
+        }
+        if (currentUid == null || !currentUid.equals(deal.getBuyerId())) {
+            return "Chỉ người mua mới có quyền xác nhận đã nhận hàng.";
+        }
+        if (deal.getStatus() == DealStatus.RECEIVED) {
+            return "Giao dịch đã được xác nhận nhận hàng.";
+        }
+        if (deal.getStatus() == DealStatus.CANCELLED || deal.getStatus() == DealStatus.DISPUTED) {
+            return "Giao dịch đã hủy hoặc đang tranh chấp.";
+        }
+        if (deal.getDeliveryMethod() == DeliveryMethod.SHIPPING) {
+            if (deal.getStatus() != DealStatus.SHIPPED) {
+                return "Người bán chưa giao hàng.";
+            }
+        } else if (deal.getDeliveryMethod() == DeliveryMethod.MEET_UP) {
+            if (deal.getStatus() != DealStatus.CONFIRMED && deal.getStatus() != DealStatus.SHIPPED) {
+                return "Giao dịch chưa sẵn sàng để nhận.";
+            }
+        }
+        if (imageId == null || imageId.trim().isEmpty()) {
+            return "Vui lòng chụp hoặc chọn ảnh món đồ đã nhận.";
+        }
+        if (deal.needsPayment()) {
+            if (payment == null || !payment.isHeld()) {
+                return "Khoản thanh toán ký quỹ chưa được thanh toán hoặc giữ.";
+            }
+        }
+        return null;
+    }
+
     public void markShipped(String dealId, String carrier, String trackingCode,
                             String imageId, DataCallback<Void> cb) {
         DocumentReference dealRef = db.collection(COLLECTION_DEALS).document(dealId);
@@ -463,40 +531,44 @@ public class DealRepository extends BaseRepository {
                     return;
                 }
                 Deal deal = task.getResult().toObject(Deal.class);
-                if (deal == null || deal.getStatus() != DealStatus.CONFIRMED) {
-                    cb.onError("Giao dịch chưa ở trạng thái sẵn sàng giao.");
+                if (deal == null) {
+                    cb.onError("Dữ liệu giao dịch không hợp lệ.");
                     return;
                 }
                 deal.setId(dealId);
 
+                String currentUid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
+
                 if (deal.needsPayment()) {
-                    checkPaymentBeforeShipping(deal, carrier, trackingCode, imageId, dealRef, cb);
+                    db.collection(COLLECTION_PAYMENTS).document(deal.getId()).get()
+                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> payTask) {
+                                    Payment payment = null;
+                                    if (payTask.isSuccessful() && payTask.getResult() != null
+                                            && payTask.getResult().exists()) {
+                                        payment = payTask.getResult().toObject(Payment.class);
+                                    }
+                                    String error = validateShipping(deal, payment, currentUid,
+                                            carrier, trackingCode, imageId);
+                                    if (error != null) {
+                                        cb.onError(error);
+                                        return;
+                                    }
+                                    executeMarkShipped(deal, carrier, trackingCode, imageId, dealRef, cb);
+                                }
+                            });
                 } else {
+                    String error = validateShipping(deal, null, currentUid,
+                            carrier, trackingCode, imageId);
+                    if (error != null) {
+                        cb.onError(error);
+                        return;
+                    }
                     executeMarkShipped(deal, carrier, trackingCode, imageId, dealRef, cb);
                 }
             }
         });
-    }
-
-    private void checkPaymentBeforeShipping(Deal deal, String carrier, String trackingCode,
-                                           String imageId, DocumentReference dealRef,
-                                           DataCallback<Void> cb) {
-        db.collection(COLLECTION_PAYMENTS).document(deal.getId()).get()
-                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                        if (!task.isSuccessful() || task.getResult() == null || !task.getResult().exists()) {
-                            cb.onError("Chưa tìm thấy khoản thanh toán ký quỹ.");
-                            return;
-                        }
-                        Payment payment = task.getResult().toObject(Payment.class);
-                        if (payment == null || !payment.isHeld()) {
-                            cb.onError("Khoản ký quỹ chưa được thanh toán.");
-                            return;
-                        }
-                        executeMarkShipped(deal, carrier, trackingCode, imageId, dealRef, cb);
-                    }
-                });
     }
 
     private void executeMarkShipped(Deal deal, String carrier, String trackingCode,
@@ -538,13 +610,41 @@ public class DealRepository extends BaseRepository {
                     return;
                 }
                 deal.setId(dealId);
-                executeMarkReceived(deal, imageId, dealRef, cb);
+
+                String currentUid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
+
+                if (deal.needsPayment()) {
+                    db.collection(COLLECTION_PAYMENTS).document(deal.getId()).get()
+                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> payTask) {
+                                    Payment payment = null;
+                                    if (payTask.isSuccessful() && payTask.getResult() != null
+                                            && payTask.getResult().exists()) {
+                                        payment = payTask.getResult().toObject(Payment.class);
+                                    }
+                                    String error = validateReceiving(deal, payment, currentUid, imageId);
+                                    if (error != null) {
+                                        cb.onError(error);
+                                        return;
+                                    }
+                                    executeMarkReceived(deal, payment, imageId, dealRef, cb);
+                                }
+                            });
+                } else {
+                    String error = validateReceiving(deal, null, currentUid, imageId);
+                    if (error != null) {
+                        cb.onError(error);
+                        return;
+                    }
+                    executeMarkReceived(deal, null, imageId, dealRef, cb);
+                }
             }
         });
     }
 
-    private void executeMarkReceived(Deal deal, String imageId, DocumentReference dealRef,
-                                     DataCallback<Void> cb) {
+    private void executeMarkReceived(Deal deal, Payment payment, String imageId,
+                                     DocumentReference dealRef, DataCallback<Void> cb) {
         DealStatus from = deal.getStatus();
         deal.markReceived(imageId);
 
@@ -556,16 +656,16 @@ public class DealRepository extends BaseRepository {
         batch.set(dealRef, deal);
 
         // Giải ngân khoản ký quỹ nếu có
-        if (deal.needsPayment()) {
+        if (deal.needsPayment() && payment != null) {
+            payment.release();
             DocumentReference payRef = db.collection(COLLECTION_PAYMENTS).document(deal.getId());
-            batch.update(payRef, "status", PaymentStatus.RELEASED.name(),
-                    "releasedAt", deal.getReceivedAt());
-        }
+            batch.set(payRef, payment);
 
-        queueNotification(deal.getSellerId(), NotificationType.PAYMENT_UPDATE,
-                "Người mua đã nhận hàng",
-                "Người mua đã xác nhận nhận hàng. Tiền ký quỹ đã được giải ngân.",
-                deal.getId(), batch);
+            queueNotification(deal.getSellerId(), NotificationType.PAYMENT_UPDATE,
+                    "Người mua đã nhận hàng",
+                    "Người mua đã xác nhận nhận hàng. Tiền ký quỹ đã được giải ngân.",
+                    deal.getId(), batch);
+        }
 
         commitBatch(batch, cb, "Lỗi xác nhận đã nhận hàng.");
     }
