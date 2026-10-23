@@ -26,9 +26,9 @@ public class TrustViewModel extends ViewModel {
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
 
-    static final int CRITERIA_ACCURACY = 0;
-    static final int CRITERIA_ATTITUDE = 1;
-    static final int CRITERIA_COMMITMENT = 2;
+    public static final int CRITERIA_ACCURACY = 0;
+    public static final int CRITERIA_ATTITUDE = 1;
+    public static final int CRITERIA_COMMITMENT = 2;
     private static final int CRITERIA_COUNT = 3;
     private static final double ONE_DECIMAL = 10.0;
     private static final String MESSAGE_NOT_SIGNED_IN = "Bạn cần đăng nhập để xem đánh giá.";
@@ -147,7 +147,7 @@ public class TrustViewModel extends ViewModel {
     }
 
     // Only the overall rating feeds ratingSum, so the three criteria are averaged here from the received reviews.
-    static double[] averageCriteria(List<Review> received) {
+    public static double[] averageCriteria(List<Review> received) {
         double[] averages = new double[CRITERIA_COUNT];
         if (received == null || received.isEmpty()) {
             return averages;

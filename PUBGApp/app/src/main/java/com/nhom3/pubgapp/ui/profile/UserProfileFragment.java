@@ -21,7 +21,6 @@ import com.nhom3.pubgapp.databinding.FragmentUserProfileBinding;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.ProfileStats;
 import com.nhom3.pubgapp.model.User;
-import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
 import com.nhom3.pubgapp.ui.common.ImageLoader;
@@ -31,7 +30,6 @@ import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.ProfileViewModel;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -462,8 +460,8 @@ public class UserProfileFragment extends Fragment {
         if (sellingTab == null || soldTab == null) {
             return;
         }
-        int sellingCount = filterSelling(listings).size();
-        int soldCount = filterSold(listings).size();
+        int sellingCount = ProfileListingAdapter.filterSelling(listings).size();
+        int soldCount = ProfileListingAdapter.filterSold(listings).size();
         sellingTab.setText(getString(R.string.profile_user_profile_tab_selling, sellingCount));
         soldTab.setText(getString(R.string.profile_user_profile_tab_sold, soldCount));
     }
@@ -490,7 +488,10 @@ public class UserProfileFragment extends Fragment {
             showListingsEmpty(listingsFailed);
             return;
         }
-        List<Listing> shown = selectedTab == TAB_SOLD ? filterSold(all) : filterSelling(all);
+        List<Listing> shown = ProfileListingAdapter.filterSelling(all);
+        if (selectedTab == TAB_SOLD) {
+            shown = ProfileListingAdapter.filterSold(all);
+        }
         listingAdapter.submitList(shown);
         binding.recyclerListings.setVisibility(shown.isEmpty() ? View.GONE : View.VISIBLE);
         binding.includeEmptyState.getRoot().setVisibility(View.GONE);
@@ -516,34 +517,6 @@ public class UserProfileFragment extends Fragment {
             binding.includeEmptyState.textEmptyMessage.setText(R.string.profile_user_profile_empty_selling_message);
         }
         binding.includeEmptyState.getRoot().setVisibility(View.VISIBLE);
-    }
-
-    // The owner's own query also returns DRAFT, HIDDEN and REMOVED; a public page never shows them.
-    static List<Listing> filterSelling(List<Listing> all) {
-        List<Listing> result = new ArrayList<Listing>();
-        if (all == null) {
-            return result;
-        }
-        for (Listing listing : all) {
-            ListingStatus status = listing.getStatus();
-            if (status == ListingStatus.AVAILABLE || status == ListingStatus.RESERVED) {
-                result.add(listing);
-            }
-        }
-        return result;
-    }
-
-    static List<Listing> filterSold(List<Listing> all) {
-        List<Listing> result = new ArrayList<Listing>();
-        if (all == null) {
-            return result;
-        }
-        for (Listing listing : all) {
-            if (listing.getStatus() == ListingStatus.SOLD) {
-                result.add(listing);
-            }
-        }
-        return result;
     }
 
     @Override

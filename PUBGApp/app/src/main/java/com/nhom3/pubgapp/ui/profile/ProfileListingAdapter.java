@@ -13,6 +13,7 @@ import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.ItemListingCardBinding;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.enums.ItemCondition;
+import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.ui.common.StatusChips;
 import com.nhom3.pubgapp.util.FormatUtils;
@@ -52,6 +53,34 @@ public class ProfileListingAdapter extends RecyclerView.Adapter<ProfileListingAd
     @Override
     public int getItemCount() {
         return listings.size();
+    }
+
+    // The owner's own query also returns DRAFT, HIDDEN and REMOVED; a public page never shows them.
+    public static List<Listing> filterSelling(List<Listing> all) {
+        List<Listing> result = new ArrayList<Listing>();
+        if (all == null) {
+            return result;
+        }
+        for (Listing listing : all) {
+            ListingStatus status = listing.getStatus();
+            if (status == ListingStatus.AVAILABLE || status == ListingStatus.RESERVED) {
+                result.add(listing);
+            }
+        }
+        return result;
+    }
+
+    public static List<Listing> filterSold(List<Listing> all) {
+        List<Listing> result = new ArrayList<Listing>();
+        if (all == null) {
+            return result;
+        }
+        for (Listing listing : all) {
+            if (listing.getStatus() == ListingStatus.SOLD) {
+                result.add(listing);
+            }
+        }
+        return result;
     }
 
     static int conditionLabel(ItemCondition condition) {

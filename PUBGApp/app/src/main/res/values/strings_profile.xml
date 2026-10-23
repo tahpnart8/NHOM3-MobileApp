@@ -107,4 +107,20 @@
 
     <!-- Review rows on D02 and D03 (ReviewAdapter); Review has no reviewer name -->
     <string name="profile_review_item_reviewer">Người dùng</string>
+
+    <!-- D03 SellerTrustFragment -->
+    <string name="profile_seller_trust_joined">tham gia %1$s</string>
+    <string name="profile_seller_trust_completion_label">Tỉ lệ hoàn tất</string>
+    <string name="profile_seller_trust_deal_label">Giao dịch</string>
+    <string name="profile_seller_trust_criteria_title">Điểm theo tiêu chí</string>
+    <string name="profile_seller_trust_criteria_accuracy">Độ chính xác thông tin</string>
+    <string name="profile_seller_trust_criteria_attitude">Thái độ giao dịch</string>
+    <string name="profile_seller_trust_criteria_commitment">Đúng cam kết</string>
+    <string name="profile_seller_trust_criteria_value">%1$.1f</string>
+    <string name="profile_seller_trust_recent_reviews">Đánh giá gần đây</string>
+    <string name="profile_seller_trust_selling">Đang bán (%1$d)</string>
+    <string name="profile_seller_trust_reviews_empty_title">Chưa có đánh giá nào</string>
+    <string name="profile_seller_trust_reviews_empty_message">Người bán này chưa nhận được đánh giá.</string>
+    <string name="profile_seller_trust_selling_empty_title">Không có món đang bán</string>
+    <string name="profile_seller_trust_selling_empty_message">Người bán này hiện không còn món nào đang bán.</string>
 </resources>
