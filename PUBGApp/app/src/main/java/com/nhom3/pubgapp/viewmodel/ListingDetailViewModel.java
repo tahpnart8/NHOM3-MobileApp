@@ -5,12 +5,16 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.ListingRepository;
+import com.nhom3.pubgapp.data.MediaRepository;
+import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.ProfileStats;
 import com.nhom3.pubgapp.model.User;
-
 import com.nhom3.pubgapp.model.enums.ListingStatus;
+import com.nhom3.pubgapp.util.SessionManager;
 
+import java.util.ArrayList;
 import java.util.List;
 
 // State for the listing detail screen. Action bodies report NOT_READY until the repositories are filled.
@@ -44,6 +48,10 @@ public class ListingDetailViewModel extends ViewModel {
         }
         return listing.getStatus() == ListingStatus.AVAILABLE;
     }
+
+    private final ListingRepository listingRepository = new ListingRepository();
+    private final UserRepository userRepository = new UserRepository();
+    private final MediaRepository mediaRepository = new MediaRepository();
 
     private final MutableLiveData<Listing> listing = new MutableLiveData<>();
     private final MutableLiveData<User> seller = new MutableLiveData<>();
@@ -102,15 +110,156 @@ public class ListingDetailViewModel extends ViewModel {
     }
 
     public void load(String listingId) {
-        error.setValue(DataCallback.NOT_READY);
+        if (listingId == null || listingId.trim().isEmpty()) {
+            error.setValue("Mã tin không hợp lệ");
+            return;
+        }
+        loading.setValue(true);
+        listingRepository.getById(listingId, new DataCallback<Listing>() {
+            @Override
+            public void onSuccess(final Listing result) {
+                loading.setValue(false);
+                listing.setValue(result);
+                if (result != null) {
+                    listingRepository.recordView(result);
+                    if (SessionManager.getInstance().isLoggedIn()) {
+                        String currentUid = SessionManager.getInstance().getCurrentUserId();
+                        if (result.getSellerId() != null) {
+                            userRepository.getProfile(result.getSellerId(), new DataCallback<User>() {
+                                @Override
+                                public void onSuccess(User sellerUser) {
+                                    seller.setValue(sellerUser);
+                                }
+
+                                @Override
+                                public void onError(String errorMessage) {
+                                    // B03 ignores seller load error if unverified or missing
+                                }
+                            });
+                        }
+                        if (currentUid != null) {
+                            userRepository.getSavedIds(currentUid, new DataCallback<List<String>>() {
+                                @Override
+                                public void onSuccess(List<String> savedIds) {
+                                    if (savedIds != null && savedIds.contains(result.getId())) {
+                                        saved.setValue(true);
+                                    } else {
+                                        saved.setValue(false);
+                                    }
+                                }
+
+                                @Override
+                                public void onError(String errorMessage) {
+                                    saved.setValue(false);
+                                }
+                            });
+                        }
+                    } else {
+                        seller.setValue(null);
+                        saved.setValue(false);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                loading.setValue(false);
+                listing.setValue(null);
+                error.setValue(errorMessage);
+            }
+        });
     }
 
     public void loadImages() {
-        error.setValue(DataCallback.NOT_READY);
+        Listing current = listing.getValue();
+        if (current == null || current.getImageIds() == null || current.getImageIds().isEmpty()) {
+            return;
+        }
+        final List<String> ids = current.getImageIds();
+        final int total = ids.size();
+        final byte[][] loaded = new byte[total][];
+        final int[] completedCount = new int[1];
+
+        for (int i = 0; i < total; i++) {
+            final int index = i;
+            String imageId = ids.get(i);
+            mediaRepository.getImage(imageId, new DataCallback<byte[]>() {
+                @Override
+                public void onSuccess(byte[] bytes) {
+                    loaded[index] = bytes;
+                    completedCount[0]++;
+                    if (completedCount[0] == total) {
+                        List<byte[]> result = new ArrayList<byte[]>();
+                        for (int j = 0; j < total; j++) {
+                            if (loaded[j] != null) {
+                                result.add(loaded[j]);
+                            }
+                        }
+                        images.setValue(result);
+                    }
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    completedCount[0]++;
+                    if (completedCount[0] == total) {
+                        List<byte[]> result = new ArrayList<byte[]>();
+                        for (int j = 0; j < total; j++) {
+                            if (loaded[j] != null) {
+                                result.add(loaded[j]);
+                            }
+                        }
+                        images.setValue(result);
+                    }
+                }
+            });
+        }
     }
 
     public void toggleSave() {
-        error.setValue(DataCallback.NOT_READY);
+        final Listing current = listing.getValue();
+        if (current == null || current.getId() == null) {
+            return;
+        }
+        if (!SessionManager.getInstance().isLoggedIn()) {
+            error.setValue("Vui lòng đăng nhập để lưu tin");
+            return;
+        }
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null) {
+            return;
+        }
+        final boolean currentSaved = Boolean.TRUE.equals(saved.getValue());
+        final boolean newSaved = !currentSaved;
+        saved.setValue(newSaved);
+
+        if (newSaved) {
+            userRepository.saveListing(uid, current.getId(), new DataCallback<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    done.setValue(true);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    saved.setValue(currentSaved);
+                    error.setValue(errorMessage);
+                }
+            });
+        } else {
+            userRepository.unsaveListing(uid, current.getId(), new DataCallback<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    done.setValue(true);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    saved.setValue(currentSaved);
+                    error.setValue(errorMessage);
+                }
+            });
+        }
     }
 
     public void toggleFollowSeller() {
