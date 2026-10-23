@@ -91,6 +91,9 @@ public class ShopViewModel extends ViewModel {
     }
 
     public void createListing(final Listing listing, final List<Uri> imageUris) {
+        if (listing != null) {
+            listing.setPrice(normalizePrice(listing.getTradeTypes(), listing.getPrice()));
+        }
         int imageCount = imageUris != null ? imageUris.size() : 0;
         List<String> missing = findMissingFields(listing, imageCount);
         if (!missing.isEmpty()) {
