@@ -64,6 +64,7 @@ public class ReportRepository extends BaseRepository {
             "Báo cáo chưa hợp lệ, vui lòng kiểm tra lại lý do, mô tả và ảnh.";
     private static final String ERROR_NOT_FOUND = "Không tìm thấy báo cáo.";
     private static final String ERROR_NOT_OPEN = "Báo cáo này đã được xử lý hoặc đã hủy.";
+    private static final String ERROR_DUPLICATE = "Bạn đã báo cáo nội dung này, đang chờ xử lý";
 
     public void create(Report report, DataCallback<Void> cb) {
         String uid = currentUserId();
@@ -75,10 +76,7 @@ public class ReportRepository extends BaseRepository {
             cb.onError(ERROR_INVALID_REPORT);
             return;
         }
-        DocumentReference reference = db.collection(COLLECTION).document();
-        reference.set(buildNewReport(report, uid))
-                .addOnSuccessListener(voidSuccess(cb))
-                .addOnFailureListener(failure(cb));
+        writeUnlessDuplicate(report, uid, cb);
     }
 
     public void cancel(String reportId, DataCallback<Void> cb) {
@@ -163,6 +161,36 @@ public class ReportRepository extends BaseRepository {
                         writeClose(snapshot, isDismissed, admin, callback);
                     }
                 })
+                .addOnFailureListener(failure(cb));
+    }
+
+    // The Rules cannot enforce one OPEN report per reporter and target, so the app checks first (UC33 1b).
+    private void writeUnlessDuplicate(Report report, String uid, DataCallback<Void> cb) {
+        final Report newReport = report;
+        final String reporterId = uid;
+        final DataCallback<Void> callback = cb;
+        db.collection(COLLECTION)
+                .whereEqualTo(FIELD_REPORTER_ID, uid)
+                .whereEqualTo(FIELD_TARGET_ID, report.getTargetId())
+                .whereEqualTo(FIELD_STATUS, ReportStatus.OPEN.name())
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot snapshot) {
+                        if (!snapshot.isEmpty()) {
+                            callback.onError(ERROR_DUPLICATE);
+                            return;
+                        }
+                        writeNewReport(newReport, reporterId, callback);
+                    }
+                })
+                .addOnFailureListener(failure(cb));
+    }
+
+    private void writeNewReport(Report report, String uid, DataCallback<Void> cb) {
+        DocumentReference reference = db.collection(COLLECTION).document();
+        reference.set(buildNewReport(report, uid))
+                .addOnSuccessListener(voidSuccess(cb))
                 .addOnFailureListener(failure(cb));
     }
 

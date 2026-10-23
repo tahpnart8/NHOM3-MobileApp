@@ -56,6 +56,18 @@ public class UserIdentity extends BaseDocument {
 
     @Exclude
     public boolean isComplete() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (nationalId == null || nationalId.trim().length() != 12) {
+            return false;
+        }
+        for (int i = 0; i < nationalId.length(); i++) {
+            if (!Character.isDigit(nationalId.charAt(i))) {
+                return false;
+            }
+        }
+        if (dateOfBirth == null) {
+            return false;
+        }
+        return gender != null;
     }
 }
+

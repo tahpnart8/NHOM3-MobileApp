@@ -15,4 +15,10 @@
 
     <!-- Smallest side of anything tappable. -->
     <dimen name="touch_min">48dp</dimen>
+
+    <!-- Cover height of item_listing_card; the width follows the column. -->
+    <dimen name="listing_card_image_height">144dp</dimen>
+
+    <!-- Large avatar, for profile headers (view_avatar defaults to touch_min). -->
+    <dimen name="avatar_size_lg">96dp</dimen>
 </resources>

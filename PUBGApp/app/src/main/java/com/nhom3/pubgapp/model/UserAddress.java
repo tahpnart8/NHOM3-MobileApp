@@ -94,6 +94,23 @@ public class UserAddress extends BaseDocument {
 
     @Exclude
     public String getFullText() {
-        throw new UnsupportedOperationException("NOT_READY");
+        StringBuilder builder = new StringBuilder();
+        if (detail != null && !detail.trim().isEmpty()) {
+            builder.append(detail.trim());
+        }
+        if (district != null && !district.trim().isEmpty()) {
+            if (builder.length() > 0) {
+                builder.append(", ");
+            }
+            builder.append(district.trim());
+        }
+        if (province != null && !province.trim().isEmpty()) {
+            if (builder.length() > 0) {
+                builder.append(", ");
+            }
+            builder.append(province.trim());
+        }
+        return builder.toString();
     }
 }
+
