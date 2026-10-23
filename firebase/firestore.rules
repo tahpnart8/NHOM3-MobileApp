@@ -706,9 +706,48 @@ service cloud.firestore {
 
     // ---- Khác ----
 
+    // Thông báo (security-rules.md mục 21). Ghi cho NGƯỜI KHÁC, trong cùng lô với thao tác
+    // làm đổi trạng thái. Chấp nhận rủi ro giả mạo nội dung (overview.md mục 11);
+    // nhánh "tăng cứng" theo từng loại chưa làm để giữ số lần get() của lô.
     match /notifications/{id} {
+      function notificationKeys() {
+        return ['recipientId', 'type', 'title', 'body', 'targetId', 'isRead', 'createdAt',
+                'updatedAt'];
+      }
+
+      function notificationTypes() {
+        return ['NEW_MESSAGE', 'NEW_OFFER', 'OFFER_RESULT', 'DEAL_UPDATE', 'PAYMENT_UPDATE',
+                'NEW_REVIEW', 'COMPLAINT_RESULT', 'WARNING', 'LISTING_MODERATED',
+                'VERIFICATION_RESULT'];
+      }
+
       allow read: if signedIn() && resource.data.recipientId == me();
-      allow write: if false;
+
+      allow create: if writerActive()
+        && hasOnlyKeys(notificationKeys())
+        && request.resource.data.recipientId is string
+        && request.resource.data.recipientId.size() > 0
+        && request.resource.data.recipientId != me()
+        && request.resource.data.type in notificationTypes()
+        && request.resource.data.title is string
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.body is string
+        && request.resource.data.body.size() <= 300
+        && optString(request.resource.data, 'targetId', 200)
+        && request.resource.data.isRead == false
+        && serverStamp('createdAt')
+        && (request.resource.data.get('updatedAt', null) == null || serverStamp('updatedAt'));
+
+      // Đánh dấu đã đọc: người nhận, chỉ isRead từ false sang true.
+      allow update: if signedIn()
+        && resource.data.recipientId == me()
+        && writerActive()
+        && onlyKeys(['isRead', 'updatedAt'])
+        && resource.data.isRead == false
+        && request.resource.data.isRead == true
+        && serverStamp('updatedAt');
+
+      allow delete: if false;
     }
 
     match /activityLogs/{id} {
