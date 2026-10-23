@@ -1,9 +1,10 @@
 rules_version = '2';
 
 // Bản NỀN của Security Rules (đợt 0) cộng luật GHI của bốn chỗ (issue #131):
-// users, users/{uid}/private/identity, sellerVerifications, listings.
-// Bản đầy đủ theo workflow/docs/data/security-rules.md làm ở issue #110. Ở bản này:
-// chỉ ĐỌC được mở theo ma trận; GHI chỉ mở cho bốn chỗ trên và collection images
+// users, users/{uid}/private/identity, sellerVerifications, listings;
+// và phần đầu của issue #110: users/{uid}/warnings, notifications.
+// Bản đầy đủ theo workflow/docs/data/security-rules.md làm tiếp ở issue #110. Ở bản này:
+// chỉ ĐỌC được mở theo ma trận; GHI chỉ mở cho sáu chỗ trên và collection images
 // (tạo và xóa ảnh có giới hạn kích thước). Mọi collection khác vẫn từ chối ghi.
 service cloud.firestore {
   match /databases/{database}/documents {
