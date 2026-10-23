@@ -10,7 +10,7 @@ public class GeoUtils {
 
     public double distanceKm(GeoPoint from, GeoPoint to) {
         if (from == null || to == null) {
-            return 0.0;
+            return -1.0;
         }
         double earthRadiusKm = 6371.0;
         double lat1 = Math.toRadians(from.getLatitude());
@@ -30,10 +30,11 @@ public class GeoUtils {
     }
 
     public boolean isWithinRadius(GeoPoint point, GeoPoint center, int radiusKm) {
-        if (point == null || center == null) {
+        if (point == null || center == null || radiusKm < 0) {
             return false;
         }
-        return distanceKm(point, center) <= radiusKm;
+        double dist = distanceKm(point, center);
+        return dist >= 0.0 && dist <= radiusKm;
     }
 
     public void sortByDistance(List<Listing> listings, final GeoPoint center) {
@@ -45,17 +46,17 @@ public class GeoUtils {
             public int compare(Listing o1, Listing o2) {
                 GeoPoint loc1 = o1 != null ? o1.getLocation() : null;
                 GeoPoint loc2 = o2 != null ? o2.getLocation() : null;
-                if (loc1 == null && loc2 == null) {
-                    return 0;
-                }
-                if (loc1 == null) {
-                    return 1;
-                }
-                if (loc2 == null) {
-                    return -1;
-                }
                 double d1 = distanceKm(loc1, center);
                 double d2 = distanceKm(loc2, center);
+                if (d1 < 0 && d2 < 0) {
+                    return 0;
+                }
+                if (d1 < 0) {
+                    return 1;
+                }
+                if (d2 < 0) {
+                    return -1;
+                }
                 return Double.compare(d1, d2);
             }
         });

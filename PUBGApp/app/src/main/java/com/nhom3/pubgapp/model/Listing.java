@@ -237,35 +237,54 @@ public class Listing extends BaseDocument {
     }
 
     public void markSold() {
+        if (status != ListingStatus.AVAILABLE && status != ListingStatus.RESERVED) {
+            throw new IllegalStateException("Only available or reserved listings can be marked sold");
+        }
         status = ListingStatus.SOLD;
         touch();
     }
 
     public void hide(String reason) {
+        if (status != ListingStatus.AVAILABLE) {
+            throw new IllegalStateException("Only available listings can be hidden");
+        }
         status = ListingStatus.HIDDEN;
         statusReason = reason;
         touch();
     }
 
     public void restore() {
+        if (status != ListingStatus.HIDDEN) {
+            throw new IllegalStateException("Only hidden listings can be restored");
+        }
         status = ListingStatus.AVAILABLE;
         statusReason = null;
         touch();
     }
 
     public void remove(String reason) {
+        if (status != ListingStatus.DRAFT && status != ListingStatus.AVAILABLE
+                && status != ListingStatus.HIDDEN) {
+            throw new IllegalStateException("Cannot remove a listing with status " + status);
+        }
         status = ListingStatus.REMOVED;
         statusReason = reason;
         touch();
     }
 
     public void reserve(String dealId) {
+        if (status != ListingStatus.AVAILABLE) {
+            throw new IllegalStateException("Only available listings can be reserved");
+        }
         status = ListingStatus.RESERVED;
         reservedDealId = dealId;
         touch();
     }
 
     public void release() {
+        if (status != ListingStatus.RESERVED) {
+            throw new IllegalStateException("Only reserved listings can be released");
+        }
         status = ListingStatus.AVAILABLE;
         reservedDealId = null;
         touch();
@@ -275,10 +294,5 @@ public class Listing extends BaseDocument {
         String combined = (title != null ? title : "") + " " + (description != null ? description : "");
         com.nhom3.pubgapp.util.FormatUtils utils = new com.nhom3.pubgapp.util.FormatUtils();
         searchKeywords = utils.toKeywords(combined);
-    }
-
-    @Override
-    public void touch() {
-        setUpdatedAt(com.google.firebase.Timestamp.now());
     }
 }
