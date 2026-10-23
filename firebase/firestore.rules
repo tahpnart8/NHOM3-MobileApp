@@ -618,6 +618,34 @@ service cloud.firestore {
              == request.resource.data.verificationStatus
         && serverStamp('updatedAt');
 
+      // Đánh giá mà lô ghi khai qua lastReviewId, đọc sau lô.
+      function reviewAfter(reviewId) {
+        return getAfter(/databases/$(database)/documents/reviews/$(reviewId)).data;
+      }
+
+      // Đánh giá đó do chính lô này tạo: chưa có trước lô, có sau lô. Chặn xoay vòng giữa hai
+      // đánh giá cũ (A, B, A...) mà điều kiện "lastReviewId phải đổi" một mình không chặn được.
+      function reviewNewInBatch(reviewId) {
+        return !exists(/databases/$(database)/documents/reviews/$(reviewId))
+          && existsAfter(/databases/$(database)/documents/reviews/$(reviewId));
+      }
+
+      // Ghi điểm đánh giá (security-rules.md mục 1): người đánh giá cộng điểm cho đối tác, cùng lô
+      // với reviews create. ratingCount tăng 1, ratingSum tăng đúng rating của đánh giá đó.
+      allow update: if writerActive()
+        && me() != uid
+        && onlyKeys(['ratingSum', 'ratingCount', 'lastReviewId', 'updatedAt'])
+        && request.resource.data.lastReviewId is string
+        && request.resource.data.lastReviewId.size() > 0
+        && request.resource.data.lastReviewId != resource.data.get('lastReviewId', null)
+        && request.resource.data.ratingCount == resource.data.ratingCount + 1
+        && reviewNewInBatch(request.resource.data.lastReviewId)
+        && reviewAfter(request.resource.data.lastReviewId).revieweeId == uid
+        && reviewAfter(request.resource.data.lastReviewId).reviewerId == me()
+        && request.resource.data.ratingSum
+             == resource.data.ratingSum + reviewAfter(request.resource.data.lastReviewId).rating
+        && serverStamp('updatedAt');
+
       allow delete: if false;
 
       // Địa chỉ giao nhận: riêng tư.
