@@ -139,6 +139,10 @@ public class ProfileViewModel extends ViewModel {
             loading.setValue(true);
             fetchStats(uid);
         }
+        // A failed read of the follow state keeps the button locked, so opening the screen again retries it.
+        if (following.getValue() == null && !isOwnPage(uid)) {
+            fetchFollowing(uid);
+        }
     }
 
     public void updateProfile(User user) {
