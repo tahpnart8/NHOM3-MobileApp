@@ -8,4 +8,8 @@
     <files-path
         name="camera_files"
         path="camera/" />
+    <!-- CSV exported by ReportRepository.exportCsv, shared out through an implicit Intent. -->
+    <cache-path
+        name="exports_cache"
+        path="exports/" />
 </paths>
