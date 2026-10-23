@@ -1,11 +1,13 @@
 package com.nhom3.pubgapp.viewmodel;
 
+import android.content.Context;
 import android.net.Uri;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.FirebaseApp;
+import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.data.ChatRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.model.ChatMessage;
@@ -13,6 +15,7 @@ import com.nhom3.pubgapp.model.Conversation;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.List;
 
@@ -63,15 +66,28 @@ public class ChatViewModel extends ViewModel {
         return done;
     }
 
+    private String getString(int resId, String fallback) {
+        try {
+            Context context = FirebaseApp.getInstance().getApplicationContext();
+            if (context != null) {
+                return context.getString(resId);
+            }
+        } catch (Exception ignored) {
+        }
+        return fallback;
+    }
+
     public void loadConversations() {
         loading.setValue(true);
-        String uid = null;
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String uid = chatRepository.currentUserId();
+        if (uid.isEmpty()) {
+            uid = SessionManager.getInstance().getCurrentUserId();
         }
-        if (uid == null || uid.isEmpty()) {
+        if (uid.isEmpty()) {
             loading.setValue(false);
-            error.setValue("Vui lòng đăng nhập để xem tin nhắn.");
+            error.setValue(getString(
+                    R.string.trade_error_not_signed_in_messages,
+                    "Vui lòng đăng nhập để xem tin nhắn."));
             return;
         }
         chatRepository.getConversations(uid, new DataCallback<List<Conversation>>() {
@@ -91,13 +107,15 @@ public class ChatViewModel extends ViewModel {
 
     public void openConversation(String listingId) {
         loading.setValue(true);
-        String uid = null;
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String uid = chatRepository.currentUserId();
+        if (uid.isEmpty()) {
+            uid = SessionManager.getInstance().getCurrentUserId();
         }
-        if (uid == null || uid.isEmpty()) {
+        if (uid.isEmpty()) {
             loading.setValue(false);
-            error.setValue("Vui lòng đăng nhập để nhắn tin.");
+            error.setValue(getString(
+                    R.string.trade_error_not_signed_in_chat,
+                    "Vui lòng đăng nhập để nhắn tin."));
             return;
         }
         chatRepository.getOrCreateConversation(listingId, uid, new DataCallback<Conversation>() {
@@ -120,7 +138,9 @@ public class ChatViewModel extends ViewModel {
 
     public void openConversationById(String id) {
         if (id == null || id.isEmpty()) {
-            error.setValue("Mã cuộc trò chuyện không hợp lệ.");
+            error.setValue(getString(
+                    R.string.trade_error_invalid_conversation_id,
+                    "Mã cuộc trò chuyện không hợp lệ."));
             return;
         }
         currentConversationId = id;
