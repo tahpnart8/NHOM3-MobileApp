@@ -342,6 +342,8 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | `public List<ConversationEntity> getConversations()` | Cuộc trò chuyện đã đệm, mới nhất trước. |  |
 | `public void upsertMessages(List<MessageEntity>)` | Chèn hoặc thay các tin nhắn. |  |
 | `public List<MessageEntity> getMessages(String)` | Tin nhắn đã đệm của một cuộc trò chuyện, cũ trước. |  |
+| `public void clearConversations()` |  |  |
+| `public void clearMessages()` |  |  |
 | `public void clearAll()` | Xóa sạch conversation_cache và message_cache; gọi khi đăng xuất hoặc xóa tài khoản. |  |
 
 **Quan hệ trên sơ đồ lớp**
@@ -401,6 +403,8 @@ Room: bộ nhớ đệm SQLite để xem lại trang đã xem khi mất mạng. 
 | `public List<RecentSearchEntity> getRecentSearches(int)` | Các lần tìm gần nhất, giới hạn số dòng. |  |
 | `public void trimViews(int)` | Chỉ giữ số lần xem mới nhất truyền vào. |  |
 | `public void trimSearches(int)` | Chỉ giữ số từ khóa mới nhất truyền vào. |  |
+| `public void clearViews()` |  |  |
+| `public void clearSearches()` |  |  |
 | `public void clearAll()` | Xóa lịch sử xem và tìm kiếm. |  |
 
 **Quan hệ trên sơ đồ lớp**
