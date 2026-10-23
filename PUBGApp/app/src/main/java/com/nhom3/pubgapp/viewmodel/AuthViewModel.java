@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel;
 import com.google.firebase.FirebaseApp;
 import com.nhom3.pubgapp.data.AdminRepository;
 import com.nhom3.pubgapp.data.AuthRepository;
+import com.nhom3.pubgapp.data.CategoryRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.data.local.AppDatabase;
@@ -38,12 +39,14 @@ public class AuthViewModel extends ViewModel {
     private final AuthRepository authRepository;
     private final UserRepository userRepository;
     private final AdminRepository adminRepository;
+    private final CategoryRepository categoryRepository;
     private final SessionManager sessionManager;
 
     public AuthViewModel() {
         this.authRepository = new AuthRepository();
         this.userRepository = new UserRepository();
         this.adminRepository = new AdminRepository();
+        this.categoryRepository = new CategoryRepository();
         this.sessionManager = SessionManager.getInstance();
     }
 
@@ -80,23 +83,136 @@ public class AuthViewModel extends ViewModel {
     }
 
     public void startSignUp(String email, String password) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!isPasswordValid(password)) {
+            error.setValue("Mật khẩu cần ít nhất 8 ký tự, gồm chữ và số.");
+            return;
+        }
+        loading.setValue(true);
+        error.setValue(null);
+        authRepository.signUp(email, password, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String uid) {
+                loading.setValue(false);
+                signUpStep.setValue(2);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.setValue(false);
+                error.setValue(message != null ? message : "Không thể tạo tài khoản.");
+            }
+        });
     }
 
     public void resendVerificationLink() {
-        error.setValue(DataCallback.NOT_READY);
+        loading.setValue(true);
+        error.setValue(null);
+        authRepository.sendVerificationEmail(new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.setValue(false);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.setValue(false);
+                if (message != null && message.contains("TOO_MANY_ATTEMPTS_TRY_LATER")) {
+                    error.setValue("Bạn đã gửi quá nhiều lần, hãy thử lại sau ít phút.");
+                } else {
+                    error.setValue(message != null ? message : "Không thể gửi lại liên kết xác thực.");
+                }
+            }
+        });
     }
 
     public void checkEmailVerified() {
-        error.setValue(DataCallback.NOT_READY);
+        authRepository.reloadUser(new DataCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean verified) {
+                if (verified != null && verified) {
+                    emailVerified.setValue(true);
+                    signUpStep.setValue(3);
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                // Keep waiting on screen 2 without error
+            }
+        });
     }
 
-    public void completeProfile(User user, UserIdentity identity, List<String> categoryIds) {
-        error.setValue(DataCallback.NOT_READY);
+    public void completeProfile(final User user, UserIdentity identity, List<String> categoryIds) {
+        loading.setValue(true);
+        error.setValue(null);
+        if (categoryIds != null) {
+            user.setInterestedCategoryIds(categoryIds);
+        }
+        userRepository.createProfile(user, identity, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                startUserSession(user);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.setValue(false);
+                error.setValue(message != null ? message : "Không thể tạo hồ sơ.");
+            }
+        });
     }
 
     public void loadCategories() {
-        error.setValue(DataCallback.NOT_READY);
+        categoryRepository.getAll(new DataCallback<List<Category>>() {
+            @Override
+            public void onSuccess(List<Category> list) {
+                categories.setValue(list);
+            }
+
+            @Override
+            public void onError(String message) {
+                error.setValue(message != null ? message : "Không thể tải danh mục.");
+            }
+        });
+    }
+
+    static boolean isPasswordValid(String password) {
+        if (password == null || password.length() < 8) {
+            return false;
+        }
+        boolean hasLetter = false;
+        boolean hasDigit = false;
+        for (int i = 0; i < password.length(); i++) {
+            char c = password.charAt(i);
+            if (Character.isLetter(c)) {
+                hasLetter = true;
+            } else if (Character.isDigit(c)) {
+                hasDigit = true;
+            }
+        }
+        return hasLetter && hasDigit;
+    }
+
+    static boolean isPasswordConfirmationMatching(String password, String confirmation) {
+        if (password == null || confirmation == null) {
+            return false;
+        }
+        return password.equals(confirmation);
+    }
+
+    static boolean isPhoneValid(String phone) {
+        if (phone == null || phone.length() != 10) {
+            return false;
+        }
+        if (phone.charAt(0) != '0') {
+            return false;
+        }
+        for (int i = 0; i < phone.length(); i++) {
+            if (!Character.isDigit(phone.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public enum LoginDecision {
