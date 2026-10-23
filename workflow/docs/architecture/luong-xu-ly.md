@@ -186,7 +186,7 @@ sequenceDiagram
     DVM->>MR: saveImage(photoUri, WAYBILL, cb)
     MR-->>DVM: imageId
     DVM->>DR: markShipped(dealId, carrier, trackingCode, imageId, cb)
-    DR->>FS: deal SHIPPED, shippedAt giờ máy chủ, autoReleaseAt = shippedAt + 7 ngày
+    DR->>FS: deal SHIPPED, shippedAt giờ máy chủ, autoReleaseAt = giờ máy + 7 ngày (sai số 5 phút)
     alt người mua bấm Đã nhận
         B->>DVM: markReceived(photoUri)
         DVM->>DR: markReceived(dealId, imageId, cb)
@@ -209,7 +209,7 @@ sequenceDiagram
 ```
 
 1. Thanh toán chỉ có khi `agreedPrice` lớn hơn 0; đây là ký quỹ mô phỏng, không gọi cổng thanh toán.
-2. Thiếu một trong ba bằng chứng vận đơn (đơn vị vận chuyển, mã, ảnh) thì nút Đã giao không bấm được và `Deal.markShipped` từ chối. `DealRepository.markShipped` còn kiểm `Payment` đang HELD nếu cần thanh toán. `shippedAt` ghi bằng giờ máy chủ và `autoReleaseAt` bằng giờ máy chủ cộng 7 ngày; Rules từ chối nếu khác.
+2. Thiếu một trong ba bằng chứng vận đơn (đơn vị vận chuyển, mã, ảnh) thì nút Đã giao không bấm được và `Deal.markShipped` từ chối. `DealRepository.markShipped` còn kiểm `Payment` đang HELD nếu cần thanh toán. `shippedAt` ghi bằng giờ máy chủ. `autoReleaseAt` ứng dụng ghi bằng giờ máy cộng 7 ngày, vì một lệnh ghi không đọc lại được giờ máy chủ của chính nó; Rules cho sai số 5 phút quanh `request.time` cộng 7 ngày và từ chối nếu lệch hơn.
 3. Màn hình chi tiết giao dịch hiện đồng hồ đếm ngược tới `autoReleaseAt` cho cả hai bên, cả khi offline (`DealEntity.autoReleaseAtMillis`).
 4. Gặp trực tiếp (MEET_UP): không có bước SHIPPED và không đếm ngược; người mua bấm Đã nhận ngay từ CONFIRMED.
 5. **Một nơi hoàn tất.** `DealRepository.completeDeal` là nơi duy nhất đặt COMPLETED và tin SOLD; `ReviewRepository.create` (khi bên thứ hai đánh giá) và `completeDueDeals` (sau 3 ngày) chỉ gọi nó.

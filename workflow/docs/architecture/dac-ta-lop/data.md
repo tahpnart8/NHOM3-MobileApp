@@ -158,6 +158,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void follow(String uid, String otherId, DataCallback<Void> cb)` | Tạo `follows/{uid_otherId}`. | 39 |
 | `public void unfollow(String uid, String otherId, DataCallback<Void> cb)` | Xóa `follows/{uid_otherId}`. | 39 |
 | `public void getFollowingIds(String uid, DataCallback<List<String>> cb)` | Mã những người mà người dùng đang theo dõi. | 30 |
+| `public void getFollowerCount(String uid, DataCallback<Integer> cb)` | Đếm số người đang theo dõi một người dùng bằng truy vấn `count()` trên `follows` với `followedId == uid`. Tách khỏi `getStats` vì `follows` ai đăng nhập cũng đọc được, còn `deals` thì không, nên số này hiện được cả trên trang cá nhân của người khác. |  |
 | `public void saveListing(String uid, String listingId, DataCallback<Void> cb)` | Tạo `users/{uid}/saved/{listingId}`. | 40 đến 42 |
 | `public void unsaveListing(String uid, String listingId, DataCallback<Void> cb)` | Xóa `users/{uid}/saved/{listingId}`. | 40 đến 42 |
 | `public void getSavedIds(String uid, DataCallback<List<String>> cb)` | Mã các tin đã lưu, mới lưu trước. | 40 đến 42 |
@@ -292,6 +293,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
 | `public void getOrCreateConversation(String listingId, String buyerId, DataCallback<Conversation> cb)` | Đọc hoặc tạo `conversations/{listingId_buyerId}`. |  |
+| `public void getConversation(String id, DataCallback<Conversation> cb)` | Đọc một cuộc trò chuyện theo mã, cho trường hợp mở C02 từ thông báo hoặc từ danh sách mà chưa có đối tượng trong tay. |  |
 | `public void getConversations(String uid, DataCallback<List<Conversation>> cb)` | Cuộc trò chuyện mà người dùng là người mua hoặc người bán, mới nhất trước; ghi vào Room. |  |
 | `public ListenerRegistration observeMessages(String id, DataCallback<List<ChatMessage>> cb)` | Lắng nghe 50 tin nhắn mới nhất theo thời gian thực, trả `ListenerRegistration`; ViewModel gỡ ở `onCleared`. Ghi tin mới vào Room. |  |
 | `public void loadOlder(String id, Timestamp before, DataCallback<List<ChatMessage>> cb)` | Tải thêm 50 tin nhắn cũ hơn mốc truyền vào. |  |
