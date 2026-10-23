@@ -1,28 +1,22 @@
 package com.nhom3.pubgapp.ui.trust;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.ItemTrustEvidenceThumbBinding;
+import com.nhom3.pubgapp.ui.common.ImageLoader;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Horizontal strip of picked evidence images with a remove button; the cap is set by the screen. */
 public class EvidenceThumbAdapter extends RecyclerView.Adapter<EvidenceThumbAdapter.ThumbViewHolder> {
-
-    private static final int PREVIEW_SAMPLE_SIZE = 8;
 
     private final List<Uri> uris = new ArrayList<Uri>();
     private final int maxImages;
@@ -104,42 +98,8 @@ public class EvidenceThumbAdapter extends RecyclerView.Adapter<EvidenceThumbAdap
             this.binding = binding;
         }
 
-        // Decoded off the main thread; the tag drops a result meant for a recycled row.
         void bind(Uri uri) {
-            ImageView target = binding.imageThumb;
-            target.setTag(uri);
-            target.setImageDrawable(null);
-            Context appContext = target.getContext().getApplicationContext();
-            Thread worker = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Bitmap bitmap = decodePreview(appContext, uri);
-                    postThumb(target, uri, bitmap);
-                }
-            });
-            worker.start();
-        }
-
-        private static Bitmap decodePreview(Context context, Uri uri) {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = PREVIEW_SAMPLE_SIZE;
-            try (InputStream input = context.getContentResolver().openInputStream(uri)) {
-                return BitmapFactory.decodeStream(input, null, options);
-            } catch (IOException | SecurityException readError) {
-                return null;
-            }
-        }
-
-        private static void postThumb(ImageView target, Uri uri, Bitmap bitmap) {
-            target.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (bitmap == null || !uri.equals(target.getTag())) {
-                        return;
-                    }
-                    target.setImageBitmap(bitmap);
-                }
-            });
+            ImageLoader.load(uri, binding.imageThumb, R.drawable.ic_inbox, R.drawable.ic_error);
         }
     }
 }
