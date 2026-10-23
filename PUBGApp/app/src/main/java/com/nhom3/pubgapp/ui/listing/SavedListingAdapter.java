@@ -148,7 +148,7 @@ public class SavedListingAdapter extends RecyclerView.Adapter<SavedListingAdapte
             binding.includeCard.textPrice.setText("");
             binding.includeCard.textCondition.setText("");
             binding.includeCard.textProvince.setText("");
-            ImageLoader.load(null, binding.includeCard.imageCover, R.drawable.ic_error, R.drawable.ic_error);
+            ImageLoader.load((String) null, binding.includeCard.imageCover, R.drawable.ic_error, R.drawable.ic_error);
             StatusChips.bind(binding.includeCard.includeStatusChip.getRoot(), (ListingStatus) null);
         }
     }
