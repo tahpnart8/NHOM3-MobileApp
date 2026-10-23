@@ -97,6 +97,36 @@ public class DealViewModelTest {
         assertFalse(DealViewModel.isPaymentInfoVisible(null));
     }
 
+    @Test
+    public void canPay_allowsOnlyConfirmedBuyerWhenNeedsPaymentAndNotYetPaid() {
+        Deal deal = createSampleDeal(DealStatus.CONFIRMED);
+        deal.setAgreedPrice(500000);
+
+        assertTrue(DealViewModel.canPay(deal, null, "buyer1", true, true));
+
+        assertFalse(DealViewModel.canPay(deal, null, "seller1", true, true));
+        assertFalse(DealViewModel.canPay(deal, null, "stranger", true, true));
+
+        deal.setStatus(DealStatus.PENDING_CONFIRM);
+        assertFalse(DealViewModel.canPay(deal, null, "buyer1", true, true));
+
+        deal.setStatus(DealStatus.SHIPPED);
+        assertFalse(DealViewModel.canPay(deal, null, "buyer1", true, true));
+
+        deal.setStatus(DealStatus.CONFIRMED);
+        deal.setAgreedPrice(0);
+        assertFalse(DealViewModel.canPay(deal, null, "buyer1", true, true));
+
+        deal.setAgreedPrice(500000);
+        com.nhom3.pubgapp.model.Payment heldPayment = new com.nhom3.pubgapp.model.Payment();
+        heldPayment.setStatus(com.nhom3.pubgapp.model.enums.PaymentStatus.HELD);
+        assertFalse(DealViewModel.canPay(deal, heldPayment, "buyer1", true, true));
+
+        assertFalse(DealViewModel.canPay(deal, null, "buyer1", false, true));
+        assertFalse(DealViewModel.canPay(deal, null, "buyer1", true, false));
+        assertFalse(DealViewModel.canPay(null, null, "buyer1", true, true));
+    }
+
     private Deal createSampleDeal(DealStatus status) {
         Deal deal = new Deal();
         deal.setId("deal1");

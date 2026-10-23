@@ -334,13 +334,37 @@
                 app:cardElevation="1dp"
                 app:contentPadding="@dimen/space_md">
 
-                <TextView
-                    android:id="@+id/textPaymentNotice"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/trade_deal_detail_payment_notice"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textPaymentNotice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/trade_deal_detail_payment_notice"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    <TextView
+                        android:id="@+id/textPaymentStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOnSurface"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/textPaymentMethod"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOnSurface"
+                        android:visibility="gone" />
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Verification Warning Card -->
@@ -629,6 +653,16 @@
                     android:layout_marginBottom="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
                     android:text="@string/trade_deal_detail_edit_terms"
+                    app:cornerRadius="@dimen/radius_md" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonPay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/space_sm"
+                    android:minHeight="@dimen/touch_min"
+                    android:text="@string/trade_deal_detail_pay"
+                    android:visibility="gone"
                     app:cornerRadius="@dimen/radius_md" />
 
                 <com.google.android.material.button.MaterialButton
