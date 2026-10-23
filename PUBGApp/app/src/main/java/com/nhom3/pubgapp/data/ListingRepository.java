@@ -153,6 +153,18 @@ public class ListingRepository extends BaseRepository {
             cb.onError("Chưa đăng nhập");
             return;
         }
+        if (listing == null || listing.getStatus() != ListingStatus.DRAFT) {
+            cb.onError("Chỉ có thể công khai tin ở trạng thái bản nháp");
+            return;
+        }
+        if (listing.getTitle() == null || listing.getTitle().trim().isEmpty()
+                || listing.getCategoryId() == null || listing.getCategoryId().trim().isEmpty()
+                || listing.getImageIds() == null || listing.getImageIds().isEmpty()
+                || listing.getTradeTypes() == null || listing.getTradeTypes().isEmpty()) {
+            cb.onError("Tin đăng cần có tối thiểu tiêu đề, danh mục, 1 hình ảnh "
+                    + "và một hình thức giao dịch để có thể công khai");
+            return;
+        }
         db.collection(COLLECTION_USERS).document(uid).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
@@ -525,7 +537,8 @@ public class ListingRepository extends BaseRepository {
                         }
                         Listing listing = doc.toObject(Listing.class);
                         if (listing == null || listing.getStatus() != ListingStatus.DRAFT) {
-                            cb.onError("Chỉ xóa được tin ở trạng thái bản nháp");
+                            cb.onError("Chỉ tin nháp mới xóa được. Tin đã đăng chỉ có thể ẩn đi, "
+                                    + "hãy chọn Ẩn tin");
                             return;
                         }
                         db.collection(COLLECTION_LISTINGS).document(id).delete()

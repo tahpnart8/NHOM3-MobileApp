@@ -65,4 +65,50 @@
         <item>Đồng Nai</item>
         <item>Khác</item>
     </string-array>
+    <!-- B05 My Shop -->
+    <string name="listing_shop_title">Kệ hàng của tôi</string>
+    <string name="listing_shop_tab_active">Đang hoạt động</string>
+    <string name="listing_shop_tab_sold">Đã bán</string>
+    <string name="listing_shop_tab_hidden">Đã ẩn</string>
+    <string name="listing_shop_tab_draft">Nháp (%1$d)</string>
+    <string name="listing_shop_menu_sort">Sắp xếp</string>
+    <string name="listing_shop_sort_newest">Mới đăng</string>
+    <string name="listing_shop_menu_filter">Lọc theo danh mục</string>
+    <string name="listing_shop_filter_all">Tất cả danh mục</string>
+    <string name="listing_shop_action_edit">Chỉnh sửa</string>
+    <string name="listing_shop_action_hide">Ẩn tin</string>
+    <string name="listing_shop_action_show">Hiện lại</string>
+    <string name="listing_shop_action_mark_sold">Đánh dấu đã bán</string>
+    <string name="listing_shop_action_reopen">Mở bán lại</string>
+    <string name="listing_shop_action_publish">Đăng</string>
+    <string name="listing_shop_action_delete">Xóa tin</string>
+    <string name="listing_shop_action_view_reason">Xem lý do</string>
+    <string name="listing_shop_empty_general">Bạn chưa có tin đăng nào ở mục này</string>
+    <string name="listing_shop_empty_draft">Bạn chưa có bản nháp nào. Tin đăng lưu dở sẽ xuất hiện tại đây</string>
+    <string name="listing_shop_dialog_delete_title">Xóa bản nháp</string>
+    <string name="listing_shop_dialog_delete_msg">Bạn có chắc chắn muốn xóa bản nháp này không?</string>
+    <string name="listing_shop_delete_success">Đã xóa bản nháp</string>
+    <string name="listing_shop_hide_confirm">Bạn có chắc chắn muốn ẩn tin đăng này?</string>
+    <string name="listing_shop_hide_success">Tin đăng đã được ẩn</string>
+    <string name="listing_shop_show_success">Tin đăng đã được hiện lại</string>
+    <string name="listing_shop_mark_sold_confirm">Đánh dấu sản phẩm này đã bán?</string>
+    <string name="listing_shop_mark_sold_success">Đã chuyển sản phẩm sang mục Đã bán</string>
+    <string name="listing_shop_reopen_success">Đã mở bán lại sản phẩm</string>
+    <string name="listing_shop_publish_success">Đăng tin thành công!</string>
+    <string name="listing_shop_offline_warning">Không có kết nối mạng. Dữ liệu chưa thể đồng bộ lên máy chủ, vui lòng thử lại sau</string>
+    <string name="listing_shop_reason_title">Lý do từ quản trị viên</string>
+    <string name="listing_shop_reason_empty">Không có lý do chi tiết</string>
+    <string name="listing_shop_thumb_desc">Ảnh thu nhỏ sản phẩm</string>
+    <string name="listing_shop_menu_desc">Thao tác tin đăng</string>
+    <string name="listing_shop_status_available">Đang bán</string>
+    <string name="listing_shop_status_reserved">Đang giữ chỗ</string>
+    <string name="listing_shop_status_sold">Đã bán</string>
+    <string name="listing_shop_status_hidden">Đã ẩn</string>
+    <string name="listing_shop_status_removed">Đã gỡ</string>
+    <string name="listing_shop_status_draft">Nháp</string>
+
+    <!-- B04 Edit mode strings -->
+    <string name="listing_post_edit_title">Chỉnh sửa tin đăng</string>
+    <string name="listing_post_edit_button_save">Lưu thay đổi</string>
+    <string name="listing_post_edit_success">Cập nhật sản phẩm thành công!</string>
 </resources>
