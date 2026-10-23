@@ -10,7 +10,6 @@ import android.util.LruCache;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.nhom3.pubgapp.model.MediaImage;
@@ -23,6 +22,12 @@ import java.util.concurrent.Executors;
 
 public class MediaRepository extends BaseRepository {
 
+    private static final String COLLECTION_IMAGES = "images";
+    private static final int MAX_IMAGE_DIMENSION = 1024;
+    private static final int MAX_IMAGE_BYTES = 300 * 1024;
+    private static final int MAX_THUMB_DIMENSION = 320;
+    private static final int MAX_THUMB_BYTES = 20 * 1024;
+
     private static final LruCache<String, byte[]> MEMORY_CACHE =
             new LruCache<String, byte[]>(5 * 1024 * 1024) {
                 @Override
@@ -34,33 +39,41 @@ public class MediaRepository extends BaseRepository {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public void saveImage(final Uri uri, final ImagePurpose purpose, final DataCallback<String> cb) {
+        final String uid = currentUserId();
+        if (uid.isEmpty()) {
+            cb.onError("Chưa đăng nhập");
+            return;
+        }
         executor.execute(new Runnable() {
             @Override
             public void run() {
                 try {
                     Context context = FirebaseApp.getInstance().getApplicationContext();
-                    Bitmap bitmap = decodeSampledBitmap(context, uri, 1024);
+                    Bitmap bitmap = decodeSampledBitmap(context, uri, MAX_IMAGE_DIMENSION);
                     if (bitmap == null) {
-                        cb.onError("Cannot decode image");
+                        cb.onError("Không thể giải mã hình ảnh");
                         return;
                     }
-                    byte[] bytes = compressBitmap(bitmap, 300 * 1024);
+                    byte[] bytes = compressBitmap(bitmap, MAX_IMAGE_BYTES);
+                    if (bytes.length == 0 || bytes.length > MAX_IMAGE_BYTES) {
+                        cb.onError("Ảnh vượt quá kích thước cho phép");
+                        return;
+                    }
                     int width = bitmap.getWidth();
                     int height = bitmap.getHeight();
                     String base64 = Base64.encodeToString(bytes, Base64.NO_WRAP);
 
-                    final DocumentReference ref = db.collection("images").document();
+                    final DocumentReference ref = db.collection(COLLECTION_IMAGES).document();
                     final String imageId = ref.getId();
 
                     MediaImage image = new MediaImage();
                     image.setId(imageId);
-                    image.setOwnerId(auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "");
+                    image.setOwnerId(uid);
                     image.setPurpose(purpose);
                     image.setData(base64);
                     image.setWidth(width);
                     image.setHeight(height);
                     image.setSizeBytes(bytes.length);
-                    image.setCreatedAt(Timestamp.now());
 
                     MEMORY_CACHE.put(imageId, bytes);
 
@@ -74,11 +87,11 @@ public class MediaRepository extends BaseRepository {
                             .addOnFailureListener(new OnFailureListener() {
                                 @Override
                                 public void onFailure(Exception e) {
-                                    cb.onError(e.getMessage() != null ? e.getMessage() : "Error saving image");
+                                    fail(cb, e);
                                 }
                             });
                 } catch (Exception e) {
-                    cb.onError(e.getMessage() != null ? e.getMessage() : "Error processing image");
+                    fail(cb, e);
                 }
             }
         });
@@ -90,16 +103,20 @@ public class MediaRepository extends BaseRepository {
             public void run() {
                 try {
                     Context context = FirebaseApp.getInstance().getApplicationContext();
-                    Bitmap bitmap = decodeSampledBitmap(context, uri, 320);
+                    Bitmap bitmap = decodeSampledBitmap(context, uri, MAX_THUMB_DIMENSION);
                     if (bitmap == null) {
-                        cb.onError("Cannot decode thumbnail");
+                        cb.onError("Không thể tạo ảnh thu nhỏ");
                         return;
                     }
-                    byte[] bytes = compressBitmap(bitmap, 20 * 1024);
+                    byte[] bytes = compressBitmap(bitmap, MAX_THUMB_BYTES);
+                    if (bytes.length == 0 || bytes.length > MAX_THUMB_BYTES) {
+                        cb.onError("Ảnh thu nhỏ vượt quá kích thước cho phép");
+                        return;
+                    }
                     String base64 = Base64.encodeToString(bytes, Base64.NO_WRAP);
                     cb.onSuccess(base64);
                 } catch (Exception e) {
-                    cb.onError(e.getMessage() != null ? e.getMessage() : "Error creating thumbnail");
+                    fail(cb, e);
                 }
             }
         });
@@ -111,7 +128,7 @@ public class MediaRepository extends BaseRepository {
             cb.onSuccess(cached);
             return;
         }
-        db.collection("images").document(id).get()
+        db.collection(COLLECTION_IMAGES).document(id).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot doc) {
@@ -126,20 +143,20 @@ public class MediaRepository extends BaseRepository {
                                 }
                             }
                         }
-                        cb.onError("Image not found");
+                        cb.onError("Không tìm thấy hình ảnh");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
-                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error fetching image");
+                        fail(cb, e);
                     }
                 });
     }
 
     public void delete(final String id, final DataCallback<Void> cb) {
         MEMORY_CACHE.remove(id);
-        db.collection("images").document(id).delete()
+        db.collection(COLLECTION_IMAGES).document(id).delete()
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void unused) {
@@ -149,7 +166,7 @@ public class MediaRepository extends BaseRepository {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
-                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error deleting image");
+                        fail(cb, e);
                     }
                 });
     }
@@ -197,14 +214,30 @@ public class MediaRepository extends BaseRepository {
     }
 
     private byte[] compressBitmap(Bitmap bitmap, int maxSizeBytes) {
-        int quality = 85;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
-        while (baos.size() > maxSizeBytes && quality > 15) {
-            baos.reset();
-            quality -= 15;
-            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+        Bitmap current = bitmap;
+        for (int attempt = 0; attempt < 4; attempt++) {
+            int quality = 85;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            current.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+            while (baos.size() > maxSizeBytes && quality > 15) {
+                baos.reset();
+                quality -= 15;
+                current.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+            }
+            if (baos.size() <= maxSizeBytes) {
+                if (current != bitmap) {
+                    current.recycle();
+                }
+                return baos.toByteArray();
+            }
+            int newW = Math.max(1, (int) (current.getWidth() * 0.8f));
+            int newH = Math.max(1, (int) (current.getHeight() * 0.8f));
+            Bitmap scaled = Bitmap.createScaledBitmap(current, newW, newH, true);
+            if (current != bitmap) {
+                current.recycle();
+            }
+            current = scaled;
         }
-        return baos.toByteArray();
+        return new byte[0];
     }
 }

@@ -93,14 +93,26 @@ public class Report extends BaseDocument {
     }
 
     public void cancel() {
-        throw new UnsupportedOperationException("NOT_READY");
+        requireOpen();
+        this.status = ReportStatus.CANCELLED;
     }
 
     public void resolve(String adminId) {
-        throw new UnsupportedOperationException("NOT_READY");
+        requireOpen();
+        this.status = ReportStatus.RESOLVED;
+        this.handledBy = adminId;
     }
 
     public void dismiss(String adminId) {
-        throw new UnsupportedOperationException("NOT_READY");
+        requireOpen();
+        this.status = ReportStatus.DISMISSED;
+        this.handledBy = adminId;
+    }
+
+    // Every report transition starts from OPEN (trang-thai.md section 5).
+    private void requireOpen() {
+        if (status != ReportStatus.OPEN) {
+            throw new IllegalStateException("Report is not OPEN: " + status);
+        }
     }
 }

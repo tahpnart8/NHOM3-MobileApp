@@ -28,11 +28,15 @@ public class GeoUtilsTest {
         GeoPoint hanoi = new GeoPoint(21.0285, 105.8542);
         GeoPoint hcmc = new GeoPoint(10.7769, 106.7009);
 
+        assertEquals(-1.0, geoUtils.distanceKm(null, hanoi), 0.001);
+        assertEquals(-1.0, geoUtils.distanceKm(hanoi, null), 0.001);
+
         double distanceSame = geoUtils.distanceKm(hanoi, hanoi);
         assertEquals(0.0, distanceSame, 0.001);
 
+        // Khoảng cách theo công thức haversine giữa tọa độ mẫu Hà Nội và TP.HCM xấp xỉ 1143.5 km
         double distance = geoUtils.distanceKm(hanoi, hcmc);
-        assertTrue(distance > 1100 && distance < 1200);
+        assertEquals(1143.5, distance, 0.5);
     }
 
     @Test
@@ -41,6 +45,9 @@ public class GeoUtilsTest {
         GeoPoint nearby = new GeoPoint(10.7800, 106.7050);
         GeoPoint faraway = new GeoPoint(21.0285, 105.8542);
 
+        assertFalse(geoUtils.isWithinRadius(null, center, 5));
+        assertFalse(geoUtils.isWithinRadius(nearby, null, 5));
+        assertFalse(geoUtils.isWithinRadius(nearby, center, -1));
         assertTrue(geoUtils.isWithinRadius(nearby, center, 5));
         assertFalse(geoUtils.isWithinRadius(faraway, center, 50));
     }

@@ -3,6 +3,9 @@ package com.nhom3.pubgapp.model;
 import com.nhom3.pubgapp.model.enums.UserStatus;
 
 public class Warning extends BaseDocument {
+    private static final int TEMPORARY_LOCK_LEVEL = 2;
+    private static final int PERMANENT_LOCK_LEVEL = 3;
+
     private String userId;
     private int level;
     private String reason;
@@ -52,7 +55,14 @@ public class Warning extends BaseDocument {
         this.targetId = targetId;
     }
 
+    // Level 1 only warns; the lock ladder is fixed by trang-thai.md section 7.
     public UserStatus resultingStatus() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (level >= PERMANENT_LOCK_LEVEL) {
+            return UserStatus.PERM_LOCKED;
+        }
+        if (level == TEMPORARY_LOCK_LEVEL) {
+            return UserStatus.TEMP_LOCKED;
+        }
+        return UserStatus.ACTIVE;
     }
 }

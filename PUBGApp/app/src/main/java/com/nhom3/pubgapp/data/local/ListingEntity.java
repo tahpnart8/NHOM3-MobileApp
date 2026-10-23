@@ -105,7 +105,7 @@ public class ListingEntity {
                 try {
                     list.add(com.nhom3.pubgapp.model.enums.TradeType.valueOf(typeStrings.get(i)));
                 } catch (IllegalArgumentException ex) {
-                    // Ignore unknown enum
+                    android.util.Log.w("ListingEntity", "Unknown TradeType in cache", ex);
                 }
             }
             listing.setTradeTypes(list);
@@ -114,7 +114,7 @@ public class ListingEntity {
             try {
                 listing.setItemCondition(com.nhom3.pubgapp.model.enums.ItemCondition.valueOf(itemCondition));
             } catch (IllegalArgumentException ex) {
-                // Ignore unknown enum
+                android.util.Log.w("ListingEntity", "Unknown ItemCondition in cache", ex);
             }
         }
         listing.setMinOfferPrice(minOfferPrice);
@@ -123,7 +123,7 @@ public class ListingEntity {
             try {
                 listing.setStatus(com.nhom3.pubgapp.model.enums.ListingStatus.valueOf(status));
             } catch (IllegalArgumentException ex) {
-                // Ignore unknown enum
+                android.util.Log.w("ListingEntity", "Unknown ListingStatus in cache", ex);
             }
         }
         if (createdAtMillis > 0) {

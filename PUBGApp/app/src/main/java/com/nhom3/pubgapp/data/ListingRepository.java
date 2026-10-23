@@ -1,6 +1,7 @@
 package com.nhom3.pubgapp.data;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -8,6 +9,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
@@ -21,27 +23,41 @@ import com.nhom3.pubgapp.model.BannedKeyword;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.SearchFilter;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.model.enums.ItemCondition;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
+import com.nhom3.pubgapp.model.enums.OfferStatus;
+import com.nhom3.pubgapp.model.enums.OfferType;
+import com.nhom3.pubgapp.model.enums.SortOrder;
+import com.nhom3.pubgapp.model.enums.TradeType;
 import com.nhom3.pubgapp.util.FormatUtils;
-import com.nhom3.pubgapp.util.GeoUtils;
+import com.nhom3.pubgapp.util.KeywordFilter;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ListingRepository extends BaseRepository {
 
+    private static final String TAG = "ListingRepository";
+    private static final String COLLECTION_LISTINGS = "listings";
+    private static final String COLLECTION_USERS = "users";
+    private static final String COLLECTION_OFFERS = "offers";
+    private static final String COLLECTION_DEALS = "deals";
+    private static final String COLLECTION_BANNED_KEYWORDS = "bannedKeywords";
+
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public void create(final Listing listing, final DataCallback<String> cb) {
-        final String uid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
-        if (uid == null) {
+        final String uid = currentUserId();
+        if (uid.isEmpty()) {
             cb.onError("Chưa đăng nhập");
             return;
         }
-        db.collection("users").document(uid).get()
+        db.collection(COLLECTION_USERS).document(uid).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot doc) {
@@ -52,72 +68,68 @@ public class ListingRepository extends BaseRepository {
                             cb.onError("Tài khoản chưa đủ điều kiện bán hàng");
                             return;
                         }
-                        checkBannedKeywords(listing.getTitle(), listing.getDescription(), new DataCallback<Boolean>() {
-                            @Override
-                            public void onSuccess(Boolean flagged) {
-                                listing.setSellerId(uid);
-                                listing.setFlagged(flagged != null && flagged);
-                                listing.setStatus(ListingStatus.AVAILABLE);
-                                listing.buildSearchKeywords();
-                                listing.setCreatedAt(Timestamp.now());
-                                listing.setUpdatedAt(Timestamp.now());
+                        checkBannedKeywords(listing.getTitle(), listing.getDescription(),
+                                new DataCallback<Boolean>() {
+                                    @Override
+                                    public void onSuccess(Boolean flagged) {
+                                        listing.setSellerId(uid);
+                                        listing.setFlagged(flagged != null && flagged);
+                                        listing.setStatus(ListingStatus.AVAILABLE);
+                                        listing.buildSearchKeywords();
 
-                                final DocumentReference ref;
-                                if (listing.getId() != null && !listing.getId().isEmpty()) {
-                                    ref = db.collection("listings").document(listing.getId());
-                                } else {
-                                    ref = db.collection("listings").document();
-                                    listing.setId(ref.getId());
-                                }
-                                ref.set(listing)
-                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                            @Override
-                                            public void onSuccess(Void unused) {
-                                                cb.onSuccess(ref.getId());
-                                            }
-                                        })
-                                        .addOnFailureListener(new OnFailureListener() {
-                                            @Override
-                                            public void onFailure(Exception e) {
-                                                String err = e.getMessage() != null
-                                                        ? e.getMessage() : "Error saving listing";
-                                                cb.onError(err);
-                                            }
-                                        });
-                            }
+                                        final DocumentReference ref;
+                                        if (listing.getId() != null && !listing.getId().isEmpty()) {
+                                            ref = db.collection(COLLECTION_LISTINGS).document(listing.getId());
+                                        } else {
+                                            ref = db.collection(COLLECTION_LISTINGS).document();
+                                            listing.setId(ref.getId());
+                                        }
+                                        ref.set(listing)
+                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void unused) {
+                                                        cb.onSuccess(ref.getId());
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(Exception e) {
+                                                        fail(cb, e);
+                                                    }
+                                                });
+                                    }
 
-                            @Override
-                            public void onError(String error) {
-                                cb.onError(error);
-                            }
-                        });
+                                    @Override
+                                    public void onError(String error) {
+                                        cb.onError(error);
+                                    }
+                                });
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
-                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error checking user");
+                        fail(cb, e);
                     }
                 });
     }
 
     public void saveDraft(final Listing listing, final DataCallback<String> cb) {
-        String uid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
-        if (uid == null) {
+        String uid = currentUserId();
+        if (uid.isEmpty()) {
             cb.onError("Chưa đăng nhập");
             return;
         }
         listing.setSellerId(uid);
         listing.setStatus(ListingStatus.DRAFT);
         listing.buildSearchKeywords();
-        listing.setCreatedAt(Timestamp.now());
-        listing.setUpdatedAt(Timestamp.now());
+        listing.touch();
 
         final DocumentReference ref;
         if (listing.getId() != null && !listing.getId().isEmpty()) {
-            ref = db.collection("listings").document(listing.getId());
+            ref = db.collection(COLLECTION_LISTINGS).document(listing.getId());
         } else {
-            ref = db.collection("listings").document();
+            ref = db.collection(COLLECTION_LISTINGS).document();
             listing.setId(ref.getId());
         }
         ref.set(listing)
@@ -130,18 +142,18 @@ public class ListingRepository extends BaseRepository {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
-                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error saving draft");
+                        fail(cb, e);
                     }
                 });
     }
 
     public void publish(final Listing listing, final DataCallback<String> cb) {
-        final String uid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
-        if (uid == null) {
+        final String uid = currentUserId();
+        if (uid.isEmpty()) {
             cb.onError("Chưa đăng nhập");
             return;
         }
-        db.collection("users").document(uid).get()
+        db.collection(COLLECTION_USERS).document(uid).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot doc) {
@@ -158,27 +170,122 @@ public class ListingRepository extends BaseRepository {
                             cb.onError(e.getMessage());
                             return;
                         }
-                        checkBannedKeywords(listing.getTitle(), listing.getDescription(), new DataCallback<Boolean>() {
+                        checkBannedKeywords(listing.getTitle(), listing.getDescription(),
+                                new DataCallback<Boolean>() {
+                                    @Override
+                                    public void onSuccess(Boolean flagged) {
+                                        listing.setSellerId(uid);
+                                        listing.setFlagged(flagged != null && flagged);
+                                        listing.buildSearchKeywords();
+
+                                        db.collection(COLLECTION_LISTINGS).document(listing.getId()).set(listing)
+                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void unused) {
+                                                        cb.onSuccess(listing.getId());
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(Exception e) {
+                                                        fail(cb, e);
+                                                    }
+                                                });
+                                    }
+
+                                    @Override
+                                    public void onError(String error) {
+                                        cb.onError(error);
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(Exception e) {
+                        fail(cb, e);
+                    }
+                });
+    }
+
+    public void update(final Listing listing, final DataCallback<Void> cb) {
+        if (listing == null || listing.getId() == null) {
+            cb.onError("Mã tin đăng không được để trống");
+            return;
+        }
+        final DocumentReference ref = db.collection(COLLECTION_LISTINGS).document(listing.getId());
+        ref.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot doc) {
+                if (doc == null || !doc.exists()) {
+                    cb.onError("Không tìm thấy tin đăng");
+                    return;
+                }
+                Listing existing = doc.toObject(Listing.class);
+                ListingStatus status = existing != null ? existing.getStatus() : null;
+                if (status != ListingStatus.DRAFT && status != ListingStatus.AVAILABLE
+                        && status != ListingStatus.HIDDEN) {
+                    cb.onError("Không thể chỉnh sửa tin ở trạng thái này");
+                    return;
+                }
+                String reason = existing != null ? existing.getStatusReason() : null;
+                if (status == ListingStatus.HIDDEN && reason != null && !reason.trim().isEmpty()) {
+                    cb.onError("Không thể chỉnh sửa tin do quản trị viên đã ẩn");
+                    return;
+                }
+
+                checkBannedKeywords(listing.getTitle(), listing.getDescription(),
+                        new DataCallback<Boolean>() {
                             @Override
                             public void onSuccess(Boolean flagged) {
-                                listing.setSellerId(uid);
-                                listing.setFlagged(flagged != null && flagged);
+                                if (flagged != null && flagged) {
+                                    listing.setFlagged(true);
+                                }
                                 listing.buildSearchKeywords();
-                                listing.setUpdatedAt(Timestamp.now());
 
-                                db.collection("listings").document(listing.getId()).set(listing)
+                                Map<String, Object> updates = new HashMap<String, Object>();
+                                updates.put("title", listing.getTitle());
+                                updates.put("description", listing.getDescription());
+                                updates.put("price", listing.getPrice());
+                                updates.put("minOfferPrice", listing.getMinOfferPrice());
+                                updates.put("categoryId", listing.getCategoryId());
+                                if (listing.getItemCondition() != null) {
+                                    updates.put("itemCondition", listing.getItemCondition().name());
+                                }
+                                updates.put("conditionValues", listing.getConditionValues());
+                                if (listing.getTradeTypes() != null) {
+                                    List<String> types = new ArrayList<String>();
+                                    for (TradeType tt : listing.getTradeTypes()) {
+                                        types.add(tt.name());
+                                    }
+                                    updates.put("tradeTypes", types);
+                                }
+                                updates.put("province", listing.getProvince());
+                                updates.put("location", listing.getLocation());
+                                updates.put("imageIds", listing.getImageIds());
+                                updates.put("coverThumb", listing.getCoverThumb());
+                                if (listing.getAcceptedOfferTypes() != null) {
+                                    List<String> offerTypes = new ArrayList<String>();
+                                    for (OfferType ot : listing.getAcceptedOfferTypes()) {
+                                        offerTypes.add(ot.name());
+                                    }
+                                    updates.put("acceptedOfferTypes", offerTypes);
+                                }
+                                updates.put("searchKeywords", listing.getSearchKeywords());
+                                updates.put("flagged", listing.isFlagged());
+                                updates.put("updatedAt", FieldValue.serverTimestamp());
+
+                                ref.update(updates)
                                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                                             @Override
                                             public void onSuccess(Void unused) {
-                                                cb.onSuccess(listing.getId());
+                                                cb.onSuccess(null);
                                             }
                                         })
                                         .addOnFailureListener(new OnFailureListener() {
                                             @Override
                                             public void onFailure(Exception e) {
-                                                String err = e.getMessage() != null
-                                                        ? e.getMessage() : "Error publishing listing";
-                                                cb.onError(err);
+                                                fail(cb, e);
                                             }
                                         });
                             }
@@ -188,69 +295,44 @@ public class ListingRepository extends BaseRepository {
                                 cb.onError(error);
                             }
                         });
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(Exception e) {
-                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error checking user");
-                    }
-                });
-    }
-
-    public void update(final Listing listing, final DataCallback<Void> cb) {
-        if (listing == null || listing.getId() == null) {
-            cb.onError("Listing ID is required");
-            return;
-        }
-        checkBannedKeywords(listing.getTitle(), listing.getDescription(), new DataCallback<Boolean>() {
-            @Override
-            public void onSuccess(Boolean flagged) {
-                if (flagged != null && flagged) {
-                    listing.setFlagged(true);
-                }
-                listing.buildSearchKeywords();
-                listing.setUpdatedAt(Timestamp.now());
-
-                db.collection("listings").document(listing.getId()).set(listing)
-                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void unused) {
-                                cb.onSuccess(null);
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(Exception e) {
-                                cb.onError(e.getMessage() != null ? e.getMessage() : "Error updating listing");
-                            }
-                        });
             }
-
+        }).addOnFailureListener(new OnFailureListener() {
             @Override
-            public void onError(String error) {
-                cb.onError(error);
+            public void onFailure(Exception e) {
+                fail(cb, e);
             }
         });
     }
 
     public void setHidden(final String id, final boolean hidden, final DataCallback<Void> cb) {
-        final DocumentReference listingRef = db.collection("listings").document(id);
+        final DocumentReference listingRef = db.collection(COLLECTION_LISTINGS).document(id);
         listingRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot doc) {
                 if (doc == null || !doc.exists()) {
-                    cb.onError("Listing not found");
+                    cb.onError("Không tìm thấy tin đăng");
                     return;
                 }
                 Listing listing = doc.toObject(Listing.class);
-                String statusReason = listing != null ? listing.getStatusReason() : null;
+                if (listing == null) {
+                    cb.onError("Không thể đọc thông tin tin đăng");
+                    return;
+                }
+                String statusReason = listing.getStatusReason();
                 if (!hidden) {
                     if (statusReason != null && !statusReason.trim().isEmpty()) {
                         cb.onError("Không thể hiện lại tin do quản trị viên đã ẩn hoặc gỡ");
                         return;
                     }
-                    listingRef.update("status", ListingStatus.AVAILABLE.name(), "updatedAt", Timestamp.now())
+                    try {
+                        listing.restore();
+                    } catch (IllegalStateException e) {
+                        cb.onError(e.getMessage());
+                        return;
+                    }
+                    listingRef.update("status", ListingStatus.AVAILABLE.name(),
+                            "statusReason", null,
+                            "updatedAt", FieldValue.serverTimestamp())
                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void unused) {
@@ -260,13 +342,19 @@ public class ListingRepository extends BaseRepository {
                             .addOnFailureListener(new OnFailureListener() {
                                 @Override
                                 public void onFailure(Exception e) {
-                                    cb.onError(e.getMessage() != null ? e.getMessage() : "Error unhiding listing");
+                                    fail(cb, e);
                                 }
                             });
                 } else {
-                    db.collection("offers")
+                    try {
+                        listing.hide("");
+                    } catch (IllegalStateException e) {
+                        cb.onError(e.getMessage());
+                        return;
+                    }
+                    db.collection(COLLECTION_OFFERS)
                             .whereEqualTo("listingId", id)
-                            .whereEqualTo("status", "PENDING")
+                            .whereEqualTo("status", OfferStatus.PENDING.name())
                             .get()
                             .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                                 @Override
@@ -275,10 +363,11 @@ public class ListingRepository extends BaseRepository {
                                     batch.update(listingRef,
                                             "status", ListingStatus.HIDDEN.name(),
                                             "statusReason", "",
-                                            "updatedAt", Timestamp.now());
+                                            "updatedAt", FieldValue.serverTimestamp());
                                     if (offerDocs != null) {
                                         for (DocumentSnapshot offerDoc : offerDocs.getDocuments()) {
-                                            batch.update(offerDoc.getReference(), "status", "REJECTED");
+                                            batch.update(offerDoc.getReference(), "status",
+                                                    OfferStatus.REJECTED.name());
                                         }
                                     }
                                     batch.commit()
@@ -291,9 +380,7 @@ public class ListingRepository extends BaseRepository {
                                             .addOnFailureListener(new OnFailureListener() {
                                                 @Override
                                                 public void onFailure(Exception e) {
-                                                    String err = e.getMessage() != null
-                                                            ? e.getMessage() : "Error hiding listing";
-                                                    cb.onError(err);
+                                                    fail(cb, e);
                                                 }
                                             });
                                 }
@@ -301,7 +388,7 @@ public class ListingRepository extends BaseRepository {
                             .addOnFailureListener(new OnFailureListener() {
                                 @Override
                                 public void onFailure(Exception e) {
-                                    cb.onError(e.getMessage() != null ? e.getMessage() : "Error querying offers");
+                                    fail(cb, e);
                                 }
                             });
                 }
@@ -309,7 +396,7 @@ public class ListingRepository extends BaseRepository {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(Exception e) {
-                cb.onError(e.getMessage() != null ? e.getMessage() : "Error loading listing");
+                fail(cb, e);
             }
         });
     }
@@ -325,89 +412,115 @@ public class ListingRepository extends BaseRepository {
             return;
         }
 
-        final DocumentReference listingRef = db.collection("listings").document(id);
+        final DocumentReference listingRef = db.collection(COLLECTION_LISTINGS).document(id);
+        listingRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot doc) {
+                if (doc == null || !doc.exists()) {
+                    cb.onError("Không tìm thấy tin đăng");
+                    return;
+                }
+                Listing listing = doc.toObject(Listing.class);
+                if (listing == null || listing.getStatus() != from) {
+                    cb.onError("Trạng thái hiện tại không khớp");
+                    return;
+                }
 
-        if (isAvailableToSold) {
-            db.collection("offers")
-                    .whereEqualTo("listingId", id)
-                    .whereEqualTo("status", "PENDING")
-                    .get()
-                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                        @Override
-                        public void onSuccess(QuerySnapshot offerDocs) {
-                            WriteBatch batch = db.batch();
-                            batch.update(listingRef, "status", ListingStatus.SOLD.name(), "updatedAt", Timestamp.now());
-                            if (offerDocs != null) {
-                                for (DocumentSnapshot offerDoc : offerDocs.getDocuments()) {
-                                    batch.update(offerDoc.getReference(), "status", "REJECTED");
+                if (to == ListingStatus.SOLD) {
+                    try {
+                        listing.markSold();
+                    } catch (IllegalStateException e) {
+                        cb.onError(e.getMessage());
+                        return;
+                    }
+                    db.collection(COLLECTION_OFFERS)
+                            .whereEqualTo("listingId", id)
+                            .whereEqualTo("status", OfferStatus.PENDING.name())
+                            .get()
+                            .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                @Override
+                                public void onSuccess(QuerySnapshot offerDocs) {
+                                    WriteBatch batch = db.batch();
+                                    batch.update(listingRef, "status", ListingStatus.SOLD.name(),
+                                            "updatedAt", FieldValue.serverTimestamp());
+                                    if (offerDocs != null) {
+                                        for (DocumentSnapshot offerDoc : offerDocs.getDocuments()) {
+                                            batch.update(offerDoc.getReference(), "status",
+                                                    OfferStatus.REJECTED.name());
+                                        }
+                                    }
+                                    batch.commit()
+                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                @Override
+                                                public void onSuccess(Void unused) {
+                                                    cb.onSuccess(null);
+                                                }
+                                            })
+                                            .addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(Exception e) {
+                                                    fail(cb, e);
+                                                }
+                                            });
                                 }
-                            }
-                            batch.commit()
-                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void unused) {
-                                            cb.onSuccess(null);
-                                        }
-                                    })
-                                    .addOnFailureListener(new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(Exception e) {
-                                            cb.onError(e.getMessage() != null ? e.getMessage() : "Error marking sold");
-                                        }
-                                    });
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(Exception e) {
-                            cb.onError(e.getMessage() != null ? e.getMessage() : "Error checking offers");
-                        }
-                    });
-        } else {
-            db.collection("deals")
-                    .whereEqualTo("listingId", id)
-                    .whereEqualTo("status", "COMPLETED")
-                    .get()
-                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                        @Override
-                        public void onSuccess(QuerySnapshot deals) {
-                            if (deals != null && !deals.isEmpty()) {
-                                cb.onError("Tin đã có giao dịch hoàn tất, không thể mở lại");
-                                return;
-                            }
-                            listingRef.update("status", ListingStatus.AVAILABLE.name(), "updatedAt", Timestamp.now())
-                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void unused) {
-                                            cb.onSuccess(null);
-                                        }
-                                    })
-                                    .addOnFailureListener(new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(Exception e) {
-                                            String err = e.getMessage() != null
-                                                    ? e.getMessage() : "Error reopening listing";
-                                            cb.onError(err);
-                                        }
-                                    });
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(Exception e) {
-                            cb.onError(e.getMessage() != null ? e.getMessage() : "Error checking deals");
-                        }
-                    });
-        }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(Exception e) {
+                                    fail(cb, e);
+                                }
+                            });
+                } else {
+                    db.collection(COLLECTION_DEALS)
+                            .whereEqualTo("listingId", id)
+                            .whereEqualTo("status", "COMPLETED")
+                            .get()
+                            .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                @Override
+                                public void onSuccess(QuerySnapshot deals) {
+                                    if (deals != null && !deals.isEmpty()) {
+                                        cb.onError("Tin đã có giao dịch hoàn tất, không thể mở lại");
+                                        return;
+                                    }
+                                    listingRef.update("status", ListingStatus.AVAILABLE.name(),
+                                            "updatedAt", FieldValue.serverTimestamp())
+                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                @Override
+                                                public void onSuccess(Void unused) {
+                                                    cb.onSuccess(null);
+                                                }
+                                            })
+                                            .addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(Exception e) {
+                                                    fail(cb, e);
+                                                }
+                                            });
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(Exception e) {
+                                    fail(cb, e);
+                                }
+                            });
+                }
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(Exception e) {
+                fail(cb, e);
+            }
+        });
     }
 
     public void delete(final String id, final DataCallback<Void> cb) {
-        db.collection("listings").document(id).get()
+        db.collection(COLLECTION_LISTINGS).document(id).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot doc) {
                         if (doc == null || !doc.exists()) {
-                            cb.onError("Listing not found");
+                            cb.onError("Không tìm thấy tin đăng");
                             return;
                         }
                         Listing listing = doc.toObject(Listing.class);
@@ -415,7 +528,7 @@ public class ListingRepository extends BaseRepository {
                             cb.onError("Chỉ xóa được tin ở trạng thái bản nháp");
                             return;
                         }
-                        db.collection("listings").document(id).delete()
+                        db.collection(COLLECTION_LISTINGS).document(id).delete()
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void unused) {
@@ -425,7 +538,7 @@ public class ListingRepository extends BaseRepository {
                                 .addOnFailureListener(new OnFailureListener() {
                                     @Override
                                     public void onFailure(Exception e) {
-                                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error deleting draft");
+                                        fail(cb, e);
                                     }
                                 });
                     }
@@ -433,13 +546,13 @@ public class ListingRepository extends BaseRepository {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
-                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error reading listing");
+                        fail(cb, e);
                     }
                 });
     }
 
     public void getById(final String id, final DataCallback<Listing> cb) {
-        db.collection("listings").document(id).get()
+        db.collection(COLLECTION_LISTINGS).document(id).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot doc) {
@@ -464,9 +577,9 @@ public class ListingRepository extends BaseRepository {
     }
 
     public void getBySeller(final String sellerId, final DataCallback<List<Listing>> cb) {
-        String currentUid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
+        String currentUid = currentUserId();
         boolean isOwner = sellerId != null && sellerId.equals(currentUid);
-        Query query = db.collection("listings").whereEqualTo("sellerId", sellerId);
+        Query query = db.collection(COLLECTION_LISTINGS).whereEqualTo("sellerId", sellerId);
         if (!isOwner) {
             List<String> allowed = new ArrayList<String>();
             allowed.add(ListingStatus.AVAILABLE.name());
@@ -479,35 +592,65 @@ public class ListingRepository extends BaseRepository {
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot snapshots) {
-                        List<Listing> list = new ArrayList<Listing>();
-                        if (snapshots != null) {
-                            for (DocumentSnapshot doc : snapshots.getDocuments()) {
-                                Listing item = doc.toObject(Listing.class);
-                                if (item != null) {
-                                    item.setId(doc.getId());
-                                    list.add(item);
-                                }
-                            }
-                        }
-                        cb.onSuccess(list);
+                        cb.onSuccess(toListingList(snapshots));
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
-                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error loading listings");
+                        fail(cb, e);
                     }
                 });
     }
 
-    public void getFeed(final SearchFilter filter, final Timestamp after, final DataCallback<List<Listing>> cb) {
-        Query query = db.collection("listings").whereEqualTo("status", ListingStatus.AVAILABLE.name());
+    public void getFeed(final SearchFilter filter, final Timestamp after,
+                        final DataCallback<List<Listing>> cb) {
+        if (filter != null && filter.isFollowingOnly()) {
+            String uid = currentUserId();
+            if (uid.isEmpty()) {
+                cb.onError("Chưa đăng nhập");
+                return;
+            }
+            UserRepository userRepo = new UserRepository();
+            userRepo.getFollowingIds(uid, new DataCallback<List<String>>() {
+                @Override
+                public void onSuccess(final List<String> followingIds) {
+                    if (followingIds == null || followingIds.isEmpty()) {
+                        cb.onSuccess(new ArrayList<Listing>());
+                        return;
+                    }
+                    executeFeedQuery(filter, after, followingIds, cb);
+                }
+
+                @Override
+                public void onError(String error) {
+                    cb.onError(error);
+                }
+            });
+            return;
+        }
+        executeFeedQuery(filter, after, null, cb);
+    }
+
+    private void executeFeedQuery(final SearchFilter filter, final Timestamp after,
+                                  final List<String> followingIds,
+                                  final DataCallback<List<Listing>> cb) {
+        Query query = db.collection(COLLECTION_LISTINGS).whereEqualTo("status", ListingStatus.AVAILABLE.name());
         if (filter != null && filter.getCategoryId() != null && !filter.getCategoryId().isEmpty()) {
             query = query.whereEqualTo("categoryId", filter.getCategoryId());
         } else if (filter != null && filter.getProvince() != null && !filter.getProvince().isEmpty()) {
             query = query.whereEqualTo("province", filter.getProvince());
         }
-        query = query.orderBy("createdAt", Query.Direction.DESCENDING);
+
+        SortOrder sortOrder = filter != null ? filter.getSortOrder() : null;
+        if (sortOrder == SortOrder.PRICE_ASC) {
+            query = query.orderBy("price", Query.Direction.ASCENDING);
+        } else if (sortOrder == SortOrder.PRICE_DESC) {
+            query = query.orderBy("price", Query.Direction.DESCENDING);
+        } else {
+            query = query.orderBy("createdAt", Query.Direction.DESCENDING);
+        }
+
         if (after != null) {
             query = query.startAfter(after);
         }
@@ -517,20 +660,19 @@ public class ListingRepository extends BaseRepository {
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot snapshots) {
-                        List<Listing> list = new ArrayList<Listing>();
-                        if (snapshots != null) {
-                            for (DocumentSnapshot doc : snapshots.getDocuments()) {
-                                Listing item = doc.toObject(Listing.class);
-                                if (item != null) {
-                                    item.setId(doc.getId());
-                                    if (matchesMemoryFilter(item, filter)) {
-                                        list.add(item);
-                                    }
-                                }
+                        List<Listing> rawList = toListingList(snapshots);
+                        List<Listing> filteredList = new ArrayList<Listing>();
+                        for (int i = 0; i < rawList.size(); i++) {
+                            Listing item = rawList.get(i);
+                            if (followingIds != null && !followingIds.contains(item.getSellerId())) {
+                                continue;
+                            }
+                            if (matchesMemoryFilter(item, filter)) {
+                                filteredList.add(item);
                             }
                         }
-                        cacheListings(list);
-                        cb.onSuccess(list);
+                        cacheListings(filteredList);
+                        cb.onSuccess(filteredList);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -539,13 +681,14 @@ public class ListingRepository extends BaseRepository {
                         if (after == null) {
                             loadFeedFromCache(filter, cb);
                         } else {
-                            cb.onError(e.getMessage() != null ? e.getMessage() : "Error loading feed");
+                            fail(cb, e);
                         }
                     }
                 });
     }
 
-    public void search(final SearchFilter filter, final Timestamp after, final DataCallback<List<Listing>> cb) {
+    public void search(final SearchFilter filter, final Timestamp after,
+                       final DataCallback<List<Listing>> cb) {
         String longestWord = "";
         if (filter != null && filter.getKeyword() != null) {
             FormatUtils fu = new FormatUtils();
@@ -558,7 +701,7 @@ public class ListingRepository extends BaseRepository {
             }
         }
 
-        Query query = db.collection("listings").whereEqualTo("status", ListingStatus.AVAILABLE.name());
+        Query query = db.collection(COLLECTION_LISTINGS).whereEqualTo("status", ListingStatus.AVAILABLE.name());
         if (!longestWord.isEmpty()) {
             query = query.whereArrayContains("searchKeywords", longestWord);
         }
@@ -572,16 +715,12 @@ public class ListingRepository extends BaseRepository {
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot snapshots) {
+                        List<Listing> rawList = toListingList(snapshots);
                         List<Listing> list = new ArrayList<Listing>();
-                        if (snapshots != null) {
-                            for (DocumentSnapshot doc : snapshots.getDocuments()) {
-                                Listing item = doc.toObject(Listing.class);
-                                if (item != null) {
-                                    item.setId(doc.getId());
-                                    if (matchesMemoryFilter(item, filter)) {
-                                        list.add(item);
-                                    }
-                                }
+                        for (int i = 0; i < rawList.size(); i++) {
+                            Listing item = rawList.get(i);
+                            if (matchesMemoryFilter(item, filter)) {
+                                list.add(item);
                             }
                         }
                         cb.onSuccess(list);
@@ -590,45 +729,13 @@ public class ListingRepository extends BaseRepository {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
-                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error searching listings");
+                        fail(cb, e);
                     }
                 });
     }
 
     public void getSimilar(final Listing listing, final DataCallback<List<Listing>> cb) {
-        if (listing == null || listing.getCategoryId() == null) {
-            cb.onSuccess(new ArrayList<Listing>());
-            return;
-        }
-        db.collection("listings")
-                .whereEqualTo("status", ListingStatus.AVAILABLE.name())
-                .whereEqualTo("categoryId", listing.getCategoryId())
-                .limit(20)
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                    @Override
-                    public void onSuccess(QuerySnapshot snapshots) {
-                        List<Listing> list = new ArrayList<Listing>();
-                        if (snapshots != null) {
-                            for (DocumentSnapshot doc : snapshots.getDocuments()) {
-                                if (!doc.getId().equals(listing.getId())) {
-                                    Listing item = doc.toObject(Listing.class);
-                                    if (item != null) {
-                                        item.setId(doc.getId());
-                                        list.add(item);
-                                    }
-                                }
-                            }
-                        }
-                        cb.onSuccess(list);
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(Exception e) {
-                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error loading similar listings");
-                    }
-                });
+        cb.onError(DataCallback.NOT_READY);
     }
 
     public void recordView(final Listing listing) {
@@ -665,7 +772,7 @@ public class ListingRepository extends BaseRepository {
     }
 
     public void getBannedKeywords(final DataCallback<List<BannedKeyword>> cb) {
-        db.collection("bannedKeywords")
+        db.collection(COLLECTION_BANNED_KEYWORDS)
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
@@ -686,7 +793,7 @@ public class ListingRepository extends BaseRepository {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
-                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error loading banned keywords");
+                        fail(cb, e);
                     }
                 });
     }
@@ -729,38 +836,38 @@ public class ListingRepository extends BaseRepository {
         });
     }
 
-    private void checkBannedKeywords(final String title, final String description, final DataCallback<Boolean> cb) {
+    private void checkBannedKeywords(final String title, final String description,
+                                     final DataCallback<Boolean> cb) {
         getBannedKeywords(new DataCallback<List<BannedKeyword>>() {
             @Override
             public void onSuccess(List<BannedKeyword> list) {
                 String combined = (title != null ? title : "") + " " + (description != null ? description : "");
-                FormatUtils fu = new FormatUtils();
-                String cleaned = fu.removeAccents(combined);
-                boolean flagged = false;
-                if (list != null) {
-                    for (int i = 0; i < list.size(); i++) {
-                        BannedKeyword bk = list.get(i);
-                        if (bk != null && bk.getKeyword() != null && !bk.getKeyword().isEmpty()) {
-                            if (cleaned.contains(bk.getKeyword())) {
-                                flagged = true;
-                                break;
-                            }
-                        }
-                    }
-                }
+                KeywordFilter filter = new KeywordFilter();
+                filter.setKeywords(list);
+                boolean flagged = filter.containsBanned(combined);
                 cb.onSuccess(flagged);
             }
 
             @Override
             public void onError(String error) {
-                cb.onSuccess(false);
+                cb.onError(error);
             }
         });
     }
 
     private boolean matchesMemoryFilter(Listing item, SearchFilter filter) {
-        if (filter == null) {
+        if (filter == null || item == null) {
             return true;
+        }
+        if (filter.getCategoryId() != null && !filter.getCategoryId().isEmpty()) {
+            if (!filter.getCategoryId().equals(item.getCategoryId())) {
+                return false;
+            }
+        }
+        if (filter.getProvince() != null && !filter.getProvince().isEmpty()) {
+            if (!filter.getProvince().equals(item.getProvince())) {
+                return false;
+            }
         }
         if (filter.getMinPrice() > 0 && item.getPrice() < filter.getMinPrice()) {
             return false;
@@ -773,13 +880,35 @@ public class ListingRepository extends BaseRepository {
                 return false;
             }
         }
-        if (filter.hasRadius() && item.getLocation() != null) {
-            GeoUtils geoUtils = new GeoUtils();
-            if (!geoUtils.isWithinRadius(item.getLocation(), filter.getCenter(), (int) filter.getRadiusKm())) {
+        if (filter.getTradeTypes() != null && !filter.getTradeTypes().isEmpty()) {
+            boolean matchTrade = false;
+            if (item.getTradeTypes() != null) {
+                for (TradeType filterType : filter.getTradeTypes()) {
+                    if (item.getTradeTypes().contains(filterType)) {
+                        matchTrade = true;
+                        break;
+                    }
+                }
+            }
+            if (!matchTrade) {
                 return false;
             }
         }
         return true;
+    }
+
+    private List<Listing> toListingList(QuerySnapshot snapshots) {
+        List<Listing> list = new ArrayList<Listing>();
+        if (snapshots != null) {
+            for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                Listing item = doc.toObject(Listing.class);
+                if (item != null) {
+                    item.setId(doc.getId());
+                    list.add(item);
+                }
+            }
+        }
+        return list;
     }
 
     private void cacheListing(final Listing listing) {
@@ -859,7 +988,7 @@ public class ListingRepository extends BaseRepository {
                 return AppDatabase.getInstance(context).listingDao();
             }
         } catch (Exception e) {
-            // Ignored when running outside Android environment
+            Log.w(TAG, "Cannot access Room database", e);
         }
         return null;
     }
@@ -871,7 +1000,7 @@ public class ListingRepository extends BaseRepository {
                 return AppDatabase.getInstance(context).historyDao();
             }
         } catch (Exception e) {
-            // Ignored when running outside Android environment
+            Log.w(TAG, "Cannot access Room database", e);
         }
         return null;
     }

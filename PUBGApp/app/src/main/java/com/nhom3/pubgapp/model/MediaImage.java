@@ -67,6 +67,10 @@ public class MediaImage extends BaseDocument {
         if (data == null || data.isEmpty()) {
             return new byte[0];
         }
-        return android.util.Base64.decode(data, android.util.Base64.DEFAULT);
+        try {
+            return java.util.Base64.getDecoder().decode(data);
+        } catch (IllegalArgumentException e) {
+            return new byte[0];
+        }
     }
 }

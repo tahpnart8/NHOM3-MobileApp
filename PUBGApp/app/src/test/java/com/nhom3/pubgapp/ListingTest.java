@@ -145,6 +145,67 @@ public class ListingTest {
         assertNull(listing.getStatusReason());
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testMarkSoldFromDraftFails() {
+        listing.markSold();
+    }
+
+    @Test
+    public void testMarkSoldFromReservedSucceeds() {
+        listing.publish();
+        listing.reserve("deal_123");
+        listing.markSold();
+        assertEquals(ListingStatus.SOLD, listing.getStatus());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testHideFromDraftFails() {
+        listing.hide("Ly do");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testRestoreFromAvailableFails() {
+        listing.publish();
+        listing.restore();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testReserveFromDraftFails() {
+        listing.reserve("deal_123");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testReleaseFromAvailableFails() {
+        listing.publish();
+        listing.release();
+    }
+
+    @Test
+    public void testRemoveFromDraftAvailableHidden() {
+        listing.remove("Ly do draft");
+        assertEquals(ListingStatus.REMOVED, listing.getStatus());
+
+        listing.setStatus(ListingStatus.AVAILABLE);
+        listing.remove("Ly do available");
+        assertEquals(ListingStatus.REMOVED, listing.getStatus());
+
+        listing.setStatus(ListingStatus.HIDDEN);
+        listing.remove("Ly do hidden");
+        assertEquals(ListingStatus.REMOVED, listing.getStatus());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testRemoveFromSoldFails() {
+        listing.setStatus(ListingStatus.SOLD);
+        listing.remove("Ly do");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testRemoveFromRemovedFails() {
+        listing.setStatus(ListingStatus.REMOVED);
+        listing.remove("Ly do");
+    }
+
     @Test
     public void testBuildSearchKeywords() {
         listing.buildSearchKeywords();
