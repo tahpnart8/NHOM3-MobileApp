@@ -52,7 +52,7 @@ public class PostListingFragment extends Fragment {
     private PostImageAdapter imageAdapter;
     private ActivityResultLauncher<PickVisualMediaRequest> photoPickerLauncher;
 
-    private final List<Category> loadedCategories = new ArrayList<>();
+    private final List<Category> loadedCategories = new ArrayList<Category>();
     private VerificationStatus currentVerification = VerificationStatus.NONE;
 
     @Override
@@ -314,7 +314,7 @@ public class PostListingFragment extends Fragment {
 
         listing.setItemCondition(getSelectedCondition());
 
-        List<TradeType> tradeTypes = new ArrayList<>();
+        List<TradeType> tradeTypes = new ArrayList<TradeType>();
         if (binding.checkTradeSell.isChecked()) {
             tradeTypes.add(TradeType.SELL);
         }
@@ -417,7 +417,7 @@ public class PostListingFragment extends Fragment {
     private void restoreInstanceState(Bundle state) {
         ArrayList<Parcelable> parcelables = state.getParcelableArrayList(KEY_IMAGES);
         if (parcelables != null) {
-            List<Uri> restored = new ArrayList<>();
+            List<Uri> restored = new ArrayList<Uri>();
             for (Parcelable p : parcelables) {
                 if (p instanceof Uri) {
                     restored.add((Uri) p);

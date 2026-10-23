@@ -21,7 +21,7 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Imag
         void onRemoveImage(int position);
     }
 
-    private final List<Uri> images = new ArrayList<>();
+    private final List<Uri> images = new ArrayList<Uri>();
     private final OnRemoveImageListener removeListener;
 
     public PostImageAdapter(OnRemoveImageListener removeListener) {
@@ -37,7 +37,7 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Imag
     }
 
     public List<Uri> getImages() {
-        return new ArrayList<>(images);
+        return new ArrayList<Uri>(images);
     }
 
     @NonNull
