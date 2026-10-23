@@ -47,11 +47,106 @@ public class ListingEntity {
     }
 
     public ListingEntity fromModel(Listing model) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (model == null) {
+            return this;
+        }
+        this.id = model.getId() != null ? model.getId() : "";
+        this.sellerId = model.getSellerId();
+        this.title = model.getTitle();
+        this.description = model.getDescription();
+        if (model.getImageIds() != null) {
+            org.json.JSONArray array = new org.json.JSONArray();
+            for (int i = 0; i < model.getImageIds().size(); i++) {
+                array.put(model.getImageIds().get(i));
+            }
+            this.imageIdsJson = array.toString();
+        }
+        this.coverThumb = model.getCoverThumb();
+        this.price = model.getPrice();
+        this.categoryId = model.getCategoryId();
+        if (model.getTradeTypes() != null) {
+            org.json.JSONArray array = new org.json.JSONArray();
+            for (int i = 0; i < model.getTradeTypes().size(); i++) {
+                com.nhom3.pubgapp.model.enums.TradeType type = model.getTradeTypes().get(i);
+                if (type != null) {
+                    array.put(type.name());
+                }
+            }
+            this.tradeTypesJson = array.toString();
+        }
+        if (model.getItemCondition() != null) {
+            this.itemCondition = model.getItemCondition().name();
+        }
+        this.minOfferPrice = model.getMinOfferPrice();
+        this.province = model.getProvince();
+        if (model.getStatus() != null) {
+            this.status = model.getStatus().name();
+        }
+        if (model.getCreatedAt() != null) {
+            this.createdAtMillis = model.getCreatedAt().toDate().getTime();
+        }
+        this.cachedAtMillis = System.currentTimeMillis();
+        return this;
     }
 
     public Listing toModel() {
-        throw new UnsupportedOperationException("NOT_READY");
+        Listing listing = new Listing();
+        listing.setId(id);
+        listing.setSellerId(sellerId);
+        listing.setTitle(title);
+        listing.setDescription(description);
+        if (imageIdsJson != null && !imageIdsJson.isEmpty()) {
+            try {
+                org.json.JSONArray array = new org.json.JSONArray(imageIdsJson);
+                java.util.List<String> list = new java.util.ArrayList<String>();
+                for (int i = 0; i < array.length(); i++) {
+                    list.add(array.getString(i));
+                }
+                listing.setImageIds(list);
+            } catch (org.json.JSONException e) {
+                // Ignore malformed json
+            }
+        }
+        listing.setCoverThumb(coverThumb);
+        listing.setPrice(price);
+        listing.setCategoryId(categoryId);
+        if (tradeTypesJson != null && !tradeTypesJson.isEmpty()) {
+            try {
+                org.json.JSONArray array = new org.json.JSONArray(tradeTypesJson);
+                java.util.List<com.nhom3.pubgapp.model.enums.TradeType> list =
+                        new java.util.ArrayList<com.nhom3.pubgapp.model.enums.TradeType>();
+                for (int i = 0; i < array.length(); i++) {
+                    try {
+                        list.add(com.nhom3.pubgapp.model.enums.TradeType.valueOf(array.getString(i)));
+                    } catch (IllegalArgumentException ex) {
+                        // Ignore unknown enum
+                    }
+                }
+                listing.setTradeTypes(list);
+            } catch (org.json.JSONException e) {
+                // Ignore malformed json
+            }
+        }
+        if (itemCondition != null && !itemCondition.isEmpty()) {
+            try {
+                listing.setItemCondition(com.nhom3.pubgapp.model.enums.ItemCondition.valueOf(itemCondition));
+            } catch (IllegalArgumentException ex) {
+                // Ignore unknown enum
+            }
+        }
+        listing.setMinOfferPrice(minOfferPrice);
+        listing.setProvince(province);
+        if (status != null && !status.isEmpty()) {
+            try {
+                listing.setStatus(com.nhom3.pubgapp.model.enums.ListingStatus.valueOf(status));
+            } catch (IllegalArgumentException ex) {
+                // Ignore unknown enum
+            }
+        }
+        if (createdAtMillis > 0) {
+            listing.setCreatedAt(new com.google.firebase.Timestamp(new java.util.Date(createdAtMillis)));
+        }
+        return listing;
     }
 
     @NonNull
