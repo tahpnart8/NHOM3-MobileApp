@@ -596,6 +596,27 @@ public class ChatRepository extends BaseRepository {
     }
 
     public void sendOffer(Offer offer, DataCallback<String> cb) {
+        try {
+            if (!com.nhom3.pubgapp.util.NetworkMonitor.getInstance().isOnline()) {
+                cb.onError("Thiết bị đang ngoại tuyến. Vui lòng kiểm tra kết nối mạng.");
+                return;
+            }
+        } catch (UnsupportedOperationException ignored) {
+        }
+
+        String senderId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
+        if (senderId.isEmpty()) {
+            cb.onError("Vui lòng đăng nhập để gửi đề nghị.");
+            return;
+        }
+
+        if (offer == null || offer.getListingId() == null || offer.getListingId().trim().isEmpty()) {
+            cb.onError("Thông tin đề nghị không hợp lệ.");
+            return;
+        }
+
+        offer.setBuyerId(senderId);
+
         db.collection(COLLECTION_LISTINGS).document(offer.getListingId()).get()
                 .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
@@ -605,16 +626,66 @@ public class ChatRepository extends BaseRepository {
                             return;
                         }
                         Listing listing = task.getResult().toObject(Listing.class);
-                        if (listing == null || !listing.acceptsOffer(offer)) {
-                            cb.onError("Tin đăng không chấp nhận đề nghị này.");
+                        if (listing == null) {
+                            cb.onError("Dữ liệu tin đăng không hợp lệ.");
                             return;
                         }
-                        saveOfferAndMessage(offer, cb);
+                        listing.setId(task.getResult().getId());
+                        offer.setSellerId(listing.getSellerId());
+
+                        String validationError = validateOffer(offer, listing, senderId);
+                        if (validationError != null) {
+                            cb.onError(validationError);
+                            return;
+                        }
+
+                        checkPendingOfferAndProceed(offer, listing, senderId, cb);
                     }
                 });
     }
 
-    private void saveOfferAndMessage(Offer offer, DataCallback<String> cb) {
+    private void checkPendingOfferAndProceed(Offer offer, Listing listing, String senderId,
+                                             DataCallback<String> cb) {
+        db.collection(COLLECTION_OFFERS)
+                .whereEqualTo("listingId", offer.getListingId())
+                .whereEqualTo("buyerId", senderId)
+                .whereEqualTo("status", OfferStatus.PENDING.name())
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
+                            cb.onError("Bạn đã có đề nghị đang chờ cho tin đăng này.");
+                            return;
+                        }
+                        ensureConversationAndSaveOffer(offer, listing, senderId, cb);
+                    }
+                });
+    }
+
+    private void ensureConversationAndSaveOffer(Offer offer, Listing listing, String senderId,
+                                                DataCallback<String> cb) {
+        String convId = offer.getConversationId();
+        if (convId == null || convId.trim().isEmpty()) {
+            convId = buildConversationId(listing.getId(), senderId);
+            offer.setConversationId(convId);
+        }
+
+        final String finalConvId = convId;
+        final DocumentReference convRef = db.collection(COLLECTION_CONVERSATIONS).document(finalConvId);
+
+        convRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                boolean convExists = task.isSuccessful() && task.getResult() != null && task.getResult().exists();
+                executeSendOfferBatch(offer, listing, senderId, finalConvId, convRef, convExists, cb);
+            }
+        });
+    }
+
+    private void executeSendOfferBatch(Offer offer, Listing listing, String senderId,
+                                       String convId, DocumentReference convRef,
+                                       boolean convExists, DataCallback<String> cb) {
         offer.setStatus(OfferStatus.PENDING);
         offer.setCreatedAt(Timestamp.now());
 
@@ -624,24 +695,36 @@ public class ChatRepository extends BaseRepository {
         offer.setId(offerId);
         batch.set(offerRef, offer);
 
-        DocumentReference msgRef = db.collection(COLLECTION_CONVERSATIONS).document(offer.getConversationId())
-                .collection(COLLECTION_MESSAGES).document();
+        String summary = formatOfferSummary(offer);
         ChatMessage msg = new ChatMessage();
+        DocumentReference msgRef = db.collection(COLLECTION_CONVERSATIONS).document(convId)
+                .collection(COLLECTION_MESSAGES).document();
         msg.setId(msgRef.getId());
-        msg.setConversationId(offer.getConversationId());
-        msg.setSenderId(offer.getBuyerId());
+        msg.setConversationId(convId);
+        msg.setSenderId(senderId);
         msg.setType(MessageType.OFFER);
         msg.setOfferId(offerId);
-        msg.setText("Đã gửi một đề nghị giá.");
+        msg.setText(summary);
         msg.setCreatedAt(Timestamp.now());
         batch.set(msgRef, msg);
 
-        DocumentReference convRef = db.collection(COLLECTION_CONVERSATIONS).document(offer.getConversationId());
-        batch.update(convRef, "lastMessage", "Đề nghị giá mới", "lastMessageAt", msg.getCreatedAt());
+        if (!convExists) {
+            Conversation conv = new Conversation();
+            conv.setId(convId);
+            conv.setListingId(listing.getId());
+            conv.setBuyerId(senderId);
+            conv.setSellerId(listing.getSellerId());
+            conv.setLastMessage(summary);
+            conv.setLastMessageAt(msg.getCreatedAt());
+            conv.setCreatedAt(Timestamp.now());
+            batch.set(convRef, conv);
+        } else {
+            batch.update(convRef, "lastMessage", summary, "lastMessageAt", msg.getCreatedAt());
+        }
 
-        queueNotification(offer.getSellerId(), NotificationType.NEW_OFFER,
-                "Đề nghị giá mới", "Có người gửi đề nghị cho tin đăng của bạn.",
-                offer.getConversationId(), batch);
+        queueNotification(listing.getSellerId(), NotificationType.NEW_OFFER,
+                "Đề nghị giá mới", "Có người gửi đề nghị cho tin: " + listing.getTitle(),
+                convId, batch);
 
         batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
@@ -656,6 +739,20 @@ public class ChatRepository extends BaseRepository {
     }
 
     public void respondToOffer(String offerId, boolean accept, DataCallback<String> cb) {
+        try {
+            if (!com.nhom3.pubgapp.util.NetworkMonitor.getInstance().isOnline()) {
+                cb.onError("Thiết bị đang ngoại tuyến. Vui lòng kiểm tra kết nối mạng.");
+                return;
+            }
+        } catch (UnsupportedOperationException ignored) {
+        }
+
+        String senderId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
+        if (senderId.isEmpty()) {
+            cb.onError("Vui lòng đăng nhập để thực hiện thao tác.");
+            return;
+        }
+
         DocumentReference offerRef = db.collection(COLLECTION_OFFERS).document(offerId);
         offerRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -670,6 +767,17 @@ public class ChatRepository extends BaseRepository {
                     return;
                 }
                 offer.setId(offerId);
+
+                if (!senderId.equals(offer.getSellerId())) {
+                    cb.onError("Chỉ người bán mới có quyền trả lời đề nghị.");
+                    return;
+                }
+
+                if (offer.getStatus() != OfferStatus.PENDING) {
+                    cb.onError("Đề nghị này đã được xử lý trước đó.");
+                    return;
+                }
+
                 if (!accept) {
                     rejectOffer(offerRef, offer, cb);
                 } else {
@@ -680,10 +788,11 @@ public class ChatRepository extends BaseRepository {
     }
 
     private void rejectOffer(DocumentReference offerRef, Offer offer, DataCallback<String> cb) {
+        offer.reject();
         WriteBatch batch = db.batch();
         batch.update(offerRef, "status", OfferStatus.REJECTED.name());
         queueNotification(offer.getBuyerId(), NotificationType.OFFER_RESULT,
-                "Đề nghị đã bị từ chối", "Người bán đã từ chối đề nghị của bạn.",
+                "Đề nghị bị từ chối", "Người bán đã từ chối đề nghị của bạn.",
                 offer.getConversationId(), batch);
 
         batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -709,9 +818,16 @@ public class ChatRepository extends BaseRepository {
                 }
                 Listing listing = task.getResult().toObject(Listing.class);
                 if (listing == null || listing.getStatus() != ListingStatus.AVAILABLE) {
-                    // Tin không còn khả dụng thì từ chối đề nghị
-                    offerRef.update("status", OfferStatus.REJECTED.name());
-                    cb.onError("Tin không còn khả dụng.");
+                    // Tin không còn khả dụng thì từ chối đề nghị và báo lỗi
+                    offer.reject();
+                    WriteBatch rejectBatch = db.batch();
+                    rejectBatch.update(offerRef, "status", OfferStatus.REJECTED.name());
+                    queueNotification(offer.getBuyerId(), NotificationType.OFFER_RESULT,
+                            "Đề nghị bị từ chối",
+                            "Tin không còn ở trạng thái khả dụng để chấp nhận.",
+                            offer.getConversationId(), rejectBatch);
+                    rejectBatch.commit();
+                    cb.onError("Tin không còn khả dụng để chấp nhận đề nghị.");
                     return;
                 }
                 listing.setId(task.getResult().getId());
@@ -723,7 +839,6 @@ public class ChatRepository extends BaseRepository {
     private void executeAcceptOfferBatch(DocumentReference offerRef, Offer offer,
                                          DocumentReference listingRef, Listing listing,
                                          DataCallback<String> cb) {
-        // Tìm các offer PENDING khác của cùng tin đăng để từ chối
         db.collection(COLLECTION_OFFERS)
                 .whereEqualTo("listingId", offer.getListingId())
                 .whereEqualTo("status", OfferStatus.PENDING.name())
@@ -732,10 +847,9 @@ public class ChatRepository extends BaseRepository {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> queryTask) {
                         WriteBatch batch = db.batch();
-                        // Chấp nhận offer hiện tại
+                        offer.accept();
                         batch.update(offerRef, "status", OfferStatus.ACCEPTED.name());
 
-                        // Dựng Deal từ offer và listing
                         DealRepository dealRepo = new DealRepository();
                         Deal deal = dealRepo.buildFromOffer(offer, listing);
                         DocumentReference dealRef = db.collection(COLLECTION_DEALS).document();
@@ -743,11 +857,10 @@ public class ChatRepository extends BaseRepository {
                         deal.setId(dealId);
                         batch.set(dealRef, deal);
 
-                        // Cập nhật tin sang RESERVED
                         batch.update(listingRef, "status", ListingStatus.RESERVED.name(),
-                                "reservedDealId", dealId);
+                                "reservedDealId", dealId,
+                                "updatedAt", Timestamp.now());
 
-                        // Từ chối các offer PENDING khác
                         if (queryTask.isSuccessful() && queryTask.getResult() != null) {
                             for (DocumentSnapshot doc : queryTask.getResult().getDocuments()) {
                                 if (!doc.getId().equals(offer.getId())) {
@@ -764,11 +877,10 @@ public class ChatRepository extends BaseRepository {
                             }
                         }
 
-                        // Thông báo kết quả cho người mua được chấp nhận
                         String acceptBody = "Người bán đã chấp nhận đề nghị của bạn. "
-                                + "Nhấn để xem giao dịch.";
+                                + "Nhấn để xem chi tiết giao dịch.";
                         queueNotification(offer.getBuyerId(), NotificationType.OFFER_RESULT,
-                                "Đề nghị đã được chấp nhận", acceptBody, dealId, batch);
+                                "Đề nghị được chấp nhận", acceptBody, dealId, batch);
 
                         batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
                             @Override
@@ -786,6 +898,20 @@ public class ChatRepository extends BaseRepository {
     }
 
     public ListenerRegistration observeOffers(String conversationId, DataCallback<Void> cb) {
+        return observeOffersData(conversationId, new DataCallback<List<Offer>>() {
+            @Override
+            public void onSuccess(List<Offer> result) {
+                cb.onSuccess(null);
+            }
+
+            @Override
+            public void onError(String message) {
+                cb.onError(message);
+            }
+        });
+    }
+
+    ListenerRegistration observeOffersData(String conversationId, DataCallback<List<Offer>> cb) {
         Query query = db.collection(COLLECTION_OFFERS).whereEqualTo("conversationId", conversationId);
         return query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
@@ -795,9 +921,84 @@ public class ChatRepository extends BaseRepository {
                     cb.onError(error.getMessage());
                     return;
                 }
-                cb.onSuccess(null);
+                List<Offer> list = new ArrayList<>();
+                if (value != null) {
+                    for (DocumentSnapshot doc : value.getDocuments()) {
+                        Offer offer = doc.toObject(Offer.class);
+                        if (offer != null) {
+                            offer.setId(doc.getId());
+                            list.add(offer);
+                        }
+                    }
+                }
+                cb.onSuccess(list);
             }
         });
+    }
+
+    static String validateOffer(Offer offer, Listing listing, String senderId) {
+        if (offer == null || listing == null) {
+            return "Thông tin đề nghị không hợp lệ.";
+        }
+        if (senderId != null && senderId.equals(listing.getSellerId())) {
+            return "Không thể gửi đề nghị cho tin đăng của chính mình.";
+        }
+        if (listing.getStatus() != ListingStatus.AVAILABLE) {
+            return "Tin đăng không còn ở trạng thái khả dụng để gửi đề nghị.";
+        }
+        if (offer.getOfferType() == null || listing.getAcceptedOfferTypes() == null
+                || !listing.getAcceptedOfferTypes().contains(offer.getOfferType())) {
+            return "Người bán không chấp nhận hình thức đề nghị này.";
+        }
+        if (offer.getOfferType() == OfferType.MONEY || offer.getOfferType() == OfferType.MONEY_AND_ITEM) {
+            if (offer.getAmount() < listing.getMinOfferPrice()) {
+                return "Giá đề nghị chưa phù hợp, hãy thử mức khác.";
+            }
+        }
+        if (offer.getOfferType() == OfferType.ITEM) {
+            if (offer.getAmount() != 0 || offer.getExchangeItem() == null
+                    || offer.getExchangeItem().trim().isEmpty()) {
+                return "Vui lòng nhập thông tin món đồ trao đổi.";
+            }
+        }
+        if (offer.getOfferType() == OfferType.MONEY_AND_ITEM) {
+            if (offer.getExchangeItem() == null || offer.getExchangeItem().trim().isEmpty()) {
+                return "Vui lòng nhập thông tin món đồ trao đổi.";
+            }
+        }
+        return null;
+    }
+
+    static String formatOfferSummary(Offer offer) {
+        if (offer == null || offer.getOfferType() == null) {
+            return "Đề nghị giá mới";
+        }
+        if (offer.getOfferType() == OfferType.MONEY) {
+            return "Đề nghị: " + com.nhom3.pubgapp.util.FormatUtils.formatPrice(offer.getAmount());
+        }
+        if (offer.getOfferType() == OfferType.ITEM) {
+            String item = offer.getExchangeItem() != null ? offer.getExchangeItem().trim() : "";
+            return "Đề nghị đổi: " + item;
+        }
+        if (offer.getOfferType() == OfferType.MONEY_AND_ITEM) {
+            String item = offer.getExchangeItem() != null ? offer.getExchangeItem().trim() : "";
+            return "Đề nghị: " + com.nhom3.pubgapp.util.FormatUtils.formatPrice(offer.getAmount())
+                    + " + " + item;
+        }
+        return "Đề nghị giá mới";
+    }
+
+    static List<Offer> filterOtherPendingOffers(List<Offer> allPending, String currentOfferId) {
+        List<Offer> result = new ArrayList<>();
+        if (allPending == null) {
+            return result;
+        }
+        for (Offer o : allPending) {
+            if (o != null && o.getId() != null && !o.getId().equals(currentOfferId)) {
+                result.add(o);
+            }
+        }
+        return result;
     }
 
     private void queueNotification(String recipientId, NotificationType type,
