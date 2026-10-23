@@ -282,7 +282,6 @@ public class Deal extends BaseDocument {
         }
         if (buyerConfirmed && sellerConfirmed && status == DealStatus.PENDING_CONFIRM) {
             status = DealStatus.CONFIRMED;
-            touch();
         }
     }
 
@@ -296,7 +295,6 @@ public class Deal extends BaseDocument {
             long sevenDaysInMillis = (long) AUTO_RELEASE_DAYS * 24 * 60 * 60 * 1000;
             long releaseTime = this.shippedAt.toDate().getTime() + sevenDaysInMillis;
             this.autoReleaseAt = new Timestamp(new java.util.Date(releaseTime));
-            touch();
         }
     }
 
@@ -310,7 +308,6 @@ public class Deal extends BaseDocument {
         this.receivedImageId = imageId;
         this.status = DealStatus.RECEIVED;
         this.receivedAt = Timestamp.now();
-        touch();
     }
 
     public boolean isAutoReleaseDue(Timestamp now) {
@@ -325,7 +322,6 @@ public class Deal extends BaseDocument {
             this.status = DealStatus.RECEIVED;
             this.receivedAt = Timestamp.now();
             this.receivedImageId = "";
-            touch();
         }
     }
 
@@ -340,7 +336,6 @@ public class Deal extends BaseDocument {
 
     public void complete() {
         this.status = DealStatus.COMPLETED;
-        touch();
     }
 
     public boolean isPendingExpired(Timestamp now) {
@@ -368,18 +363,15 @@ public class Deal extends BaseDocument {
     public void cancel(String userId, String reason) {
         this.status = DealStatus.CANCELLED;
         this.cancelReason = reason;
-        touch();
     }
 
     public void dispute() {
         this.status = DealStatus.DISPUTED;
-        touch();
     }
 
     public void resolveDispute(DealStatus target) {
         if (canMoveTo(target)) {
             this.status = target;
-            touch();
         }
     }
 

@@ -82,11 +82,9 @@ public class Offer extends BaseDocument {
 
     public void accept() {
         this.status = OfferStatus.ACCEPTED;
-        touch();
     }
 
     public void reject() {
         this.status = OfferStatus.REJECTED;
-        touch();
     }
 }
