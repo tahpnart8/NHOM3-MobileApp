@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Screen names for the empty shells, replaced when each screen is built -->
+    <string name="admin_dashboard_title">E01 Bảng điều khiển</string>
+    <string name="admin_user_list_title">E02 Danh sách người dùng</string>
+    <string name="admin_user_detail_title">E03 Chi tiết người dùng</string>
+    <string name="admin_moderation_title">E04 Kiểm duyệt nội dung</string>
+    <string name="admin_listing_detail_title">E04 Chi tiết tin cho admin</string>
+</resources>
