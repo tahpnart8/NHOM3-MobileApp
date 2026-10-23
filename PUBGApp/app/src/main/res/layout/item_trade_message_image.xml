@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="@dimen/space_md"
+    android:paddingVertical="@dimen/space_xs">
+
+    <!-- Received image bubble (left aligned) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardImageReceived"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginEnd="@dimen/space_xl"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="@dimen/radius_md"
+        app:cardElevation="@dimen/elevation_card"
+        app:strokeColor="?attr/colorOutline"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/space_xs">
+
+            <ImageView
+                android:id="@+id/imageReceived"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/trade_chat_image_sent"
+                android:scaleType="centerCrop" />
+
+            <TextView
+                android:id="@+id/textTimeImageReceived"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="@dimen/space_xs"
+                android:layout_marginEnd="@dimen/space_xs"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Sent image bubble (right aligned) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardImageSent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginStart="@dimen/space_xl"
+        app:cardBackgroundColor="?attr/colorPrimary"
+        app:cardCornerRadius="@dimen/radius_md"
+        app:cardElevation="@dimen/elevation_card">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/space_xs">
+
+            <ImageView
+                android:id="@+id/imageSent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/trade_chat_image_sent"
+                android:scaleType="centerCrop" />
+
+            <TextView
+                android:id="@+id/textTimeImageSent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="@dimen/space_xs"
+                android:layout_marginEnd="@dimen/space_xs"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnPrimary" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>
