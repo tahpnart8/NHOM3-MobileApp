@@ -1,14 +1,11 @@
 package com.nhom3.pubgapp.data;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.Timestamp;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
@@ -36,7 +33,6 @@ import java.util.Map;
 // Complaints about a deal; the document id is the dealId (firestore-schema.md, complaints and adminNote).
 public class ComplaintRepository extends BaseRepository {
 
-    private static final String TAG = "ComplaintRepository";
     private static final String COLLECTION = "complaints";
     private static final String ADMIN_NOTE_COLLECTION = "adminNote";
     private static final String ADMIN_NOTE_DOCUMENT = "note";
@@ -71,7 +67,6 @@ public class ComplaintRepository extends BaseRepository {
     private static final String ERROR_NOT_NEEDS_EVIDENCE =
             "Đơn khiếu nại này không cần bổ sung bằng chứng.";
     private static final String ERROR_INVALID_EVIDENCE = "Mỗi lần bổ sung từ 1 đến 5 ảnh.";
-    private static final String ERROR_GENERIC = "Không kết nối được máy chủ, vui lòng thử lại.";
     private static final String ERROR_INVALID_COMPLAINT =
             "Đơn khiếu nại cần lý do, mô tả không quá 2000 ký tự và từ 1 đến 5 ảnh.";
     private static final String ERROR_DEAL_NOT_FOUND = "Không tìm thấy giao dịch.";
@@ -82,8 +77,8 @@ public class ComplaintRepository extends BaseRepository {
     private final NotificationRepository notificationRepository = new NotificationRepository();
 
     public void create(Complaint complaint, DataCallback<Void> cb) {
-        final String uid = signedInUserId();
-        if (uid == null) {
+        final String uid = currentUserId();
+        if (uid.isEmpty()) {
             cb.onError(ERROR_NOT_SIGNED_IN);
             return;
         }
@@ -111,8 +106,8 @@ public class ComplaintRepository extends BaseRepository {
     }
 
     public void withdraw(String id, DataCallback<Void> cb) {
-        final String uid = signedInUserId();
-        if (uid == null) {
+        final String uid = currentUserId();
+        if (uid.isEmpty()) {
             cb.onError(ERROR_NOT_SIGNED_IN);
             return;
         }
@@ -166,8 +161,8 @@ public class ComplaintRepository extends BaseRepository {
     }
 
     public void decide(String id, ComplaintDecision decision, String message, DataCallback<Void> cb) {
-        final String uid = signedInUserId();
-        if (uid == null) {
+        final String uid = currentUserId();
+        if (uid.isEmpty()) {
             cb.onError(ERROR_NOT_SIGNED_IN);
             return;
         }
@@ -189,8 +184,8 @@ public class ComplaintRepository extends BaseRepository {
     }
 
     public void saveAdminNote(String id, String note, DataCallback<Void> cb) {
-        String uid = signedInUserId();
-        if (uid == null) {
+        String uid = currentUserId();
+        if (uid.isEmpty()) {
             cb.onError(ERROR_NOT_SIGNED_IN);
             return;
         }
@@ -605,16 +600,6 @@ public class ComplaintRepository extends BaseRepository {
                 .addOnFailureListener(failure(cb));
     }
 
-    // BaseRepository.currentUserId is still a skeleton, so the uid is read here.
-    @Nullable
-    private String signedInUserId() {
-        FirebaseUser user = auth.getCurrentUser();
-        if (user == null) {
-            return null;
-        }
-        return user.getUid();
-    }
-
     private OnSuccessListener<Void> voidSuccess(DataCallback<Void> cb) {
         final DataCallback<Void> callback = cb;
         return new OnSuccessListener<Void>() {
@@ -630,8 +615,7 @@ public class ComplaintRepository extends BaseRepository {
         return new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception error) {
-                Log.e(TAG, "Firestore call failed", error);
-                callback.onError(ERROR_GENERIC);
+                fail(callback, error);
             }
         };
     }
