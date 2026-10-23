@@ -176,12 +176,21 @@ service cloud.firestore {
           && d.get('isActive', false) is bool;
       }
 
+      // Chỉ hai cấp: parentId rỗng là danh mục gốc; khác rỗng thì cha phải là danh mục gốc.
+      function twoLevels(d) {
+        return emptyString(d, 'parentId')
+          || (d.parentId is string
+            && d.parentId != id
+            && emptyString(get(/databases/$(database)/documents/categories/$(d.parentId)).data, 'parentId'));
+      }
+
       allow read: if true;
 
       allow create: if isAdmin()
         && writerActive()
         && hasOnlyKeys(categoryKeys())
         && validCategory(request.resource.data)
+        && twoLevels(request.resource.data)
         && createStamps();
 
       allow update, delete: if false;
