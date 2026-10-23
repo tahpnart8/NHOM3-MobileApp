@@ -434,9 +434,23 @@ service cloud.firestore {
     // ---- Quyền admin: chỉ đọc từ ứng dụng ----
 
     // Cấm mọi ghi từ ứng dụng; leader tạo tài liệu admin bằng tay trên Console (luật R12).
+    // Tài khoản admin (security-rules.md mục 8). Admin đầu tiên do leader tạo tay trên Console;
+    // sau đó admin cấp quyền cho tài khoản ACTIVE khác. Không ai tự cấp hay tự gỡ quyền của mình.
+    // "Phải còn ít nhất một admin" không ép được vì Rules không đếm được (mục Giới hạn).
     match /admins/{uid} {
       allow read: if signedIn() && (me() == uid || isAdmin());
-      allow write: if false;
+
+      allow create: if isAdmin()
+        && writerActive()
+        && uid != me()
+        && hasOnlyKeys(['uid', 'createdAt'])
+        && request.resource.data.uid == uid
+        && serverStamp('createdAt')
+        && userDoc(uid).status == 'ACTIVE';
+
+      allow update: if false;
+
+      allow delete: if isAdmin() && writerActive() && uid != me();
     }
 
     // ---- Người dùng ----
