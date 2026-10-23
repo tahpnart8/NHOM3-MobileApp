@@ -16,6 +16,7 @@
     <string name="profile_my_profile_follower_label">Người theo dõi</string>
     <string name="profile_my_profile_rating_value">%1$.1f</string>
     <string name="profile_my_profile_no_rating">-</string>
+    <string name="profile_my_profile_stat_unknown">-</string>
     <string name="profile_my_profile_row_my_shop">Sản phẩm của tôi</string>
     <string name="profile_my_profile_row_my_shop_hint">Bạn chưa bán món nào. Hãy đăng tin đầu tiên.</string>
     <string name="profile_my_profile_row_saved">Tin đã lưu</string>

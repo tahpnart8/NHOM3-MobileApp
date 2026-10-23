@@ -145,6 +145,12 @@ public class MyProfileFragment extends Fragment {
                 profileViewModel.loadProfile(SessionManager.getInstance().getCurrentUserId());
             }
         });
+        binding.buttonRetryStats.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View clicked) {
+                profileViewModel.loadProfile(SessionManager.getInstance().getCurrentUserId());
+            }
+        });
         View.OnClickListener openOwnProfile = new View.OnClickListener() {
             @Override
             public void onClick(View clicked) {
@@ -400,6 +406,19 @@ public class MyProfileFragment extends Fragment {
         // Nothing loaded and nothing loading means the last read failed, also after a rotation.
         boolean failed = !hasProfile && !loading;
         binding.includeErrorState.getRoot().setVisibility(failed ? View.VISIBLE : View.GONE);
+        updateStatsState(hasProfile && !loading);
+    }
+
+    // Profile shown, nothing loading and no stats means the count failed: show "-" and Retry.
+    private void updateStatsState(boolean settled) {
+        boolean statsFailed = settled && profileViewModel.getStats().getValue() == null;
+        binding.buttonRetryStats.setVisibility(statsFailed ? View.VISIBLE : View.GONE);
+        if (!statsFailed) {
+            return;
+        }
+        binding.textSoldCount.setText(R.string.profile_my_profile_stat_unknown);
+        binding.textFollowerCount.setText(R.string.profile_my_profile_stat_unknown);
+        binding.textMyShopHint.setVisibility(View.GONE);
     }
 
     private void showError(String message) {
@@ -422,6 +441,7 @@ public class MyProfileFragment extends Fragment {
         }
         binding.textDisplayName.setText(user.getDisplayName());
         binding.textLocation.setText(formatLocation(user));
+        showRatingAverage(user);
         showAvatar(user);
         showVerification(user);
     }
@@ -450,8 +470,11 @@ public class MyProfileFragment extends Fragment {
         binding.textSoldCount.setText(String.valueOf(stats.getSoldCount()));
         binding.textFollowerCount.setText(String.valueOf(stats.getFollowerCount()));
         binding.textMyShopHint.setVisibility(stats.getSoldCount() == 0 ? View.VISIBLE : View.GONE);
-        User user = profileViewModel.getProfile().getValue();
-        if (user == null || user.getRatingCount() == 0) {
+    }
+
+    // The average comes from the users document, so it does not wait for the counts.
+    private void showRatingAverage(User user) {
+        if (user.getRatingCount() == 0) {
             binding.textRatingAverage.setText(R.string.profile_my_profile_no_rating);
         } else {
             String average = getString(R.string.profile_my_profile_rating_value, user.ratingAverage());
