@@ -163,10 +163,28 @@ service cloud.firestore {
 
     // ---- Collection khách chưa đăng nhập ĐƯỢC ĐỌC ----
 
-    // Danh mục: ai cũng đọc; ghi sẽ mở cho admin ở bản đầy đủ.
+    // Danh mục (security-rules.md mục 9): ai cũng đọc; chỉ admin tạo, sửa, xóa.
     match /categories/{id} {
+      function categoryKeys() {
+        return ['name', 'parentId', 'conditionFields', 'isActive', 'createdAt', 'updatedAt'];
+      }
+
+      // Tên khác rỗng; thuộc tính tình trạng là list có giới hạn; isActive là bool.
+      function validCategory(d) {
+        return reqString(d, 'name', 100)
+          && optList(d, 'conditionFields', 30)
+          && d.get('isActive', false) is bool;
+      }
+
       allow read: if true;
-      allow write: if false;
+
+      allow create: if isAdmin()
+        && writerActive()
+        && hasOnlyKeys(categoryKeys())
+        && validCategory(request.resource.data)
+        && createStamps();
+
+      allow update, delete: if false;
     }
 
     // Tin đăng (security-rules.md mục 10): khách đọc tin đang mở; tin DRAFT, HIDDEN, REMOVED
