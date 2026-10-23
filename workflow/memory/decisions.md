@@ -770,3 +770,33 @@ Three independent audit passes over the plan and the 58 issue drafts. The first 
 
 ### Owner
 tahpnart8
+
+## 2026-10-23 - Seven calls the first review round forced, and one name added to `users`
+
+### Decision
+Twelve pull requests were reviewed in one pass. Six of them waited on a judgement only the leader could make, so those are settled here rather than in a comment thread that the next person will not find.
+
+- **`lastReviewId` joins `users`.** The `reviews` create branch demands that the reviewee's `ratingCount` rise by exactly one and `ratingSum` by exactly the new rating, but no `users` branch allowed that write, so no review could be stored and "complete when both sides have reviewed" was unreachable. Rules can only `getAfter` a path it knows in advance, and a `users` document does not know the `dealId` that the review id is built from. So the batch now declares the review id in `lastReviewId`, and the rule follows that pointer. Requiring `lastReviewId` to differ from the stored one is what stops the same review being counted twice.
+- **Deal counts stay hidden on other people's profiles.** `getStats` queries `deals` by `sellerId` and `buyerId`, and the `deals` read rule admits only the buyer, the seller and admins, so every number on D02 and D03 is denied when viewing anyone else. Denormalising the counters into `users` is the correct fix and is not affordable with two days left, because each would need its own write branch, the same thicket `lastReviewId` just crossed. D02 and D03 therefore hide those figures off one's own page and keep the rating, which already lives in `users`. `UserRepository.getFollowerCount` is added so the follower figure survives, since `follows` is readable by anyone signed in.
+- **`ChatRepository.getConversation` is added.** C02 can open from a notification with only an id in hand, and the specification offered no legitimate place to read one conversation, which pushed a Firestore call into a ViewModel. Hải Long was right not to invent it.
+- **Only B03 must ship a `layout-land`.** An earlier call demanded one for B03, C02 and C03. C02 is a vertical `RecyclerView` that stretches correctly on its own; the requirement bought nothing and cost a file. B03 keeps it because of the large image carousel.
+- **`categories` tightens to `serverStamp('updatedAt')`.** The loose branch existed to accommodate `CategoryRepository.update`, which calls `set(POJO)`; that call fails anyway, because a `Category` carrying no `createdAt` writes null into it and `onlyKeys` rejects the change. Loosening the rule removed one of two reasons for refusal, so it was not worth the only exception in the file.
+- **Re-following stays a refusal.** `follows` allows no update, so a `set` onto an existing document is denied. The follow button is a toggle and the screen knows the current state, so follow is a create and unfollow a delete. A duplicate `set` from a second device is caught and read as "already following" rather than shown as an error.
+- **Reporting your own listing is left possible.** UC33 forbids it for every target type, but enforcing it for listings needs a `sellerId` read and probably a navigation argument, and the damage is nil: an admin dismisses it. The deviation is recorded in the module D README instead.
+
+### Context
+Nothing had been reviewed before this pass, and the same five mistakes appeared across six branches: `setValue` in a repository callback, `Timestamp.now()` for `createdAt` or `updatedAt`, `set(POJO)` on an update, a Rules-required string left null, and Base64 decoded on a bare thread with no recycle guard. Two faults were worse than the pattern. `UserRepository.createProfile` writes an empty `email` while the rule demands it equal `request.auth.token.email`, so nobody can finish registering and therefore nobody on the team can exercise anything against real Firebase; the same method never assigns the id back, so the session opens on a `User` with a null id. Both were named in the review of the pull request that introduced them and both were filed under "worth fixing too" rather than as blockers, which is the review error that let them reach `main`.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Denormalise deal counters into `users` now | Every counter needs its own Rules branch tying the increment to a real deal, the problem `lastReviewId` just took a day to solve |
+| Widen the `deals` read rule so any seller's completed deals are public | It exposes the buyer of every sale; the leak is worse than a missing number |
+| Let the leader patch `createProfile` directly | It is Ngân's file, she has three pull requests already reworking it, and a silent edit would collide with every one of them |
+| Relax the 100-byte commit subject limit to rescue a blocked branch | The two subjects are 90 and 103 characters, over any sane limit; the byte-versus-character flaw is real but separate |
+
+### Impact
+`erd_model.py` and `model.py` in the generator (hence `firestore-schema.md`, `model.md`, `data.md`, `room-schema.md`, `erd/README.md`), `security-rules.md` (the rating row rewritten, the `autoReleaseAt` tolerance), `trang-thai.md` and `luong-xu-ly.md` (the same tolerance), and `decisions.md`. `reports` and `complaints` gain the `updatedAt` their rules already required. Four DAO methods added in an earlier session reached `room-schema.md` at last.
+
+### Owner
+tahpnart8

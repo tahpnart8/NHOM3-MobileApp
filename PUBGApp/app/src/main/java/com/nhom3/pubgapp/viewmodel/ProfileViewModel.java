@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.nhom3.pubgapp.data.AuthRepository;
 import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.ListingRepository;
 import com.nhom3.pubgapp.data.MediaRepository;
 import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.model.Listing;
@@ -16,11 +17,13 @@ import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.UserAddress;
 import com.nhom3.pubgapp.model.UserIdentity;
 import com.nhom3.pubgapp.model.enums.ImagePurpose;
+import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,15 +61,19 @@ public class ProfileViewModel extends ViewModel {
     private static final String MESSAGE_ALREADY_PENDING = "Yêu cầu xác thực tài khoản đang chờ duyệt.";
     private static final String MESSAGE_ALREADY_APPROVED = "Tài khoản đã xác thực.";
     private static final String MESSAGE_NO_RESUBMIT_LEFT = "Đã hết số lần gửi lại, hãy liên hệ admin.";
+    private static final String MESSAGE_CANNOT_FOLLOW_SELF = "Bạn không thể tự theo dõi chính mình.";
 
     private final UserRepository userRepository = new UserRepository();
     private final AuthRepository authRepository = new AuthRepository();
     private final MediaRepository mediaRepository = new MediaRepository();
+    private final ListingRepository listingRepository = new ListingRepository();
 
     // The uid whose profile is in profile, so a rotation does not read users/{uid} again.
     private String loadedUid;
     // The uid of the last read started, so a late answer for a previous account is dropped.
     private String requestedUid;
+    // The seller whose listings are in userListings, so a rotation does not query again.
+    private String listingsUid;
 
     public LiveData<User> getProfile() {
         return profile;
@@ -130,9 +137,13 @@ public class ProfileViewModel extends ViewModel {
             return;
         }
         // A failed count leaves stats empty, so opening the screen or Retry reads it again.
-        if (stats.getValue() == null) {
+        if (stats.getValue() == null && isOwnPage(uid)) {
             loading.setValue(true);
             fetchStats(uid);
+        }
+        // A failed read of the follow state keeps the button locked, so opening the screen again retries it.
+        if (following.getValue() == null && !isOwnPage(uid)) {
+            fetchFollowing(uid);
         }
     }
 
@@ -195,24 +206,101 @@ public class ProfileViewModel extends ViewModel {
         error.setValue(DataCallback.NOT_READY);
     }
 
+    // uid is the person being followed; the follower is always the signed-in user.
     public void follow(String uid) {
-        error.setValue(DataCallback.NOT_READY);
+        String me = followerIdOrReport(uid);
+        if (me == null) {
+            return;
+        }
+        loading.setValue(true);
+        userRepository.follow(me, uid, new FollowCallback(true));
     }
 
     public void unfollow(String uid) {
-        error.setValue(DataCallback.NOT_READY);
+        String me = followerIdOrReport(uid);
+        if (me == null) {
+            return;
+        }
+        loading.setValue(true);
+        userRepository.unfollow(me, uid, new FollowCallback(false));
     }
 
     public void loadSaved() {
-        error.setValue(DataCallback.NOT_READY);
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        loading.setValue(true);
+        userRepository.getSavedIds(uid, new DataCallback<List<String>>() {
+            @Override
+            public void onSuccess(List<String> savedIds) {
+                fetchSavedListings(savedIds);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
+    // The card leaves the list at once and comes back if the write fails.
     public void unsaveListing(String listingId) {
-        error.setValue(DataCallback.NOT_READY);
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        List<Listing> before = savedListings.getValue();
+        savedListings.setValue(withoutListing(before, listingId));
+        userRepository.unsaveListing(uid, listingId, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                savedListings.postValue(before);
+                error.postValue(message);
+            }
+        });
     }
 
+    // Keeps AVAILABLE, RESERVED and SOLD as the repository returns them; each screen filters by tab.
     public void loadUserListings(String uid) {
-        error.setValue(DataCallback.NOT_READY);
+        if (uid == null || uid.isEmpty()) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        if (uid.equals(listingsUid) && userListings.getValue() != null) {
+            return;
+        }
+        listingsUid = uid;
+        userListings.setValue(null);
+        listingRepository.getBySeller(uid, new DataCallback<List<Listing>>() {
+            @Override
+            public void onSuccess(List<Listing> result) {
+                if (!uid.equals(listingsUid)) {
+                    return;
+                }
+                userListings.postValue(result);
+            }
+
+            @Override
+            public void onError(String message) {
+                error.postValue(message);
+            }
+        });
     }
 
     public void requestVerification(String nationalId, List<Uri> imageUris) {
@@ -286,6 +374,7 @@ public class ProfileViewModel extends ViewModel {
         profile.setValue(null);
         stats.setValue(null);
         verification.setValue(null);
+        following.setValue(null);
     }
 
     private void fetchProfile(String uid) {
@@ -299,7 +388,12 @@ public class ProfileViewModel extends ViewModel {
                 }
                 loadedUid = uid;
                 profile.postValue(result);
-                fetchStats(uid);
+                fetchFollowing(uid);
+                if (isOwnPage(uid)) {
+                    fetchStats(uid);
+                } else {
+                    loading.postValue(false);
+                }
             }
 
             @Override
@@ -328,6 +422,179 @@ public class ProfileViewModel extends ViewModel {
                 error.postValue(message);
             }
         });
+    }
+
+    // The Rules let a user read only deals they are part of, so the counts exist only on the own page.
+    private boolean isOwnPage(String uid) {
+        String me = SessionManager.getInstance().getCurrentUserId();
+        return me != null && !me.isEmpty() && me.equals(uid);
+    }
+
+    // Reads every saved listing at once and joins the answers in the saved order.
+    private void fetchSavedListings(List<String> savedIds) {
+        List<String> ids = new ArrayList<String>();
+        if (savedIds != null) {
+            ids.addAll(savedIds);
+        }
+        if (ids.isEmpty()) {
+            savedListings.postValue(new ArrayList<Listing>());
+            loading.postValue(false);
+            return;
+        }
+        SavedCollector collector = new SavedCollector(ids);
+        for (String id : ids) {
+            listingRepository.getById(id, new SavedListingCallback(collector, id));
+        }
+    }
+
+    private static List<Listing> withoutListing(List<Listing> listings, String listingId) {
+        List<Listing> result = new ArrayList<Listing>();
+        if (listings == null) {
+            return result;
+        }
+        for (Listing listing : listings) {
+            if (listingId == null || !listingId.equals(listing.getId())) {
+                result.add(listing);
+            }
+        }
+        return result;
+    }
+
+    // A listing that could not be read stays as a card holding only its id, so it can still be unsaved.
+    static List<Listing> buildSavedList(List<String> savedIds, Map<String, Listing> found) {
+        List<Listing> result = new ArrayList<Listing>();
+        if (savedIds == null) {
+            return result;
+        }
+        for (String id : savedIds) {
+            Listing listing = null;
+            if (found != null) {
+                listing = found.get(id);
+            }
+            if (listing == null) {
+                listing = new Listing();
+                listing.setId(id);
+            }
+            result.add(listing);
+        }
+        return result;
+    }
+
+    static boolean isUnavailable(Listing listing) {
+        if (listing == null || listing.getStatus() == null) {
+            return true;
+        }
+        ListingStatus status = listing.getStatus();
+        return status == ListingStatus.HIDDEN || status == ListingStatus.REMOVED || status == ListingStatus.DRAFT;
+    }
+
+    // Callbacks may come back on different threads, so the shared map and counter are synchronized.
+    private final class SavedCollector {
+        private final List<String> savedIds;
+        private final Map<String, Listing> found = new HashMap<String, Listing>();
+        private int answered;
+
+        SavedCollector(List<String> savedIds) {
+            this.savedIds = savedIds;
+        }
+
+        synchronized void answer(String id, Listing listing) {
+            if (listing != null) {
+                found.put(id, listing);
+            }
+            answered = answered + 1;
+            if (answered < savedIds.size()) {
+                return;
+            }
+            savedListings.postValue(buildSavedList(savedIds, found));
+            loading.postValue(false);
+        }
+    }
+
+    private static final class SavedListingCallback implements DataCallback<Listing> {
+        private final SavedCollector collector;
+        private final String id;
+
+        SavedListingCallback(SavedCollector collector, String id) {
+            this.collector = collector;
+            this.id = id;
+        }
+
+        @Override
+        public void onSuccess(Listing result) {
+            collector.answer(id, result);
+        }
+
+        // A hidden or removed listing is refused by the Rules; it becomes a "no longer available" card.
+        @Override
+        public void onError(String message) {
+            collector.answer(id, null);
+        }
+    }
+
+    // Only someone else's page has a Follow button, so the own profile skips this read.
+    private void fetchFollowing(String uid) {
+        String me = SessionManager.getInstance().getCurrentUserId();
+        if (me == null || me.isEmpty() || me.equals(uid)) {
+            return;
+        }
+        userRepository.getFollowingIds(me, new DataCallback<List<String>>() {
+            @Override
+            public void onSuccess(List<String> result) {
+                if (!uid.equals(requestedUid)) {
+                    return;
+                }
+                following.postValue(result != null && result.contains(uid));
+            }
+
+            @Override
+            public void onError(String message) {
+                error.postValue(message);
+            }
+        });
+    }
+
+    // Returns the signed-in uid, or null after putting the reason into error.
+    private String followerIdOrReport(String uid) {
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return null;
+        }
+        String me = SessionManager.getInstance().getCurrentUserId();
+        if (me == null || me.isEmpty()) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return null;
+        }
+        if (uid == null || uid.isEmpty() || me.equals(uid)) {
+            error.setValue(MESSAGE_CANNOT_FOLLOW_SELF);
+            return null;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return null;
+        }
+        return me;
+    }
+
+    // On success the flag flips; the follower count is not read again because it is only shown on the own page.
+    private final class FollowCallback implements DataCallback<Void> {
+        private final boolean nowFollowing;
+
+        FollowCallback(boolean nowFollowing) {
+            this.nowFollowing = nowFollowing;
+        }
+
+        @Override
+        public void onSuccess(Void result) {
+            following.postValue(nowFollowing);
+            loading.postValue(false);
+            done.postValue(true);
+        }
+
+        @Override
+        public void onError(String message) {
+            loading.postValue(false);
+            error.postValue(message);
+        }
     }
 
     private void saveAvatar(User user, String base64) {
