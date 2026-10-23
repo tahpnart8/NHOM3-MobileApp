@@ -112,6 +112,7 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `lastActiveAt` | `Timestamp` | private | Lần cuối ứng dụng của người này hoạt động; dùng cho trạng thái hoạt động trong chat. |
 | `lockReason` | `String` | private | Lý do khóa gần nhất do admin ghi; hiện cho người bị khóa khi đăng nhập. |
 | `searchKeywords` | `List<String>` | private | Các từ đã bỏ dấu, viết thường của `displayName`, để truy vấn `array-contains` khi người dùng tìm nhau. Tạo lại mỗi lần `displayName` đổi; tối đa 20 từ. |
+| `lastReviewId` | `String` | private | Mã tài liệu `reviews` của lần đánh giá gần nhất đã cộng vào `ratingSum` và `ratingCount`. Security Rules dùng nó để kiểm lần cộng điểm có kèm một đánh giá thật hay không, và để chặn cộng hai lần bằng cùng một đánh giá; ứng dụng không hiển thị trường này. |
 
 **Phương thức**
 

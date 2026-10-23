@@ -8,6 +8,7 @@ import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -60,6 +61,7 @@ public class ForgotPasswordFragment extends Fragment {
                 if (errorMsg != null && !errorMsg.isEmpty()) {
                     binding.textError.setText(errorMsg);
                     binding.textError.setVisibility(View.VISIBLE);
+                    viewModel.clearError();
                 } else {
                     binding.textError.setVisibility(View.GONE);
                 }
@@ -70,13 +72,10 @@ public class ForgotPasswordFragment extends Fragment {
             @Override
             public void onChanged(Boolean isDone) {
                 if (isDone != null && isDone) {
-                    binding.textSuccess.setVisibility(View.VISIBLE);
-                    binding.textError.setVisibility(View.GONE);
-                    binding.layoutEmail.setError(null);
-                    if (binding.editEmail.getText() != null) {
-                        binding.editEmail.getText().clear();
-                    }
+                    Toast.makeText(requireContext(), R.string.account_forgot_password_success,
+                            Toast.LENGTH_LONG).show();
                     viewModel.clearDone();
+                    NavHostFragment.findNavController(ForgotPasswordFragment.this).navigateUp();
                 }
             }
         });
@@ -86,6 +85,8 @@ public class ForgotPasswordFragment extends Fragment {
         binding.buttonBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                viewModel.clearError();
+                viewModel.clearDone();
                 NavHostFragment.findNavController(ForgotPasswordFragment.this).navigateUp();
             }
         });
@@ -93,6 +94,8 @@ public class ForgotPasswordFragment extends Fragment {
         binding.buttonBackToLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                viewModel.clearError();
+                viewModel.clearDone();
                 NavHostFragment.findNavController(ForgotPasswordFragment.this).navigateUp();
             }
         });
@@ -139,6 +142,7 @@ public class ForgotPasswordFragment extends Fragment {
         try {
             return NetworkMonitor.getInstance().isOnline();
         } catch (Exception e) {
+            // NetworkMonitor throws NOT_READY until fully implemented; falls back to ConnectivityManager.
             ConnectivityManager cm = (ConnectivityManager)
                     requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
             if (cm != null) {

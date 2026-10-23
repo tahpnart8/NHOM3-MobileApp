@@ -215,7 +215,7 @@ public class AuthViewModel extends ViewModel {
         return true;
     }
 
-    public enum LoginDecision {
+    enum LoginDecision {
         ALLOW,
         CLEAR_EXPIRED_LOCK,
         LOCKED,
@@ -223,9 +223,6 @@ public class AuthViewModel extends ViewModel {
     }
 
     static LoginDecision evaluateUserStatus(User user) {
-        if (user == null) {
-            return LoginDecision.DELETED;
-        }
         if (user.isDeleted()) {
             return LoginDecision.DELETED;
         }
@@ -268,16 +265,15 @@ public class AuthViewModel extends ViewModel {
                 boolean adminFlag = isAdmin != null && isAdmin;
                 sessionManager.start(user, adminFlag);
                 userRepository.touchLastActive(user.getId());
-                loading.setValue(false);
-                loggedIn.setValue(true);
+                loading.postValue(false);
+                loggedIn.postValue(true);
             }
 
             @Override
             public void onError(String message) {
-                sessionManager.start(user, false);
-                userRepository.touchLastActive(user.getId());
-                loading.setValue(false);
-                loggedIn.setValue(true);
+                authRepository.signOut();
+                loading.postValue(false);
+                error.postValue(message != null ? message : "Không thể xác thực quyền người dùng.");
             }
         });
     }
@@ -286,14 +282,14 @@ public class AuthViewModel extends ViewModel {
         LoginDecision decision = evaluateUserStatus(user);
         if (decision == LoginDecision.DELETED) {
             authRepository.signOut();
-            loading.setValue(false);
-            error.setValue("Tài khoản đã xóa.");
+            loading.postValue(false);
+            error.postValue("Tài khoản đã xóa.");
             return;
         }
         if (decision == LoginDecision.LOCKED) {
             authRepository.signOut();
-            loading.setValue(false);
-            error.setValue(getLockErrorMessage(user));
+            loading.postValue(false);
+            error.postValue(getLockErrorMessage(user));
             return;
         }
         if (decision == LoginDecision.CLEAR_EXPIRED_LOCK) {
@@ -308,7 +304,9 @@ public class AuthViewModel extends ViewModel {
 
                 @Override
                 public void onError(String message) {
-                    startUserSession(user);
+                    authRepository.signOut();
+                    loading.postValue(false);
+                    error.postValue("Tài khoản đang bị khóa tạm thời. Vui lòng thử lại sau.");
                 }
             });
             return;
@@ -326,8 +324,13 @@ public class AuthViewModel extends ViewModel {
                     @Override
                     public void onSuccess(Boolean verified) {
                         if (!authRepository.isEmailVerified()) {
-                            loading.setValue(false);
-                            signUpStep.setValue(2);
+                            loading.postValue(false);
+                            signUpStep.postValue(2);
+                            return;
+                        }
+                        if (user == null) {
+                            loading.postValue(false);
+                            needsProfile.postValue(true);
                             return;
                         }
                         processUserSession(user);
@@ -336,8 +339,13 @@ public class AuthViewModel extends ViewModel {
                     @Override
                     public void onError(String message) {
                         if (!authRepository.isEmailVerified()) {
-                            loading.setValue(false);
-                            signUpStep.setValue(2);
+                            loading.postValue(false);
+                            signUpStep.postValue(2);
+                            return;
+                        }
+                        if (user == null) {
+                            loading.postValue(false);
+                            needsProfile.postValue(true);
                             return;
                         }
                         processUserSession(user);
@@ -347,8 +355,8 @@ public class AuthViewModel extends ViewModel {
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue(message != null ? message : "Email hoặc mật khẩu không đúng.");
+                loading.postValue(false);
+                error.postValue(message != null ? message : "Email hoặc mật khẩu không đúng.");
             }
         });
     }
@@ -360,8 +368,8 @@ public class AuthViewModel extends ViewModel {
             @Override
             public void onSuccess(User user) {
                 if (user == null) {
-                    loading.setValue(false);
-                    needsProfile.setValue(true);
+                    loading.postValue(false);
+                    needsProfile.postValue(true);
                     return;
                 }
                 processUserSession(user);
@@ -369,8 +377,8 @@ public class AuthViewModel extends ViewModel {
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue(message != null ? message : "Không thể đăng nhập bằng Google.");
+                loading.postValue(false);
+                error.postValue(message != null ? message : "Không thể đăng nhập bằng Google.");
             }
         });
     }
@@ -379,26 +387,39 @@ public class AuthViewModel extends ViewModel {
         if (sessionManager.isLoggedIn()) {
             return;
         }
-        String uid = authRepository.getCurrentUserId();
+        final String uid = authRepository.getCurrentUserId();
         if (uid == null || uid.isEmpty()) {
             return;
         }
         loading.setValue(true);
-        userRepository.getProfile(uid, new DataCallback<User>() {
+        authRepository.reloadUser(new DataCallback<Boolean>() {
             @Override
-            public void onSuccess(User user) {
-                if (user == null) {
-                    authRepository.signOut();
-                    loading.setValue(false);
+            public void onSuccess(Boolean verified) {
+                if (!authRepository.isGoogleAccount() && !authRepository.isEmailVerified()) {
+                    loading.postValue(false);
                     return;
                 }
-                processUserSession(user);
+                userRepository.getProfile(uid, new DataCallback<User>() {
+                    @Override
+                    public void onSuccess(User user) {
+                        if (user == null) {
+                            loading.postValue(false);
+                            needsProfile.postValue(true);
+                            return;
+                        }
+                        processUserSession(user);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        loading.postValue(false);
+                    }
+                });
             }
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue(message);
+                loading.postValue(false);
             }
         });
     }
@@ -410,14 +431,15 @@ public class AuthViewModel extends ViewModel {
         authRepository.sendPasswordReset(email, new DataCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                loading.setValue(false);
-                done.setValue(true);
+                loading.postValue(false);
+                done.postValue(true);
             }
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue(message != null ? message : "Không thể gửi liên kết đặt lại mật khẩu.");
+                loading.postValue(false);
+                String errMsg = message != null ? message : "Không thể gửi liên kết đặt lại mật khẩu.";
+                error.postValue(errMsg);
             }
         });
     }
@@ -435,6 +457,9 @@ public class AuthViewModel extends ViewModel {
         sessionManager.clear();
         clearRoomDatabase();
         loggedIn.setValue(false);
+        needsProfile.setValue(false);
+        signUpStep.setValue(1);
+        emailVerified.setValue(false);
     }
 
     private void clearRoomDatabase() {

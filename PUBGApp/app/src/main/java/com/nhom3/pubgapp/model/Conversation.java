@@ -53,10 +53,22 @@ public class Conversation extends BaseDocument {
     }
 
     public boolean isParticipant(String userId) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (userId == null) {
+            return false;
+        }
+        return userId.equals(buyerId) || userId.equals(sellerId);
     }
 
     public String otherParty(String userId) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (userId == null) {
+            return null;
+        }
+        if (userId.equals(buyerId)) {
+            return sellerId;
+        }
+        if (userId.equals(sellerId)) {
+            return buyerId;
+        }
+        return null;
     }
 }

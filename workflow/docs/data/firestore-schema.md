@@ -147,6 +147,7 @@ erDiagram
         timestamp lastActiveAt
         string lockReason
         array_string searchKeywords
+        string lastReviewId FK
         timestamp createdAt
         timestamp updatedAt
     }
@@ -335,6 +336,7 @@ erDiagram
         string conversationId FK
         string handledBy FK
         timestamp createdAt
+        timestamp updatedAt
     }
     complaints {
         string id PK
@@ -350,6 +352,7 @@ erDiagram
         string resolutionMessage
         string handledBy FK
         timestamp createdAt
+        timestamp updatedAt
     }
     adminNote {
         string complaintId PK
@@ -423,6 +426,7 @@ erDiagram
 | `lastActiveAt` | timestamp |  | Lần cuối ứng dụng của người này hoạt động; dùng cho trạng thái hoạt động trong chat. |  |
 | `lockReason` | string |  | Lý do khóa gần nhất do admin ghi; hiện cho người bị khóa khi đăng nhập. |  |
 | `searchKeywords` | array<string> |  | Các từ đã bỏ dấu, viết thường của `displayName`, để truy vấn `array-contains` khi người dùng tìm nhau. Tạo lại mỗi lần `displayName` đổi; tối đa 20 từ. |  |
+| `lastReviewId` | string | FK | Mã tài liệu `reviews` của lần đánh giá gần nhất đã cộng vào `ratingSum` và `ratingCount`. Security Rules dùng nó để kiểm lần cộng điểm có kèm một đánh giá thật hay không, và để chặn cộng hai lần bằng cùng một đánh giá; ứng dụng không hiển thị trường này. | tham chiếu reviews |
 | `createdAt` | timestamp |  |  |  |
 | `updatedAt` | timestamp |  |  |  |
 
@@ -466,6 +470,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   "lastActiveAt": "2026-10-12T09:30:00+07:00",
   "lockReason": "",
   "searchKeywords": [],
+  "lastReviewId": "lastReview_01",
   "createdAt": "2026-10-12T09:30:00+07:00",
   "updatedAt": "2026-10-12T09:30:00+07:00"
 }
@@ -1207,6 +1212,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `conversationId` | string | FK | Mã cuộc trò chuyện chứa tin nhắn bị báo cáo; chỉ có khi `targetType` là MESSAGE. | tham chiếu conversations |
 | `handledBy` | string | FK | Admin đã xử lý. | tham chiếu users |
 | `createdAt` | timestamp |  |  |  |
+| `updatedAt` | timestamp |  | Lần sửa gần nhất; Security Rules đòi giờ máy chủ ở mọi nhánh sửa (hủy báo cáo, admin xử lý). |  |
 
 Truy vấn dự kiến:
 
@@ -1232,7 +1238,8 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   ],
   "conversationId": "conversation_01",
   "handledBy": null,
-  "createdAt": "2026-10-12T09:30:00+07:00"
+  "createdAt": "2026-10-12T09:30:00+07:00",
+  "updatedAt": "2026-10-12T09:30:00+07:00"
 }
 ```
 
@@ -1258,6 +1265,7 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `resolutionMessage` | string |  | Lời giải thích kết quả gửi cho hai bên. |  |
 | `handledBy` | string | FK | Admin đã xử lý. | tham chiếu users |
 | `createdAt` | timestamp |  |  |  |
+| `updatedAt` | timestamp |  | Lần sửa gần nhất; Security Rules đòi giờ máy chủ ở cả năm nhánh sửa của khiếu nại. |  |
 
 Truy vấn dự kiến:
 
@@ -1284,7 +1292,8 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
   "evidenceRequest": "",
   "resolutionMessage": "",
   "handledBy": null,
-  "createdAt": "2026-10-12T09:30:00+07:00"
+  "createdAt": "2026-10-12T09:30:00+07:00",
+  "updatedAt": "2026-10-12T09:30:00+07:00"
 }
 ```
 
