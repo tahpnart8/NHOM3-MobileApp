@@ -522,10 +522,32 @@ service cloud.firestore {
         allow write: if false;
       }
 
-      // Cảnh báo: chỉ màn quản trị đọc.
+      // Cảnh báo (security-rules.md mục 7): chỉ màn quản trị đọc; admin tạo cùng lô
+      // với lần tăng users.warningCount; không ai sửa hay xóa lịch sử cảnh báo.
       match /warnings/{warningId} {
+        function warningKeys() {
+          return ['userId', 'level', 'reason', 'issuedBy', 'targetId', 'createdAt', 'updatedAt'];
+        }
+
         allow read: if isAdmin();
-        allow write: if false;
+
+        // level phải bằng warningCount của hồ sơ SAU lô, nên mỗi cảnh báo gắn đúng một lần tăng số.
+        allow create: if isAdmin()
+          && writerActive()
+          && hasOnlyKeys(warningKeys())
+          && request.resource.data.userId == uid
+          && request.resource.data.issuedBy == me()
+          && request.resource.data.level is int
+          && request.resource.data.level == userAfter(uid).warningCount
+          && request.resource.data.level != userDoc(uid).warningCount
+          && request.resource.data.reason is string
+          && request.resource.data.reason.size() > 0
+          && request.resource.data.reason.size() <= 500
+          && optString(request.resource.data, 'targetId', 200)
+          && serverStamp('createdAt')
+          && (request.resource.data.get('updatedAt', null) == null || serverStamp('updatedAt'));
+
+        allow update, delete: if false;
       }
     }
 
