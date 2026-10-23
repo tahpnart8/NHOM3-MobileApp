@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Temporary camera photos; the app writes them to getCacheDir()/camera/. -->
+    <cache-path
+        name="camera_cache"
+        path="camera/" />
+    <!-- Same folder under filesDir, for a photo that must outlive a cache clean. -->
+    <files-path
+        name="camera_files"
+        path="camera/" />
+</paths>
