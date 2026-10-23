@@ -4,8 +4,8 @@ rules_version = '2';
 // issue #131 (users, users/{uid}/private/identity, sellerVerifications, listings) và issue #110:
 // warnings, notifications, mạch mua bán (conversations, messages, offers, deals kèm statusHistory,
 // payments, reviews), rồi addresses, saved, follows, admins, reports, complaints, adminNote,
-// activityLogs, bannedKeywords, categories. Còn CHƯA mở: dòng "Ghi điểm đánh giá" của users
-// (issue #157). Mọi đường dẫn không nêu dưới đây vẫn từ chối.
+// activityLogs, bannedKeywords, categories; issue #157 mở dòng "Ghi điểm đánh giá" của users.
+// Mọi đường dẫn không nêu dưới đây vẫn từ chối.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -494,8 +494,6 @@ service cloud.firestore {
     // Hồ sơ (security-rules.md mục 1). Người dùng thường chỉ sửa phần hồ sơ của mình;
     // status, verificationStatus, rating*, warningCount, lockedUntil, lockReason chỉ đổi
     // qua các nhánh có điều kiện riêng bên dưới. Không ai xóa được hồ sơ.
-    // CHƯA mở ở đây: "Ghi điểm đánh giá". Lần sửa users không mang dealId nên Rules không
-    // tìm được đánh giá đi cùng lô (security-rules.md mục 1 ghi "kiểm lại"); đã hỏi ở #110.
     match /users/{uid} {
       // Các trường hồ sơ chủ tài khoản được sửa.
       function profileEditKeys() {
