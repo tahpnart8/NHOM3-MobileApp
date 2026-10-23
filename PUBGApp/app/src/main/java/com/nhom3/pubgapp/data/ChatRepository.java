@@ -17,6 +17,8 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
+import com.nhom3.pubgapp.data.local.ChatDao;
+import com.nhom3.pubgapp.data.local.ConversationEntity;
 import com.nhom3.pubgapp.model.AppNotification;
 import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Conversation;
@@ -35,6 +37,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ChatRepository extends BaseRepository {
 
@@ -45,8 +49,61 @@ public class ChatRepository extends BaseRepository {
     private static final String COLLECTION_DEALS = "deals";
     private static final String COLLECTION_NOTIFICATIONS = "notifications";
 
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    private ChatDao getChatDao() {
+        try {
+            android.content.Context context = com.google.firebase.FirebaseApp.getInstance().getApplicationContext();
+            if (context != null) {
+                return com.nhom3.pubgapp.data.local.AppDatabase.getInstance(context).chatDao();
+            }
+        } catch (Exception e) {
+            // Room is unavailable in unit tests or before app initialization.
+        }
+        return null;
+    }
+
+    static String buildConversationId(String listingId, String buyerId) {
+        return listingId + "_" + buyerId;
+    }
+
+    static boolean isSameUser(String buyerId, String sellerId) {
+        return buyerId != null && buyerId.equals(sellerId);
+    }
+
+    static boolean isListingStatusAllowed(ListingStatus status) {
+        return status == ListingStatus.AVAILABLE || status == ListingStatus.RESERVED;
+    }
+
+    static String validateNewConversation(String buyerId, String sellerId, ListingStatus status) {
+        if (buyerId == null || buyerId.trim().isEmpty()) {
+            return "Vui lòng đăng nhập để nhắn tin.";
+        }
+        if (isSameUser(buyerId, sellerId)) {
+            return "Không thể nhắn tin cho chính mình.";
+        }
+        if (status != null && !isListingStatusAllowed(status)) {
+            return "Tin đăng không còn hoạt động.";
+        }
+        return null;
+    }
+
     public void getOrCreateConversation(String listingId, String buyerId, DataCallback<Conversation> cb) {
-        String convId = listingId + "_" + buyerId;
+        try {
+            if (!com.nhom3.pubgapp.util.NetworkMonitor.getInstance().isOnline()) {
+                cb.onError("Thiết bị đang ngoại tuyến. Vui lòng kiểm tra kết nối mạng.");
+                return;
+            }
+        } catch (UnsupportedOperationException ignored) {
+            // NetworkMonitor not ready yet in early phase.
+        }
+
+        if (buyerId == null || buyerId.trim().isEmpty()) {
+            cb.onError("Vui lòng đăng nhập để nhắn tin.");
+            return;
+        }
+
+        String convId = buildConversationId(listingId, buyerId);
         DocumentReference docRef = db.collection(COLLECTION_CONVERSATIONS).document(convId);
         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -80,7 +137,23 @@ public class ChatRepository extends BaseRepository {
                             cb.onError("Không tìm thấy tin đăng.");
                             return;
                         }
-                        String sellerId = task.getResult().getString("sellerId");
+                        DocumentSnapshot listingDoc = task.getResult();
+                        String sellerId = listingDoc.getString("sellerId");
+                        String statusStr = listingDoc.getString("status");
+                        ListingStatus status = null;
+                        if (statusStr != null) {
+                            try {
+                                status = ListingStatus.valueOf(statusStr);
+                            } catch (IllegalArgumentException e) {
+                                status = null;
+                            }
+                        }
+                        String validationError = validateNewConversation(buyerId, sellerId, status);
+                        if (validationError != null) {
+                            cb.onError(validationError);
+                            return;
+                        }
+
                         Conversation conv = new Conversation();
                         conv.setId(convId);
                         conv.setListingId(listingId);
@@ -104,8 +177,29 @@ public class ChatRepository extends BaseRepository {
     }
 
     public void getConversations(String uid, DataCallback<List<Conversation>> cb) {
+        // Đọc cache từ Room trước
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                ChatDao dao = getChatDao();
+                if (dao != null) {
+                    List<ConversationEntity> cached = dao.getConversations();
+                    if (cached != null && !cached.isEmpty()) {
+                        List<Conversation> list = new ArrayList<Conversation>();
+                        for (int i = 0; i < cached.size(); i++) {
+                            list.add(cached.get(i).toModel());
+                        }
+                        cb.onSuccess(list);
+                    }
+                }
+            }
+        });
+
         // Tải các cuộc trò chuyện người dùng tham gia với vai trò người mua
-        db.collection(COLLECTION_CONVERSATIONS).whereEqualTo("buyerId", uid).get()
+        db.collection(COLLECTION_CONVERSATIONS)
+                .whereEqualTo("buyerId", uid)
+                .orderBy("lastMessageAt", Query.Direction.DESCENDING)
+                .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> buyerTask) {
@@ -114,7 +208,10 @@ public class ChatRepository extends BaseRepository {
                             return;
                         }
                         // Tải các cuộc trò chuyện vai trò người bán
-                        db.collection(COLLECTION_CONVERSATIONS).whereEqualTo("sellerId", uid).get()
+                        db.collection(COLLECTION_CONVERSATIONS)
+                                .whereEqualTo("sellerId", uid)
+                                .orderBy("lastMessageAt", Query.Direction.DESCENDING)
+                                .get()
                                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                                     @Override
                                     public void onComplete(@NonNull Task<QuerySnapshot> sellerTask) {
@@ -129,6 +226,25 @@ public class ChatRepository extends BaseRepository {
 
                                         List<Conversation> list = new ArrayList<>(map.values());
                                         sortConversationsByDate(list);
+
+                                        // Lưu vào Room
+                                        executor.execute(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                ChatDao dao = getChatDao();
+                                                if (dao != null && !list.isEmpty()) {
+                                                    List<ConversationEntity> entities =
+                                                            new ArrayList<ConversationEntity>();
+                                                    for (int i = 0; i < list.size(); i++) {
+                                                        ConversationEntity entity =
+                                                                new ConversationEntity().fromModel(list.get(i));
+                                                        entities.add(entity);
+                                                    }
+                                                    dao.upsertConversations(entities);
+                                                }
+                                            }
+                                        });
+
                                         cb.onSuccess(list);
                                     }
                                 });
