@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground">
 
-    <!-- Top Bar with toolbar and Save button -->
+    <!-- Top Bar with toolbar, save button, and report button -->
     <LinearLayout
         android:id="@+id/layoutTopBar"
         android:layout_width="match_parent"
@@ -29,7 +29,16 @@
             android:layout_marginEnd="@dimen/space_xs"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/listing_detail_save_icon_desc"
-            android:src="@android:drawable/btn_star_big_off" />
+            android:src="@drawable/ic_heart_outline" />
+
+        <ImageButton
+            android:id="@+id/buttonReport"
+            android:layout_width="@dimen/touch_min"
+            android:layout_height="@dimen/touch_min"
+            android:layout_marginEnd="@dimen/space_xs"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/listing_detail_report_icon_desc"
+            android:src="@drawable/ic_more_vert" />
     </LinearLayout>
 
     <!-- Offline Banner -->
@@ -108,7 +117,8 @@
                     android:paddingHorizontal="@dimen/space_sm"
                     android:paddingVertical="@dimen/space_xs"
                     android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:textColor="?attr/colorOnSurface"
+                    android:visibility="gone" />
 
                 <!-- SOLD overlay -->
                 <TextView
@@ -119,7 +129,7 @@
                     android:gravity="center"
                     android:text="@string/listing_detail_status_sold"
                     android:textAppearance="?attr/textAppearanceHeadlineMedium"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/white"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </FrameLayout>
@@ -199,9 +209,13 @@
 
             <!-- Seller Card -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardSeller"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/space_md"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
                 app:cardCornerRadius="@dimen/radius_md"
                 app:cardElevation="@dimen/elevation_card">
 
@@ -216,47 +230,77 @@
                         android:id="@+id/layoutSellerBlock"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <include
-                            android:id="@+id/avatarSeller"
-                            layout="@layout/view_avatar"
-                            android:layout_width="@dimen/touch_min"
-                            android:layout_height="@dimen/touch_min" />
+                        android:orientation="vertical">
 
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:id="@+id/textSellerName"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:textAppearance="?attr/textAppearanceTitleMedium"
-                                android:textColor="?attr/colorOnSurface" />
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
                             <include
-                                android:id="@+id/ratingSeller"
-                                layout="@layout/view_rating"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/space_xs" />
+                                android:id="@+id/avatarSeller"
+                                layout="@layout/view_avatar"
+                                android:layout_width="@dimen/touch_min"
+                                android:layout_height="@dimen/touch_min" />
 
-                            <TextView
-                                android:id="@+id/textVerifiedBadge"
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/space_md"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/textSellerName"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                                    android:textColor="?attr/colorOnSurface" />
+
+                                <include
+                                    android:id="@+id/ratingSeller"
+                                    layout="@layout/view_rating"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/space_xs" />
+
+                                <TextView
+                                    android:id="@+id/textVerifiedBadge"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/space_xs"
+                                    android:text="@string/listing_detail_seller_verified"
+                                    android:textAppearance="?attr/textAppearanceBodySmall"
+                                    android:textColor="@color/success"
+                                    android:textStyle="bold"
+                                    android:visibility="gone" />
+                            </LinearLayout>
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/buttonFollowSeller"
+                                style="?attr/materialButtonOutlinedStyle"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/space_xs"
-                                android:text="@string/listing_detail_seller_verified"
-                                android:textAppearance="?attr/textAppearanceBodySmall"
-                                android:textColor="@color/success"
-                                android:textStyle="bold"
-                                android:visibility="gone" />
+                                android:layout_marginStart="@dimen/space_xs"
+                                android:minHeight="@dimen/touch_min"
+                                android:text="@string/listing_detail_btn_follow"
+                                app:cornerRadius="@dimen/radius_md" />
                         </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/buttonSellerReviews"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_sm"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:minHeight="@dimen/touch_min"
+                            android:text="@string/listing_detail_btn_seller_reviews"
+                            android:textAppearance="?attr/textAppearanceLabelLarge"
+                            android:textColor="?attr/colorPrimary" />
                     </LinearLayout>
 
                     <!-- Guest Mode Block -->
@@ -393,22 +437,9 @@
             android:visibility="gone">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonEdit"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/space_xs"
-                android:layout_weight="1"
-                android:minHeight="@dimen/touch_min"
-                android:text="@string/listing_detail_btn_edit"
-                app:cornerRadius="@dimen/radius_md" />
-
-            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonMarkSold"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_xs"
-                android:layout_weight="1"
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/listing_detail_btn_mark_sold"
                 app:cornerRadius="@dimen/radius_md" />
