@@ -106,4 +106,28 @@
         <item>Đồng Nai</item>
         <item>Khác</item>
     </string-array>
+
+    <!-- B01 Home & Listing Card -->
+    <string name="listing_home_brand">ĐồCũ</string>
+    <string name="listing_home_search_hint">Tìm iPhone, xe đạp, sách…</string>
+    <string name="listing_home_search_bar_desc">Thanh tìm kiếm</string>
+    <string name="listing_home_avatar_desc">Trang cá nhân của tôi</string>
+    <string name="listing_home_channel_general">Kênh chung</string>
+    <string name="listing_home_channel_following">Đang theo dõi</string>
+    <string name="listing_home_guest_sign_in">Đăng nhập</string>
+    <string name="listing_home_guest_dialog_title">Yêu cầu đăng nhập</string>
+    <string name="listing_home_guest_dialog_message">Vui lòng đăng nhập để xem bài đăng từ những người bạn theo dõi</string>
+    <string name="listing_home_guest_dialog_cancel">Hủy</string>
+    <string name="listing_home_guest_dialog_sign_in">Đăng nhập</string>
+    <string name="listing_home_following_empty_title">Chưa có bài đăng nào</string>
+    <string name="listing_home_following_empty_message">Chưa có bài đăng nào từ người bạn theo dõi. Hãy khám phá và theo dõi các người bán uy tín nhé!</string>
+    <string name="listing_home_following_empty_action">Về Kênh chung</string>
+    <string name="listing_home_empty_title">Chưa có tin nào</string>
+    <string name="listing_home_empty_message">Hiện chưa có tin đăng nào</string>
+    <string name="listing_home_refresh">Tải lại</string>
+    <string name="listing_card_condition_new">Mới 100%</string>
+    <string name="listing_card_condition_like_new">Như mới</string>
+    <string name="listing_card_condition_used">Đã qua sử dụng</string>
+    <string name="listing_card_condition_repaired">Đã sửa chữa</string>
+    <string name="listing_card_condition_defective">Lỗi nhẹ / Hỏng</string>
 </resources>
