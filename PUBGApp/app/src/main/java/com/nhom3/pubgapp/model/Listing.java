@@ -26,7 +26,7 @@ public class Listing extends BaseDocument {
     private String province;
     private GeoPoint location;
     private ListingStatus status;
-    private String statusReason;
+    private String statusReason = "";
     private List<String> searchKeywords;
     private boolean flagged;
     private String reservedDealId;

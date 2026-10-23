@@ -80,12 +80,12 @@ public class ShopViewModel extends ViewModel {
         categoryRepository.getAll(new DataCallback<List<Category>>() {
             @Override
             public void onSuccess(List<Category> data) {
-                categories.setValue(data);
+                categories.postValue(data);
             }
 
             @Override
             public void onError(String errorMessage) {
-                error.setValue(errorMessage);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -97,11 +97,11 @@ public class ShopViewModel extends ViewModel {
         int imageCount = imageUris != null ? imageUris.size() : 0;
         List<String> missing = findMissingFields(listing, imageCount);
         if (!missing.isEmpty()) {
-            error.setValue("Vui lòng điền đủ các trường bắt buộc và chọn từ 1 đến 5 ảnh");
+            error.postValue("Vui lòng điền đủ các trường bắt buộc và chọn từ 1 đến 5 ảnh");
             return;
         }
 
-        loading.setValue(true);
+        loading.postValue(true);
         clearError();
 
         // Check banned keywords before creating
@@ -113,7 +113,7 @@ public class ShopViewModel extends ViewModel {
 
             @Override
             public void onError(String errorMessage) {
-                keywordFlag.setValue(false);
+                keywordFlag.postValue(false);
                 saveImagesAndCreate(listing, imageUris);
             }
         });
@@ -139,7 +139,7 @@ public class ShopViewModel extends ViewModel {
                 }
             }
         }
-        keywordFlag.setValue(hasBanned);
+        keywordFlag.postValue(hasBanned);
         saveImagesAndCreate(listing, imageUris);
     }
 
@@ -166,8 +166,8 @@ public class ShopViewModel extends ViewModel {
             @Override
             public void onError(String errorMessage) {
                 rollbackImages(savedIds);
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -186,8 +186,8 @@ public class ShopViewModel extends ViewModel {
             @Override
             public void onError(String errorMessage) {
                 rollbackImages(savedIds);
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -196,16 +196,16 @@ public class ShopViewModel extends ViewModel {
         listingRepository.create(listing, new DataCallback<String>() {
             @Override
             public void onSuccess(String id) {
-                createdListingId.setValue(id);
-                loading.setValue(false);
-                done.setValue(true);
+                createdListingId.postValue(id);
+                loading.postValue(false);
+                done.postValue(true);
             }
 
             @Override
             public void onError(String errorMessage) {
                 rollbackImages(savedIds);
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -225,8 +225,84 @@ public class ShopViewModel extends ViewModel {
         }
     }
 
-    public void saveDraft(Listing listing, List<Uri> imageUris) {
-        error.setValue(DataCallback.NOT_READY);
+    public void saveDraft(final Listing listing, final List<Uri> imageUris) {
+        int imageCount = imageUris != null ? imageUris.size() : 0;
+        if (!canSaveDraft(listing, imageCount)) {
+            error.postValue("Hãy nhập tiêu đề, mô tả hoặc chọn ít nhất 1 ảnh để lưu nháp");
+            return;
+        }
+
+        loading.postValue(true);
+        clearError();
+
+        if (imageCount > 0) {
+            final List<String> savedIds = new ArrayList<>();
+            saveNextDraftImage(0, imageUris, savedIds, listing);
+        } else {
+            submitDraft(listing, new ArrayList<String>());
+        }
+    }
+
+    private void saveNextDraftImage(final int index, final List<Uri> imageUris,
+                                    final List<String> savedIds, final Listing listing) {
+        if (index >= imageUris.size()) {
+            makeThumbAndSubmitDraft(listing, imageUris, savedIds);
+            return;
+        }
+
+        Uri uri = imageUris.get(index);
+        mediaRepository.saveImage(uri, ImagePurpose.LISTING, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String imageId) {
+                savedIds.add(imageId);
+                saveNextDraftImage(index + 1, imageUris, savedIds, listing);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                rollbackImages(savedIds);
+                loading.postValue(false);
+                error.postValue(errorMessage);
+            }
+        });
+    }
+
+    private void makeThumbAndSubmitDraft(final Listing listing, final List<Uri> imageUris,
+                                         final List<String> savedIds) {
+        Uri firstUri = imageUris.get(0);
+        mediaRepository.makeThumb(firstUri, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String thumbBase64) {
+                listing.setImageIds(savedIds);
+                listing.setCoverThumb(thumbBase64);
+                submitDraft(listing, savedIds);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                rollbackImages(savedIds);
+                loading.postValue(false);
+                error.postValue(errorMessage);
+            }
+        });
+    }
+
+    private void submitDraft(Listing listing, final List<String> savedIds) {
+        listingRepository.saveDraft(listing, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String id) {
+                createdListingId.postValue(id);
+                loading.postValue(false);
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                rollbackImages(savedIds);
+                loading.postValue(false);
+                error.postValue(errorMessage);
+            }
+        });
     }
 
     public void publishDraft(String id) {
@@ -255,6 +331,7 @@ public class ShopViewModel extends ViewModel {
 
     public void clearDone() {
         done.setValue(false);
+        createdListingId.setValue(null);
     }
 
     // Validates form fields and returns missing field names in order.
@@ -290,5 +367,16 @@ public class ShopViewModel extends ViewModel {
             return 0L;
         }
         return typedPrice;
+    }
+
+    // Checks whether a draft has minimum required content (title, description, or at least 1 image).
+    static boolean canSaveDraft(Listing listing, int imageCount) {
+        if (listing == null) {
+            return false;
+        }
+        boolean hasTitle = listing.getTitle() != null && !listing.getTitle().trim().isEmpty();
+        boolean hasDesc = listing.getDescription() != null && !listing.getDescription().trim().isEmpty();
+        boolean hasImages = imageCount > 0;
+        return hasTitle || hasDesc || hasImages;
     }
 }
