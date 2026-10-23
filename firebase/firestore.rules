@@ -798,10 +798,71 @@ service cloud.firestore {
       }
     }
 
+    // Offer (security-rules.md mục 13). Người mua không sửa, không hủy offer (STT 47).
     match /offers/{id} {
+      function offerKeys() {
+        return ['listingId', 'conversationId', 'buyerId', 'sellerId', 'offerType', 'amount',
+                'exchangeItem', 'status', 'createdAt', 'updatedAt'];
+      }
+
+      // Loại và mức giá đúng như người bán chấp nhận; offer chỉ có vật thì tiền bằng 0.
+      function offerTermsOk(d, l) {
+        return d.offerType in l.get('acceptedOfferTypes', [])
+          && d.amount is int
+          && d.amount >= 0
+          && optString(d, 'exchangeItem', 500)
+          && (d.offerType != 'ITEM'
+              || (d.amount == 0 && reqString(d, 'exchangeItem', 500)))
+          && (d.offerType == 'ITEM' || d.amount >= l.get('minOfferPrice', 0));
+      }
+
       allow read: if signedIn()
         && (resource.data.buyerId == me() || resource.data.sellerId == me() || isAdmin());
-      allow write: if false;
+
+      // Gửi offer: người mua đã được duyệt xác thực, tin đang AVAILABLE.
+      allow create: if writerActive()
+        && verified()
+        && hasOnlyKeys(offerKeys())
+        && request.resource.data.buyerId == me()
+        && request.resource.data.status == 'PENDING'
+        && request.resource.data.listingId is string
+        && listingBefore(request.resource.data.listingId).status == 'AVAILABLE'
+        && request.resource.data.sellerId == listingBefore(request.resource.data.listingId).sellerId
+        && request.resource.data.buyerId != request.resource.data.sellerId
+        && request.resource.data.conversationId == request.resource.data.listingId + '_' + me()
+        && offerTermsOk(request.resource.data, listingBefore(request.resource.data.listingId))
+        && createStamps();
+
+      // Chấp nhận: cùng lô giữ chỗ tin và tạo giao dịch trỏ về offer này.
+      allow update: if signedIn()
+        && resource.data.sellerId == me()
+        && writerActive()
+        && resource.data.status == 'PENDING'
+        && request.resource.data.status == 'ACCEPTED'
+        && onlyKeys(['status', 'updatedAt'])
+        && listingAfter(resource.data.listingId).status == 'RESERVED'
+        && dealAfter(listingAfter(resource.data.listingId).reservedDealId).offerId == id
+        && serverStamp('updatedAt');
+
+      // Người bán từ chối (cũng dùng khi từ chối các offer còn lại lúc tin rời AVAILABLE).
+      allow update: if signedIn()
+        && resource.data.sellerId == me()
+        && writerActive()
+        && resource.data.status == 'PENDING'
+        && request.resource.data.status == 'REJECTED'
+        && onlyKeys(['status', 'updatedAt'])
+        && serverStamp('updatedAt');
+
+      // Admin từ chối offer còn chờ, cùng lô ẩn hoặc gỡ tin.
+      allow update: if isAdmin()
+        && writerActive()
+        && resource.data.status == 'PENDING'
+        && request.resource.data.status == 'REJECTED'
+        && onlyKeys(['status', 'updatedAt'])
+        && listingAfter(resource.data.listingId).status in ['HIDDEN', 'REMOVED']
+        && serverStamp('updatedAt');
+
+      allow delete: if false;
     }
 
     match /deals/{id} {
