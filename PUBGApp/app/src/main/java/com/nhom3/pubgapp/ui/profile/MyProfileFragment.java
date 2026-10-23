@@ -165,7 +165,7 @@ public class MyProfileFragment extends Fragment {
                 NavHostFragment.findNavController(MyProfileFragment.this).navigate(R.id.action_global_edit_profile);
             }
         };
-        binding.buttonSettings.setOnClickListener(openEditProfile);
+        binding.buttonEditProfile.setOnClickListener(openEditProfile);
         binding.textRowEditProfile.setOnClickListener(openEditProfile);
         setUpShortcutRows();
         setUpAccountButtons();

@@ -8,7 +8,7 @@
     <string name="profile_report_title">D04 Báo cáo</string>
 
     <!-- D01 MyProfileFragment -->
-    <string name="profile_my_profile_settings">Cài đặt</string>
+    <string name="profile_my_profile_edit_action">Sửa hồ sơ</string>
     <string name="profile_my_profile_location">%1$s, %2$s</string>
     <string name="profile_my_profile_no_location">Chưa cập nhật khu vực</string>
     <string name="profile_my_profile_sold_label">Đã bán</string>
