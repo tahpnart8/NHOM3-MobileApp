@@ -5,7 +5,7 @@
     <string name="profile_edit_profile_title">Chỉnh sửa hồ sơ</string>
     <string name="profile_user_profile_title">Trang cá nhân</string>
     <string name="profile_seller_trust_title">Hồ sơ người bán</string>
-    <string name="profile_report_title">D04 Báo cáo</string>
+    <string name="profile_report_title">Báo cáo</string>
 
     <!-- D01 MyProfileFragment -->
     <string name="profile_my_profile_edit_action">Sửa hồ sơ</string>
