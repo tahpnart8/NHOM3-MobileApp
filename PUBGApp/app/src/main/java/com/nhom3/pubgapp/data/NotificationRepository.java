@@ -26,6 +26,7 @@ public class NotificationRepository extends BaseRepository {
         db.collection(COLLECTION_NOTIFICATIONS)
                 .whereEqualTo("recipientId", uid)
                 .orderBy("createdAt", Query.Direction.DESCENDING)
+                .limit(50)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -39,6 +40,7 @@ public class NotificationRepository extends BaseRepository {
                             for (DocumentSnapshot doc : task.getResult().getDocuments()) {
                                 AppNotification notification = doc.toObject(AppNotification.class);
                                 if (notification != null) {
+                                    notification.setId(doc.getId());
                                     list.add(notification);
                                 }
                             }
