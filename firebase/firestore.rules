@@ -865,10 +865,296 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Giao dịch (security-rules.md mục 14 và 15). Mỗi chuyển trạng thái một nhánh "allow update";
+    // chuyển nào không có nhánh thì bị cấm. listingId, offerId, buyerId, sellerId, tradeType,
+    // itemTitle, itemThumb, createdAt không đổi vì không nhánh sửa nào cho đụng tới.
     match /deals/{id} {
+      function dealKeys() {
+        return ['listingId', 'offerId', 'buyerId', 'sellerId', 'tradeType', 'agreedPrice',
+                'exchangeItem', 'deliveryMethod', 'deliveryAddress', 'scheduledAt', 'agreedTerms',
+                'itemTitle', 'itemThumb', 'status', 'buyerConfirmed', 'sellerConfirmed',
+                'cancelReason', 'carrierName', 'trackingCode', 'trackingImageId', 'shippedAt',
+                'autoReleaseAt', 'receivedAt', 'receivedImageId', 'statusHistory', 'createdAt',
+                'updatedAt'];
+      }
+
+      function isDealParty() {
+        return signedIn()
+          && (resource.data.buyerId == me() || resource.data.sellerId == me());
+      }
+
+      function isDealBuyer() {
+        return signedIn() && resource.data.buyerId == me();
+      }
+
+      function isDealSeller() {
+        return signedIn() && resource.data.sellerId == me();
+      }
+
+      function moved(fromStatus, toStatus) {
+        return resource.data.status == fromStatus && request.resource.data.status == toStatus;
+      }
+
+      // Giới hạn kích thước và giá trị cho phép của các trường hai bên được sửa.
+      function dealTermsOk(d) {
+        return d.agreedPrice is int
+          && d.agreedPrice >= 0
+          && (d.get('deliveryMethod', null) == null || d.deliveryMethod in ['MEET_UP', 'SHIPPING'])
+          && optString(d, 'deliveryAddress', 300)
+          && optString(d, 'agreedTerms', 1000)
+          && optString(d, 'exchangeItem', 500);
+      }
+
+      // Cách giao đã chọn; giao qua vận chuyển thì phải có địa chỉ.
+      function deliveryReady(d) {
+        return d.get('deliveryMethod', null) in ['MEET_UP', 'SHIPPING']
+          && (d.deliveryMethod != 'SHIPPING' || reqString(d, 'deliveryAddress', 300));
+      }
+
+      // statusHistory chỉ thêm đúng một phần tử từ trạng thái cũ sang trạng thái mới (mục 15).
+      function historyAppended() {
+        let oldList = resource.data.statusHistory;
+        let newList = request.resource.data.statusHistory;
+        return newList is list
+          && newList.size() == oldList.size() + 1
+          && newList[0:oldList.size()] == oldList
+          && newList[oldList.size()].fromStatus == resource.data.status
+          && newList[oldList.size()].toStatus == request.resource.data.status;
+      }
+
+      // Khoản ký quỹ đang giữ tiền của giao dịch này (trước lô).
+      function paymentHeld() {
+        return paymentExists(id) && paymentBefore(id).status == 'HELD';
+      }
+
+      // Hạn đếm ngược bằng giờ máy chủ cộng 7 ngày; ứng dụng ghi bằng giờ máy nên cho sai số 5 phút.
+      function autoReleaseOk() {
+        let due = request.time + duration.value(7, 'd');
+        return request.resource.data.autoReleaseAt is timestamp
+          && request.resource.data.autoReleaseAt >= due - duration.value(5, 'm')
+          && request.resource.data.autoReleaseAt <= due + duration.value(5, 'm');
+      }
+
+      // Lô hoàn tất đặt tin của giao dịch sang SOLD.
+      function listingSoldAfter() {
+        return listingAfter(resource.data.listingId).status == 'SOLD';
+      }
+
       allow read: if signedIn()
         && (resource.data.buyerId == me() || resource.data.sellerId == me() || isAdmin());
-      allow write: if false;
+
+      // Tạo: người bán, chỉ cùng lô chấp nhận offer và giữ chỗ tin; giá và loại lấy từ offer.
+      allow create: if writerActive()
+        && verified()
+        && hasOnlyKeys(dealKeys())
+        && request.resource.data.sellerId == me()
+        && request.resource.data.status == 'PENDING_CONFIRM'
+        && request.resource.data.sellerConfirmed == true
+        && request.resource.data.buyerConfirmed == false
+        && request.resource.data.offerId is string
+        && offerAfter(request.resource.data.offerId).status == 'ACCEPTED'
+        && offerAfter(request.resource.data.offerId).sellerId == me()
+        && request.resource.data.buyerId == offerAfter(request.resource.data.offerId).buyerId
+        && request.resource.data.listingId == offerAfter(request.resource.data.offerId).listingId
+        && listingAfter(request.resource.data.listingId).status == 'RESERVED'
+        && listingAfter(request.resource.data.listingId).reservedDealId == id
+        && request.resource.data.agreedPrice == offerAfter(request.resource.data.offerId).amount
+        && ((offerAfter(request.resource.data.offerId).offerType == 'ITEM'
+             && request.resource.data.tradeType == 'EXCHANGE')
+            || (offerAfter(request.resource.data.offerId).offerType != 'ITEM'
+                && request.resource.data.tradeType == 'SELL'))
+        && dealTermsOk(request.resource.data)
+        && optString(request.resource.data, 'itemTitle', 150)
+        && optString(request.resource.data, 'itemThumb', 28000)
+        && request.resource.data.statusHistory is list
+        && request.resource.data.statusHistory.size() == 1
+        && request.resource.data.statusHistory[0].get('fromStatus', null) == null
+        && request.resource.data.statusHistory[0].toStatus == 'PENDING_CONFIRM'
+        && request.resource.data.get('shippedAt', null) == null
+        && request.resource.data.get('autoReleaseAt', null) == null
+        && request.resource.data.get('receivedAt', null) == null
+        && emptyString(request.resource.data, 'cancelReason')
+        && emptyString(request.resource.data, 'carrierName')
+        && emptyString(request.resource.data, 'trackingCode')
+        && emptyString(request.resource.data, 'trackingImageId')
+        && emptyString(request.resource.data, 'receivedImageId')
+        && createStamps();
+
+      // Sửa điều khoản: xóa cả hai cờ xác nhận; trạng thái và lịch sử giữ nguyên.
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('PENDING_CONFIRM', 'PENDING_CONFIRM')
+        && onlyKeys(['deliveryMethod', 'deliveryAddress', 'scheduledAt', 'agreedTerms',
+                     'exchangeItem', 'agreedPrice', 'buyerConfirmed', 'sellerConfirmed',
+                     'updatedAt'])
+        && request.resource.data.buyerConfirmed == false
+        && request.resource.data.sellerConfirmed == false
+        && dealTermsOk(request.resource.data)
+        && serverStamp('updatedAt');
+
+      // Xác nhận của bên thứ nhất: mỗi bên chỉ bật cờ của mình, cờ bên kia đang false.
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('PENDING_CONFIRM', 'PENDING_CONFIRM')
+        && ((isDealBuyer()
+             && onlyKeys(['buyerConfirmed', 'updatedAt'])
+             && request.resource.data.buyerConfirmed == true
+             && resource.data.sellerConfirmed == false)
+            || (isDealSeller()
+                && onlyKeys(['sellerConfirmed', 'updatedAt'])
+                && request.resource.data.sellerConfirmed == true
+                && resource.data.buyerConfirmed == false))
+        && resource.data.get('deliveryMethod', null) in ['MEET_UP', 'SHIPPING']
+        && serverStamp('updatedAt');
+
+      // Xác nhận của bên thứ hai: cờ bên kia đang true, sang CONFIRMED.
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('PENDING_CONFIRM', 'CONFIRMED')
+        && ((isDealBuyer()
+             && onlyKeys(['buyerConfirmed', 'status', 'statusHistory', 'updatedAt'])
+             && request.resource.data.buyerConfirmed == true
+             && resource.data.sellerConfirmed == true)
+            || (isDealSeller()
+                && onlyKeys(['sellerConfirmed', 'status', 'statusHistory', 'updatedAt'])
+                && request.resource.data.sellerConfirmed == true
+                && resource.data.buyerConfirmed == true))
+        && deliveryReady(resource.data)
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Hết hạn xác nhận 3 ngày (đại diện hệ thống): hủy và nhả giữ chỗ tin cùng lô.
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('PENDING_CONFIRM', 'CANCELLED')
+        && request.time > resource.data.createdAt + duration.value(3, 'd')
+        && onlyKeys(['status', 'statusHistory', 'updatedAt'])
+        && listingAfter(resource.data.listingId).status == 'AVAILABLE'
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Hủy: bắt buộc lý do; tiền đang giữ thì hoàn cùng lô.
+      allow update: if isDealParty()
+        && writerActive()
+        && resource.data.status in ['PENDING_CONFIRM', 'CONFIRMED']
+        && request.resource.data.status == 'CANCELLED'
+        && onlyKeys(['status', 'cancelReason', 'statusHistory', 'updatedAt'])
+        && reqString(request.resource.data, 'cancelReason', 500)
+        && (!paymentHeld() || paymentAfter(id).status == 'REFUNDED')
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Giao hàng: người bán, có vận đơn; đồng hồ đếm ngược đúng 7 ngày từ giờ máy chủ.
+      allow update: if isDealSeller()
+        && writerActive()
+        && moved('CONFIRMED', 'SHIPPED')
+        && resource.data.deliveryMethod == 'SHIPPING'
+        && onlyKeys(['status', 'carrierName', 'trackingCode', 'trackingImageId', 'shippedAt',
+                     'autoReleaseAt', 'statusHistory', 'updatedAt'])
+        && reqString(request.resource.data, 'carrierName', 100)
+        && reqString(request.resource.data, 'trackingCode', 100)
+        && reqString(request.resource.data, 'trackingImageId', 200)
+        && imageOwnedByMe(request.resource.data.trackingImageId)
+        && serverStamp('shippedAt')
+        && autoReleaseOk()
+        && (resource.data.agreedPrice == 0 || paymentBefore(id).status == 'HELD')
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Người mua nhận hàng: gặp trực tiếp (từ CONFIRMED) hoặc qua vận chuyển (từ SHIPPED),
+      // kèm ảnh lúc nhận; có tiền thì giải ngân cùng lô.
+      allow update: if isDealBuyer()
+        && writerActive()
+        && ((moved('CONFIRMED', 'RECEIVED') && resource.data.deliveryMethod == 'MEET_UP')
+            || moved('SHIPPED', 'RECEIVED'))
+        && onlyKeys(['status', 'receivedAt', 'receivedImageId', 'statusHistory', 'updatedAt'])
+        && serverStamp('receivedAt')
+        && reqString(request.resource.data, 'receivedImageId', 200)
+        && (resource.data.agreedPrice == 0
+            || (paymentBefore(id).status == 'HELD' && paymentAfter(id).status == 'RELEASED'))
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Hết đếm ngược (đại diện hệ thống): mốc so với giờ máy chủ nên người bán cũng chạy được.
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('SHIPPED', 'RECEIVED')
+        && request.time >= resource.data.autoReleaseAt
+        && onlyKeys(['status', 'receivedAt', 'statusHistory', 'updatedAt'])
+        && serverStamp('receivedAt')
+        && (resource.data.agreedPrice == 0 || paymentAfter(id).status == 'RELEASED')
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Mở khiếu nại: trong thời gian đếm ngược, hoặc khi gặp trực tiếp đã xác nhận;
+      // tài liệu khiếu nại ghi cùng lô.
+      allow update: if isDealParty()
+        && writerActive()
+        && ((resource.data.status == 'SHIPPED' && request.time < resource.data.autoReleaseAt)
+            || (resource.data.status == 'CONFIRMED' && resource.data.deliveryMethod == 'MEET_UP'))
+        && request.resource.data.status == 'DISPUTED'
+        && onlyKeys(['status', 'statusHistory', 'updatedAt'])
+        && complaintAfter(id).complainantId == me()
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Rút khiếu nại: về đúng trạng thái trước DISPUTED (fromStatus của phần tử cuối).
+      allow update: if isDealParty()
+        && writerActive()
+        && resource.data.status == 'DISPUTED'
+        && request.resource.data.status
+             == resource.data.statusHistory[resource.data.statusHistory.size() - 1].fromStatus
+        && onlyKeys(['status', 'statusHistory', 'updatedAt'])
+        && complaintAfter(id).status == 'WITHDRAWN'
+        && complaintAfter(id).complainantId == me()
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Admin quyết định hoàn tiền, trả hàng, hủy: giao dịch hủy, tiền hoàn, tin mở bán lại.
+      allow update: if isAdmin()
+        && writerActive()
+        && moved('DISPUTED', 'CANCELLED')
+        && complaintAfter(id).decision in ['REFUND', 'RETURN_ITEM', 'CANCEL_DEAL']
+        && complaintAfter(id).status == 'RESOLVED'
+        && onlyKeys(['status', 'statusHistory', 'updatedAt'])
+        && (!paymentExists(id) || paymentAfter(id).status == 'REFUNDED')
+        && listingAfter(resource.data.listingId).status == 'AVAILABLE'
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Admin bác khiếu nại: giao dịch sang RECEIVED, tiền giải ngân.
+      allow update: if isAdmin()
+        && writerActive()
+        && moved('DISPUTED', 'RECEIVED')
+        && complaintAfter(id).decision == 'REJECT'
+        && onlyKeys(['status', 'receivedAt', 'statusHistory', 'updatedAt'])
+        && serverStamp('receivedAt')
+        && (!paymentExists(id) || paymentAfter(id).status == 'RELEASED')
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Hoàn tất khi hai bên đã đánh giá (cả hai đánh giá có mặt sau lô); tin sang SOLD cùng lô.
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('RECEIVED', 'COMPLETED')
+        && existsAfter(/databases/$(database)/documents/reviews/$(id + '_' + resource.data.buyerId))
+        && existsAfter(/databases/$(database)/documents/reviews/$(id + '_' + resource.data.sellerId))
+        && onlyKeys(['status', 'statusHistory', 'updatedAt'])
+        && listingSoldAfter()
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Hoàn tất khi đã quá 3 ngày từ lúc nhận (đại diện hệ thống).
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('RECEIVED', 'COMPLETED')
+        && request.time > resource.data.receivedAt + duration.value(3, 'd')
+        && onlyKeys(['status', 'statusHistory', 'updatedAt'])
+        && listingSoldAfter()
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      allow delete: if false;
     }
 
     match /payments/{dealId} {
