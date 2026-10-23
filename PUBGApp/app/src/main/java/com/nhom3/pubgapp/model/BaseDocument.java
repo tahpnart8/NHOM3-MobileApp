@@ -2,6 +2,7 @@ package com.nhom3.pubgapp.model;
 
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentId;
+import com.google.firebase.firestore.ServerTimestamp;
 
 // Setters are public because Firestore cannot fill protected fields without them.
 public abstract class BaseDocument {
@@ -17,6 +18,8 @@ public abstract class BaseDocument {
         this.id = id;
     }
 
+    // A null value is replaced by the server clock when the object is written, as the Rules demand.
+    @ServerTimestamp
     public Timestamp getCreatedAt() {
         return createdAt;
     }
@@ -25,6 +28,7 @@ public abstract class BaseDocument {
         this.createdAt = createdAt;
     }
 
+    @ServerTimestamp
     public Timestamp getUpdatedAt() {
         return updatedAt;
     }
@@ -37,7 +41,8 @@ public abstract class BaseDocument {
         return id;
     }
 
+    // Clears updatedAt so the next write stamps it with server time; a device clock would fail the Rules.
     public void touch() {
-        throw new UnsupportedOperationException("NOT_READY");
+        updatedAt = null;
     }
 }
