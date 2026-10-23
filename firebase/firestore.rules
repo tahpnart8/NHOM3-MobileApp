@@ -1157,15 +1157,130 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Ký quỹ mô phỏng (security-rules.md mục 16). Mã tài liệu là dealId nên mỗi giao dịch
+    // tối đa một khoản. RELEASED và REFUNDED là cuối. Bảng của payments trong
+    // firestore-schema.md không có createdAt, nên hai mốc của BaseDocument được vắng.
     match /payments/{dealId} {
+      function isPaymentParty() {
+        return signedIn()
+          && (resource.data.payerId == me() || resource.data.payeeId == me());
+      }
+
+      function paymentMoved(fromStatus, toStatus) {
+        return resource.data.status == fromStatus && request.resource.data.status == toStatus;
+      }
+
+      // Lần sửa chỉ đổi trạng thái và mốc giải ngân hoặc hoàn tiền, theo giờ máy chủ.
+      function settleKeysOk() {
+        return onlyKeys(['status', 'releasedAt', 'updatedAt'])
+          && serverStamp('releasedAt')
+          && serverStamp('updatedAt');
+      }
+
       allow read: if signedIn()
         && (resource.data.payerId == me() || resource.data.payeeId == me() || isAdmin());
-      allow write: if false;
+
+      // Giữ tiền: người mua, giao dịch đã CONFIRMED, đúng số tiền thỏa thuận.
+      allow create: if writerActive()
+        && hasOnlyKeys(['dealId', 'payerId', 'payeeId', 'amount', 'status', 'method', 'heldAt',
+                        'releasedAt', 'createdAt', 'updatedAt'])
+        && request.resource.data.dealId == dealId
+        && dealBefore(dealId).buyerId == me()
+        && dealBefore(dealId).status == 'CONFIRMED'
+        && dealBefore(dealId).agreedPrice > 0
+        && request.resource.data.amount == dealBefore(dealId).agreedPrice
+        && request.resource.data.payerId == me()
+        && request.resource.data.payeeId == dealBefore(dealId).sellerId
+        && request.resource.data.status == 'HELD'
+        && request.resource.data.method in ['CARD', 'E_WALLET', 'BANK_TRANSFER']
+        && serverStamp('heldAt')
+        && request.resource.data.get('releasedAt', null) == null
+        && (request.resource.data.get('createdAt', null) == null || serverStamp('createdAt'))
+        && (request.resource.data.get('updatedAt', null) == null || serverStamp('updatedAt'));
+
+      // Giải ngân khi người mua nhận hàng, cùng lô giao dịch sang RECEIVED.
+      allow update: if signedIn()
+        && resource.data.payerId == me()
+        && writerActive()
+        && paymentMoved('HELD', 'RELEASED')
+        && settleKeysOk()
+        && dealAfter(dealId).status == 'RECEIVED'
+        && (dealBefore(dealId).status == 'SHIPPED'
+            || (dealBefore(dealId).status == 'CONFIRMED'
+                && dealBefore(dealId).deliveryMethod == 'MEET_UP'));
+
+      // Giải ngân khi hết đếm ngược: mốc là giờ máy chủ nên người bán cũng chạy được.
+      allow update: if isPaymentParty()
+        && writerActive()
+        && paymentMoved('HELD', 'RELEASED')
+        && settleKeysOk()
+        && dealBefore(dealId).status == 'SHIPPED'
+        && request.time >= dealBefore(dealId).autoReleaseAt
+        && dealAfter(dealId).status == 'RECEIVED';
+
+      // Giải ngân khi admin bác khiếu nại.
+      allow update: if isAdmin()
+        && writerActive()
+        && paymentMoved('HELD', 'RELEASED')
+        && settleKeysOk()
+        && complaintAfter(dealId).decision == 'REJECT'
+        && dealAfter(dealId).status == 'RECEIVED';
+
+      // Hoàn tiền khi một bên hủy giao dịch, cùng lô giao dịch sang CANCELLED.
+      allow update: if isPaymentParty()
+        && writerActive()
+        && paymentMoved('HELD', 'REFUNDED')
+        && settleKeysOk()
+        && dealAfter(dealId).status == 'CANCELLED';
+
+      // Hoàn tiền theo quyết định khiếu nại của admin.
+      allow update: if isAdmin()
+        && writerActive()
+        && paymentMoved('HELD', 'REFUNDED')
+        && settleKeysOk()
+        && complaintAfter(dealId).decision in ['REFUND', 'RETURN_ITEM', 'CANCEL_DEAL']
+        && dealAfter(dealId).status == 'CANCELLED';
+
+      allow delete: if false;
     }
 
+    // Đánh giá (security-rules.md mục 17). Mã dealId_reviewerId nên mỗi bên một đánh giá cho
+    // mỗi giao dịch; không sửa, không xóa vì điểm đã cộng.
     match /reviews/{id} {
+      // Sao từ 1 đến 5.
+      function starOk(d, f) {
+        return d.get(f, null) is int && d[f] >= 1 && d[f] <= 5;
+      }
+
+      // Người được đánh giá là bên còn lại của giao dịch.
+      function revieweeOk(d, deal) {
+        return (deal.buyerId == me() && d.revieweeId == deal.sellerId)
+          || (deal.sellerId == me() && d.revieweeId == deal.buyerId);
+      }
+
       allow read: if signedIn();
-      allow write: if false;
+
+      // Điểm của người được đánh giá tăng đúng bằng điểm viết, trong cùng lô.
+      allow create: if writerActive()
+        && hasOnlyKeys(['dealId', 'reviewerId', 'revieweeId', 'rating', 'accuracyRating',
+                        'attitudeRating', 'commitmentRating', 'comment', 'createdAt', 'updatedAt'])
+        && request.resource.data.reviewerId == me()
+        && request.resource.data.dealId is string
+        && id == request.resource.data.dealId + '_' + me()
+        && dealBefore(request.resource.data.dealId).status in ['RECEIVED', 'COMPLETED']
+        && revieweeOk(request.resource.data, dealBefore(request.resource.data.dealId))
+        && starOk(request.resource.data, 'rating')
+        && starOk(request.resource.data, 'accuracyRating')
+        && starOk(request.resource.data, 'attitudeRating')
+        && starOk(request.resource.data, 'commitmentRating')
+        && optString(request.resource.data, 'comment', 500)
+        && userAfter(request.resource.data.revieweeId).ratingCount
+             == userDoc(request.resource.data.revieweeId).ratingCount + 1
+        && userAfter(request.resource.data.revieweeId).ratingSum
+             == userDoc(request.resource.data.revieweeId).ratingSum + request.resource.data.rating
+        && createStamps();
+
+      allow update, delete: if false;
     }
 
     // ---- Báo cáo và khiếu nại ----
