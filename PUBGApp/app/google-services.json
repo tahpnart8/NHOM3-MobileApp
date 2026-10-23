@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "992647241562",
+    "project_id": "nhom3-mobileapp",
+    "storage_bucket": "nhom3-mobileapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:992647241562:android:b9303e3ce03b5f5e1c9d63",
+        "android_client_info": {
+          "package_name": "com.nhom3.pubgapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "992647241562-criif9vi8sqk139eb226rv7soa0l1s7p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nhom3.pubgapp",
+            "certificate_hash": "fbb28c4ac2d928d3a5bf05c3ad6f23bc8d9719e7"
+          }
+        },
+        {
+          "client_id": "992647241562-35n9j7oecli7653eu59mt9no91bli4is.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB10lmQSY-kA7C-B11q6jj1vx_kolrO0QE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "992647241562-35n9j7oecli7653eu59mt9no91bli4is.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
