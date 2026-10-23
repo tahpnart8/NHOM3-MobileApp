@@ -241,66 +241,156 @@ public class Deal extends BaseDocument {
     }
 
     public boolean canMoveTo(DealStatus target) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (target == null) {
+            return false;
+        }
+        if (status == null) {
+            return target == DealStatus.PENDING_CONFIRM;
+        }
+        if (status == DealStatus.PENDING_CONFIRM) {
+            return target == DealStatus.CONFIRMED || target == DealStatus.CANCELLED;
+        }
+        if (status == DealStatus.CONFIRMED) {
+            return target == DealStatus.CANCELLED
+                    || target == DealStatus.SHIPPED
+                    || target == DealStatus.RECEIVED
+                    || target == DealStatus.DISPUTED;
+        }
+        if (status == DealStatus.SHIPPED) {
+            return target == DealStatus.RECEIVED || target == DealStatus.DISPUTED;
+        }
+        if (status == DealStatus.RECEIVED) {
+            return target == DealStatus.COMPLETED;
+        }
+        if (status == DealStatus.DISPUTED) {
+            return target == DealStatus.CANCELLED
+                    || target == DealStatus.RECEIVED
+                    || target == DealStatus.SHIPPED
+                    || target == DealStatus.CONFIRMED;
+        }
+        return false;
     }
 
     public void confirmBy(String userId) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (userId == null) {
+            return;
+        }
+        if (userId.equals(buyerId)) {
+            buyerConfirmed = true;
+        } else if (userId.equals(sellerId)) {
+            sellerConfirmed = true;
+        }
+        if (buyerConfirmed && sellerConfirmed && status == DealStatus.PENDING_CONFIRM) {
+            status = DealStatus.CONFIRMED;
+            touch();
+        }
     }
 
     public void markShipped(String carrier, String trackingCode, String imageId) {
-        throw new UnsupportedOperationException("NOT_READY");
+        this.carrierName = carrier;
+        this.trackingCode = trackingCode;
+        this.trackingImageId = imageId;
+        if (status == DealStatus.CONFIRMED && deliveryMethod == DeliveryMethod.SHIPPING && hasShippingProof()) {
+            this.status = DealStatus.SHIPPED;
+            this.shippedAt = Timestamp.now();
+            long sevenDaysInMillis = (long) AUTO_RELEASE_DAYS * 24 * 60 * 60 * 1000;
+            long releaseTime = this.shippedAt.toDate().getTime() + sevenDaysInMillis;
+            this.autoReleaseAt = new Timestamp(new java.util.Date(releaseTime));
+            touch();
+        }
     }
 
     public boolean hasShippingProof() {
-        throw new UnsupportedOperationException("NOT_READY");
+        return carrierName != null && !carrierName.trim().isEmpty()
+                && trackingCode != null && !trackingCode.trim().isEmpty()
+                && trackingImageId != null && !trackingImageId.trim().isEmpty();
     }
 
     public void markReceived(String imageId) {
-        throw new UnsupportedOperationException("NOT_READY");
+        this.receivedImageId = imageId;
+        this.status = DealStatus.RECEIVED;
+        this.receivedAt = Timestamp.now();
+        touch();
     }
 
     public boolean isAutoReleaseDue(Timestamp now) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status != DealStatus.SHIPPED || autoReleaseAt == null || now == null) {
+            return false;
+        }
+        return now.compareTo(autoReleaseAt) >= 0;
     }
 
     public void autoReceive() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status == DealStatus.SHIPPED) {
+            this.status = DealStatus.RECEIVED;
+            this.receivedAt = Timestamp.now();
+            this.receivedImageId = "";
+            touch();
+        }
     }
 
     public boolean isAutoCompleteDue(Timestamp now) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status != DealStatus.RECEIVED || receivedAt == null || now == null) {
+            return false;
+        }
+        long completeDaysInMillis = (long) AUTO_COMPLETE_DAYS * 24 * 60 * 60 * 1000;
+        long dueTime = receivedAt.toDate().getTime() + completeDaysInMillis;
+        return now.toDate().getTime() >= dueTime;
     }
 
     public void complete() {
-        throw new UnsupportedOperationException("NOT_READY");
+        this.status = DealStatus.COMPLETED;
+        touch();
     }
 
     public boolean isPendingExpired(Timestamp now) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status != DealStatus.PENDING_CONFIRM || getCreatedAt() == null || now == null) {
+            return false;
+        }
+        long threeDaysInMillis = 3L * 24 * 60 * 60 * 1000;
+        long expiredTime = getCreatedAt().toDate().getTime() + threeDaysInMillis;
+        return now.toDate().getTime() >= expiredTime;
     }
 
     public DealStatus statusBeforeDispute() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (statusHistory == null || statusHistory.isEmpty()) {
+            return null;
+        }
+        for (int i = statusHistory.size() - 1; i >= 0; i--) {
+            StatusChange sc = statusHistory.get(i);
+            if (sc.getToStatus() == DealStatus.DISPUTED) {
+                return sc.getFromStatus();
+            }
+        }
+        return null;
     }
 
     public void cancel(String userId, String reason) {
-        throw new UnsupportedOperationException("NOT_READY");
+        this.status = DealStatus.CANCELLED;
+        this.cancelReason = reason;
+        touch();
     }
 
     public void dispute() {
-        throw new UnsupportedOperationException("NOT_READY");
+        this.status = DealStatus.DISPUTED;
+        touch();
     }
 
     public void resolveDispute(DealStatus target) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (canMoveTo(target)) {
+            this.status = target;
+            touch();
+        }
     }
 
     public boolean isParticipant(String userId) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (userId == null) {
+            return false;
+        }
+        return userId.equals(buyerId) || userId.equals(sellerId);
     }
 
     public boolean needsPayment() {
-        throw new UnsupportedOperationException("NOT_READY");
+        return agreedPrice > 0;
     }
 }

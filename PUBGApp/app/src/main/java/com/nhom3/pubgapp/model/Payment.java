@@ -83,15 +83,19 @@ public class Payment extends BaseDocument {
     }
 
     public void release() {
-        throw new UnsupportedOperationException("NOT_READY");
+        this.status = PaymentStatus.RELEASED;
+        this.releasedAt = Timestamp.now();
+        touch();
     }
 
     public void refund() {
-        throw new UnsupportedOperationException("NOT_READY");
+        this.status = PaymentStatus.REFUNDED;
+        this.releasedAt = Timestamp.now();
+        touch();
     }
 
     @Exclude
     public boolean isHeld() {
-        throw new UnsupportedOperationException("NOT_READY");
+        return status == PaymentStatus.HELD;
     }
 }
