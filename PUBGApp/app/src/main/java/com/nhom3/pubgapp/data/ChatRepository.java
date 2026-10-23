@@ -125,7 +125,6 @@ public class ChatRepository extends BaseRepository {
                         conv.setBuyerId(buyerId);
                         conv.setSellerId(sellerId);
                         conv.setLastMessage("");
-                        conv.setCreatedAt(Timestamp.now());
 
                         docRef.set(conv).addOnCompleteListener(new OnCompleteListener<Void>() {
                             @Override
@@ -364,7 +363,6 @@ public class ChatRepository extends BaseRepository {
         msg.setText(text != null ? text.trim() : "");
         msg.setImageId("");
         msg.setOfferId("");
-        msg.setCreatedAt(Timestamp.now());
 
         WriteBatch batch = db.batch();
         DocumentReference msgRef = db.collection(COLLECTION_CONVERSATIONS).document(id)
@@ -375,7 +373,7 @@ public class ChatRepository extends BaseRepository {
         DocumentReference convRef = db.collection(COLLECTION_CONVERSATIONS).document(id);
         Map<String, Object> convUpdates = new HashMap<String, Object>();
         convUpdates.put("lastMessage", msg.getText());
-        convUpdates.put("lastMessageAt", msg.getCreatedAt());
+        convUpdates.put("lastMessageAt", FieldValue.serverTimestamp());
         convUpdates.put("updatedAt", FieldValue.serverTimestamp());
         batch.update(convRef, convUpdates);
 
@@ -424,7 +422,6 @@ public class ChatRepository extends BaseRepository {
         msg.setImageId(imageId != null ? imageId : "");
         msg.setOfferId("");
         msg.setText("[Hình ảnh]");
-        msg.setCreatedAt(Timestamp.now());
 
         WriteBatch batch = db.batch();
         DocumentReference msgRef = db.collection(COLLECTION_CONVERSATIONS).document(id)
@@ -435,7 +432,7 @@ public class ChatRepository extends BaseRepository {
         DocumentReference convRef = db.collection(COLLECTION_CONVERSATIONS).document(id);
         Map<String, Object> convUpdates = new HashMap<String, Object>();
         convUpdates.put("lastMessage", "[Hình ảnh]");
-        convUpdates.put("lastMessageAt", msg.getCreatedAt());
+        convUpdates.put("lastMessageAt", FieldValue.serverTimestamp());
         convUpdates.put("updatedAt", FieldValue.serverTimestamp());
         batch.update(convRef, convUpdates);
 
@@ -486,7 +483,6 @@ public class ChatRepository extends BaseRepository {
 
     private void saveOfferAndMessage(Offer offer, DataCallback<String> cb) {
         offer.setStatus(OfferStatus.PENDING);
-        offer.setCreatedAt(Timestamp.now());
 
         WriteBatch batch = db.batch();
         DocumentReference offerRef = db.collection(COLLECTION_OFFERS).document();
@@ -504,13 +500,12 @@ public class ChatRepository extends BaseRepository {
         msg.setOfferId(offerId);
         msg.setImageId("");
         msg.setText("Đã gửi một đề nghị giá.");
-        msg.setCreatedAt(Timestamp.now());
         batch.set(msgRef, msg);
 
         DocumentReference convRef = db.collection(COLLECTION_CONVERSATIONS).document(offer.getConversationId());
         Map<String, Object> convUpdates = new HashMap<String, Object>();
         convUpdates.put("lastMessage", "Đề nghị giá mới");
-        convUpdates.put("lastMessageAt", msg.getCreatedAt());
+        convUpdates.put("lastMessageAt", FieldValue.serverTimestamp());
         convUpdates.put("updatedAt", FieldValue.serverTimestamp());
         batch.update(convRef, convUpdates);
 

@@ -47,7 +47,6 @@ public class ReviewRepository extends BaseRepository {
         review.setReviewerId(currentUid);
         String reviewId = review.getDealId() + "_" + currentUid;
         review.setId(reviewId);
-        review.setCreatedAt(Timestamp.now());
 
         DocumentReference reviewRef = db.collection(COLLECTION_REVIEWS).document(reviewId);
         reviewRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {

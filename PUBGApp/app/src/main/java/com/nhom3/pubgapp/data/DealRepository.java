@@ -100,8 +100,6 @@ public class DealRepository extends BaseRepository {
         deal.setStatus(DealStatus.PENDING_CONFIRM);
         deal.setSellerConfirmed(true);
         deal.setBuyerConfirmed(false);
-        deal.setCreatedAt(Timestamp.now());
-        deal.setUpdatedAt(Timestamp.now());
 
         List<StatusChange> history = new ArrayList<StatusChange>();
         StatusChange initial = new StatusChange();
@@ -325,8 +323,6 @@ public class DealRepository extends BaseRepository {
                 payment.setAmount(deal.getAgreedPrice());
                 payment.setStatus(PaymentStatus.HELD);
                 payment.setMethod(method);
-                payment.setHeldAt(Timestamp.now());
-                payment.setCreatedAt(Timestamp.now());
 
                 WriteBatch batch = db.batch();
                 DocumentReference paymentRef = db.collection(COLLECTION_PAYMENTS).document(dealId);
