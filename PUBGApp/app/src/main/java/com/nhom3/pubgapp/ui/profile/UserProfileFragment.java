@@ -429,7 +429,8 @@ public class UserProfileFragment extends Fragment {
         binding.includeAvatar.imageAvatar.setVisibility(hasPhoto ? View.VISIBLE : View.GONE);
         binding.includeAvatar.textInitial.setVisibility(hasPhoto ? View.GONE : View.VISIBLE);
         if (hasPhoto) {
-            ImageLoader.load(avatarBase64, binding.includeAvatar.imageAvatar, R.drawable.bg_avatar, R.drawable.bg_avatar);
+            ImageLoader.load(avatarBase64, binding.includeAvatar.imageAvatar,
+                    R.drawable.bg_avatar, R.drawable.bg_avatar);
         }
     }
 
