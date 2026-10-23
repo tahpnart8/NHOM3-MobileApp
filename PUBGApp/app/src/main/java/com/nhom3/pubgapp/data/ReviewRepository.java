@@ -6,13 +6,16 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
 import com.nhom3.pubgapp.model.AppNotification;
+import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Review;
+import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.NotificationType;
 
 import java.util.ArrayList;
@@ -22,10 +25,17 @@ public class ReviewRepository extends BaseRepository {
 
     private static final String COLLECTION_REVIEWS = "reviews";
     private static final String COLLECTION_USERS = "users";
-    private static final String COLLECTION_NOTIFICATIONS = "notifications";
+    private static final String COLLECTION_DEALS = "deals";
+
+    private final NotificationRepository notificationRepository = new NotificationRepository();
 
     public void create(Review review, DataCallback<Void> cb) {
-        if (review == null || review.getDealId() == null || review.getReviewerId() == null) {
+        String currentUid = currentUserId();
+        if (currentUid.isEmpty()) {
+            cb.onError("Chưa đăng nhập.");
+            return;
+        }
+        if (review == null || review.getDealId() == null || review.getDealId().trim().isEmpty()) {
             cb.onError("Thông tin đánh giá không hợp lệ.");
             return;
         }
@@ -34,36 +44,83 @@ public class ReviewRepository extends BaseRepository {
             return;
         }
 
-        String reviewId = review.getDealId() + "_" + review.getReviewerId();
+        review.setReviewerId(currentUid);
+        String reviewId = review.getDealId() + "_" + currentUid;
         review.setId(reviewId);
-        review.setCreatedAt(Timestamp.now());
 
-        WriteBatch batch = db.batch();
         DocumentReference reviewRef = db.collection(COLLECTION_REVIEWS).document(reviewId);
-        batch.set(reviewRef, review);
-
-        // Cập nhật ratingSum và ratingCount của người được đánh giá
-        if (review.getRevieweeId() != null) {
-            DocumentReference userRef = db.collection(COLLECTION_USERS).document(review.getRevieweeId());
-            batch.update(userRef, "ratingSum", FieldValue.increment(review.getRating()),
-                    "ratingCount", FieldValue.increment(1));
-
-            // Gửi thông báo cho người nhận đánh giá
-            queueNotification(review.getRevieweeId(), NotificationType.NEW_REVIEW,
-                    "Bạn có đánh giá mới",
-                    "Đối tác đã gửi đánh giá cho giao dịch gần đây.",
-                    review.getDealId(), batch);
-        }
-
-        batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
+        reviewRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (!task.isSuccessful()) {
-                    cb.onError(getErrorMessage(task.getException(), "Lỗi lưu đánh giá."));
+            public void onComplete(@NonNull Task<DocumentSnapshot> checkTask) {
+                if (!checkTask.isSuccessful()) {
+                    fail(cb, checkTask.getException());
                     return;
                 }
-                // Kiểm tra xem cả hai bên đã đánh giá chưa để hoàn tất giao dịch
-                checkIfBothSidesReviewed(review.getDealId(), cb);
+                DocumentSnapshot existingReview = checkTask.getResult();
+                if (existingReview != null && existingReview.exists()) {
+                    cb.onError("Bạn đã đánh giá giao dịch này rồi.");
+                    return;
+                }
+
+                db.collection(COLLECTION_DEALS).document(review.getDealId()).get()
+                        .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DocumentSnapshot> dealTask) {
+                                if (!dealTask.isSuccessful()) {
+                                    fail(cb, dealTask.getException());
+                                    return;
+                                }
+                                DocumentSnapshot dealDoc = dealTask.getResult();
+                                if (dealDoc == null || !dealDoc.exists()) {
+                                    cb.onError("Không tìm thấy giao dịch.");
+                                    return;
+                                }
+                                Deal deal = dealDoc.toObject(Deal.class);
+                                if (deal == null) {
+                                    cb.onError("Dữ liệu giao dịch không hợp lệ.");
+                                    return;
+                                }
+
+                                if (!deal.isParticipant(currentUid)) {
+                                    cb.onError("Bạn không phải thành viên của giao dịch này.");
+                                    return;
+                                }
+                                if (deal.getStatus() != DealStatus.RECEIVED
+                                        && deal.getStatus() != DealStatus.COMPLETED) {
+                                    cb.onError("Chỉ được đánh giá giao dịch "
+                                            + "đã nhận hàng hoặc hoàn tất.");
+                                    return;
+                                }
+
+                                String revieweeId = currentUid.equals(deal.getBuyerId())
+                                        ? deal.getSellerId() : deal.getBuyerId();
+                                review.setRevieweeId(revieweeId);
+
+                                WriteBatch batch = db.batch();
+                                batch.set(reviewRef, review);
+
+                                DocumentReference userRef = db.collection(COLLECTION_USERS).document(revieweeId);
+                                batch.update(userRef,
+                                        "ratingSum", FieldValue.increment(review.getRating()),
+                                        "ratingCount", FieldValue.increment(1));
+
+                                sendNotification(revieweeId, NotificationType.NEW_REVIEW,
+                                        "Bạn có đánh giá mới",
+                                        "Đối tác đã gửi đánh giá cho giao dịch gần đây.",
+                                        review.getDealId(), batch);
+
+                                batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> commitTask) {
+                                        if (!commitTask.isSuccessful()) {
+                                            fail(cb, commitTask.getException());
+                                            return;
+                                        }
+                                        checkIfBothSidesReviewed(review.getDealId(), cb);
+                                    }
+                                });
+                            }
+                        });
             }
         });
     }
@@ -86,7 +143,6 @@ public class ReviewRepository extends BaseRepository {
 
                                 @Override
                                 public void onError(String message) {
-                                    // Vẫn coi là thành công vì review đã được ghi
                                     cb.onSuccess(null);
                                 }
                             });
@@ -105,10 +161,10 @@ public class ReviewRepository extends BaseRepository {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (!task.isSuccessful()) {
-                            cb.onError(getErrorMessage(task.getException(), "Lỗi tải đánh giá giao dịch."));
+                            fail(cb, task.getException());
                             return;
                         }
-                        List<Review> list = new ArrayList<>();
+                        List<Review> list = new ArrayList<Review>();
                         if (task.getResult() != null) {
                             for (QueryDocumentSnapshot doc : task.getResult()) {
                                 Review rev = doc.toObject(Review.class);
@@ -130,10 +186,10 @@ public class ReviewRepository extends BaseRepository {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (!task.isSuccessful()) {
-                            cb.onError(getErrorMessage(task.getException(), "Lỗi tải đánh giá đã nhận."));
+                            fail(cb, task.getException());
                             return;
                         }
-                        List<Review> list = new ArrayList<>();
+                        List<Review> list = new ArrayList<Review>();
                         if (task.getResult() != null) {
                             for (QueryDocumentSnapshot doc : task.getResult()) {
                                 Review rev = doc.toObject(Review.class);
@@ -155,10 +211,10 @@ public class ReviewRepository extends BaseRepository {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (!task.isSuccessful()) {
-                            cb.onError(getErrorMessage(task.getException(), "Lỗi tải đánh giá đã gửi."));
+                            fail(cb, task.getException());
                             return;
                         }
-                        List<Review> list = new ArrayList<>();
+                        List<Review> list = new ArrayList<Review>();
                         if (task.getResult() != null) {
                             for (QueryDocumentSnapshot doc : task.getResult()) {
                                 Review rev = doc.toObject(Review.class);
@@ -171,8 +227,9 @@ public class ReviewRepository extends BaseRepository {
                 });
     }
 
-    private void queueNotification(String recipientId, NotificationType type,
-                                   String title, String body, String targetId, WriteBatch batch) {
+    private void sendNotification(String recipientId, NotificationType type,
+                                  String title, String body, String targetId,
+                                  WriteBatch batch) {
         if (recipientId == null || recipientId.trim().isEmpty()) {
             return;
         }
@@ -183,16 +240,14 @@ public class ReviewRepository extends BaseRepository {
         notif.setBody(body);
         notif.setTargetId(targetId);
         notif.setRead(false);
-        notif.setCreatedAt(Timestamp.now());
-        DocumentReference notifRef = db.collection(COLLECTION_NOTIFICATIONS).document();
-        notif.setId(notifRef.getId());
-        batch.set(notifRef, notif);
-    }
+        notificationRepository.create(notif, batch, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+            }
 
-    private String getErrorMessage(Exception exception, String fallback) {
-        if (exception != null && exception.getMessage() != null) {
-            return exception.getMessage();
-        }
-        return fallback;
+            @Override
+            public void onError(String message) {
+            }
+        });
     }
 }

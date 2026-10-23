@@ -40,15 +40,9 @@
                     android:textAppearance="?attr/textAppearanceTitleSmall"
                     android:textColor="?attr/colorOnSurface" />
 
-                <TextView
-                    android:id="@+id/textOfferStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="@dimen/space_sm"
-                    android:paddingVertical="@dimen/space_xs"
-                    android:text="@string/trade_chat_offer_status_pending"
-                    android:textAppearance="?attr/textAppearanceLabelSmall"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                <include
+                    android:id="@+id/chipOfferStatus"
+                    layout="@layout/view_status_chip" />
 
             </LinearLayout>
 

@@ -136,6 +136,12 @@ public class MakeOfferFragment extends BottomSheetDialogFragment {
         }
 
         int checkedId = binding.radioGroupOfferType.getCheckedRadioButtonId();
+        if (checkedId == -1) {
+            Snackbar.make(binding.getRoot(), R.string.trade_make_offer_error_type_required,
+                    Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+
         OfferType offerType = OfferType.MONEY;
         long amount = 0;
         String exchangeItem = "";
@@ -144,7 +150,8 @@ public class MakeOfferFragment extends BottomSheetDialogFragment {
             offerType = OfferType.MONEY;
             amount = parseAmount();
             if (amount <= 0) {
-                binding.inputLayoutOfferAmount.setError("Vui lòng nhập số tiền đề nghị hợp lệ");
+                binding.inputLayoutOfferAmount.setError(
+                        getString(R.string.trade_make_offer_error_amount));
                 return;
             }
             binding.inputLayoutOfferAmount.setError(null);
@@ -153,7 +160,8 @@ public class MakeOfferFragment extends BottomSheetDialogFragment {
             exchangeItem = binding.editOfferItem.getText() != null
                     ? binding.editOfferItem.getText().toString().trim() : "";
             if (exchangeItem.isEmpty()) {
-                binding.inputLayoutOfferItem.setError("Vui lòng nhập thông tin món đồ trao đổi");
+                binding.inputLayoutOfferItem.setError(
+                        getString(R.string.trade_make_offer_error_item));
                 return;
             }
             binding.inputLayoutOfferItem.setError(null);
@@ -163,12 +171,14 @@ public class MakeOfferFragment extends BottomSheetDialogFragment {
             exchangeItem = binding.editOfferItem.getText() != null
                     ? binding.editOfferItem.getText().toString().trim() : "";
             if (amount <= 0) {
-                binding.inputLayoutOfferAmount.setError("Vui lòng nhập số tiền đề nghị hợp lệ");
+                binding.inputLayoutOfferAmount.setError(
+                        getString(R.string.trade_make_offer_error_amount));
                 return;
             }
             binding.inputLayoutOfferAmount.setError(null);
             if (exchangeItem.isEmpty()) {
-                binding.inputLayoutOfferItem.setError("Vui lòng nhập thông tin món đồ trao đổi");
+                binding.inputLayoutOfferItem.setError(
+                        getString(R.string.trade_make_offer_error_item));
                 return;
             }
             binding.inputLayoutOfferItem.setError(null);

@@ -6,102 +6,61 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.nhom3.pubgapp.model.Conversation;
+import com.nhom3.pubgapp.model.Listing;
+import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
+import com.nhom3.pubgapp.model.enums.OfferType;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-// Tests pure validation rules for conversation creation in ChatRepository without Firebase.
+// Unit tests for pure validation rules of ChatRepository.
 public class ChatRepositoryTest {
 
     @Test
-    public void buildConversationId_concatenatesListingAndBuyer() {
-        String id = ChatRepository.buildConversationId("list123", "buyer456");
-        assertEquals("list123_buyer456", id);
-    }
-
-    @Test
-    public void validateNewConversation_rejectsSameUser() {
-        String error = ChatRepository.validateNewConversation("user1", "user1", ListingStatus.AVAILABLE);
-        assertNotNull(error);
-        assertEquals("Không thể nhắn tin cho chính mình.", error);
-    }
-
-    @Test
-    public void validateNewConversation_rejectsEmptyBuyer() {
-        String error = ChatRepository.validateNewConversation("", "seller1", ListingStatus.AVAILABLE);
-        assertNotNull(error);
-        assertEquals("Vui lòng đăng nhập để nhắn tin.", error);
-    }
-
-    @Test
-    public void validateNewConversation_rejectsNonAvailableStatus() {
-        String errorSold = ChatRepository.validateNewConversation("buyer1", "seller1", ListingStatus.SOLD);
-        assertNotNull(errorSold);
-        assertEquals("Tin đăng không còn hoạt động.", errorSold);
-
-        String errorDraft = ChatRepository.validateNewConversation("buyer1", "seller1", ListingStatus.DRAFT);
-        assertNotNull(errorDraft);
-        assertEquals("Tin đăng không còn hoạt động.", errorDraft);
-    }
-
-    @Test
-    public void validateNewConversation_acceptsAvailableAndReserved() {
-        String resultAvail = ChatRepository.validateNewConversation("buyer1", "seller1", ListingStatus.AVAILABLE);
-        assertNull(resultAvail);
-
-        String resultReserved = ChatRepository.validateNewConversation("buyer1", "seller1", ListingStatus.RESERVED);
-        assertNull(resultReserved);
-    }
-
-    @Test
-    public void isListingStatusAllowed_returnsTrueOnlyForAvailableAndReserved() {
-        assertTrue(ChatRepository.isListingStatusAllowed(ListingStatus.AVAILABLE));
-        assertTrue(ChatRepository.isListingStatusAllowed(ListingStatus.RESERVED));
-        assertFalse(ChatRepository.isListingStatusAllowed(ListingStatus.DRAFT));
-        assertFalse(ChatRepository.isListingStatusAllowed(ListingStatus.SOLD));
-        assertFalse(ChatRepository.isListingStatusAllowed(ListingStatus.HIDDEN));
-        assertFalse(ChatRepository.isListingStatusAllowed(ListingStatus.REMOVED));
-    }
-
-    @Test
-    public void validateMessageText_rejectsEmptyOrWhitespace() {
+    public void validateMessageText_rejectsEmptyOrBlank() {
         assertNotNull(ChatRepository.validateMessageText(null));
         assertNotNull(ChatRepository.validateMessageText(""));
         assertNotNull(ChatRepository.validateMessageText("   "));
-        assertFalse(ChatRepository.isValidMessageText(""));
-        assertFalse(ChatRepository.isValidMessageText("   "));
+        assertNotNull(ChatRepository.validateMessageText("\n\t"));
     }
 
     @Test
-    public void validateMessageText_rejectsOver2000Characters() {
+    public void validateMessageText_rejectsTooLong() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 2001; i++) {
-            sb.append("a");
+            sb.append('a');
         }
-        String tooLong = sb.toString();
-        assertNotNull(ChatRepository.validateMessageText(tooLong));
-        assertFalse(ChatRepository.isValidMessageText(tooLong));
+        assertNotNull(ChatRepository.validateMessageText(sb.toString()));
     }
 
     @Test
-    public void validateMessageText_acceptsValidRange() {
-        assertNull(ChatRepository.validateMessageText("A"));
-        assertTrue(ChatRepository.isValidMessageText("A"));
+    public void validateMessageText_acceptsValid() {
+        assertNull(ChatRepository.validateMessageText("Xin chào!"));
+        assertNull(ChatRepository.validateMessageText("a"));
 
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 2000; i++) {
-            sb.append("x");
+            sb.append('x');
         }
-        String maxLength = sb.toString();
-        assertNull(ChatRepository.validateMessageText(maxLength));
-        assertTrue(ChatRepository.isValidMessageText(maxLength));
+        assertNull(ChatRepository.validateMessageText(sb.toString()));
     }
 
     @Test
-    public void isSenderAllowed_verifiesParticipant() {
-        com.nhom3.pubgapp.model.Conversation conv = new com.nhom3.pubgapp.model.Conversation();
+    public void isValidMessageText_matchesValidation() {
+        assertFalse(ChatRepository.isValidMessageText(null));
+        assertFalse(ChatRepository.isValidMessageText(""));
+        assertFalse(ChatRepository.isValidMessageText("   "));
+        assertTrue(ChatRepository.isValidMessageText("Chào bạn"));
+    }
+
+    @Test
+    public void isSenderAllowed_allowsOnlyParticipants() {
+        Conversation conv = new Conversation();
         conv.setBuyerId("buyer1");
         conv.setSellerId("seller1");
 
@@ -114,12 +73,12 @@ public class ChatRepositoryTest {
 
     @Test
     public void validateOffer_rejectsSelfOffer() {
-        com.nhom3.pubgapp.model.Listing listing = new com.nhom3.pubgapp.model.Listing();
+        Listing listing = new Listing();
         listing.setSellerId("user1");
         listing.setStatus(ListingStatus.AVAILABLE);
 
-        com.nhom3.pubgapp.model.Offer offer = new com.nhom3.pubgapp.model.Offer();
-        offer.setOfferType(com.nhom3.pubgapp.model.enums.OfferType.MONEY);
+        Offer offer = new Offer();
+        offer.setOfferType(OfferType.MONEY);
         offer.setAmount(100000);
 
         String error = ChatRepository.validateOffer(offer, listing, "user1");
@@ -129,12 +88,12 @@ public class ChatRepositoryTest {
 
     @Test
     public void validateOffer_rejectsNonAvailableListing() {
-        com.nhom3.pubgapp.model.Listing listing = new com.nhom3.pubgapp.model.Listing();
+        Listing listing = new Listing();
         listing.setSellerId("seller1");
         listing.setStatus(ListingStatus.RESERVED);
 
-        com.nhom3.pubgapp.model.Offer offer = new com.nhom3.pubgapp.model.Offer();
-        offer.setOfferType(com.nhom3.pubgapp.model.enums.OfferType.MONEY);
+        Offer offer = new Offer();
+        offer.setOfferType(OfferType.MONEY);
         offer.setAmount(100000);
 
         String error = ChatRepository.validateOffer(offer, listing, "buyer1");
@@ -144,14 +103,13 @@ public class ChatRepositoryTest {
 
     @Test
     public void validateOffer_rejectsUnacceptedOfferType() {
-        com.nhom3.pubgapp.model.Listing listing = new com.nhom3.pubgapp.model.Listing();
+        Listing listing = new Listing();
         listing.setSellerId("seller1");
         listing.setStatus(ListingStatus.AVAILABLE);
-        listing.setAcceptedOfferTypes(java.util.Collections.singletonList(
-                com.nhom3.pubgapp.model.enums.OfferType.MONEY));
+        listing.setAcceptedOfferTypes(Collections.singletonList(OfferType.MONEY));
 
-        com.nhom3.pubgapp.model.Offer offer = new com.nhom3.pubgapp.model.Offer();
-        offer.setOfferType(com.nhom3.pubgapp.model.enums.OfferType.ITEM);
+        Offer offer = new Offer();
+        offer.setOfferType(OfferType.ITEM);
         offer.setExchangeItem("Sách");
 
         String error = ChatRepository.validateOffer(offer, listing, "buyer1");
@@ -161,15 +119,14 @@ public class ChatRepositoryTest {
 
     @Test
     public void validateOffer_rejectsAmountBelowMinOfferPrice() {
-        com.nhom3.pubgapp.model.Listing listing = new com.nhom3.pubgapp.model.Listing();
+        Listing listing = new Listing();
         listing.setSellerId("seller1");
         listing.setStatus(ListingStatus.AVAILABLE);
-        listing.setAcceptedOfferTypes(java.util.Collections.singletonList(
-                com.nhom3.pubgapp.model.enums.OfferType.MONEY));
+        listing.setAcceptedOfferTypes(Collections.singletonList(OfferType.MONEY));
         listing.setMinOfferPrice(200000);
 
-        com.nhom3.pubgapp.model.Offer offer = new com.nhom3.pubgapp.model.Offer();
-        offer.setOfferType(com.nhom3.pubgapp.model.enums.OfferType.MONEY);
+        Offer offer = new Offer();
+        offer.setOfferType(OfferType.MONEY);
         offer.setAmount(150000);
 
         String error = ChatRepository.validateOffer(offer, listing, "buyer1");
@@ -179,21 +136,19 @@ public class ChatRepositoryTest {
 
     @Test
     public void validateOffer_acceptsValidOffer() {
-        com.nhom3.pubgapp.model.Listing listing = new com.nhom3.pubgapp.model.Listing();
+        Listing listing = new Listing();
         listing.setSellerId("seller1");
         listing.setStatus(ListingStatus.AVAILABLE);
-        listing.setAcceptedOfferTypes(java.util.Arrays.asList(
-                com.nhom3.pubgapp.model.enums.OfferType.MONEY,
-                com.nhom3.pubgapp.model.enums.OfferType.ITEM));
+        listing.setAcceptedOfferTypes(Arrays.asList(OfferType.MONEY, OfferType.ITEM));
         listing.setMinOfferPrice(200000);
 
-        com.nhom3.pubgapp.model.Offer offerMoney = new com.nhom3.pubgapp.model.Offer();
-        offerMoney.setOfferType(com.nhom3.pubgapp.model.enums.OfferType.MONEY);
+        Offer offerMoney = new Offer();
+        offerMoney.setOfferType(OfferType.MONEY);
         offerMoney.setAmount(250000);
         assertNull(ChatRepository.validateOffer(offerMoney, listing, "buyer1"));
 
-        com.nhom3.pubgapp.model.Offer offerItem = new com.nhom3.pubgapp.model.Offer();
-        offerItem.setOfferType(com.nhom3.pubgapp.model.enums.OfferType.ITEM);
+        Offer offerItem = new Offer();
+        offerItem.setOfferType(OfferType.ITEM);
         offerItem.setAmount(0);
         offerItem.setExchangeItem("Tai nghe Bluetooth");
         assertNull(ChatRepository.validateOffer(offerItem, listing, "buyer1"));
@@ -201,26 +156,25 @@ public class ChatRepositoryTest {
 
     @Test
     public void formatOfferSummary_formatsProperly() {
-        com.nhom3.pubgapp.model.Offer offerMoney = new com.nhom3.pubgapp.model.Offer();
-        offerMoney.setOfferType(com.nhom3.pubgapp.model.enums.OfferType.MONEY);
+        Offer offerMoney = new Offer();
+        offerMoney.setOfferType(OfferType.MONEY);
         offerMoney.setAmount(500000);
         assertTrue(ChatRepository.formatOfferSummary(offerMoney).contains("500.000"));
 
-        com.nhom3.pubgapp.model.Offer offerItem = new com.nhom3.pubgapp.model.Offer();
-        offerItem.setOfferType(com.nhom3.pubgapp.model.enums.OfferType.ITEM);
+        Offer offerItem = new Offer();
+        offerItem.setOfferType(OfferType.ITEM);
         offerItem.setExchangeItem("Máy tính bảng");
         assertEquals("Đề nghị đổi: Máy tính bảng", ChatRepository.formatOfferSummary(offerItem));
     }
 
     @Test
     public void filterOtherPendingOffers_excludesCurrentOffer() {
-        com.nhom3.pubgapp.model.Offer o1 = new com.nhom3.pubgapp.model.Offer();
+        Offer o1 = new Offer();
         o1.setId("offer1");
-        com.nhom3.pubgapp.model.Offer o2 = new com.nhom3.pubgapp.model.Offer();
+        Offer o2 = new Offer();
         o2.setId("offer2");
 
-        List<com.nhom3.pubgapp.model.Offer> filtered =
-                ChatRepository.filterOtherPendingOffers(java.util.Arrays.asList(o1, o2), "offer1");
+        List<Offer> filtered = ChatRepository.filterOtherPendingOffers(Arrays.asList(o1, o2), "offer1");
         assertEquals(1, filtered.size());
         assertEquals("offer2", filtered.get(0).getId());
     }

@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "992647241562-0u3akdomahino9ud0bcj3hfp6qkfar8h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nhom3.pubgapp",
+            "certificate_hash": "c307b2ec3b8e7eb64c24420ad2e12abe65d9a4d4"
+          }
+        },
+        {
           "client_id": "992647241562-bej9b0gmgo4nf35icvdt4rqmuo1ve56n.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

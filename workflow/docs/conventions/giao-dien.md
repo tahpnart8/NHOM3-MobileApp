@@ -127,6 +127,12 @@ Cái nào xuất hiện ở hai màn hình trở lên thì làm một layout dù
 | Ô lỗi kèm nút Thử lại | `view_error_state.xml` | Mọi màn hình có tải dữ liệu |
 | Dải ngoại tuyến | `view_offline_banner.xml` | B01, B02, B03, C01, C03, C04, D01 |
 | Thanh trên của màn chi tiết (nút quay lại, tiêu đề) | `view_detail_toolbar.xml` | Mọi màn hình không phải gốc của tab |
+| Nạp ảnh vào `ImageView` (lớp Java) | `ui/common/ImageLoader.java` | Mọi màn hình có ảnh: thẻ tin, chat, hồ sơ, bằng chứng |
+| Tô chữ và màu cho nhãn trạng thái (lớp Java) | `ui/common/StatusChips.java` | Mọi màn hình có `view_status_chip` |
+
+**Hai lớp Java ở cuối bảng là bắt buộc dùng, không ai tự viết lại.** Giải mã ảnh Base64 trên luồng chính đã xảy ra ba lần (các Pull Request #129, #133 và #135, xem issue #140): giao diện giật, ảnh 1024 px có thể làm tràn bộ nhớ, và `ViewHolder` bị dùng lại thì ảnh gán nhầm sang dòng khác. `ImageLoader.load` giải mã ngoài luồng chính, thu nhỏ khi giải mã, có ảnh giữ chỗ và ảnh dự phòng, và chỉ gán ảnh khi `ImageView` vẫn còn cần đúng ảnh đó. **Có ba bản nạp chồng, chọn theo chỗ bạn đang giữ ảnh:** chuỗi Base64 đọc từ tài liệu Firestore thì `load(String, ...)`; `byte[]` do `MediaRepository.getImage` trả thì `load(byte[], imageId, ...)` và `imageId` chính là chốt chống gán nhầm nên phải truyền đúng mã của ảnh đó; `Uri` người dùng vừa chọn từ bộ chọn ảnh thì `load(Uri, ...)`. Thiếu một trong ba cửa vào này là lý do hai adapter đã phải tự viết và tự viết sai, nên nguồn ảnh mới thì thêm bản nạp chồng thứ tư, đừng giải mã trong adapter. `StatusChips.bind` đặt chữ và màu cho `view_status_chip` đúng bảng ở mục 4, với một phương thức nạp chồng cho mỗi enum trạng thái; chữ lấy từ khóa `common_status_<đối tượng>_<trạng thái>` trong `strings_common.xml`. Màn hình nào cần giải mã ảnh hoặc tô nhãn thì gọi hai lớp này; cần thêm hành vi thì mở issue `area:ui`, đừng sao chép sang module mình.
+
+`item_listing_card.xml` có chiều rộng `match_parent`, nên dùng được cả trong lưới hai cột (B01) lẫn danh sách một cột (B05, B06, D02). Chiều cao ảnh bìa lấy từ token `listing_card_image_height`; ảnh đại diện lớn lấy từ `avatar_size_lg`.
 
 ## 6. Bốn trạng thái mà màn hình nào cũng phải có
 

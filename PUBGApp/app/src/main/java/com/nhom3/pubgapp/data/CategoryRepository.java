@@ -7,10 +7,13 @@ import com.google.firebase.firestore.AggregateSource;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.nhom3.pubgapp.model.Category;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CategoryRepository extends BaseRepository {
 
@@ -115,13 +118,48 @@ public class CategoryRepository extends BaseRepository {
                 });
     }
 
-    public void update(Category category, final DataCallback<Void> cb) {
-        if (category == null || category.getId() == null) {
+    public void update(final Category category, final DataCallback<Void> cb) {
+        if (category == null || category.getId() == null || category.getId().trim().isEmpty()) {
             cb.onError("Category ID is required");
             return;
         }
+        if (category.getParentId() != null && !category.getParentId().trim().isEmpty()) {
+            db.collection("categories").whereEqualTo("parentId", category.getId()).count()
+                    .get(AggregateSource.SERVER)
+                    .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
+                        @Override
+                        public void onSuccess(AggregateQuerySnapshot snapshot) {
+                            if (snapshot.getCount() > 0) {
+                                String msg = "Không thể chuyển danh mục đang có danh mục con "
+                                        + "thành danh mục con";
+                                cb.onError(msg);
+                                return;
+                            }
+                            performUpdate(category, cb);
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(Exception e) {
+                            cb.onError(e.getMessage() != null ? e.getMessage() : "Error checking child categories");
+                        }
+                    });
+        } else {
+            performUpdate(category, cb);
+        }
+    }
+
+    private void performUpdate(Category category, final DataCallback<Void> cb) {
+        Map<String, Object> updates = new HashMap<String, Object>();
+        updates.put("name", category.getName() != null ? category.getName() : "");
+        updates.put("parentId", category.getParentId() != null ? category.getParentId() : "");
+        List<String> conditions = category.getConditionFields();
+        updates.put("conditionFields", conditions != null ? conditions : new ArrayList<String>());
+        updates.put("isActive", category.isActive());
+        updates.put("updatedAt", FieldValue.serverTimestamp());
+
         db.collection("categories").document(category.getId())
-                .set(category)
+                .update(updates)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void unused) {
@@ -137,6 +175,10 @@ public class CategoryRepository extends BaseRepository {
     }
 
     public void delete(final String id, final DataCallback<Void> cb) {
+        if (id == null || id.trim().isEmpty()) {
+            cb.onError("Category ID is required");
+            return;
+        }
         db.collection("categories").whereEqualTo("parentId", id).count().get(AggregateSource.SERVER)
                 .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
                     @Override

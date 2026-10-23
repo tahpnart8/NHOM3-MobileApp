@@ -24,7 +24,7 @@ Branch from the latest `main`. One issue, one branch, one pull request. The only
 <type>(<scope>): <imperative summary>
 ```
 
-The `type` and `scope` stay English. The summary may be English or Vietnamese (a pull request title must be Vietnamese, see below). It does not start with a capital letter, has no trailing period, and the whole subject is at most 100 bytes: about 72 English characters or 55 Vietnamese ones. The scope is optional and names an area: `auth`, `account`, `notification`, `listing`, `feed`, `chat`, `deal`, `trade`, `profile`, `trust`, `complaint`, `admin`, `offline`, `ui`, `plan`, `build`, `docs`, `repo`. The type list is closed.
+The `type` and `scope` stay English. The summary may be English or Vietnamese (a pull request title must be Vietnamese, see below). It does not start with a capital letter, except for a single screen code such as `B05` or `C02` (the pattern `[A-E][0-9][0-9]` followed by a space), because the delivery plan names every screen that way and a pull request copies its issue title. It has no trailing period, and the whole subject is at most 100 bytes: about 72 English characters or 55 Vietnamese ones. The scope is optional and names an area: `auth`, `account`, `notification`, `listing`, `feed`, `chat`, `deal`, `trade`, `profile`, `trust`, `complaint`, `admin`, `offline`, `ui`, `plan`, `build`, `docs`, `repo`. The type list is closed.
 
 ```text
 feat(auth): thêm nút đăng nhập bằng Google
