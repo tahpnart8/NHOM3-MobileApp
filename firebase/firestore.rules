@@ -4,8 +4,8 @@ rules_version = '2';
 // issue #131 (users, users/{uid}/private/identity, sellerVerifications, listings) và issue #110:
 // warnings, notifications, mạch mua bán (conversations, messages, offers, deals kèm statusHistory,
 // payments, reviews), rồi addresses, saved, follows, admins, reports, complaints, adminNote,
-// activityLogs, bannedKeywords. Còn CHƯA mở: dòng "Ghi điểm đánh giá" của users (chờ leader chốt
-// ở #110). Mọi đường dẫn không nêu dưới đây vẫn từ chối.
+// activityLogs, bannedKeywords, categories. Còn CHƯA mở: dòng "Ghi điểm đánh giá" của users
+// (issue #157). Mọi đường dẫn không nêu dưới đây vẫn từ chối.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -163,10 +163,47 @@ service cloud.firestore {
 
     // ---- Collection khách chưa đăng nhập ĐƯỢC ĐỌC ----
 
-    // Danh mục: ai cũng đọc; ghi sẽ mở cho admin ở bản đầy đủ.
+    // Danh mục (security-rules.md mục 9): ai cũng đọc; chỉ admin tạo, sửa, xóa.
     match /categories/{id} {
+      function categoryKeys() {
+        return ['name', 'parentId', 'conditionFields', 'isActive', 'createdAt', 'updatedAt'];
+      }
+
+      // Tên khác rỗng; thuộc tính tình trạng là list có giới hạn; isActive là bool.
+      function validCategory(d) {
+        return reqString(d, 'name', 100)
+          && optList(d, 'conditionFields', 30)
+          && d.get('isActive', false) is bool;
+      }
+
+      // Chỉ hai cấp: parentId rỗng là danh mục gốc; khác rỗng thì cha phải là danh mục gốc.
+      function twoLevels(d) {
+        return emptyString(d, 'parentId')
+          || (d.parentId is string
+            && d.parentId != id
+            && emptyString(get(/databases/$(database)/documents/categories/$(d.parentId)).data, 'parentId'));
+      }
+
       allow read: if true;
-      allow write: if false;
+
+      allow create: if isAdmin()
+        && writerActive()
+        && hasOnlyKeys(categoryKeys())
+        && validCategory(request.resource.data)
+        && twoLevels(request.resource.data)
+        && createStamps();
+
+      // Sửa tên, cha, thuộc tính tình trạng, ẩn hiện. updatedAt luôn là giờ máy chủ như mọi collection;
+      // CategoryRepository.update cần ghi update(Map) kèm FieldValue.serverTimestamp().
+      allow update: if isAdmin()
+        && writerActive()
+        && onlyKeys(['name', 'parentId', 'conditionFields', 'isActive', 'updatedAt'])
+        && validCategory(request.resource.data)
+        && twoLevels(request.resource.data)
+        && serverStamp('updatedAt');
+
+      // "Không xóa khi còn tin hoặc danh mục con" kiểm ở ứng dụng bằng count() (Rules không đếm được).
+      allow delete: if isAdmin() && writerActive();
     }
 
     // Tin đăng (security-rules.md mục 10): khách đọc tin đang mở; tin DRAFT, HIDDEN, REMOVED
@@ -1408,7 +1445,8 @@ service cloud.firestore {
 
       allow read: if signedIn() && (resource.data.reporterId == me() || isAdmin());
 
-      // conversationId khác rỗng khi và chỉ khi targetType là MESSAGE.
+      // conversationId khác rỗng khi và chỉ khi targetType là MESSAGE. Ảnh bằng chứng đầu phải của
+      // người báo cáo, giống complaints.
       allow create: if writerActive()
         && hasOnlyKeys(reportKeys())
         && request.resource.data.reporterId == me()
@@ -1419,6 +1457,8 @@ service cloud.firestore {
         && request.resource.data.reason in reportReasons()
         && optString(request.resource.data, 'description', 1000)
         && optList(request.resource.data, 'evidenceImageIds', 3)
+        && (request.resource.data.get('evidenceImageIds', []).size() == 0
+          || imageOwnedByMe(request.resource.data.evidenceImageIds[0]))
         && ((request.resource.data.targetType == 'MESSAGE')
           == reqString(request.resource.data, 'conversationId', 200))
         && createStamps();
@@ -1633,7 +1673,7 @@ service cloud.firestore {
         && request.resource.data.keyword is string
         && request.resource.data.keyword.size() >= 2
         && request.resource.data.keyword.size() <= 60
-        && request.resource.data.keyword.matches('[ -~]+')
+        && request.resource.data.keyword.matches('^[ -~]+$')
         && request.resource.data.keyword.lower() == request.resource.data.keyword
         && createStamps();
 
