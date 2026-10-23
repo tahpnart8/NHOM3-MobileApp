@@ -71,6 +71,8 @@ public class ComplaintRepository extends BaseRepository {
             "Đơn khiếu nại cần lý do, mô tả không quá 2000 ký tự và từ 1 đến 5 ảnh.";
     private static final String ERROR_DEAL_NOT_FOUND = "Không tìm thấy giao dịch.";
     private static final String ERROR_CANNOT_COMPLAIN = "Giao dịch này không còn mở khiếu nại được.";
+    private static final String ERROR_ALREADY_COMPLAINED =
+            "Giao dịch này đã từng có khiếu nại, không mở lại được.";
     private static final String ERROR_CLOSED = "Đơn khiếu nại này đã đóng.";
     private static final String ERROR_MESSAGE_REQUIRED = "Vui lòng nhập lời giải thích cho quyết định.";
 
@@ -88,11 +90,16 @@ public class ComplaintRepository extends BaseRepository {
         }
         final Complaint request = complaint;
         final DataCallback<Void> callback = cb;
-        db.collection(DEAL_COLLECTION).document(complaint.getDealId()).get()
+        db.collection(COLLECTION).document(complaint.getDealId()).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot snapshot) {
-                        writeNewComplaint(snapshot, request, uid, callback);
+                        // The document id is the dealId, so an existing one (even WITHDRAWN) means no new complaint.
+                        if (snapshot.exists()) {
+                            callback.onError(ERROR_ALREADY_COMPLAINED);
+                            return;
+                        }
+                        loadDealForNewComplaint(request, uid, callback);
                     }
                 })
                 .addOnFailureListener(failure(cb));
@@ -221,6 +228,20 @@ public class ComplaintRepository extends BaseRepository {
         db.collection(COLLECTION).document(id)
                 .update(changes)
                 .addOnSuccessListener(voidSuccess(cb))
+                .addOnFailureListener(failure(cb));
+    }
+
+    private void loadDealForNewComplaint(Complaint complaint, String uid, DataCallback<Void> cb) {
+        final Complaint request = complaint;
+        final String userId = uid;
+        final DataCallback<Void> callback = cb;
+        db.collection(DEAL_COLLECTION).document(complaint.getDealId()).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot snapshot) {
+                        writeNewComplaint(snapshot, request, userId, callback);
+                    }
+                })
                 .addOnFailureListener(failure(cb));
     }
 
