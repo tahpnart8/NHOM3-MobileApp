@@ -271,10 +271,12 @@ public class MyProfileFragment extends Fragment {
             return;
         }
         Context appContext = requireContext().getApplicationContext();
+        // Taken on the main thread: onDestroyView may null the binding while the worker runs.
+        View root = binding.getRoot();
         Thread worker = new Thread(new Runnable() {
             @Override
             public void run() {
-                postPreview(target, decodePreview(appContext, uri));
+                postPreview(root, target, decodePreview(appContext, uri));
             }
         });
         worker.start();
@@ -291,11 +293,11 @@ public class MyProfileFragment extends Fragment {
         }
     }
 
-    private void postPreview(ImageView target, Bitmap bitmap) {
-        if (bitmap == null || binding == null) {
+    private void postPreview(View root, ImageView target, Bitmap bitmap) {
+        if (bitmap == null) {
             return;
         }
-        binding.getRoot().post(new Runnable() {
+        root.post(new Runnable() {
             @Override
             public void run() {
                 if (binding == null) {
@@ -499,6 +501,7 @@ public class MyProfileFragment extends Fragment {
 
     // Decoding is disk-like work, so it runs off the main thread; a failure keeps the initial letter.
     private void decodeAvatar(String avatarBase64) {
+        View root = binding.getRoot();
         Thread worker = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -509,17 +512,17 @@ public class MyProfileFragment extends Fragment {
                 } catch (IllegalArgumentException badBase64) {
                     bitmap = null;
                 }
-                postAvatar(bitmap);
+                postAvatar(root, bitmap);
             }
         });
         worker.start();
     }
 
-    private void postAvatar(Bitmap bitmap) {
-        if (bitmap == null || binding == null) {
+    private void postAvatar(View root, Bitmap bitmap) {
+        if (bitmap == null) {
             return;
         }
-        binding.getRoot().post(new Runnable() {
+        root.post(new Runnable() {
             @Override
             public void run() {
                 if (binding == null) {

@@ -212,10 +212,12 @@ public class EditProfileFragment extends Fragment {
             binding.includeAvatar.imageAvatar.setVisibility(View.GONE);
             return;
         }
+        // Taken on the main thread: onDestroyView may null the binding while the worker runs.
+        View root = binding.getRoot();
         Thread worker = new Thread(new Runnable() {
             @Override
             public void run() {
-                postAvatar(decodeAvatar(avatarBase64));
+                postAvatar(root, decodeAvatar(avatarBase64));
             }
         });
         worker.start();
@@ -231,11 +233,8 @@ public class EditProfileFragment extends Fragment {
     }
 
     // A failed decode keeps the initial letter, as giao-dien.md asks for a missing photo.
-    private void postAvatar(Bitmap bitmap) {
-        if (binding == null) {
-            return;
-        }
-        binding.getRoot().post(new Runnable() {
+    private void postAvatar(View root, Bitmap bitmap) {
+        root.post(new Runnable() {
             @Override
             public void run() {
                 if (binding == null) {
