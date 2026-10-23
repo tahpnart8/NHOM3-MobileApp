@@ -30,6 +30,8 @@ public class ChatViewModel extends ViewModel {
 
     private final ChatRepository chatRepository = new ChatRepository();
     private String currentConversationId;
+    private Conversation currentConversation;
+    private com.google.firebase.firestore.ListenerRegistration messageListener;
 
     public LiveData<List<Conversation>> getConversations() {
         return conversations;
@@ -105,7 +107,11 @@ public class ChatViewModel extends ViewModel {
             public void onSuccess(Conversation result) {
                 loading.postValue(false);
                 if (result != null) {
+                    currentConversation = result;
                     currentConversationId = result.getId();
+                    startObservingMessages(result.getId());
+                    loadPartnerInternal(result);
+                    loadListingInternal(result.getListingId());
                 }
                 done.postValue(true);
             }
@@ -124,19 +130,156 @@ public class ChatViewModel extends ViewModel {
             return;
         }
         currentConversationId = id;
+        startObservingMessages(id);
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("conversations").document(id).get()
+                .addOnCompleteListener(
+                        new com.google.android.gms.tasks.OnCompleteListener<
+                                com.google.firebase.firestore.DocumentSnapshot>() {
+                            @Override
+                            public void onComplete(
+                                    @androidx.annotation.NonNull
+                                    com.google.android.gms.tasks.Task<
+                                            com.google.firebase.firestore.DocumentSnapshot> task) {
+                                if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                                    Conversation conv = task.getResult().toObject(Conversation.class);
+                                    if (conv != null) {
+                                        conv.setId(id);
+                                        currentConversation = conv;
+                                        loadPartnerInternal(conv);
+                                        loadListingInternal(conv.getListingId());
+                                    }
+                                }
+                            }
+                        });
         done.setValue(true);
     }
 
+    private void startObservingMessages(final String conversationId) {
+        if (messageListener != null) {
+            messageListener.remove();
+            messageListener = null;
+        }
+        try {
+            final android.content.Context ctx =
+                    com.google.firebase.FirebaseApp.getInstance().getApplicationContext();
+            if (ctx != null) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        com.nhom3.pubgapp.data.local.ChatDao dao =
+                                com.nhom3.pubgapp.data.local.AppDatabase.getInstance(ctx).chatDao();
+                        if (dao != null) {
+                            List<com.nhom3.pubgapp.data.local.MessageEntity> cached =
+                                    dao.getMessages(conversationId);
+                            if (cached != null && !cached.isEmpty()) {
+                                List<ChatMessage> list = new java.util.ArrayList<ChatMessage>();
+                                for (int i = 0; i < cached.size(); i++) {
+                                    list.add(cached.get(i).toModel());
+                                }
+                                messages.postValue(list);
+                            }
+                        }
+                    }
+                }).start();
+            }
+        } catch (Exception ignored) {
+        }
+
+        messageListener = chatRepository.observeMessages(conversationId, new DataCallback<List<ChatMessage>>() {
+            @Override
+            public void onSuccess(List<ChatMessage> result) {
+                messages.postValue(result);
+            }
+
+            @Override
+            public void onError(String message) {
+                error.postValue(message);
+            }
+        });
+    }
+
     public void loadOlder() {
-        error.setValue(DataCallback.NOT_READY);
+        if (currentConversationId == null || currentConversationId.isEmpty()) {
+            return;
+        }
+        List<ChatMessage> currentList = messages.getValue();
+        if (currentList == null || currentList.isEmpty()) {
+            return;
+        }
+        ChatMessage oldest = currentList.get(0);
+        if (oldest.getCreatedAt() == null) {
+            return;
+        }
+        loading.setValue(true);
+        chatRepository.loadOlder(currentConversationId, oldest.getCreatedAt(),
+                new DataCallback<List<ChatMessage>>() {
+                    @Override
+                    public void onSuccess(List<ChatMessage> olderMessages) {
+                        loading.postValue(false);
+                        if (olderMessages != null && !olderMessages.isEmpty()) {
+                            List<ChatMessage> combined = new java.util.ArrayList<ChatMessage>(olderMessages);
+                            List<ChatMessage> existing = messages.getValue();
+                            if (existing != null) {
+                                combined.addAll(existing);
+                            }
+                            messages.postValue(combined);
+                        }
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        loading.postValue(false);
+                        error.postValue(message);
+                    }
+                });
     }
 
     public void loadPartner() {
-        error.setValue(DataCallback.NOT_READY);
+        if (currentConversation != null) {
+            loadPartnerInternal(currentConversation);
+        }
+    }
+
+    private void loadPartnerInternal(Conversation conv) {
+        String uid = FirebaseAuth.getInstance().getCurrentUser() != null
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        String partnerId = conv.otherParty(uid);
+        if (partnerId != null && !partnerId.isEmpty()) {
+            new com.nhom3.pubgapp.data.UserRepository().getProfile(partnerId, new DataCallback<User>() {
+                @Override
+                public void onSuccess(User result) {
+                    partner.postValue(result);
+                }
+
+                @Override
+                public void onError(String message) {
+                    error.postValue(message);
+                }
+            });
+        }
     }
 
     public void loadListing() {
-        error.setValue(DataCallback.NOT_READY);
+        if (currentConversation != null) {
+            loadListingInternal(currentConversation.getListingId());
+        }
+    }
+
+    private void loadListingInternal(String listingId) {
+        if (listingId != null && !listingId.isEmpty()) {
+            new com.nhom3.pubgapp.data.ListingRepository().getById(listingId, new DataCallback<Listing>() {
+                @Override
+                public void onSuccess(Listing result) {
+                    listing.postValue(result);
+                }
+
+                @Override
+                public void onError(String message) {
+                    error.postValue(message);
+                }
+            });
+        }
     }
 
     public void observeOffers() {
@@ -144,11 +287,45 @@ public class ChatViewModel extends ViewModel {
     }
 
     public void sendText(String text) {
-        error.setValue(DataCallback.NOT_READY);
+        if (currentConversationId == null || currentConversationId.isEmpty()) {
+            error.setValue("Chưa mở cuộc trò chuyện.");
+            return;
+        }
+        loading.setValue(true);
+        chatRepository.sendText(currentConversationId, text, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void sendImage(Uri uri) {
-        error.setValue(DataCallback.NOT_READY);
+        if (currentConversationId == null || currentConversationId.isEmpty()) {
+            error.setValue("Chưa mở cuộc trò chuyện.");
+            return;
+        }
+        loading.setValue(true);
+        chatRepository.sendImage(currentConversationId, uri, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void makeOffer(Offer offer) {
@@ -165,5 +342,14 @@ public class ChatViewModel extends ViewModel {
 
     public void clearDone() {
         done.setValue(false);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (messageListener != null) {
+            messageListener.remove();
+            messageListener = null;
+        }
     }
 }
