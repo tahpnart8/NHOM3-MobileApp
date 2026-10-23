@@ -20,7 +20,7 @@ import java.util.List;
 // State for the listing detail screen. Action bodies report NOT_READY until the repositories are filled.
 public class ListingDetailViewModel extends ViewModel {
 
-    static boolean canShowListing(Listing listing, String viewerId) {
+    public static boolean canShowListing(Listing listing, String viewerId) {
         if (listing == null) {
             return false;
         }
@@ -34,7 +34,7 @@ public class ListingDetailViewModel extends ViewModel {
         return false;
     }
 
-    static boolean canStartChat(Listing listing, String viewerId) {
+    public static boolean canStartChat(Listing listing, String viewerId) {
         if (listing == null || viewerId == null || viewerId.equals(listing.getSellerId())) {
             return false;
         }
@@ -42,7 +42,7 @@ public class ListingDetailViewModel extends ViewModel {
         return status == ListingStatus.AVAILABLE || status == ListingStatus.RESERVED;
     }
 
-    static boolean canSendOffer(Listing listing, String viewerId) {
+    public static boolean canSendOffer(Listing listing, String viewerId) {
         if (listing == null || viewerId == null || viewerId.equals(listing.getSellerId())) {
             return false;
         }
