@@ -31,6 +31,7 @@ import com.nhom3.pubgapp.model.enums.SortOrder;
 import com.nhom3.pubgapp.model.enums.TradeType;
 import com.nhom3.pubgapp.util.FormatUtils;
 import com.nhom3.pubgapp.util.KeywordFilter;
+import com.nhom3.pubgapp.util.NetworkMonitor;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -605,6 +606,38 @@ public class ListingRepository extends BaseRepository {
 
     public void getFeed(final SearchFilter filter, final Timestamp after,
                         final DataCallback<List<Listing>> cb) {
+        boolean online = true;
+        try {
+            online = NetworkMonitor.getInstance().isOnline();
+        } catch (UnsupportedOperationException e) {
+            online = true;
+        }
+
+        if (!online) {
+            if (after == null) {
+                loadFeedFromCache(filter, cb);
+            } else {
+                cb.onError("Không có kết nối mạng");
+            }
+            return;
+        }
+
+        if (after == null) {
+            loadFeedFromCache(filter, new DataCallback<List<Listing>>() {
+                @Override
+                public void onSuccess(List<Listing> cached) {
+                    if (cached != null && !cached.isEmpty()) {
+                        cb.onSuccess(cached);
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    // Ignore cache read error, Firestore will be queried next
+                }
+            });
+        }
+
         if (filter != null && filter.isFollowingOnly()) {
             String uid = currentUserId();
             if (uid.isEmpty()) {
@@ -619,7 +652,11 @@ public class ListingRepository extends BaseRepository {
                         cb.onSuccess(new ArrayList<Listing>());
                         return;
                     }
-                    executeFeedQuery(filter, after, followingIds, cb);
+                    List<String> top30 = followingIds;
+                    if (top30.size() > 30) {
+                        top30 = top30.subList(0, 30);
+                    }
+                    executeFeedQuery(filter, after, top30, cb);
                 }
 
                 @Override
@@ -636,6 +673,9 @@ public class ListingRepository extends BaseRepository {
                                   final List<String> followingIds,
                                   final DataCallback<List<Listing>> cb) {
         Query query = db.collection(COLLECTION_LISTINGS).whereEqualTo("status", ListingStatus.AVAILABLE.name());
+        if (followingIds != null && !followingIds.isEmpty()) {
+            query = query.whereIn("sellerId", followingIds);
+        }
         if (filter != null && filter.getCategoryId() != null && !filter.getCategoryId().isEmpty()) {
             query = query.whereEqualTo("categoryId", filter.getCategoryId());
         } else if (filter != null && filter.getProvince() != null && !filter.getProvince().isEmpty()) {
@@ -664,9 +704,6 @@ public class ListingRepository extends BaseRepository {
                         List<Listing> filteredList = new ArrayList<Listing>();
                         for (int i = 0; i < rawList.size(); i++) {
                             Listing item = rawList.get(i);
-                            if (followingIds != null && !followingIds.contains(item.getSellerId())) {
-                                continue;
-                            }
                             if (matchesMemoryFilter(item, filter)) {
                                 filteredList.add(item);
                             }
