@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Screen placeholders of module D (profile and trust), replaced by the real screens in phase 2. -->
+    <string name="profile_my_profile_title">D01 Hồ sơ cá nhân</string>
+    <string name="profile_edit_profile_title">A05 Chỉnh sửa hồ sơ</string>
+    <string name="profile_user_profile_title">D02 Trang cá nhân</string>
+    <string name="profile_seller_trust_title">D03 Hồ sơ uy tín người bán</string>
+    <string name="profile_report_title">D04 Báo cáo</string>
+</resources>
