@@ -23,7 +23,15 @@ public class BannedKeyword extends BaseDocument {
         this.createdBy = createdBy;
     }
 
+    // The caller normalizes the text; the keyword is stored normalized already.
     public boolean matches(String normalizedText) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (normalizedText == null || keyword == null) {
+            return false;
+        }
+        String needle = keyword.trim();
+        if (needle.isEmpty()) {
+            return false;
+        }
+        return normalizedText.contains(needle);
     }
 }
