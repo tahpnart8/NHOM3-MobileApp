@@ -436,7 +436,8 @@ public class ChatViewModel extends ViewModel {
                 boolean emailVerified = authRepository.isEmailVerified();
                 if (!canUserBuy(user, emailVerified)) {
                     loading.postValue(false);
-                    error.postValue("Tài khoản cần được admin duyệt xác thực trước khi gửi đề nghị mua bán.");
+                    error.postValue("Tài khoản cần được admin duyệt "
+                            + "xác thực trước khi gửi đề nghị mua bán.");
                     return;
                 }
                 chatRepository.sendOffer(offer, new DataCallback<String>() {
@@ -476,7 +477,8 @@ public class ChatViewModel extends ViewModel {
                 boolean emailVerified = authRepository.isEmailVerified();
                 if (!canUserSell(user, emailVerified)) {
                     loading.postValue(false);
-                    error.postValue("Tài khoản cần được admin duyệt xác thực trước khi phản hồi đề nghị.");
+                    error.postValue("Tài khoản cần được admin duyệt "
+                            + "xác thực trước khi phản hồi đề nghị.");
                     return;
                 }
                 chatRepository.respondToOffer(offerId, accept, new DataCallback<String>() {

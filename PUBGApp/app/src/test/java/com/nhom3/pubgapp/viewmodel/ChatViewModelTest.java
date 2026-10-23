@@ -31,7 +31,7 @@ public class ChatViewModelTest {
         assertFalse(ChatViewModel.canUserBuy(user, true));
 
         user.setVerificationStatus(VerificationStatus.APPROVED);
-        user.setStatus(UserStatus.LOCKED);
+        user.setStatus(UserStatus.TEMP_LOCKED);
         assertFalse(ChatViewModel.canUserBuy(user, true));
 
         user.setStatus(UserStatus.DELETED);
@@ -52,7 +52,7 @@ public class ChatViewModelTest {
         user.setVerificationStatus(VerificationStatus.PENDING);
         assertFalse(ChatViewModel.canUserSell(user, true));
 
-        user.setStatus(UserStatus.LOCKED);
+        user.setStatus(UserStatus.TEMP_LOCKED);
         assertFalse(ChatViewModel.canUserSell(user, true));
 
         assertFalse(ChatViewModel.canUserSell(null, true));

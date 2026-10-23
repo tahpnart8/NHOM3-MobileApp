@@ -188,7 +188,7 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
     }
 
     private void setupProductBanner() {
-        binding.layoutProductBanner.setOnClickListener(new View.OnClickListener() {
+        binding.cardProductBanner.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (currentListingId != null && !currentListingId.isEmpty()) {
@@ -320,13 +320,13 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
                     if (lastActive != null) {
                         long fiveMinutesAgo = System.currentTimeMillis() - 5 * 60 * 1000L;
                         if (partnerUser.isActiveSince(new Timestamp(new Date(fiveMinutesAgo)))) {
-                            binding.textActiveStatus.setText(R.string.trade_chat_active_now);
+                            binding.textPartnerStatus.setText(R.string.trade_chat_active_now);
                         } else {
                             String timeStr = formatUtils.formatTime(lastActive);
-                            binding.textActiveStatus.setText(getString(R.string.trade_chat_active_recent, timeStr));
+                            binding.textPartnerStatus.setText(getString(R.string.trade_chat_active_recent, timeStr));
                         }
                     } else {
-                        binding.textActiveStatus.setText("");
+                        binding.textPartnerStatus.setText("");
                     }
 
                     if (partnerUser.isLocked() || partnerUser.isDeleted()) {

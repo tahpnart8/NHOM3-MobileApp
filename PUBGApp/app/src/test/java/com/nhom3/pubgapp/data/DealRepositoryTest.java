@@ -31,7 +31,7 @@ public class DealRepositoryTest {
         offer.setOfferType(OfferType.MONEY);
         offer.setAmount(500000);
 
-        Deal deal = DealRepository.createDealFromOffer(offer, listing);
+        Deal deal = DealRepository.buildFromOffer(offer, listing);
         assertNotNull(deal);
         assertEquals("listing1", deal.getListingId());
         assertEquals("offer1", deal.getOfferId());
@@ -65,7 +65,7 @@ public class DealRepositoryTest {
         offer.setAmount(0);
         offer.setExchangeItem("Loa bluetooth");
 
-        Deal deal = DealRepository.createDealFromOffer(offer, listing);
+        Deal deal = DealRepository.buildFromOffer(offer, listing);
         assertNotNull(deal);
         assertEquals(TradeType.EXCHANGE, deal.getTradeType());
         assertEquals(0, deal.getAgreedPrice());

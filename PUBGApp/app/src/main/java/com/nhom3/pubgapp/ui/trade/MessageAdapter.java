@@ -203,7 +203,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 binding.textTimeImageReceived.setText(time);
                 loadImage(message.getImageId(), binding.imageReceived);
 
-                binding.cardReceived.setOnLongClickListener(new View.OnLongClickListener() {
+                binding.cardImageReceived.setOnLongClickListener(new View.OnLongClickListener() {
                     @Override
                     public boolean onLongClick(View v) {
                         if (longClickListener != null) {

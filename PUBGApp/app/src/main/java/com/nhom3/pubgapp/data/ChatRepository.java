@@ -37,6 +37,7 @@ import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.MessageType;
 import com.nhom3.pubgapp.model.enums.NotificationType;
 import com.nhom3.pubgapp.model.enums.OfferStatus;
+import com.nhom3.pubgapp.model.enums.OfferType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -856,8 +857,7 @@ public class ChatRepository extends BaseRepository {
                         offerUpdates.put("updatedAt", FieldValue.serverTimestamp());
                         batch.update(offerRef, offerUpdates);
 
-                        DealRepository dealRepo = new DealRepository();
-                        Deal deal = dealRepo.buildFromOffer(offer, listing);
+                        Deal deal = DealRepository.buildFromOffer(offer, listing);
                         DocumentReference dealRef = db.collection(COLLECTION_DEALS).document();
                         final String dealId = dealRef.getId();
                         deal.setId(dealId);
@@ -890,7 +890,8 @@ public class ChatRepository extends BaseRepository {
                             }
                         }
 
-                        String acceptBody = "Người bán đã chấp nhận đề nghị của bạn. Nhấn để xem giao dịch.";
+                        String acceptBody = "Người bán đã chấp nhận đề nghị của bạn. "
+                                + "Nhấn để xem giao dịch.";
                         sendNotification(offer.getBuyerId(), NotificationType.OFFER_RESULT,
                                 "Đề nghị đã được chấp nhận", acceptBody, dealId, batch);
 
