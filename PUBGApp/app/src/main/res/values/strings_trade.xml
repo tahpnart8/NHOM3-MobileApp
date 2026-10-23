@@ -10,7 +10,6 @@
     <string name="trade_error_not_signed_in_messages">Vui lòng đăng nhập để xem tin nhắn.</string>
     <string name="trade_error_not_signed_in_chat">Vui lòng đăng nhập để nhắn tin.</string>
     <string name="trade_error_invalid_conversation_id">Mã cuộc trò chuyện không hợp lệ.</string>
-
     <string name="trade_chat_title">Trò chuyện</string>
     <string name="trade_chat_active_now">Đang hoạt động</string>
     <string name="trade_chat_active_recent">Hoạt động %1$s</string>
@@ -26,7 +25,6 @@
     <string name="trade_chat_menu_report_user">Báo cáo người dùng</string>
     <string name="trade_chat_menu_report_message">Báo cáo tin nhắn</string>
     <string name="trade_chat_offer_placeholder">[Đề nghị giá]</string>
-
     <string name="trade_chat_offer_title">Đề nghị giá</string>
     <string name="trade_chat_offer_type_money">Tiền</string>
     <string name="trade_chat_offer_type_item">Vật trao đổi</string>
@@ -41,7 +39,6 @@
     <string name="trade_chat_offer_waiting">Chờ người bán trả lời</string>
     <string name="trade_chat_offer_verification_required">Tài khoản cần được admin duyệt xác thực trước khi mua bán.</string>
     <string name="trade_chat_offer_register_verification">Đăng ký xác thực</string>
-
     <string name="trade_make_offer_heading">Gửi đề nghị giá</string>
     <string name="trade_make_offer_select_type">Chọn hình thức đề nghị:</string>
     <string name="trade_make_offer_amount_hint">Số tiền (đ)</string>
@@ -51,7 +48,6 @@
     <string name="trade_make_offer_error_item">Vui lòng nhập thông tin món đồ trao đổi</string>
     <string name="trade_make_offer_error_type_required">Vui lòng chọn hình thức đề nghị</string>
     <string name="trade_make_offer_error_general">Không thể gửi đề nghị lúc này</string>
-
     <string name="trade_make_offer_title">C02 Gửi đề nghị giá</string>
     <string name="trade_deal_detail_title">Chi tiết giao dịch</string>
     <string name="trade_deal_detail_heading">Chi tiết giao dịch</string>
@@ -130,5 +126,31 @@
     <string name="trade_write_review_not_allowed">Chỉ đánh giá được khi giao dịch đã nhận hàng hoặc đã hoàn tất.</string>
     <string name="trade_write_review_not_participant">Bạn không phải người tham gia giao dịch này.</string>
     <string name="trade_write_review_not_found">Không tìm thấy giao dịch để đánh giá.</string>
+    <string name="trade_deal_detail_pay">Thanh toán</string>
+    <string name="trade_deal_payment_heading">Thanh toán giao dịch</string>
+    <string name="trade_deal_payment_step1_title">Chọn phương thức thanh toán</string>
+    <string name="trade_deal_payment_amount_label">Số tiền: %1$s</string>
+    <string name="trade_deal_payment_seller_label">Người bán</string>
+    <string name="trade_deal_payment_method_card">Thẻ ngân hàng</string>
+    <string name="trade_deal_payment_method_wallet">Ví điện tử</string>
+    <string name="trade_deal_payment_method_transfer">Chuyển khoản</string>
+    <string name="trade_deal_payment_continue">Tiếp tục</string>
+    <string name="trade_deal_payment_step2_title">Xác nhận thanh toán</string>
+    <string name="trade_deal_payment_confirm_notice">Lưu ý: Đây là thanh toán mô phỏng. Tiền sẽ được hệ thống giữ an toàn dưới dạng khoản thanh toán đang giữ cho tới khi bạn xác nhận đã nhận hàng.</string>
+    <string name="trade_deal_payment_selected_method_label">Phương thức: %1$s</string>
+    <string name="trade_deal_payment_confirm_button">Xác nhận thanh toán</string>
+    <string name="trade_deal_payment_change_method">Đổi phương thức</string>
+    <string name="trade_deal_payment_cancel">Hủy</string>
+    <string name="trade_deal_payment_step3_title">Biên lai thanh toán</string>
+    <string name="trade_deal_payment_success_message">Thanh toán mô phỏng thành công</string>
+    <string name="trade_deal_payment_status_held">Đang giữ</string>
+    <string name="trade_deal_payment_status_released">Đã giải ngân cho người bán</string>
+    <string name="trade_deal_payment_status_refunded">Đã hoàn cho người mua</string>
+    <string name="trade_deal_payment_status_label">Trạng thái: %1$s</string>
+    <string name="trade_deal_payment_method_label">Phương thức: %1$s</string>
+    <string name="trade_deal_payment_time_label">Thời điểm giữ: %1$s</string>
+    <string name="trade_deal_payment_return_button">Về chi tiết giao dịch</string>
+    <string name="trade_deal_payment_not_buyer">Chỉ người mua mới có quyền thực hiện thanh toán cho giao dịch này.</string>
+    <string name="trade_deal_payment_not_eligible">Giao dịch không đủ điều kiện thanh toán hoặc đã được thanh toán.</string>
     <string name="trade_deal_payment_title">C07 Thanh toán giao dịch</string>
 </resources>

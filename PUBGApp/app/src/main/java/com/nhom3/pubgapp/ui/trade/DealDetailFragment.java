@@ -157,7 +157,8 @@ public class DealDetailFragment extends Fragment {
             return;
         }
 
-        if (!isUserVerified && deal.getStatus() == DealStatus.PENDING_CONFIRM) {
+        if (!isUserVerified && (deal.getStatus() == DealStatus.PENDING_CONFIRM
+                || (deal.getStatus() == DealStatus.CONFIRMED && deal.needsPayment()))) {
             binding.cardVerificationNotice.setVisibility(View.VISIBLE);
             binding.buttonRegisterVerification.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -168,6 +169,7 @@ public class DealDetailFragment extends Fragment {
             });
             binding.buttonEditTerms.setEnabled(false);
             binding.buttonConfirm.setEnabled(false);
+            binding.buttonPay.setEnabled(false);
         } else {
             binding.cardVerificationNotice.setVisibility(View.GONE);
         }
@@ -456,8 +458,40 @@ public class DealDetailFragment extends Fragment {
                 Deal deal = viewModel.getDeal().getValue();
                 if (deal != null && deal.needsPayment()) {
                     binding.cardPaymentInfo.setVisibility(View.VISIBLE);
+                    if (payment != null) {
+                        binding.textPaymentStatus.setVisibility(View.VISIBLE);
+                        int statusTextRes = R.string.trade_deal_payment_status_held;
+                        if (payment.getStatus() == com.nhom3.pubgapp.model.enums.PaymentStatus.RELEASED) {
+                            statusTextRes = R.string.trade_deal_payment_status_released;
+                        } else if (payment.getStatus() == com.nhom3.pubgapp.model.enums.PaymentStatus.REFUNDED) {
+                            statusTextRes = R.string.trade_deal_payment_status_refunded;
+                        }
+                        binding.textPaymentStatus.setText(getString(R.string.trade_deal_payment_status_label,
+                                getString(statusTextRes)));
+
+                        if (payment.getMethod() != null) {
+                            binding.textPaymentMethod.setVisibility(View.VISIBLE);
+                            int methodTextRes = R.string.trade_deal_payment_method_card;
+                            if (payment.getMethod() == com.nhom3.pubgapp.model.enums.PaymentMethod.E_WALLET) {
+                                methodTextRes = R.string.trade_deal_payment_method_wallet;
+                            } else if (payment.getMethod()
+                                    == com.nhom3.pubgapp.model.enums.PaymentMethod.BANK_TRANSFER) {
+                                methodTextRes = R.string.trade_deal_payment_method_transfer;
+                            }
+                            binding.textPaymentMethod.setText(getString(R.string.trade_deal_payment_method_label,
+                                    getString(methodTextRes)));
+                        } else {
+                            binding.textPaymentMethod.setVisibility(View.GONE);
+                        }
+                    } else {
+                        binding.textPaymentStatus.setVisibility(View.GONE);
+                        binding.textPaymentMethod.setVisibility(View.GONE);
+                    }
                 } else {
                     binding.cardPaymentInfo.setVisibility(View.GONE);
+                }
+                if (deal != null) {
+                    renderActionButtons(deal, getCurrentUserId());
                 }
             }
         });
@@ -662,6 +696,24 @@ public class DealDetailFragment extends Fragment {
             binding.textConfirmationStatus.setVisibility(View.GONE);
             binding.buttonCancelDeal.setVisibility(View.VISIBLE);
             binding.buttonCancelDeal.setEnabled(online);
+
+            Payment payment = viewModel.getPayment().getValue();
+            boolean canShowPay = isBuyer && deal.needsPayment() && (payment == null || !payment.isHeld());
+            if (canShowPay) {
+                binding.buttonPay.setVisibility(View.VISIBLE);
+                binding.buttonPay.setEnabled(online && isUserVerified);
+                binding.buttonPay.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Bundle args = new Bundle();
+                        args.putString("dealId", deal.getId());
+                        NavController navController = NavHostFragment.findNavController(DealDetailFragment.this);
+                        navController.navigate(R.id.action_global_deal_payment, args);
+                    }
+                });
+            } else {
+                binding.buttonPay.setVisibility(View.GONE);
+            }
         } else {
             binding.layoutActions.setVisibility(View.GONE);
         }
