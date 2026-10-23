@@ -92,14 +92,14 @@ public class AuthViewModel extends ViewModel {
         authRepository.signUp(email, password, new DataCallback<String>() {
             @Override
             public void onSuccess(String uid) {
-                loading.setValue(false);
-                signUpStep.setValue(2);
+                loading.postValue(false);
+                signUpStep.postValue(2);
             }
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue(message != null ? message : "Không thể tạo tài khoản.");
+                loading.postValue(false);
+                error.postValue(message != null ? message : "Không thể tạo tài khoản.");
             }
         });
     }
@@ -107,19 +107,21 @@ public class AuthViewModel extends ViewModel {
     public void resendVerificationLink() {
         loading.setValue(true);
         error.setValue(null);
+        done.setValue(false);
         authRepository.sendVerificationEmail(new DataCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                loading.setValue(false);
+                loading.postValue(false);
+                done.postValue(true);
             }
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
+                loading.postValue(false);
                 if (message != null && message.contains("TOO_MANY_ATTEMPTS_TRY_LATER")) {
-                    error.setValue("Bạn đã gửi quá nhiều lần, hãy thử lại sau ít phút.");
+                    error.postValue("Bạn đã gửi quá nhiều lần, hãy thử lại sau ít phút.");
                 } else {
-                    error.setValue(message != null ? message : "Không thể gửi lại liên kết xác thực.");
+                    error.postValue(message != null ? message : "Không thể gửi lại liên kết xác thực.");
                 }
             }
         });
@@ -130,8 +132,8 @@ public class AuthViewModel extends ViewModel {
             @Override
             public void onSuccess(Boolean verified) {
                 if (verified != null && verified) {
-                    emailVerified.setValue(true);
-                    signUpStep.setValue(3);
+                    emailVerified.postValue(true);
+                    signUpStep.postValue(3);
                 }
             }
 
@@ -156,8 +158,8 @@ public class AuthViewModel extends ViewModel {
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue(message != null ? message : "Không thể tạo hồ sơ.");
+                loading.postValue(false);
+                error.postValue(message != null ? message : "Không thể tạo hồ sơ.");
             }
         });
     }
@@ -166,17 +168,17 @@ public class AuthViewModel extends ViewModel {
         categoryRepository.getAll(new DataCallback<List<Category>>() {
             @Override
             public void onSuccess(List<Category> list) {
-                categories.setValue(list);
+                categories.postValue(list);
             }
 
             @Override
             public void onError(String message) {
-                error.setValue(message != null ? message : "Không thể tải danh mục.");
+                error.postValue(message != null ? message : "Không thể tải danh mục.");
             }
         });
     }
 
-    static boolean isPasswordValid(String password) {
+    public static boolean isPasswordValid(String password) {
         if (password == null || password.length() < 8) {
             return false;
         }
@@ -193,14 +195,14 @@ public class AuthViewModel extends ViewModel {
         return hasLetter && hasDigit;
     }
 
-    static boolean isPasswordConfirmationMatching(String password, String confirmation) {
+    public static boolean isPasswordConfirmationMatching(String password, String confirmation) {
         if (password == null || confirmation == null) {
             return false;
         }
         return password.equals(confirmation);
     }
 
-    static boolean isPhoneValid(String phone) {
+    public static boolean isPhoneValid(String phone) {
         if (phone == null || phone.length() != 10) {
             return false;
         }

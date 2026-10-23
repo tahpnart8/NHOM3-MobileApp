@@ -75,6 +75,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPersonName"
+                    android:maxLength="100"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -253,14 +254,6 @@
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/account_register_resend_link" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonBackToStep1"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xs"
-                android:minHeight="@dimen/touch_min"
-                android:text="@string/account_register_back_to_step1" />
         </LinearLayout>
 
         <!-- STEP 3: Complete Profile -->
@@ -290,6 +283,23 @@
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layoutProfileDisplayName"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:hint="@string/account_register_display_name_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editProfileDisplayName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName"
+                    android:maxLength="100"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layoutPhone"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
@@ -302,6 +312,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="phone"
+                    android:maxLength="20"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -318,6 +329,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="text"
+                    android:maxLength="100"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -334,6 +346,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="text"
+                    android:maxLength="100"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -441,6 +454,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPostalAddress"
+                    android:maxLength="300"
                     android:maxLines="2" />
             </com.google.android.material.textfield.TextInputLayout>
 

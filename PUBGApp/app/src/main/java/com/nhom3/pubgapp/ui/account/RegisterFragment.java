@@ -35,6 +35,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentRegisterBinding;
 import com.nhom3.pubgapp.model.Category;
@@ -175,8 +177,24 @@ public class RegisterFragment extends Fragment {
                 if (err != null && !err.isEmpty()) {
                     binding.textError.setText(err);
                     binding.textError.setVisibility(View.VISIBLE);
-                } else {
-                    binding.textError.setVisibility(View.GONE);
+                    viewModel.clearError();
+                }
+            }
+        });
+
+        viewModel.getDone().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean isDone) {
+                if (isDone != null && isDone) {
+                    Integer step = viewModel.getSignUpStep().getValue();
+                    if (step != null && step == 2) {
+                        Toast.makeText(
+                                requireContext(),
+                                R.string.account_register_resend_success,
+                                Toast.LENGTH_SHORT
+                        ).show();
+                        viewModel.clearDone();
+                    }
                 }
             }
         });
@@ -206,9 +224,14 @@ public class RegisterFragment extends Fragment {
             binding.layoutStep1.setVisibility(View.GONE);
             binding.layoutStep2.setVisibility(View.VISIBLE);
             binding.layoutStep3.setVisibility(View.GONE);
-            if (binding.editEmail.getText() != null) {
-                binding.textTargetEmail.setText(binding.editEmail.getText().toString().trim());
+            String targetEmail = getFieldText(binding.editEmail);
+            if (targetEmail.isEmpty()) {
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user != null && user.getEmail() != null) {
+                    targetEmail = user.getEmail();
+                }
             }
+            binding.textTargetEmail.setText(targetEmail);
         } else if (step != null && step == 3) {
             showStep3();
         } else {
@@ -222,7 +245,21 @@ public class RegisterFragment extends Fragment {
         binding.layoutStep1.setVisibility(View.GONE);
         binding.layoutStep2.setVisibility(View.GONE);
         binding.layoutStep3.setVisibility(View.VISIBLE);
-        viewModel.loadCategories();
+        if (viewModel.getCategories().getValue() == null) {
+            viewModel.loadCategories();
+        }
+        String currentProfileName = getFieldText(binding.editProfileDisplayName);
+        if (currentProfileName.isEmpty()) {
+            String step1Name = getFieldText(binding.editDisplayName);
+            if (!step1Name.isEmpty()) {
+                binding.editProfileDisplayName.setText(step1Name);
+            } else {
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user != null && user.getDisplayName() != null) {
+                    binding.editProfileDisplayName.setText(user.getDisplayName());
+                }
+            }
+        }
     }
 
     private void setupListeners() {
@@ -256,15 +293,6 @@ public class RegisterFragment extends Fragment {
                     return;
                 }
                 viewModel.resendVerificationLink();
-                Toast.makeText(requireContext(), R.string.account_register_resend_success, Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        binding.buttonBackToStep1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                binding.layoutStep2.setVisibility(View.GONE);
-                binding.layoutStep1.setVisibility(View.VISIBLE);
             }
         });
 
@@ -312,8 +340,7 @@ public class RegisterFragment extends Fragment {
                         }
                         Integer step = viewModel.getSignUpStep().getValue();
                         if (step != null && step == 2) {
-                            binding.layoutStep2.setVisibility(View.GONE);
-                            binding.layoutStep1.setVisibility(View.VISIBLE);
+                            // Do nothing on step 2 to avoid orphan auth accounts per QA2f
                             return;
                         }
                         setEnabled(false);
@@ -355,14 +382,14 @@ public class RegisterFragment extends Fragment {
         if (password.isEmpty()) {
             binding.layoutPassword.setError(getString(R.string.account_register_password_empty));
             hasError = true;
-        } else if (!isPasswordValid(password)) {
+        } else if (!AuthViewModel.isPasswordValid(password)) {
             binding.layoutPassword.setError(getString(R.string.account_register_password_invalid));
             hasError = true;
         }
         if (confirm.isEmpty()) {
             binding.layoutConfirmPassword.setError(getString(R.string.account_register_confirm_password_empty));
             hasError = true;
-        } else if (!isPasswordConfirmationMatching(password, confirm)) {
+        } else if (!AuthViewModel.isPasswordConfirmationMatching(password, confirm)) {
             binding.layoutConfirmPassword.setError(getString(R.string.account_register_password_mismatch));
             hasError = true;
         }
@@ -380,6 +407,34 @@ public class RegisterFragment extends Fragment {
             return;
         }
 
+        resetProfileErrors();
+
+        String phone = getFieldText(binding.editPhone);
+        String province = getFieldText(binding.editProvince);
+        String district = getFieldText(binding.editDistrict);
+        String nationalId = getFieldText(binding.editNationalId);
+        String address = getFieldText(binding.editAddress);
+        String displayName = getFieldText(binding.editProfileDisplayName);
+
+        boolean valid = validateProfile(phone, province, district, nationalId, address, displayName);
+        if (!valid) {
+            return;
+        }
+
+        User user = buildUser(phone, province, district, displayName);
+        UserIdentity identity = buildIdentity(nationalId, address);
+        if (!identity.isComplete()) {
+            binding.textError.setText(R.string.account_register_national_id_invalid);
+            binding.textError.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        List<String> categoryIds = categoryChoiceAdapter.getSelectedCategoryIds();
+        viewModel.completeProfile(user, identity, categoryIds);
+    }
+
+    private void resetProfileErrors() {
+        binding.layoutProfileDisplayName.setError(null);
         binding.layoutPhone.setError(null);
         binding.layoutProvince.setError(null);
         binding.layoutDistrict.setError(null);
@@ -387,22 +442,26 @@ public class RegisterFragment extends Fragment {
         binding.layoutDob.setError(null);
         binding.layoutAddress.setError(null);
         binding.textError.setVisibility(View.GONE);
+    }
 
-        String phone = getFieldText(binding.editPhone);
-        String province = getFieldText(binding.editProvince);
-        String district = getFieldText(binding.editDistrict);
-        String nationalId = getFieldText(binding.editNationalId);
-        String address = getFieldText(binding.editAddress);
-
+    private boolean validateProfile(String phone,
+                                    String province,
+                                    String district,
+                                    String nationalId,
+                                    String address,
+                                    String displayName) {
         boolean hasError = false;
+        if (displayName.isEmpty()) {
+            binding.layoutProfileDisplayName.setError(getString(R.string.account_register_display_name_empty));
+            hasError = true;
+        }
         if (phone.isEmpty()) {
             binding.layoutPhone.setError(getString(R.string.account_register_phone_empty));
             hasError = true;
-        } else if (!isPhoneValid(phone)) {
+        } else if (!AuthViewModel.isPhoneValid(phone)) {
             binding.layoutPhone.setError(getString(R.string.account_register_phone_invalid));
             hasError = true;
         }
-
         if (province.isEmpty()) {
             binding.layoutProvince.setError(getString(R.string.account_register_province_empty));
             hasError = true;
@@ -411,54 +470,47 @@ public class RegisterFragment extends Fragment {
             binding.layoutDistrict.setError(getString(R.string.account_register_district_empty));
             hasError = true;
         }
-
-        if (nationalId.length() != 12) {
+        if (nationalId.length() != 12 || !isAllDigits(nationalId)) {
             binding.layoutNationalId.setError(getString(R.string.account_register_national_id_invalid));
             hasError = true;
         }
-
         if (selectedDob == null) {
             binding.layoutDob.setError(getString(R.string.account_register_dob_empty));
             hasError = true;
         }
-
-        Gender gender = getSelectedGender();
-        if (gender == null) {
+        if (getSelectedGender() == null) {
             binding.textError.setText(R.string.account_register_gender_empty);
             binding.textError.setVisibility(View.VISIBLE);
             hasError = true;
         }
-
         if (address.isEmpty()) {
             binding.layoutAddress.setError(getString(R.string.account_register_address_empty));
             hasError = true;
         }
-
         if (!binding.checkTerms.isChecked()) {
             binding.textError.setText(R.string.account_register_terms_required);
             binding.textError.setVisibility(View.VISIBLE);
             hasError = true;
         }
+        return !hasError;
+    }
 
-        if (hasError) {
-            return;
-        }
-
-        String displayName = getFieldText(binding.editDisplayName);
+    private User buildUser(String phone, String province, String district, String displayName) {
         User user = new User();
         user.setDisplayName(displayName);
         user.setPhone(phone);
         user.setProvince(province);
         user.setDistrict(district);
+        return user;
+    }
 
+    private UserIdentity buildIdentity(String nationalId, String address) {
         UserIdentity identity = new UserIdentity();
         identity.setNationalId(nationalId);
         identity.setDateOfBirth(selectedDob);
-        identity.setGender(gender);
+        identity.setGender(getSelectedGender());
         identity.setPermanentAddress(address);
-
-        List<String> categoryIds = categoryChoiceAdapter.getSelectedCategoryIds();
-        viewModel.completeProfile(user, identity, categoryIds);
+        return identity;
     }
 
     private Gender getSelectedGender() {
@@ -550,17 +602,22 @@ public class RegisterFragment extends Fragment {
 
                         @Override
                         public void onError(GetCredentialException e) {
+                            if (binding == null) {
+                                return;
+                            }
                             if (e instanceof GetCredentialCancellationException) {
                                 return;
                             }
-                            binding.textError.setText("Không thể đăng nhập bằng Google: " + e.getMessage());
+                            binding.textError.setText(R.string.account_login_google_failed);
                             binding.textError.setVisibility(View.VISIBLE);
                         }
                     }
             );
         } catch (Exception e) {
-            binding.textError.setText("Không thể khởi động đăng nhập Google.");
-            binding.textError.setVisibility(View.VISIBLE);
+            if (binding != null) {
+                binding.textError.setText(R.string.account_login_google_init_error);
+                binding.textError.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -575,65 +632,25 @@ public class RegisterFragment extends Fragment {
                     String idToken = googleIdTokenCredential.getIdToken();
                     viewModel.loginWithGoogle(idToken);
                 } catch (Exception e) {
-                    binding.textError.setText("Lỗi xử lý tài khoản Google.");
-                    binding.textError.setVisibility(View.VISIBLE);
+                    if (binding != null) {
+                        binding.textError.setText(R.string.account_login_google_parse_error);
+                        binding.textError.setVisibility(View.VISIBLE);
+                    }
                 }
             }
         }
     }
 
     private boolean isNetworkAvailable() {
-        try {
-            return NetworkMonitor.getInstance().isOnline();
-        } catch (Exception e) {
-            Context context = getContext();
-            if (context == null) {
-                return true;
-            }
-            ConnectivityManager cm = (ConnectivityManager)
-                    context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (cm != null) {
-                NetworkCapabilities capabilities = cm.getNetworkCapabilities(cm.getActiveNetwork());
-                return capabilities != null
-                        && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-            }
-            return true;
-        }
+        return NetworkMonitor.getInstance().isOnline();
     }
 
-    private boolean isPasswordValid(String password) {
-        if (password == null || password.length() < 8) {
+    private boolean isAllDigits(String text) {
+        if (text == null || text.isEmpty()) {
             return false;
         }
-        boolean hasLetter = false;
-        boolean hasDigit = false;
-        for (int i = 0; i < password.length(); i++) {
-            char c = password.charAt(i);
-            if (Character.isLetter(c)) {
-                hasLetter = true;
-            } else if (Character.isDigit(c)) {
-                hasDigit = true;
-            }
-        }
-        return hasLetter && hasDigit;
-    }
-
-    private boolean isPasswordConfirmationMatching(String password, String confirmation) {
-        if (password == null || confirmation == null) {
-            return false;
-        }
-        return password.equals(confirmation);
-    }
-
-    private boolean isPhoneValid(String phone) {
-        if (phone == null || phone.length() != 10) {
-            return false;
-        }
-        if (phone.charAt(0) != '0') {
-            return false;
-        }
-        for (int i = 0; i < phone.length(); i++) {
-            if (!Character.isDigit(phone.charAt(i))) {
+        for (int i = 0; i < text.length(); i++) {
+            if (!Character.isDigit(text.charAt(i))) {
                 return false;
             }
         }

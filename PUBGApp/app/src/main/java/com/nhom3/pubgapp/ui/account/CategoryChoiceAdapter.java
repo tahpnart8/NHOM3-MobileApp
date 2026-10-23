@@ -17,12 +17,12 @@ import java.util.List;
 import java.util.Set;
 
 // Adapter for selecting interested categories in registration step 3.
-public class CategoryChoiceAdapter extends RecyclerView.Adapter<CategoryChoiceAdapter.ViewHolder> {
+class CategoryChoiceAdapter extends RecyclerView.Adapter<CategoryChoiceAdapter.ViewHolder> {
 
     private final List<Category> items = new ArrayList<Category>();
     private final Set<String> selectedIds = new HashSet<String>();
 
-    public void submitList(List<Category> newItems) {
+    void submitList(List<Category> newItems) {
         items.clear();
         if (newItems != null) {
             items.addAll(newItems);
@@ -30,11 +30,11 @@ public class CategoryChoiceAdapter extends RecyclerView.Adapter<CategoryChoiceAd
         notifyDataSetChanged();
     }
 
-    public List<String> getSelectedCategoryIds() {
+    List<String> getSelectedCategoryIds() {
         return new ArrayList<String>(selectedIds);
     }
 
-    public void setSelectedCategoryIds(List<String> ids) {
+    void setSelectedCategoryIds(List<String> ids) {
         selectedIds.clear();
         if (ids != null) {
             selectedIds.addAll(ids);
