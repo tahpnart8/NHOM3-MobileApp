@@ -20,6 +20,7 @@ import androidx.credentials.GetCredentialRequest;
 import androidx.credentials.GetCredentialResponse;
 import androidx.credentials.exceptions.GetCredentialCancellationException;
 import androidx.credentials.exceptions.GetCredentialException;
+import androidx.credentials.exceptions.NoCredentialException;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -37,6 +38,7 @@ public class LoginFragment extends Fragment {
 
     private FragmentLoginBinding binding;
     private AuthViewModel viewModel;
+    private boolean navigatedToRegister = false;
 
     @Nullable
     @Override
@@ -64,6 +66,9 @@ public class LoginFragment extends Fragment {
                 binding.progressBarLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
                 binding.buttonSignIn.setEnabled(!isLoading);
                 binding.buttonGoogleSignIn.setEnabled(!isLoading);
+                if (isLoading) {
+                    navigatedToRegister = false;
+                }
             }
         });
 
@@ -73,6 +78,7 @@ public class LoginFragment extends Fragment {
                 if (errorMsg != null && !errorMsg.isEmpty()) {
                     binding.textError.setText(errorMsg);
                     binding.textError.setVisibility(View.VISIBLE);
+                    viewModel.clearError();
                 } else {
                     binding.textError.setVisibility(View.GONE);
                 }
@@ -95,8 +101,11 @@ public class LoginFragment extends Fragment {
             @Override
             public void onChanged(Integer step) {
                 if (step != null && step == 2) {
-                    NavHostFragment.findNavController(LoginFragment.this)
-                            .navigate(R.id.action_login_to_register);
+                    if (!navigatedToRegister) {
+                        navigatedToRegister = true;
+                        NavHostFragment.findNavController(LoginFragment.this)
+                                .navigate(R.id.action_login_to_register);
+                    }
                 }
             }
         });
@@ -105,8 +114,11 @@ public class LoginFragment extends Fragment {
             @Override
             public void onChanged(Boolean needsProfile) {
                 if (needsProfile != null && needsProfile) {
-                    NavHostFragment.findNavController(LoginFragment.this)
-                            .navigate(R.id.action_login_to_register);
+                    if (!navigatedToRegister) {
+                        navigatedToRegister = true;
+                        NavHostFragment.findNavController(LoginFragment.this)
+                                .navigate(R.id.action_login_to_register);
+                    }
                 }
             }
         });
@@ -130,6 +142,7 @@ public class LoginFragment extends Fragment {
         binding.textForgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                viewModel.clearError();
                 NavHostFragment.findNavController(LoginFragment.this)
                         .navigate(R.id.action_login_to_forgot_password);
             }
@@ -138,6 +151,8 @@ public class LoginFragment extends Fragment {
         binding.buttonRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                viewModel.clearError();
+                navigatedToRegister = true;
                 NavHostFragment.findNavController(LoginFragment.this)
                         .navigate(R.id.action_login_to_register);
             }
@@ -199,6 +214,7 @@ public class LoginFragment extends Fragment {
         binding.viewOfflineBanner.layoutOfflineBanner.setVisibility(View.GONE);
 
         try {
+            binding.buttonGoogleSignIn.setEnabled(false);
             CredentialManager credentialManager = CredentialManager.create(requireContext());
             GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
@@ -218,26 +234,47 @@ public class LoginFragment extends Fragment {
                     new CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
                         @Override
                         public void onResult(GetCredentialResponse response) {
+                            if (binding == null) {
+                                return;
+                            }
+                            binding.buttonGoogleSignIn.setEnabled(true);
                             handleGoogleSignInResponse(response);
                         }
 
                         @Override
                         public void onError(GetCredentialException e) {
-                            if (e instanceof GetCredentialCancellationException) {
+                            if (binding == null) {
                                 return;
                             }
-                            binding.textError.setText("Không thể đăng nhập bằng Google: " + e.getMessage());
+                            binding.buttonGoogleSignIn.setEnabled(true);
+                            if (e instanceof GetCredentialCancellationException) {
+                                binding.textError.setText(R.string.account_login_google_cancelled);
+                                binding.textError.setVisibility(View.VISIBLE);
+                                return;
+                            }
+                            if (e instanceof NoCredentialException) {
+                                binding.textError.setText(R.string.account_login_google_no_credential);
+                                binding.textError.setVisibility(View.VISIBLE);
+                                return;
+                            }
+                            binding.textError.setText(R.string.account_login_google_failed);
                             binding.textError.setVisibility(View.VISIBLE);
                         }
                     }
             );
         } catch (Exception e) {
-            binding.textError.setText("Không thể khởi động đăng nhập Google.");
-            binding.textError.setVisibility(View.VISIBLE);
+            if (binding != null) {
+                binding.buttonGoogleSignIn.setEnabled(true);
+                binding.textError.setText(R.string.account_login_google_init_error);
+                binding.textError.setVisibility(View.VISIBLE);
+            }
         }
     }
 
     private void handleGoogleSignInResponse(GetCredentialResponse response) {
+        if (binding == null) {
+            return;
+        }
         Credential credential = response.getCredential();
         if (credential instanceof CustomCredential) {
             CustomCredential customCredential = (CustomCredential) credential;
@@ -248,7 +285,7 @@ public class LoginFragment extends Fragment {
                     String idToken = googleIdTokenCredential.getIdToken();
                     viewModel.loginWithGoogle(idToken);
                 } catch (Exception e) {
-                    binding.textError.setText("Lỗi xử lý tài khoản Google.");
+                    binding.textError.setText(R.string.account_login_google_parse_error);
                     binding.textError.setVisibility(View.VISIBLE);
                 }
             }
@@ -259,6 +296,7 @@ public class LoginFragment extends Fragment {
         try {
             return NetworkMonitor.getInstance().isOnline();
         } catch (Exception e) {
+            // NetworkMonitor throws NOT_READY until fully implemented; falls back to ConnectivityManager.
             ConnectivityManager cm = (ConnectivityManager)
                     requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
             if (cm != null) {

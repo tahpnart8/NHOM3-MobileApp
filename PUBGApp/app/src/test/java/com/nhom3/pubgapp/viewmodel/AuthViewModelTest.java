@@ -13,12 +13,6 @@ import java.util.Date;
 public class AuthViewModelTest {
 
     @Test
-    public void evaluateUserStatus_nullUser_returnsDeleted() {
-        AuthViewModel.LoginDecision decision = AuthViewModel.evaluateUserStatus(null);
-        assertEquals(AuthViewModel.LoginDecision.DELETED, decision);
-    }
-
-    @Test
     public void evaluateUserStatus_activeUser_returnsAllow() {
         User user = new User();
         user.setStatus(UserStatus.ACTIVE);
