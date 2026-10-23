@@ -1445,18 +1445,119 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Khiếu nại (security-rules.md mục 19). Mã là dealId nên mỗi giao dịch một khiếu nại;
+    // hệ quả lên deals, payments, listings kiểm ở các khối của chính chúng (mục 14, 16, 10).
     match /complaints/{id} {
+      function complaintKeys() {
+        return ['complainantId', 'dealId', 'reason', 'description', 'evidenceImageIds', 'status',
+                'priority', 'decision', 'evidenceRequest', 'resolutionMessage', 'handledBy',
+                'createdAt', 'updatedAt'];
+      }
+
+      // Chỉ mở trong lúc đếm ngược (SHIPPED, trước autoReleaseAt), hoặc khi gặp trực tiếp đã CONFIRMED.
+      function complaintWindowOpen(d) {
+        return (d.status == 'SHIPPED' && request.time < d.autoReleaseAt)
+          || (d.status == 'CONFIRMED' && d.deliveryMethod == 'MEET_UP');
+      }
+
       allow read: if signedIn() && (
         resource.data.complainantId == me()
         || get(/databases/$(database)/documents/deals/$(id)).data.buyerId == me()
         || get(/databases/$(database)/documents/deals/$(id)).data.sellerId == me()
         || isAdmin());
-      allow write: if false;
 
-      // Ghi chú nội bộ: chỉ admin, kể cả người khiếu nại cũng không đọc được.
+      allow create: if writerActive()
+        && hasOnlyKeys(complaintKeys())
+        && (dealBefore(id).buyerId == me() || dealBefore(id).sellerId == me())
+        && request.resource.data.complainantId == me()
+        && request.resource.data.dealId == id
+        && complaintWindowOpen(dealBefore(id))
+        && dealAfter(id).status == 'DISPUTED'
+        && request.resource.data.reason in ['NOT_AS_DESCRIBED', 'NOT_RECEIVED', 'DAMAGED', 'OTHER']
+        && request.resource.data.status == 'OPEN'
+        && request.resource.data.priority == 'MEDIUM'
+        && request.resource.data.get('decision', null) == null
+        && emptyString(request.resource.data, 'evidenceRequest')
+        && emptyString(request.resource.data, 'resolutionMessage')
+        && request.resource.data.get('handledBy', null) == null
+        && request.resource.data.evidenceImageIds is list
+        && request.resource.data.evidenceImageIds.size() >= 1
+        && request.resource.data.evidenceImageIds.size() <= 5
+        && imageOwnedByMe(request.resource.data.evidenceImageIds[0])
+        && optString(request.resource.data, 'description', 2000)
+        && createStamps();
+
+      // Bổ sung bằng chứng: chỉ thêm ảnh mới vào cuối, ảnh cũ giữ nguyên thứ tự.
+      allow update: if signedIn()
+        && resource.data.complainantId == me()
+        && writerActive()
+        && onlyKeys(['evidenceImageIds', 'status', 'updatedAt'])
+        && resource.data.status == 'NEEDS_EVIDENCE'
+        && request.resource.data.status == 'OPEN'
+        && request.resource.data.evidenceImageIds is list
+        && request.resource.data.evidenceImageIds.size() > resource.data.evidenceImageIds.size()
+        && request.resource.data.evidenceImageIds.size() <= resource.data.evidenceImageIds.size() + 5
+        && request.resource.data.evidenceImageIds[0:resource.data.evidenceImageIds.size()]
+          == resource.data.evidenceImageIds
+        && serverStamp('updatedAt');
+
+      // Rút đơn: giao dịch cùng lô rời DISPUTED; khối deals kiểm nó về đúng trạng thái trước.
+      allow update: if signedIn()
+        && resource.data.complainantId == me()
+        && writerActive()
+        && onlyKeys(['status', 'updatedAt'])
+        && resource.data.status in ['OPEN', 'NEEDS_EVIDENCE']
+        && request.resource.data.status == 'WITHDRAWN'
+        && dealAfter(id).status != 'DISPUTED'
+        && serverStamp('updatedAt');
+
+      // Admin đặt mức ưu tiên.
+      allow update: if isAdmin()
+        && writerActive()
+        && onlyKeys(['priority', 'updatedAt'])
+        && request.resource.data.priority in ['LOW', 'MEDIUM', 'HIGH']
+        && serverStamp('updatedAt');
+
+      // Admin yêu cầu bổ sung bằng chứng.
+      allow update: if isAdmin()
+        && writerActive()
+        && onlyKeys(['status', 'decision', 'evidenceRequest', 'handledBy', 'updatedAt'])
+        && resource.data.status == 'OPEN'
+        && request.resource.data.status == 'NEEDS_EVIDENCE'
+        && request.resource.data.decision == 'REQUEST_EVIDENCE'
+        && reqString(request.resource.data, 'evidenceRequest', 1000)
+        && request.resource.data.handledBy == me()
+        && serverStamp('updatedAt');
+
+      // Admin ra quyết định cuối.
+      allow update: if isAdmin()
+        && writerActive()
+        && onlyKeys(['status', 'decision', 'resolutionMessage', 'handledBy', 'updatedAt'])
+        && resource.data.status in ['OPEN', 'NEEDS_EVIDENCE']
+        && request.resource.data.status == 'RESOLVED'
+        && request.resource.data.decision in ['REFUND', 'RETURN_ITEM', 'CANCEL_DEAL', 'REJECT']
+        && optString(request.resource.data, 'resolutionMessage', 1000)
+        && request.resource.data.handledBy == me()
+        && serverStamp('updatedAt');
+
+      allow delete: if false;
+
+      // Ghi chú nội bộ (security-rules.md mục 20): chỉ admin, kể cả người khiếu nại cũng
+      // không đọc được. Một tài liệu duy nhất complaints/{id}/adminNote/note.
       match /adminNote/{noteId} {
         allow read: if isAdmin();
-        allow write: if false;
+
+        allow create, update: if isAdmin()
+          && writerActive()
+          && noteId == 'note'
+          && request.resource.data.keys().hasOnly(['complaintId', 'text', 'adminId', 'updatedAt'])
+          && request.resource.data.complaintId == id
+          && request.resource.data.adminId == me()
+          && request.resource.data.text is string
+          && request.resource.data.text.size() <= 2000
+          && serverStamp('updatedAt');
+
+        allow delete: if false;
       }
     }
 
