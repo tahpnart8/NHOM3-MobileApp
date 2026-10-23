@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.ReviewRepository;
 import com.nhom3.pubgapp.model.Complaint;
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.model.Review;
@@ -24,6 +25,8 @@ public class TrustViewModel extends ViewModel {
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>();
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
+
+    private final ReviewRepository reviewRepository = new ReviewRepository();
 
     public LiveData<List<Review>> getReviews() {
         return reviews;
@@ -58,7 +61,23 @@ public class TrustViewModel extends ViewModel {
     }
 
     public void submitReview(Review review) {
-        error.setValue(DataCallback.NOT_READY);
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        loading.setValue(true);
+        reviewRepository.create(review, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void loadReviews(String uid, boolean received) {
