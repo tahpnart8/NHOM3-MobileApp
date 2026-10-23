@@ -54,6 +54,7 @@ public class PostListingFragment extends Fragment {
 
     private final List<Category> loadedCategories = new ArrayList<Category>();
     private VerificationStatus currentVerification = VerificationStatus.NONE;
+    private boolean isSavingDraft = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -89,6 +90,22 @@ public class PostListingFragment extends Fragment {
         setupFormListeners();
         observeViewModel();
         checkSellerVerification();
+        updateOfflineBanner();
+
+        binding.layoutErrorState.buttonRetry.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binding.layoutErrorState.getRoot().setVisibility(View.GONE);
+                viewModel.clearError();
+                if (loadedCategories.isEmpty()) {
+                    viewModel.loadCategories();
+                } else if (isSavingDraft) {
+                    attemptSaveDraft();
+                } else {
+                    attemptPublish();
+                }
+            }
+        });
 
         if (savedInstanceState != null) {
             restoreInstanceState(savedInstanceState);
@@ -132,6 +149,11 @@ public class PostListingFragment extends Fragment {
             return;
         }
         List<Uri> current = imageAdapter.getImages();
+        int availableSlots = 5 - current.size();
+        if (uris.size() > availableSlots) {
+            Toast.makeText(requireContext(),
+                    R.string.listing_post_max_images_reached, Toast.LENGTH_SHORT).show();
+        }
         for (Uri uri : uris) {
             if (current.size() < 5) {
                 current.add(uri);
@@ -157,10 +179,10 @@ public class PostListingFragment extends Fragment {
         binding.checkTradeSell.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                binding.layoutPrice.setVisibility(isChecked ? View.VISIBLE : View.GONE);
                 if (isChecked && binding.checkTradeGiveaway.isChecked()) {
                     binding.checkTradeGiveaway.setChecked(false);
                 }
+                updateTradeVisibility();
             }
         });
 
@@ -170,6 +192,7 @@ public class PostListingFragment extends Fragment {
                 if (isChecked && binding.checkTradeGiveaway.isChecked()) {
                     binding.checkTradeGiveaway.setChecked(false);
                 }
+                updateTradeVisibility();
             }
         });
 
@@ -179,9 +202,9 @@ public class PostListingFragment extends Fragment {
                 if (isChecked) {
                     binding.checkTradeSell.setChecked(false);
                     binding.checkTradeExchange.setChecked(false);
-                    binding.layoutPrice.setVisibility(View.GONE);
                     binding.editPrice.setText("0");
                 }
+                updateTradeVisibility();
             }
         });
 
@@ -189,6 +212,13 @@ public class PostListingFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 attemptPublish();
+            }
+        });
+
+        binding.buttonSaveDraft.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                attemptSaveDraft();
             }
         });
     }
@@ -239,7 +269,9 @@ public class PostListingFragment extends Fragment {
             public void onChanged(Boolean isLoading) {
                 boolean loading = isLoading != null && isLoading;
                 binding.progressLoading.setVisibility(loading ? View.VISIBLE : View.GONE);
-                binding.buttonPost.setEnabled(!loading);
+                boolean canInteract = !loading && isNetworkAvailable();
+                binding.buttonPost.setEnabled(canInteract);
+                binding.buttonSaveDraft.setEnabled(canInteract);
             }
         });
 
@@ -247,11 +279,8 @@ public class PostListingFragment extends Fragment {
             @Override
             public void onChanged(String err) {
                 if (err != null && !err.isEmpty()) {
-                    binding.textErrorMessage.setText(err);
-                    binding.textErrorMessage.setVisibility(View.VISIBLE);
-                    viewModel.clearError();
-                } else {
-                    binding.textErrorMessage.setVisibility(View.GONE);
+                    binding.layoutErrorState.getRoot().setVisibility(View.VISIBLE);
+                    binding.layoutErrorState.textErrorMessage.setText(err);
                 }
             }
         });
@@ -271,33 +300,164 @@ public class PostListingFragment extends Fragment {
             @Override
             public void onChanged(String listingId) {
                 if (listingId != null && !listingId.isEmpty()) {
-                    Snackbar.make(binding.getRoot(),
-                            R.string.listing_post_success,
-                            Snackbar.LENGTH_SHORT).show();
-
-                    Bundle args = new Bundle();
-                    args.putString("listingId", listingId);
-                    NavHostFragment.findNavController(PostListingFragment.this)
-                            .navigate(R.id.action_global_listing_detail, args);
+                    viewModel.clearDone();
+                    if (isSavingDraft) {
+                        Snackbar.make(binding.getRoot(),
+                                R.string.listing_post_draft_success,
+                                Snackbar.LENGTH_SHORT).show();
+                        clearForm();
+                        NavHostFragment.findNavController(PostListingFragment.this)
+                                .navigate(R.id.action_global_my_shop);
+                    } else {
+                        Snackbar.make(binding.getRoot(),
+                                R.string.listing_post_success,
+                                Snackbar.LENGTH_SHORT).show();
+                        clearForm();
+                        Bundle args = new Bundle();
+                        args.putString("listingId", listingId);
+                        NavHostFragment.findNavController(PostListingFragment.this)
+                                .navigate(R.id.action_global_listing_detail, args);
+                    }
                 }
             }
         });
     }
 
     private void attemptPublish() {
-        if (!NetworkMonitor.getInstance().isOnline()) {
-            binding.textOfflineWarning.setVisibility(View.VISIBLE);
+        if (!isNetworkAvailable()) {
+            updateOfflineBanner();
             return;
         }
-        binding.textOfflineWarning.setVisibility(View.GONE);
+        binding.layoutOfflineBanner.getRoot().setVisibility(View.GONE);
+        binding.layoutErrorState.getRoot().setVisibility(View.GONE);
+        viewModel.clearError();
+
+        binding.layoutTitle.setError(null);
+        binding.layoutPrice.setError(null);
+
+        String title = binding.editTitle.getText() != null
+                ? binding.editTitle.getText().toString().trim() : "";
+        if (title.isEmpty()) {
+            binding.layoutTitle.setError(getString(R.string.listing_post_missing_fields));
+            binding.nestedScrollView.smoothScrollTo(0, binding.layoutTitle.getTop());
+            return;
+        }
+
+        if (imageAdapter.getItemCount() < 1) {
+            Toast.makeText(requireContext(),
+                    R.string.listing_post_missing_fields, Toast.LENGTH_SHORT).show();
+            binding.nestedScrollView.smoothScrollTo(0, binding.textImagesLabel.getTop());
+            return;
+        }
+
+        if (loadedCategories.isEmpty() || binding.spinnerCategory.getSelectedItemPosition() < 0) {
+            Toast.makeText(requireContext(),
+                    R.string.listing_post_missing_fields, Toast.LENGTH_SHORT).show();
+            binding.nestedScrollView.smoothScrollTo(0, binding.textCategoryLabel.getTop());
+            return;
+        }
+
+        if (getSelectedCondition() == null) {
+            Toast.makeText(requireContext(),
+                    R.string.listing_post_missing_fields, Toast.LENGTH_SHORT).show();
+            binding.nestedScrollView.smoothScrollTo(0, binding.textConditionLabel.getTop());
+            return;
+        }
+
+        if (!binding.checkTradeSell.isChecked()
+                && !binding.checkTradeExchange.isChecked()
+                && !binding.checkTradeGiveaway.isChecked()) {
+            Toast.makeText(requireContext(),
+                    R.string.listing_post_missing_fields, Toast.LENGTH_SHORT).show();
+            binding.nestedScrollView.smoothScrollTo(0, binding.textTradeTypeLabel.getTop());
+            return;
+        }
+
+        long typedPrice = 0L;
+        String priceStr = binding.editPrice.getText() != null
+                ? binding.editPrice.getText().toString().trim() : "";
+        if (!priceStr.isEmpty()) {
+            try {
+                typedPrice = Long.parseLong(priceStr);
+            } catch (NumberFormatException ignored) {
+                typedPrice = 0L;
+            }
+        }
+        if (binding.checkTradeSell.isChecked() && typedPrice <= 0L) {
+            binding.layoutPrice.setError(getString(R.string.listing_post_price_error));
+            binding.nestedScrollView.smoothScrollTo(0, binding.layoutPrice.getTop());
+            return;
+        }
 
         if (currentVerification != VerificationStatus.APPROVED) {
             showUnverifiedDialog();
             return;
         }
 
+        isSavingDraft = false;
         Listing listing = buildListingFromInputs();
         viewModel.createListing(listing, imageAdapter.getImages());
+    }
+
+    private void attemptSaveDraft() {
+        if (!isNetworkAvailable()) {
+            updateOfflineBanner();
+            return;
+        }
+        binding.layoutOfflineBanner.getRoot().setVisibility(View.GONE);
+        binding.layoutErrorState.getRoot().setVisibility(View.GONE);
+        viewModel.clearError();
+
+        binding.layoutTitle.setError(null);
+        binding.layoutPrice.setError(null);
+
+        isSavingDraft = true;
+        Listing listing = buildListingFromInputs();
+        viewModel.saveDraft(listing, imageAdapter.getImages());
+    }
+
+    private void clearForm() {
+        binding.editTitle.setText("");
+        binding.editDescription.setText("");
+        binding.editPrice.setText("");
+        binding.editMinOfferPrice.setText("");
+        binding.layoutTitle.setError(null);
+        binding.layoutPrice.setError(null);
+        binding.radioGroupCondition.clearCheck();
+        binding.radioGroupOffer.clearCheck();
+        binding.checkTradeSell.setChecked(false);
+        binding.checkTradeExchange.setChecked(false);
+        binding.checkTradeGiveaway.setChecked(false);
+        imageAdapter.setImages(new ArrayList<Uri>());
+        binding.buttonAddImage.setVisibility(View.VISIBLE);
+        updateTradeVisibility();
+    }
+
+    private void updateTradeVisibility() {
+        boolean isSell = binding.checkTradeSell.isChecked();
+        boolean isGiveaway = binding.checkTradeGiveaway.isChecked();
+
+        binding.layoutPrice.setVisibility(isSell ? View.VISIBLE : View.GONE);
+
+        int offerVisibility = isGiveaway ? View.GONE : View.VISIBLE;
+        binding.textOfferLabel.setVisibility(offerVisibility);
+        binding.radioGroupOffer.setVisibility(offerVisibility);
+        binding.layoutMinOfferPrice.setVisibility(offerVisibility);
+    }
+
+    private boolean isNetworkAvailable() {
+        try {
+            return NetworkMonitor.getInstance().isOnline();
+        } catch (UnsupportedOperationException e) {
+            return true;
+        }
+    }
+
+    private void updateOfflineBanner() {
+        boolean online = isNetworkAvailable();
+        binding.layoutOfflineBanner.getRoot().setVisibility(online ? View.GONE : View.VISIBLE);
+        binding.buttonPost.setEnabled(online);
+        binding.buttonSaveDraft.setEnabled(online);
     }
 
     private Listing buildListingFromInputs() {

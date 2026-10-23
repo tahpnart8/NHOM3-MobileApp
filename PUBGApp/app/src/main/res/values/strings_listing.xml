@@ -46,6 +46,8 @@
     <string name="listing_post_min_offer_hint">Nhập số tiền tối thiểu...</string>
     <string name="listing_post_province_label">Tỉnh / Thành phố</string>
     <string name="listing_post_button_publish">Đăng tin</string>
+    <string name="listing_post_button_save_draft">Lưu nháp</string>
+    <string name="listing_post_draft_success">Đã lưu bản nháp!</string>
     <string name="listing_post_offline_warning">Không có kết nối mạng. Vui lòng thử lại khi có mạng</string>
     <string name="listing_post_missing_fields">Tin đăng cần có tối thiểu tiêu đề, danh mục, 1 hình ảnh và một hình thức giao dịch để có thể công khai</string>
     <string name="listing_post_banned_keyword_warning">Tin của bạn có từ khóa cần chú ý, admin sẽ xem xét</string>

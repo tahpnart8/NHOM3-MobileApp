@@ -1,5 +1,8 @@
 package com.nhom3.pubgapp.ui.listing;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,8 +13,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.nhom3.pubgapp.databinding.ItemListingPostImageBinding;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /** Adapter showing selected image thumbnails for screen B04. */
 public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.ImageViewHolder> {
@@ -23,6 +29,7 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Imag
 
     private final List<Uri> images = new ArrayList<Uri>();
     private final OnRemoveImageListener removeListener;
+    private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
     public PostImageAdapter(OnRemoveImageListener removeListener) {
         this.removeListener = removeListener;
@@ -49,19 +56,73 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Imag
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
-        Uri uri = images.get(position);
-        holder.binding.imageThumbnail.setImageURI(uri);
+    public void onBindViewHolder(@NonNull final ImageViewHolder holder, int position) {
+        final Uri uri = images.get(position);
+        holder.binding.imageThumbnail.setTag(uri);
+        holder.binding.imageThumbnail.setImageDrawable(null);
 
-        final int pos = position;
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                final Bitmap bitmap = decodeThumbnail(holder.binding.getRoot().getContext(), uri);
+                holder.binding.imageThumbnail.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (uri.equals(holder.binding.imageThumbnail.getTag())) {
+                            holder.binding.imageThumbnail.setImageBitmap(bitmap);
+                        }
+                    }
+                });
+            }
+        });
+
         holder.binding.buttonRemoveImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (removeListener != null) {
+                int pos = holder.getBindingAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION && removeListener != null) {
                     removeListener.onRemoveImage(pos);
                 }
             }
         });
+    }
+
+    private static Bitmap decodeThumbnail(Context context, Uri uri) {
+        if (context == null || uri == null) {
+            return null;
+        }
+        InputStream is = null;
+        try {
+            is = context.getContentResolver().openInputStream(uri);
+            BitmapFactory.Options boundsOptions = new BitmapFactory.Options();
+            boundsOptions.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(is, null, boundsOptions);
+            if (is != null) {
+                is.close();
+            }
+
+            int inSampleSize = 1;
+            int maxDim = Math.max(boundsOptions.outWidth, boundsOptions.outHeight);
+            int targetDim = 176;
+            while (maxDim / (inSampleSize * 2) >= targetDim) {
+                inSampleSize *= 2;
+            }
+
+            BitmapFactory.Options decodeOptions = new BitmapFactory.Options();
+            decodeOptions.inSampleSize = inSampleSize;
+            is = context.getContentResolver().openInputStream(uri);
+            Bitmap bitmap = BitmapFactory.decodeStream(is, null, decodeOptions);
+            return bitmap;
+        } catch (Exception e) {
+            return null;
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (Exception ignored) {
+                }
+            }
+        }
     }
 
     @Override

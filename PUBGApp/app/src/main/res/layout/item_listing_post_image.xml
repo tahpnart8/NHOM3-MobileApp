@@ -20,13 +20,14 @@
 
         <ImageButton
             android:id="@+id/buttonRemoveImage"
-            android:layout_width="@dimen/touch_min"
-            android:layout_height="@dimen/touch_min"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:layout_gravity="top|end"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:layout_margin="@dimen/space_xs"
+            android:background="@drawable/bg_avatar"
             android:contentDescription="@string/listing_post_remove_image"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            app:tint="?attr/colorOnError" />
+            app:tint="?attr/colorOnPrimary" />
 
     </FrameLayout>
 

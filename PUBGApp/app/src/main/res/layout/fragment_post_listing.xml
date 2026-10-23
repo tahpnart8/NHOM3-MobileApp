@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nestedScrollView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
@@ -227,6 +228,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_md"
             android:hint="@string/listing_post_price_label"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/layoutTradeTypes">
@@ -320,42 +322,59 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textProvinceLabel" />
 
-        <!-- Error / Warning Messages -->
-        <TextView
-            android:id="@+id/textOfflineWarning"
+        <!-- Offline and Error States -->
+        <include
+            android:id="@+id/layoutOfflineBanner"
+            layout="@layout/view_offline_banner"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_md"
-            android:text="@string/listing_post_offline_warning"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorError"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/spinnerProvince" />
 
-        <TextView
-            android:id="@+id/textErrorMessage"
+        <include
+            android:id="@+id/layoutErrorState"
+            layout="@layout/view_error_state"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_sm"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorError"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textOfflineWarning" />
+            app:layout_constraintTop_toBottomOf="@id/layoutOfflineBanner" />
 
-        <!-- Publish Button -->
-        <Button
-            android:id="@+id/buttonPost"
+        <!-- Actions -->
+        <LinearLayout
+            android:id="@+id/layoutActions"
             android:layout_width="0dp"
-            android:layout_height="@dimen/touch_min"
+            android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_lg"
-            android:text="@string/listing_post_button_publish"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textErrorMessage" />
+            app:layout_constraintTop_toBottomOf="@id/layoutErrorState">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonSaveDraft"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/touch_min"
+                android:layout_marginEnd="@dimen/space_sm"
+                android:layout_weight="1"
+                android:text="@string/listing_post_button_save_draft"
+                app:cornerRadius="@dimen/radius_md" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonPost"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/touch_min"
+                android:layout_marginStart="@dimen/space_sm"
+                android:layout_weight="1"
+                android:text="@string/listing_post_button_publish"
+                app:cornerRadius="@dimen/radius_md" />
+        </LinearLayout>
 
         <!-- Progress Indicator -->
         <ProgressBar
@@ -366,7 +385,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/buttonPost" />
+            app:layout_constraintTop_toBottomOf="@id/layoutActions" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
