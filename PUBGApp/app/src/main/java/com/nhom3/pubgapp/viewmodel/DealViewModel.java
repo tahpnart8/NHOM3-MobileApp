@@ -5,16 +5,16 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.data.DataCallback;
+import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.data.DealRepository;
 import com.nhom3.pubgapp.data.MediaRepository;
-import com.nhom3.pubgapp.model.Deal;
-import com.nhom3.pubgapp.model.Payment;
-import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.ImagePurpose;
+import com.nhom3.pubgapp.model.Deal;
+import com.nhom3.pubgapp.model.Payment;
+import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.enums.PaymentMethod;
 
 import java.util.List;
@@ -87,31 +87,31 @@ public class DealViewModel extends ViewModel {
         dealRepository.getById(id, new DataCallback<Deal>() {
             @Override
             public void onSuccess(Deal result) {
-                deal.setValue(result);
+                deal.postValue(result);
                 if (result != null && result.needsPayment()) {
                     dealRepository.getPayment(id, new DataCallback<Payment>() {
                         @Override
                         public void onSuccess(Payment paymentResult) {
-                            payment.setValue(paymentResult);
-                            loading.setValue(false);
+                            payment.postValue(paymentResult);
+                            loading.postValue(false);
                         }
 
                         @Override
                         public void onError(String message) {
-                            payment.setValue(null);
-                            loading.setValue(false);
+                            payment.postValue(null);
+                            loading.postValue(false);
                         }
                     });
                 } else {
-                    payment.setValue(null);
-                    loading.setValue(false);
+                    payment.postValue(null);
+                    loading.postValue(false);
                 }
             }
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue(message);
+                loading.postValue(false);
+                error.postValue(message);
             }
         });
     }
@@ -124,15 +124,15 @@ public class DealViewModel extends ViewModel {
         dealRepository.updateTerms(dealToUpdate, new DataCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                loading.setValue(false);
-                done.setValue(true);
+                loading.postValue(false);
+                done.postValue(true);
                 loadDeal(dealToUpdate.getId());
             }
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue(message);
+                loading.postValue(false);
+                error.postValue(message);
             }
         });
     }
@@ -147,15 +147,15 @@ public class DealViewModel extends ViewModel {
         dealRepository.confirm(current.getId(), new DataCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                loading.setValue(false);
-                done.setValue(true);
+                loading.postValue(false);
+                done.postValue(true);
                 loadDeal(current.getId());
             }
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue(message);
+                loading.postValue(false);
+                error.postValue(message);
             }
         });
     }
@@ -170,15 +170,15 @@ public class DealViewModel extends ViewModel {
         dealRepository.pay(current.getId(), method, new DataCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                loading.setValue(false);
-                done.setValue(true);
+                loading.postValue(false);
+                done.postValue(true);
                 loadDeal(current.getId());
             }
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue(message);
+                loading.postValue(false);
+                error.postValue(message);
                 if (message != null && message.contains("đã được thanh toán")) {
                     loadDeal(current.getId());
                 }
@@ -297,8 +297,8 @@ public class DealViewModel extends ViewModel {
                             @Override
                             public void onSuccess(Void unused) {
                                 loadDeal(currentDeal.getId());
-                                done.setValue(true);
-                                loading.setValue(false);
+                                done.postValue(true);
+                                loading.postValue(false);
                             }
 
                             @Override
@@ -312,16 +312,16 @@ public class DealViewModel extends ViewModel {
                                     public void onError(String ignored) {
                                     }
                                 });
-                                loading.setValue(false);
-                                error.setValue(message);
+                                loading.postValue(false);
+                                error.postValue(message);
                             }
                         });
             }
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue("Lỗi tải ảnh vận đơn: " + message);
+                loading.postValue(false);
+                error.postValue("Lỗi tải ảnh vận đơn: " + message);
             }
         });
     }
@@ -348,8 +348,8 @@ public class DealViewModel extends ViewModel {
                     @Override
                     public void onSuccess(Void unused) {
                         loadDeal(currentDeal.getId());
-                        done.setValue(true);
-                        loading.setValue(false);
+                        done.postValue(true);
+                        loading.postValue(false);
                     }
 
                     @Override
@@ -363,16 +363,16 @@ public class DealViewModel extends ViewModel {
                             public void onError(String ignored) {
                             }
                         });
-                        loading.setValue(false);
-                        error.setValue(message);
+                        loading.postValue(false);
+                        error.postValue(message);
                     }
                 });
             }
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue("Lỗi tải ảnh nhận hàng: " + message);
+                loading.postValue(false);
+                error.postValue("Lỗi tải ảnh nhận hàng: " + message);
             }
         });
     }
@@ -417,15 +417,15 @@ public class DealViewModel extends ViewModel {
         dealRepository.cancel(current.getId(), reason, new DataCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                loading.setValue(false);
-                done.setValue(true);
+                loading.postValue(false);
+                done.postValue(true);
                 loadDeal(current.getId());
             }
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue(message);
+                loading.postValue(false);
+                error.postValue(message);
             }
         });
     }
