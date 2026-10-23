@@ -283,8 +283,8 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
                         ImageLoader.load(
                                 partnerUser.getAvatarBase64(),
                                 binding.includeAvatar.imageAvatar,
-                                R.drawable.ic_profile,
-                                R.drawable.ic_profile
+                                R.drawable.bg_avatar,
+                                R.drawable.bg_avatar
                         );
                         binding.includeAvatar.imageAvatar.setVisibility(View.VISIBLE);
                         binding.includeAvatar.textInitial.setVisibility(View.GONE);
