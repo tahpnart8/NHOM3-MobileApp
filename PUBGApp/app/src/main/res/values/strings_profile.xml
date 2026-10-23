@@ -2,7 +2,7 @@
 <resources>
     <!-- Screen placeholders of module D (profile and trust), replaced by the real screens in phase 2. -->
     <string name="profile_my_profile_title">Hồ sơ cá nhân</string>
-    <string name="profile_edit_profile_title">A05 Chỉnh sửa hồ sơ</string>
+    <string name="profile_edit_profile_title">Chỉnh sửa hồ sơ</string>
     <string name="profile_user_profile_title">D02 Trang cá nhân</string>
     <string name="profile_seller_trust_title">D03 Hồ sơ uy tín người bán</string>
     <string name="profile_report_title">D04 Báo cáo</string>
@@ -49,4 +49,20 @@
     <string name="profile_my_profile_verify_submit">Gửi yêu cầu</string>
     <string name="profile_my_profile_verify_sent">Đã gửi yêu cầu xác thực tài khoản.</string>
     <string name="profile_my_profile_verify_not_image">Không dùng được tệp này, hãy chọn một ảnh.</string>
+
+    <!-- A05 EditProfileFragment -->
+    <string name="profile_edit_profile_change_avatar">Đổi ảnh đại diện</string>
+    <string name="profile_edit_profile_display_name">Tên hiển thị</string>
+    <string name="profile_edit_profile_bio">Giới thiệu ngắn</string>
+    <string name="profile_edit_profile_phone">Số điện thoại</string>
+    <string name="profile_edit_profile_province">Tỉnh hoặc thành phố</string>
+    <string name="profile_edit_profile_district">Quận hoặc huyện</string>
+    <string name="profile_edit_profile_name_empty">Hãy nhập tên hiển thị.</string>
+    <string name="profile_edit_profile_name_too_long">Tên hiển thị tối đa 50 ký tự.</string>
+    <string name="profile_edit_profile_bio_too_long">Giới thiệu tối đa 200 ký tự.</string>
+    <string name="profile_edit_profile_phone_invalid">Số điện thoại gồm 10 chữ số, bắt đầu bằng 0.</string>
+    <string name="profile_edit_profile_unsaved_message">Bạn có thay đổi chưa lưu. Bạn có muốn thoát?</string>
+    <string name="profile_edit_profile_unsaved_leave">Thoát</string>
+    <string name="profile_edit_profile_unsaved_stay">Ở lại</string>
+    <string name="profile_edit_profile_saved">Đã lưu hồ sơ.</string>
 </resources>
