@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Actions -->
+    <string name="common_retry">Thử lại</string>
+    <string name="common_cancel">Hủy</string>
+    <string name="common_save">Lưu</string>
+    <string name="common_confirm">Xác nhận</string>
+    <string name="common_close">Đóng</string>
+    <string name="common_back">Quay lại</string>
+
+    <!-- The four screen states, giao-dien.md section 6 -->
+    <string name="common_loading">Đang tải…</string>
+    <string name="common_empty">Chưa có nội dung nào ở đây.</string>
+    <string name="common_error_generic">Đã có lỗi xảy ra. Vui lòng thử lại sau ít phút.</string>
+    <string name="common_error_network">Không có kết nối mạng. Hãy kiểm tra mạng rồi thử lại.</string>
+
+    <!-- Offline banner wording from luong-xu-ly.md section 3 -->
+    <string name="common_offline_banner">Đang offline, đây là dữ liệu đã xem</string>
+
+    <!-- Bottom bar tabs and top bar of MainActivity -->
+    <string name="common_tab_home">Trang chủ</string>
+    <string name="common_tab_search">Tìm kiếm</string>
+    <string name="common_tab_post">Đăng tin</string>
+    <string name="common_tab_chat">Tin nhắn</string>
+    <string name="common_tab_profile">Cá nhân</string>
+    <string name="common_top_bar_notifications">Thông báo</string>
+    <string name="common_top_bar_profile">Trang cá nhân của tôi</string>
+</resources>
