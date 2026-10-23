@@ -696,9 +696,24 @@ service cloud.firestore {
       }
     }
 
+    // Theo dõi (security-rules.md mục 5). Mã cố định followerId_followedId nên mỗi cặp một
+    // tài liệu. Sửa bị từ chối: theo dõi lại khi tài liệu đã có là một lần sửa, ứng dụng phải bỏ qua.
     match /follows/{id} {
       allow read: if signedIn();
-      allow write: if false;
+
+      allow create: if writerActive()
+        && hasOnlyKeys(['id', 'followerId', 'followedId', 'createdAt'])
+        && request.resource.data.followerId == me()
+        && request.resource.data.followedId is string
+        && request.resource.data.followedId.size() > 0
+        && request.resource.data.followedId != me()
+        && id == request.resource.data.followerId + '_' + request.resource.data.followedId
+        && (request.resource.data.get('id', null) == null || request.resource.data.id == id)
+        && serverStamp('createdAt');
+
+      allow update: if false;
+
+      allow delete: if writerActive() && resource.data.followerId == me();
     }
 
     // Yêu cầu xác thực tài khoản (security-rules.md mục 6). Mã tài liệu là mã người gửi,
