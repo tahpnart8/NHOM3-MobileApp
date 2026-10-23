@@ -25,4 +25,53 @@
     <string name="common_tab_profile">Cá nhân</string>
     <string name="common_top_bar_notifications">Thông báo</string>
     <string name="common_top_bar_profile">Trang cá nhân của tôi</string>
+
+    <!-- Status chip labels, giao-dien.md section 4. Key is common_status_<object>_<state>; the object keeps equal state names apart. -->
+    <!-- Listing status chips, giao-dien.md section 4 -->
+    <string name="common_status_listing_draft">Nháp</string>
+    <string name="common_status_listing_available">Đang bán</string>
+    <string name="common_status_listing_reserved">Đang giữ chỗ</string>
+    <string name="common_status_listing_sold">Đã bán</string>
+    <string name="common_status_listing_hidden">Đã ẩn</string>
+    <string name="common_status_listing_removed">Đã gỡ</string>
+    <!-- Deal -->
+    <string name="common_status_deal_pending_confirm">Chờ xác nhận</string>
+    <string name="common_status_deal_confirmed">Đã xác nhận</string>
+    <string name="common_status_deal_shipped">Đã giao</string>
+    <string name="common_status_deal_received">Đã nhận</string>
+    <string name="common_status_deal_completed">Hoàn tất</string>
+    <string name="common_status_deal_cancelled">Đã hủy</string>
+    <string name="common_status_deal_disputed">Tranh chấp</string>
+    <!-- Offer -->
+    <string name="common_status_offer_pending">Chờ người bán trả lời</string>
+    <string name="common_status_offer_accepted">Đã chấp nhận</string>
+    <string name="common_status_offer_rejected">Đã từ chối</string>
+    <!-- Account -->
+    <string name="common_status_account_active">Đang hoạt động</string>
+    <string name="common_status_account_temp_locked">Khóa tạm</string>
+    <string name="common_status_account_perm_locked">Khóa vĩnh viễn</string>
+    <string name="common_status_account_deleted">Đã xóa</string>
+    <!-- Seller verification -->
+    <string name="common_status_verification_none">Chưa gửi yêu cầu</string>
+    <string name="common_status_verification_pending">Đang chờ duyệt</string>
+    <string name="common_status_verification_approved">Đã xác thực</string>
+    <string name="common_status_verification_rejected">Bị từ chối</string>
+    <!-- Report -->
+    <string name="common_status_report_open">Chờ xử lý</string>
+    <string name="common_status_report_resolved">Đã xử lý, có vi phạm</string>
+    <string name="common_status_report_dismissed">Đã xem, không vi phạm</string>
+    <string name="common_status_report_cancelled">Người báo cáo đã hủy</string>
+    <!-- Complaint -->
+    <string name="common_status_complaint_open">Chờ xử lý</string>
+    <string name="common_status_complaint_needs_evidence">Chờ bổ sung bằng chứng</string>
+    <string name="common_status_complaint_resolved">Đã có quyết định</string>
+    <string name="common_status_complaint_withdrawn">Người khiếu nại đã rút</string>
+    <!-- Payment -->
+    <string name="common_status_payment_held">Đang giữ</string>
+    <string name="common_status_payment_released">Đã giải ngân cho người bán</string>
+    <string name="common_status_payment_refunded">Đã hoàn cho người mua</string>
+    <!-- Priority -->
+    <string name="common_status_priority_low">Thấp</string>
+    <string name="common_status_priority_medium">Trung bình</string>
+    <string name="common_status_priority_high">Cao</string>
 </resources>
