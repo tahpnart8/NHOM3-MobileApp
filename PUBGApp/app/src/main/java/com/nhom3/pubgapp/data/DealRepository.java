@@ -100,6 +100,42 @@ public class DealRepository extends BaseRepository {
         return deal;
     }
 
+    static String validatePayment(Deal deal, Payment existingPayment, String userId,
+                                  PaymentMethod method) {
+        if (deal == null) {
+            return "Không tìm thấy giao dịch.";
+        }
+        if (userId == null || !userId.equals(deal.getBuyerId())) {
+            return "Chỉ người mua mới được thực hiện thanh toán.";
+        }
+        if (deal.getStatus() != DealStatus.CONFIRMED) {
+            return "Giao dịch chưa ở trạng thái đã xác nhận để thanh toán.";
+        }
+        if (!deal.needsPayment()) {
+            return "Giao dịch không yêu cầu thanh toán.";
+        }
+        if (existingPayment != null) {
+            return "Giao dịch đã được thanh toán.";
+        }
+        if (method == null) {
+            return "Chưa chọn phương thức thanh toán.";
+        }
+        return null;
+    }
+
+    static Payment createHeldPayment(Deal deal, PaymentMethod method) {
+        Payment payment = new Payment();
+        payment.setDealId(deal.getId());
+        payment.setPayerId(deal.getBuyerId());
+        payment.setPayeeId(deal.getSellerId());
+        payment.setAmount(deal.getAgreedPrice());
+        payment.setStatus(PaymentStatus.HELD);
+        payment.setMethod(method);
+        payment.setHeldAt(Timestamp.now());
+        payment.setCreatedAt(Timestamp.now());
+        return payment;
+    }
+
     static void applyUpdateTerms(Deal deal) {
         deal.setBuyerConfirmed(false);
         deal.setSellerConfirmed(false);
@@ -362,50 +398,56 @@ public class DealRepository extends BaseRepository {
     }
 
     public void pay(String dealId, PaymentMethod method, DataCallback<Void> cb) {
+        String currentUid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
+        if (currentUid.isEmpty()) {
+            cb.onError("Bạn cần đăng nhập để thực hiện thanh toán.");
+            return;
+        }
+
         DocumentReference dealRef = db.collection(COLLECTION_DEALS).document(dealId);
+        DocumentReference paymentRef = db.collection(COLLECTION_PAYMENTS).document(dealId);
+
         dealRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (!task.isSuccessful() || task.getResult() == null || !task.getResult().exists()) {
+            public void onComplete(@NonNull Task<DocumentSnapshot> dealTask) {
+                if (!dealTask.isSuccessful() || dealTask.getResult() == null || !dealTask.getResult().exists()) {
                     cb.onError("Không tìm thấy giao dịch.");
                     return;
                 }
-                Deal deal = task.getResult().toObject(Deal.class);
-                if (deal == null || deal.getStatus() != DealStatus.CONFIRMED) {
-                    cb.onError("Giao dịch chưa được xác nhận để thanh toán.");
+                Deal deal = dealTask.getResult().toObject(Deal.class);
+                if (deal == null) {
+                    cb.onError("Dữ liệu giao dịch không hợp lệ.");
                     return;
                 }
-                if (!deal.needsPayment()) {
-                    cb.onError("Giao dịch này không yêu cầu thanh toán.");
-                    return;
-                }
+                deal.setId(dealId);
 
-                String currentUid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
-                if (!currentUid.equals(deal.getBuyerId())) {
-                    cb.onError("Chỉ người mua mới được thanh toán.");
-                    return;
-                }
+                paymentRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> payTask) {
+                        Payment existingPayment = null;
+                        if (payTask.isSuccessful() && payTask.getResult() != null && payTask.getResult().exists()) {
+                            existingPayment = payTask.getResult().toObject(Payment.class);
+                        }
 
-                Payment payment = new Payment();
-                payment.setDealId(dealId);
-                payment.setPayerId(deal.getBuyerId());
-                payment.setPayeeId(deal.getSellerId());
-                payment.setAmount(deal.getAgreedPrice());
-                payment.setStatus(PaymentStatus.HELD);
-                payment.setMethod(method);
-                payment.setHeldAt(Timestamp.now());
-                payment.setCreatedAt(Timestamp.now());
+                        String error = validatePayment(deal, existingPayment, currentUid, method);
+                        if (error != null) {
+                            cb.onError(error);
+                            return;
+                        }
 
-                WriteBatch batch = db.batch();
-                DocumentReference paymentRef = db.collection(COLLECTION_PAYMENTS).document(dealId);
-                batch.set(paymentRef, payment);
+                        Payment payment = createHeldPayment(deal, method);
 
-                queueNotification(deal.getSellerId(), NotificationType.PAYMENT_UPDATE,
-                        "Đã thanh toán ký quỹ",
-                        "Người mua đã thanh toán tiền ký quỹ vào hệ thống.",
-                        dealId, batch);
+                        WriteBatch batch = db.batch();
+                        batch.set(paymentRef, payment);
 
-                commitBatch(batch, cb, "Lỗi thanh toán.");
+                        queueNotification(deal.getSellerId(), NotificationType.PAYMENT_UPDATE,
+                                "Thanh toán giao dịch",
+                                "Người mua đã hoàn tất thanh toán mô phỏng cho giao dịch.",
+                                dealId, batch);
+
+                        commitBatch(batch, cb, "Lỗi thanh toán.");
+                    }
+                });
             }
         });
     }
