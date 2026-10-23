@@ -65,6 +65,8 @@ public class ProfileViewModel extends ViewModel {
 
     // The uid whose profile is in profile, so a rotation does not read users/{uid} again.
     private String loadedUid;
+    // The uid of the last read started, so a late answer for a previous account is dropped.
+    private String requestedUid;
 
     public LiveData<User> getProfile() {
         return profile;
@@ -115,10 +117,23 @@ public class ProfileViewModel extends ViewModel {
             error.setValue(MESSAGE_NOT_SIGNED_IN);
             return;
         }
-        if (uid.equals(loadedUid) && profile.getValue() != null) {
+        if (Boolean.TRUE.equals(loading.getValue()) && uid.equals(requestedUid)) {
             return;
         }
-        fetchProfile(uid);
+        if (!uid.equals(loadedUid)) {
+            clearPreviousUser();
+            fetchProfile(uid);
+            return;
+        }
+        if (profile.getValue() == null) {
+            fetchProfile(uid);
+            return;
+        }
+        // A failed count leaves stats empty, so opening the screen or Retry reads it again.
+        if (stats.getValue() == null) {
+            loading.setValue(true);
+            fetchStats(uid);
+        }
     }
 
     public void updateProfile(User user) {
@@ -265,11 +280,23 @@ public class ProfileViewModel extends ViewModel {
         error.setValue(DataCallback.NOT_READY);
     }
 
+    // The ViewModel outlives a sign out, so another account must never see the previous one's data.
+    private void clearPreviousUser() {
+        loadedUid = null;
+        profile.setValue(null);
+        stats.setValue(null);
+        verification.setValue(null);
+    }
+
     private void fetchProfile(String uid) {
+        requestedUid = uid;
         loading.setValue(true);
         userRepository.getProfile(uid, new DataCallback<User>() {
             @Override
             public void onSuccess(User result) {
+                if (!uid.equals(requestedUid)) {
+                    return;
+                }
                 loadedUid = uid;
                 profile.postValue(result);
                 fetchStats(uid);
@@ -288,6 +315,9 @@ public class ProfileViewModel extends ViewModel {
         userRepository.getStats(uid, new DataCallback<ProfileStats>() {
             @Override
             public void onSuccess(ProfileStats result) {
+                if (!uid.equals(requestedUid)) {
+                    return;
+                }
                 stats.postValue(result);
                 loading.postValue(false);
             }
