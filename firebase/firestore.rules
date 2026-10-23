@@ -509,7 +509,8 @@ service cloud.firestore {
         return ['email', 'displayName', 'phone', 'avatarBase64', 'bio', 'province', 'district',
                 'interestedCategoryIds', 'termsAcceptedAt', 'notificationPrefs', 'lastActiveAt',
                 'lockedUntil', 'lockReason', 'status', 'verificationStatus', 'ratingSum',
-                'ratingCount', 'warningCount', 'searchKeywords', 'createdAt', 'updatedAt'];
+                'ratingCount', 'warningCount', 'searchKeywords', 'lastReviewId', 'createdAt',
+                'updatedAt'];
       }
 
       // Giới hạn kích thước: ảnh đại diện dưới 20 KB (khoảng 28.000 ký tự Base64),
@@ -540,6 +541,7 @@ service cloud.firestore {
         && request.resource.data.warningCount == 0
         && request.resource.data.lockedUntil == null
         && request.resource.data.lockReason == ''
+        && emptyString(request.resource.data, 'lastReviewId')
         && profileSizeOk(request.resource.data)
         && serverStamp('createdAt')
         && serverStamp('updatedAt');
