@@ -88,6 +88,31 @@ public class ChatRepository extends BaseRepository {
         return null;
     }
 
+    static boolean isValidMessageText(String text) {
+        if (text == null) {
+            return false;
+        }
+        String trimmed = text.trim();
+        return !trimmed.isEmpty() && text.length() <= 2000;
+    }
+
+    static String validateMessageText(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return "Nội dung tin nhắn không được để trống.";
+        }
+        if (text.length() > 2000) {
+            return "Nội dung tin nhắn không được vượt quá 2000 ký tự.";
+        }
+        return null;
+    }
+
+    static boolean isSenderAllowed(Conversation conv, String senderId) {
+        if (conv == null || senderId == null || senderId.trim().isEmpty()) {
+            return false;
+        }
+        return conv.isParticipant(senderId);
+    }
+
     public void getOrCreateConversation(String listingId, String buyerId, DataCallback<Conversation> cb) {
         try {
             if (!com.nhom3.pubgapp.util.NetworkMonitor.getInstance().isOnline()) {
@@ -306,7 +331,23 @@ public class ChatRepository extends BaseRepository {
                         }
                     }
                 }
-                cb.onSuccess(list);
+                final List<ChatMessage> finalList = list;
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        ChatDao dao = getChatDao();
+                        if (dao != null && !finalList.isEmpty()) {
+                            List<com.nhom3.pubgapp.data.local.MessageEntity> entities =
+                                    new ArrayList<com.nhom3.pubgapp.data.local.MessageEntity>();
+                            for (int i = 0; i < finalList.size(); i++) {
+                                entities.add(new com.nhom3.pubgapp.data.local.MessageEntity()
+                                        .fromModel(finalList.get(i)));
+                            }
+                            dao.upsertMessages(entities);
+                        }
+                    }
+                });
+                cb.onSuccess(finalList);
             }
         });
     }
@@ -337,7 +378,23 @@ public class ChatRepository extends BaseRepository {
                 }
                 // Sắp xếp lại từ cũ đến mới để giao diện hiển thị nối tiếp
                 Collections.reverse(list);
-                cb.onSuccess(list);
+                final List<ChatMessage> finalList = list;
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        ChatDao dao = getChatDao();
+                        if (dao != null && !finalList.isEmpty()) {
+                            List<com.nhom3.pubgapp.data.local.MessageEntity> entities =
+                                    new ArrayList<com.nhom3.pubgapp.data.local.MessageEntity>();
+                            for (int i = 0; i < finalList.size(); i++) {
+                                entities.add(new com.nhom3.pubgapp.data.local.MessageEntity()
+                                        .fromModel(finalList.get(i)));
+                            }
+                            dao.upsertMessages(entities);
+                        }
+                    }
+                });
+                cb.onSuccess(finalList);
             }
         });
     }
@@ -370,33 +427,59 @@ public class ChatRepository extends BaseRepository {
     }
 
     public void sendText(String id, String text, DataCallback<Void> cb) {
-        String senderId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
-        ChatMessage msg = new ChatMessage();
-        msg.setConversationId(id);
-        msg.setSenderId(senderId);
-        msg.setType(MessageType.TEXT);
-        msg.setText(text);
-        msg.setCreatedAt(Timestamp.now());
+        try {
+            if (!com.nhom3.pubgapp.util.NetworkMonitor.getInstance().isOnline()) {
+                cb.onError("Thiết bị đang ngoại tuyến. Vui lòng kiểm tra kết nối mạng.");
+                return;
+            }
+        } catch (UnsupportedOperationException ignored) {
+        }
 
-        WriteBatch batch = db.batch();
-        DocumentReference msgRef = db.collection(COLLECTION_CONVERSATIONS).document(id)
-                .collection(COLLECTION_MESSAGES).document();
-        msg.setId(msgRef.getId());
-        batch.set(msgRef, msg);
+        String validationError = validateMessageText(text);
+        if (validationError != null) {
+            cb.onError(validationError);
+            return;
+        }
+
+        String senderId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
+        if (senderId.isEmpty()) {
+            cb.onError("Vui lòng đăng nhập để gửi tin nhắn.");
+            return;
+        }
 
         DocumentReference convRef = db.collection(COLLECTION_CONVERSATIONS).document(id);
-        batch.update(convRef, "lastMessage", text, "lastMessageAt", msg.getCreatedAt());
-
         convRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
-                    Conversation conv = task.getResult().toObject(Conversation.class);
-                    String recipientId = conv != null ? conv.otherParty(senderId) : null;
-                    if (recipientId != null) {
-                        queueNotification(recipientId, NotificationType.NEW_MESSAGE,
-                                "Tin nhắn mới", text, id, batch);
-                    }
+                if (!task.isSuccessful() || task.getResult() == null || !task.getResult().exists()) {
+                    cb.onError("Cuộc trò chuyện không tồn tại.");
+                    return;
+                }
+                Conversation conv = task.getResult().toObject(Conversation.class);
+                if (!isSenderAllowed(conv, senderId)) {
+                    cb.onError("Bạn không thuộc cuộc trò chuyện này.");
+                    return;
+                }
+
+                ChatMessage msg = new ChatMessage();
+                msg.setConversationId(id);
+                msg.setSenderId(senderId);
+                msg.setType(MessageType.TEXT);
+                msg.setText(text);
+                msg.setCreatedAt(Timestamp.now());
+
+                WriteBatch batch = db.batch();
+                DocumentReference msgRef = db.collection(COLLECTION_CONVERSATIONS).document(id)
+                        .collection(COLLECTION_MESSAGES).document();
+                msg.setId(msgRef.getId());
+                batch.set(msgRef, msg);
+
+                batch.update(convRef, "lastMessage", text, "lastMessageAt", msg.getCreatedAt());
+
+                String recipientId = conv != null ? conv.otherParty(senderId) : null;
+                if (recipientId != null) {
+                    queueNotification(recipientId, NotificationType.NEW_MESSAGE,
+                            "Tin nhắn mới", text, id, batch);
                 }
                 commitBatch(batch, cb, "Lỗi gửi tin nhắn.");
             }
@@ -404,11 +487,25 @@ public class ChatRepository extends BaseRepository {
     }
 
     public void sendImage(String id, Uri uri, DataCallback<Void> cb) {
+        try {
+            if (!com.nhom3.pubgapp.util.NetworkMonitor.getInstance().isOnline()) {
+                cb.onError("Thiết bị đang ngoại tuyến. Vui lòng kiểm tra kết nối mạng.");
+                return;
+            }
+        } catch (UnsupportedOperationException ignored) {
+        }
+
+        String senderId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
+        if (senderId.isEmpty()) {
+            cb.onError("Vui lòng đăng nhập để gửi ảnh.");
+            return;
+        }
+
         MediaRepository mediaRepo = new MediaRepository();
         mediaRepo.saveImage(uri, ImagePurpose.CHAT, new DataCallback<String>() {
             @Override
             public void onSuccess(String imageId) {
-                sendImageMessage(id, imageId, cb);
+                sendImageMessage(id, imageId, senderId, cb);
             }
 
             @Override
@@ -418,37 +515,82 @@ public class ChatRepository extends BaseRepository {
         });
     }
 
-    private void sendImageMessage(String id, String imageId, DataCallback<Void> cb) {
-        String senderId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
-        ChatMessage msg = new ChatMessage();
-        msg.setConversationId(id);
-        msg.setSenderId(senderId);
-        msg.setType(MessageType.IMAGE);
-        msg.setImageId(imageId);
-        msg.setText("[Hình ảnh]");
-        msg.setCreatedAt(Timestamp.now());
-
-        WriteBatch batch = db.batch();
-        DocumentReference msgRef = db.collection(COLLECTION_CONVERSATIONS).document(id)
-                .collection(COLLECTION_MESSAGES).document();
-        msg.setId(msgRef.getId());
-        batch.set(msgRef, msg);
-
+    private void sendImageMessage(String id, String imageId, String senderId, DataCallback<Void> cb) {
         DocumentReference convRef = db.collection(COLLECTION_CONVERSATIONS).document(id);
-        batch.update(convRef, "lastMessage", "[Hình ảnh]", "lastMessageAt", msg.getCreatedAt());
-
         convRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
-                    Conversation conv = task.getResult().toObject(Conversation.class);
-                    String recipientId = conv != null ? conv.otherParty(senderId) : null;
-                    if (recipientId != null) {
-                        queueNotification(recipientId, NotificationType.NEW_MESSAGE,
-                                "Tin nhắn hình ảnh mới", "[Hình ảnh]", id, batch);
-                    }
+                if (!task.isSuccessful() || task.getResult() == null || !task.getResult().exists()) {
+                    new MediaRepository().delete(imageId, new DataCallback<Void>() {
+                        @Override
+                        public void onSuccess(Void result) {
+                        }
+                        @Override
+                        public void onError(String msg) {
+                        }
+                    });
+                    cb.onError("Cuộc trò chuyện không tồn tại.");
+                    return;
                 }
-                commitBatch(batch, cb, "Lỗi gửi ảnh.");
+
+                Conversation conv = task.getResult().toObject(Conversation.class);
+                if (!isSenderAllowed(conv, senderId)) {
+                    new MediaRepository().delete(imageId, new DataCallback<Void>() {
+                        @Override
+                        public void onSuccess(Void result) {
+                        }
+                        @Override
+                        public void onError(String msg) {
+                        }
+                    });
+                    cb.onError("Bạn không thuộc cuộc trò chuyện này.");
+                    return;
+                }
+
+                ChatMessage msg = new ChatMessage();
+                msg.setConversationId(id);
+                msg.setSenderId(senderId);
+                msg.setType(MessageType.IMAGE);
+                msg.setImageId(imageId);
+                msg.setText("[Hình ảnh]");
+                msg.setCreatedAt(Timestamp.now());
+
+                WriteBatch batch = db.batch();
+                DocumentReference msgRef = db.collection(COLLECTION_CONVERSATIONS).document(id)
+                        .collection(COLLECTION_MESSAGES).document();
+                msg.setId(msgRef.getId());
+                batch.set(msgRef, msg);
+
+                batch.update(convRef, "lastMessage", "[Hình ảnh]", "lastMessageAt", msg.getCreatedAt());
+
+                String recipientId = conv != null ? conv.otherParty(senderId) : null;
+                if (recipientId != null) {
+                    queueNotification(recipientId, NotificationType.NEW_MESSAGE,
+                            "Tin nhắn hình ảnh mới", "[Hình ảnh]", id, batch);
+                }
+                commitBatchImage(batch, imageId, cb, "Lỗi gửi ảnh.");
+            }
+        });
+    }
+
+    private void commitBatchImage(WriteBatch batch, String imageId, DataCallback<Void> cb,
+                                  String defaultErrorMessage) {
+        batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    cb.onSuccess(null);
+                } else {
+                    new MediaRepository().delete(imageId, new DataCallback<Void>() {
+                        @Override
+                        public void onSuccess(Void result) {
+                        }
+                        @Override
+                        public void onError(String msg) {
+                        }
+                    });
+                    cb.onError(getErrorMessage(task.getException(), defaultErrorMessage));
+                }
             }
         });
     }
