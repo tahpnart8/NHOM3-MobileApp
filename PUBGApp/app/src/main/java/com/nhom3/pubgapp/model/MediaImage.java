@@ -64,6 +64,13 @@ public class MediaImage extends BaseDocument {
 
     @Exclude
     public byte[] toBytes() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (data == null || data.isEmpty()) {
+            return new byte[0];
+        }
+        try {
+            return java.util.Base64.getDecoder().decode(data);
+        } catch (IllegalArgumentException e) {
+            return new byte[0];
+        }
     }
 }

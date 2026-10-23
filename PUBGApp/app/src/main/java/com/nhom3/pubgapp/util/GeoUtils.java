@@ -9,14 +9,56 @@ import java.util.List;
 public class GeoUtils {
 
     public double distanceKm(GeoPoint from, GeoPoint to) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (from == null || to == null) {
+            return -1.0;
+        }
+        double earthRadiusKm = 6371.0;
+        double lat1 = Math.toRadians(from.getLatitude());
+        double lon1 = Math.toRadians(from.getLongitude());
+        double lat2 = Math.toRadians(to.getLatitude());
+        double lon2 = Math.toRadians(to.getLongitude());
+
+        double dLat = lat2 - lat1;
+        double dLon = lon2 - lon1;
+
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(lat1) * Math.cos(lat2)
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return earthRadiusKm * c;
     }
 
     public boolean isWithinRadius(GeoPoint point, GeoPoint center, int radiusKm) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (point == null || center == null || radiusKm < 0) {
+            return false;
+        }
+        double dist = distanceKm(point, center);
+        return dist >= 0.0 && dist <= radiusKm;
     }
 
-    public void sortByDistance(List<Listing> listings, GeoPoint center) {
-        throw new UnsupportedOperationException("NOT_READY");
+    public void sortByDistance(List<Listing> listings, final GeoPoint center) {
+        if (listings == null || center == null) {
+            return;
+        }
+        java.util.Collections.sort(listings, new java.util.Comparator<Listing>() {
+            @Override
+            public int compare(Listing o1, Listing o2) {
+                GeoPoint loc1 = o1 != null ? o1.getLocation() : null;
+                GeoPoint loc2 = o2 != null ? o2.getLocation() : null;
+                double d1 = distanceKm(loc1, center);
+                double d2 = distanceKm(loc2, center);
+                if (d1 < 0 && d2 < 0) {
+                    return 0;
+                }
+                if (d1 < 0) {
+                    return 1;
+                }
+                if (d2 < 0) {
+                    return -1;
+                }
+                return Double.compare(d1, d2);
+            }
+        });
     }
 }

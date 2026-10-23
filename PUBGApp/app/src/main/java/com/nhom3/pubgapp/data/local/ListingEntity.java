@@ -47,11 +47,89 @@ public class ListingEntity {
     }
 
     public ListingEntity fromModel(Listing model) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (model == null) {
+            return this;
+        }
+        this.id = model.getId() != null ? model.getId() : "";
+        this.sellerId = model.getSellerId();
+        this.title = model.getTitle();
+        this.description = model.getDescription();
+        if (model.getImageIds() != null) {
+            this.imageIdsJson = serializeStringList(model.getImageIds());
+        }
+        this.coverThumb = model.getCoverThumb();
+        this.price = model.getPrice();
+        this.categoryId = model.getCategoryId();
+        if (model.getTradeTypes() != null) {
+            java.util.List<String> types = new java.util.ArrayList<String>();
+            for (int i = 0; i < model.getTradeTypes().size(); i++) {
+                com.nhom3.pubgapp.model.enums.TradeType type = model.getTradeTypes().get(i);
+                if (type != null) {
+                    types.add(type.name());
+                }
+            }
+            this.tradeTypesJson = serializeStringList(types);
+        }
+        if (model.getItemCondition() != null) {
+            this.itemCondition = model.getItemCondition().name();
+        }
+        this.minOfferPrice = model.getMinOfferPrice();
+        this.province = model.getProvince();
+        if (model.getStatus() != null) {
+            this.status = model.getStatus().name();
+        }
+        if (model.getCreatedAt() != null) {
+            this.createdAtMillis = model.getCreatedAt().toDate().getTime();
+        }
+        this.cachedAtMillis = System.currentTimeMillis();
+        return this;
     }
 
     public Listing toModel() {
-        throw new UnsupportedOperationException("NOT_READY");
+        Listing listing = new Listing();
+        listing.setId(id);
+        listing.setSellerId(sellerId);
+        listing.setTitle(title);
+        listing.setDescription(description);
+        if (imageIdsJson != null && !imageIdsJson.isEmpty()) {
+            listing.setImageIds(deserializeStringList(imageIdsJson));
+        }
+        listing.setCoverThumb(coverThumb);
+        listing.setPrice(price);
+        listing.setCategoryId(categoryId);
+        if (tradeTypesJson != null && !tradeTypesJson.isEmpty()) {
+            java.util.List<String> typeStrings = deserializeStringList(tradeTypesJson);
+            java.util.List<com.nhom3.pubgapp.model.enums.TradeType> list =
+                    new java.util.ArrayList<com.nhom3.pubgapp.model.enums.TradeType>();
+            for (int i = 0; i < typeStrings.size(); i++) {
+                try {
+                    list.add(com.nhom3.pubgapp.model.enums.TradeType.valueOf(typeStrings.get(i)));
+                } catch (IllegalArgumentException ex) {
+                    android.util.Log.w("ListingEntity", "Unknown TradeType in cache", ex);
+                }
+            }
+            listing.setTradeTypes(list);
+        }
+        if (itemCondition != null && !itemCondition.isEmpty()) {
+            try {
+                listing.setItemCondition(com.nhom3.pubgapp.model.enums.ItemCondition.valueOf(itemCondition));
+            } catch (IllegalArgumentException ex) {
+                android.util.Log.w("ListingEntity", "Unknown ItemCondition in cache", ex);
+            }
+        }
+        listing.setMinOfferPrice(minOfferPrice);
+        listing.setProvince(province);
+        if (status != null && !status.isEmpty()) {
+            try {
+                listing.setStatus(com.nhom3.pubgapp.model.enums.ListingStatus.valueOf(status));
+            } catch (IllegalArgumentException ex) {
+                android.util.Log.w("ListingEntity", "Unknown ListingStatus in cache", ex);
+            }
+        }
+        if (createdAtMillis > 0) {
+            listing.setCreatedAt(new com.google.firebase.Timestamp(new java.util.Date(createdAtMillis)));
+        }
+        return listing;
     }
 
     @NonNull
@@ -173,5 +251,42 @@ public class ListingEntity {
 
     public void setCachedAtMillis(long cachedAtMillis) {
         this.cachedAtMillis = cachedAtMillis;
+    }
+
+    private String serializeStringList(java.util.List<String> list) {
+        if (list == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < list.size(); i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            sb.append("\"").append(list.get(i).replace("\"", "\\\"")).append("\"");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private java.util.List<String> deserializeStringList(String json) {
+        java.util.List<String> list = new java.util.ArrayList<String>();
+        if (json == null) {
+            return list;
+        }
+        String trimmed = json.trim();
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+            String inner = trimmed.substring(1, trimmed.length() - 1).trim();
+            if (!inner.isEmpty()) {
+                String[] parts = inner.split(",");
+                for (int i = 0; i < parts.length; i++) {
+                    String part = parts[i].trim();
+                    if (part.startsWith("\"") && part.endsWith("\"") && part.length() >= 2) {
+                        part = part.substring(1, part.length() - 1);
+                    }
+                    list.add(part.replace("\\\"", "\""));
+                }
+            }
+        }
+        return list;
     }
 }

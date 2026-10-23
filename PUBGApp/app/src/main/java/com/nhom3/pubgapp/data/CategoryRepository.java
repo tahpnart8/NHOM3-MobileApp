@@ -1,32 +1,190 @@
 package com.nhom3.pubgapp.data;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.AggregateQuerySnapshot;
+import com.google.firebase.firestore.AggregateSource;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.nhom3.pubgapp.model.Category;
+
+import java.util.ArrayList;
 import java.util.List;
 
-// Skeleton: the module owner fills each body as the issue assigns it.
 public class CategoryRepository extends BaseRepository {
 
-    public void getAll(DataCallback<List<Category>> cb) {
-        cb.onError(DataCallback.NOT_READY);
+    public void getAll(final DataCallback<List<Category>> cb) {
+        db.collection("categories")
+                .whereEqualTo("isActive", true)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot snapshots) {
+                        List<Category> list = new ArrayList<Category>();
+                        if (snapshots != null) {
+                            for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                                Category item = doc.toObject(Category.class);
+                                if (item != null) {
+                                    item.setId(doc.getId());
+                                    list.add(item);
+                                }
+                            }
+                        }
+                        cb.onSuccess(list);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(Exception e) {
+                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error loading categories");
+                    }
+                });
     }
 
-    public void getAllForAdmin(DataCallback<List<Category>> cb) {
-        cb.onError(DataCallback.NOT_READY);
+    public void getAllForAdmin(final DataCallback<List<Category>> cb) {
+        db.collection("categories")
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot snapshots) {
+                        List<Category> list = new ArrayList<Category>();
+                        if (snapshots != null) {
+                            for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                                Category item = doc.toObject(Category.class);
+                                if (item != null) {
+                                    item.setId(doc.getId());
+                                    list.add(item);
+                                }
+                            }
+                        }
+                        cb.onSuccess(list);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(Exception e) {
+                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error loading categories");
+                    }
+                });
     }
 
-    public void getChildren(String parentId, DataCallback<List<Category>> cb) {
-        cb.onError(DataCallback.NOT_READY);
+    public void getChildren(String parentId, final DataCallback<List<Category>> cb) {
+        db.collection("categories")
+                .whereEqualTo("parentId", parentId)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot snapshots) {
+                        List<Category> list = new ArrayList<Category>();
+                        if (snapshots != null) {
+                            for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                                Category item = doc.toObject(Category.class);
+                                if (item != null) {
+                                    item.setId(doc.getId());
+                                    list.add(item);
+                                }
+                            }
+                        }
+                        cb.onSuccess(list);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(Exception e) {
+                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error loading child categories");
+                    }
+                });
     }
 
-    public void add(Category category, DataCallback<String> cb) {
-        cb.onError(DataCallback.NOT_READY);
+    public void add(final Category category, final DataCallback<String> cb) {
+        final DocumentReference ref = db.collection("categories").document();
+        category.setId(ref.getId());
+        ref.set(category)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        cb.onSuccess(ref.getId());
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(Exception e) {
+                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error adding category");
+                    }
+                });
     }
 
-    public void update(Category category, DataCallback<Void> cb) {
-        cb.onError(DataCallback.NOT_READY);
+    public void update(Category category, final DataCallback<Void> cb) {
+        if (category == null || category.getId() == null) {
+            cb.onError("Category ID is required");
+            return;
+        }
+        db.collection("categories").document(category.getId())
+                .set(category)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        cb.onSuccess(null);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(Exception e) {
+                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error updating category");
+                    }
+                });
     }
 
-    public void delete(String id, DataCallback<Void> cb) {
-        cb.onError(DataCallback.NOT_READY);
+    public void delete(final String id, final DataCallback<Void> cb) {
+        db.collection("categories").whereEqualTo("parentId", id).count().get(AggregateSource.SERVER)
+                .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
+                    @Override
+                    public void onSuccess(AggregateQuerySnapshot catCountSnapshot) {
+                        if (catCountSnapshot.getCount() > 0) {
+                            cb.onError("Không thể xóa danh mục còn danh mục con; hãy ẩn danh mục");
+                            return;
+                        }
+                        db.collection("listings").whereEqualTo("categoryId", id).count().get(AggregateSource.SERVER)
+                                .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
+                                    @Override
+                                    public void onSuccess(AggregateQuerySnapshot listCountSnapshot) {
+                                        if (listCountSnapshot.getCount() > 0) {
+                                            String msg = "Không thể xóa danh mục còn tin đăng; "
+                                                    + "hãy ẩn danh mục";
+                                            cb.onError(msg);
+                                            return;
+                                        }
+                                        db.collection("categories").document(id).delete()
+                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void unused) {
+                                                        cb.onSuccess(null);
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(Exception e) {
+                                                        String err = e.getMessage() != null
+                                                                ? e.getMessage() : "Error deleting category";
+                                                        cb.onError(err);
+                                                    }
+                                                });
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(Exception e) {
+                                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error checking listings");
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(Exception e) {
+                        cb.onError(e.getMessage() != null ? e.getMessage() : "Error checking child categories");
+                    }
+                });
     }
 }

@@ -112,14 +112,24 @@ public class SearchFilter {
     }
 
     public boolean hasPriceRange() {
-        throw new UnsupportedOperationException("NOT_READY");
+        return minPrice > 0 || maxPrice > 0;
     }
 
     public boolean hasRadius() {
-        throw new UnsupportedOperationException("NOT_READY");
+        return center != null && radiusKm > 0;
     }
 
     public void reset() {
-        throw new UnsupportedOperationException("NOT_READY");
+        keyword = null;
+        categoryId = null;
+        minPrice = 0;
+        maxPrice = 0;
+        conditions = null;
+        province = null;
+        center = null;
+        radiusKm = 0;
+        tradeTypes = null;
+        sortOrder = null;
+        followingOnly = false;
     }
 }
