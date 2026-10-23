@@ -281,6 +281,8 @@ public class PostListingFragment extends Fragment {
                 if (err != null && !err.isEmpty()) {
                     binding.layoutErrorState.getRoot().setVisibility(View.VISIBLE);
                     binding.layoutErrorState.textErrorMessage.setText(err);
+                    Snackbar.make(binding.getRoot(), err, Snackbar.LENGTH_LONG).show();
+                    binding.nestedScrollView.smoothScrollTo(0, binding.layoutErrorState.getRoot().getTop());
                 }
             }
         });
