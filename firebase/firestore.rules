@@ -4,8 +4,8 @@ rules_version = '2';
 // issue #131 (users, users/{uid}/private/identity, sellerVerifications, listings) và issue #110:
 // warnings, notifications, mạch mua bán (conversations, messages, offers, deals kèm statusHistory,
 // payments, reviews), rồi addresses, saved, follows, admins, reports, complaints, adminNote,
-// activityLogs, bannedKeywords. Còn CHƯA mở: dòng "Ghi điểm đánh giá" của users (chờ leader chốt
-// ở #110). Mọi đường dẫn không nêu dưới đây vẫn từ chối.
+// activityLogs, bannedKeywords, categories. Còn CHƯA mở: dòng "Ghi điểm đánh giá" của users
+// (issue #157). Mọi đường dẫn không nêu dưới đây vẫn từ chối.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -203,7 +203,8 @@ service cloud.firestore {
         && (request.resource.data.get('updatedAt', null) == resource.data.get('updatedAt', null)
           || serverStamp('updatedAt'));
 
-      allow delete: if false;
+      // "Không xóa khi còn tin hoặc danh mục con" kiểm ở ứng dụng bằng count() (Rules không đếm được).
+      allow delete: if isAdmin() && writerActive();
     }
 
     // Tin đăng (security-rules.md mục 10): khách đọc tin đang mở; tin DRAFT, HIDDEN, REMOVED
