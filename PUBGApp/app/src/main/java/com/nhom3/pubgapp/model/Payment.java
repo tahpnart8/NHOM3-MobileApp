@@ -83,11 +83,17 @@ public class Payment extends BaseDocument {
     }
 
     public void release() {
+        if (!isHeld()) {
+            return;
+        }
         this.status = PaymentStatus.RELEASED;
         this.releasedAt = Timestamp.now();
     }
 
     public void refund() {
+        if (!isHeld()) {
+            return;
+        }
         this.status = PaymentStatus.REFUNDED;
         this.releasedAt = Timestamp.now();
     }
