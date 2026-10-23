@@ -23,4 +23,62 @@
     <string name="listing_saved_condition_used">Đã sử dụng</string>
     <string name="listing_saved_condition_repaired">Đã sửa chữa</string>
     <string name="listing_saved_condition_defective">Có lỗi</string>
+
+    <!-- B04 Post Listing -->
+    <string name="listing_post_unverified_banner">Tài khoản của bạn chưa được xác thực nên chưa thể đăng tin</string>
+    <string name="listing_post_unverified_dialog_title">Chưa được xác thực</string>
+    <string name="listing_post_unverified_dialog_msg">Tài khoản cần được admin duyệt xác thực để có thể đăng tin. Bạn có muốn đăng ký xác thực ngay?</string>
+    <string name="listing_post_pending_dialog_msg">Yêu cầu xác thực tài khoản của bạn đang chờ admin duyệt. Vui lòng quay lại sau.</string>
+    <string name="listing_post_btn_verify">Đăng ký xác thực</string>
+    <string name="listing_post_btn_close">Đóng</string>
+    <string name="listing_post_images_label">Hình ảnh (1 - 5 ảnh)</string>
+    <string name="listing_post_add_image">Thêm ảnh</string>
+    <string name="listing_post_max_images_reached">Chỉ được tải lên tối đa 5 hình ảnh cho mỗi tin đăng</string>
+    <string name="listing_post_remove_image">Xóa ảnh</string>
+    <string name="listing_post_title_label">Tiêu đề</string>
+    <string name="listing_post_title_hint">Nhập tên món đồ...</string>
+    <string name="listing_post_category_label">Danh mục</string>
+    <string name="listing_post_category_prompt">Chọn danh mục</string>
+    <string name="listing_post_desc_label">Mô tả</string>
+    <string name="listing_post_desc_hint">Mô tả chi tiết tình trạng, xuất xứ, phụ kiện kèm theo...</string>
+    <string name="listing_post_condition_label">Tình trạng</string>
+    <string name="listing_post_condition_new">Mới 100%</string>
+    <string name="listing_post_condition_like_new">Như mới</string>
+    <string name="listing_post_condition_used">Đã qua sử dụng</string>
+    <string name="listing_post_condition_repaired">Đã sửa chữa</string>
+    <string name="listing_post_condition_defective">Lỗi nhẹ / Hỏng</string>
+    <string name="listing_post_trade_type_label">Hình thức giao dịch</string>
+    <string name="listing_post_trade_sell">Bán</string>
+    <string name="listing_post_trade_exchange">Trao đổi</string>
+    <string name="listing_post_trade_giveaway">Cho tặng</string>
+    <string name="listing_post_price_label">Giá bán (VNĐ)</string>
+    <string name="listing_post_price_hint">Nhập giá bán...</string>
+    <string name="listing_post_price_error">Giá bán phải lớn hơn 0 đối với hình thức Bán</string>
+    <string name="listing_post_offer_label">Offer mong muốn</string>
+    <string name="listing_post_offer_money">Tiền</string>
+    <string name="listing_post_offer_item">Vật trao đổi</string>
+    <string name="listing_post_offer_both">Tiền và vật</string>
+    <string name="listing_post_min_offer_label">Mức tiền đề nghị tối thiểu (VNĐ, 0 là không giới hạn)</string>
+    <string name="listing_post_min_offer_hint">Nhập số tiền tối thiểu...</string>
+    <string name="listing_post_province_label">Tỉnh / Thành phố</string>
+    <string name="listing_post_button_publish">Đăng tin</string>
+    <string name="listing_post_button_save_draft">Lưu nháp</string>
+    <string name="listing_post_draft_success">Đã lưu bản nháp!</string>
+    <string name="listing_post_offline_warning">Không có kết nối mạng. Vui lòng thử lại khi có mạng</string>
+    <string name="listing_post_missing_fields">Tin đăng cần có tối thiểu tiêu đề, danh mục, 1 hình ảnh và một hình thức giao dịch để có thể công khai</string>
+    <string name="listing_post_banned_keyword_warning">Tin của bạn có từ khóa cần chú ý, admin sẽ xem xét</string>
+    <string name="listing_post_success">Đăng tin thành công!</string>
+    <string name="listing_post_failed">Đăng tin thất bại, vui lòng thử lại</string>
+    <string name="listing_post_image_preview_desc">Ảnh tin đăng</string>
+
+    <string-array name="listing_provinces">
+        <item>TP.HCM</item>
+        <item>Hà Nội</item>
+        <item>Đà Nẵng</item>
+        <item>Cần Thơ</item>
+        <item>Hải Phòng</item>
+        <item>Bình Dương</item>
+        <item>Đồng Nai</item>
+        <item>Khác</item>
+    </string-array>
 </resources>

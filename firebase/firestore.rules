@@ -2,9 +2,10 @@ rules_version = '2';
 
 // Bản NỀN của Security Rules (đợt 0) cộng luật GHI của bốn chỗ (issue #131):
 // users, users/{uid}/private/identity, sellerVerifications, listings;
-// và phần đầu của issue #110: users/{uid}/warnings, notifications.
+// và các phần của issue #110: users/{uid}/warnings, notifications, rồi mạch mua bán
+// conversations, messages, offers, deals (kèm statusHistory), payments, reviews.
 // Bản đầy đủ theo workflow/docs/data/security-rules.md làm tiếp ở issue #110. Ở bản này:
-// chỉ ĐỌC được mở theo ma trận; GHI chỉ mở cho sáu chỗ trên và collection images
+// chỉ ĐỌC được mở theo ma trận; GHI chỉ mở cho các chỗ trên và collection images
 // (tạo và xóa ảnh có giới hạn kích thước). Mọi collection khác vẫn từ chối ghi.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -93,6 +94,69 @@ service cloud.firestore {
       return d.get(f, null) == null || (d[f] is number && d[f] >= 0);
     }
 
+    // Chuỗi vắng, null hoặc rỗng (POJO để null thì cũng coi là rỗng).
+    function emptyString(d, f) {
+      return d.get(f, null) == null || d[f] == '';
+    }
+
+    // Chuỗi bắt buộc: khác rỗng và không dài quá max.
+    function reqString(d, f, max) {
+      return d.get(f, null) is string && d[f].size() > 0 && d[f].size() <= max;
+    }
+
+    // Lần tạo: createdAt bằng giờ máy chủ; updatedAt (BaseDocument) vắng hoặc cũng bằng giờ máy chủ.
+    function createStamps() {
+      return serverStamp('createdAt')
+        && (request.resource.data.get('updatedAt', null) == null || serverStamp('updatedAt'));
+    }
+
+    // ---- Đọc tài liệu khác trong cùng lô (security-rules.md, before và after) ----
+
+    function listingBefore(listingId) {
+      return get(/databases/$(database)/documents/listings/$(listingId)).data;
+    }
+
+    function listingAfter(listingId) {
+      return getAfter(/databases/$(database)/documents/listings/$(listingId)).data;
+    }
+
+    function conversationBefore(conversationId) {
+      return get(/databases/$(database)/documents/conversations/$(conversationId)).data;
+    }
+
+    function offerAfter(offerId) {
+      return getAfter(/databases/$(database)/documents/offers/$(offerId)).data;
+    }
+
+    function dealBefore(dealId) {
+      return get(/databases/$(database)/documents/deals/$(dealId)).data;
+    }
+
+    function dealAfter(dealId) {
+      return getAfter(/databases/$(database)/documents/deals/$(dealId)).data;
+    }
+
+    function paymentExists(dealId) {
+      return exists(/databases/$(database)/documents/payments/$(dealId));
+    }
+
+    function paymentBefore(dealId) {
+      return get(/databases/$(database)/documents/payments/$(dealId)).data;
+    }
+
+    function paymentAfter(dealId) {
+      return getAfter(/databases/$(database)/documents/payments/$(dealId)).data;
+    }
+
+    function complaintAfter(dealId) {
+      return getAfter(/databases/$(database)/documents/complaints/$(dealId)).data;
+    }
+
+    // Ảnh phải do chính người ghi tải lên.
+    function imageOwnedByMe(imageId) {
+      return get(/databases/$(database)/documents/images/$(imageId)).data.ownerId == request.auth.uid;
+    }
+
     // Mặc định: từ chối mọi đường dẫn không được nêu ở dưới.
     match /{document=**} {
       allow read, write: if false;
@@ -109,7 +173,6 @@ service cloud.firestore {
     // Tin đăng (security-rules.md mục 10): khách đọc tin đang mở; tin DRAFT, HIDDEN, REMOVED
     // chỉ chủ tin và admin. Truy vấn của ứng dụng phải mang status in [AVAILABLE, RESERVED, SOLD].
     // Ghi: mỗi chuyển trạng thái là một nhánh "allow" riêng để lỗi từ chối dễ truy ra.
-    // CHƯA mở ở đây (thuộc #110, cần offers và deals): giữ chỗ, nhả giữ chỗ, bán xong khi hoàn tất.
     match /listings/{id} {
       // Người đang ghi là chủ tin hiện có.
       function isOwner() {
@@ -295,6 +358,43 @@ service cloud.firestore {
         && onlyKeys(['flagged', 'updatedAt'])
         && serverStamp('updatedAt');
 
+      // Giữ chỗ khi chấp nhận offer: cùng lô với offer ACCEPTED và giao dịch PENDING_CONFIRM
+      // trỏ về tin này; reservedDealId ghi lại giao dịch đang giữ tin.
+      allow update: if isOwner()
+        && writerActive()
+        && resource.data.status == 'AVAILABLE'
+        && request.resource.data.status == 'RESERVED'
+        && onlyKeys(['status', 'reservedDealId', 'updatedAt'])
+        && reqString(request.resource.data, 'reservedDealId', 200)
+        && dealAfter(request.resource.data.reservedDealId).listingId == id
+        && dealAfter(request.resource.data.reservedDealId).sellerId == me()
+        && dealAfter(request.resource.data.reservedDealId).status == 'PENDING_CONFIRM'
+        && offerAfter(dealAfter(request.resource.data.reservedDealId).offerId).status == 'ACCEPTED'
+        && offerAfter(dealAfter(request.resource.data.reservedDealId).offerId).listingId == id
+        && serverStamp('updatedAt');
+
+      // Nhả giữ chỗ khi giao dịch đang giữ tin bị hủy: một bên của giao dịch, hoặc admin.
+      allow update: if writerActive()
+        && resource.data.status == 'RESERVED'
+        && request.resource.data.status == 'AVAILABLE'
+        && onlyKeys(['status', 'reservedDealId', 'updatedAt'])
+        && emptyString(request.resource.data, 'reservedDealId')
+        && dealAfter(resource.data.reservedDealId).status == 'CANCELLED'
+        && (dealAfter(resource.data.reservedDealId).buyerId == me()
+            || dealAfter(resource.data.reservedDealId).sellerId == me()
+            || isAdmin())
+        && serverStamp('updatedAt');
+
+      // Bán xong khi giao dịch đang giữ tin hoàn tất: một bên của giao dịch đó.
+      allow update: if writerActive()
+        && resource.data.status == 'RESERVED'
+        && request.resource.data.status == 'SOLD'
+        && onlyKeys(['status', 'updatedAt'])
+        && dealAfter(resource.data.reservedDealId).status == 'COMPLETED'
+        && (dealAfter(resource.data.reservedDealId).buyerId == me()
+            || dealAfter(resource.data.reservedDealId).sellerId == me())
+        && serverStamp('updatedAt');
+
       // Xóa: chỉ chủ tin và chỉ bản nháp. Tin đã đăng thì ẩn.
       allow delete: if isOwner()
         && writerActive()
@@ -344,7 +444,8 @@ service cloud.firestore {
     // Hồ sơ (security-rules.md mục 1). Người dùng thường chỉ sửa phần hồ sơ của mình;
     // status, verificationStatus, rating*, warningCount, lockedUntil, lockReason chỉ đổi
     // qua các nhánh có điều kiện riêng bên dưới. Không ai xóa được hồ sơ.
-    // CHƯA mở ở đây: "Ghi điểm đánh giá" (cần reviews, thuộc #110).
+    // CHƯA mở ở đây: "Ghi điểm đánh giá". Lần sửa users không mang dealId nên Rules không
+    // tìm được đánh giá đi cùng lô (security-rules.md mục 1 ghi "kiểm lại"); đã hỏi ở #110.
     match /users/{uid} {
       // Các trường hồ sơ chủ tài khoản được sửa.
       function profileEditKeys() {
@@ -646,41 +747,578 @@ service cloud.firestore {
 
     // ---- Trò chuyện, offer, giao dịch ----
 
+    // Cuộc trò chuyện (security-rules.md mục 11). Mã tài liệu listingId_buyerId nên mỗi người
+    // mua một cuộc trò chuyện cho một tin; không ai tự nhắn cho mình.
     match /conversations/{id} {
+      function isConversationParty() {
+        return signedIn()
+          && (resource.data.buyerId == me() || resource.data.sellerId == me());
+      }
+
       allow read: if signedIn()
         && (resource.data.buyerId == me() || resource.data.sellerId == me() || isAdmin());
-      allow write: if false;
 
+      // Người mua mở cuộc trò chuyện với tin còn AVAILABLE hoặc RESERVED.
+      allow create: if writerActive()
+        && hasOnlyKeys(['listingId', 'buyerId', 'sellerId', 'lastMessage', 'lastMessageAt',
+                        'createdAt', 'updatedAt'])
+        && request.resource.data.buyerId == me()
+        && request.resource.data.listingId is string
+        && id == request.resource.data.listingId + '_' + me()
+        && request.resource.data.sellerId == listingBefore(request.resource.data.listingId).sellerId
+        && request.resource.data.sellerId != me()
+        && listingBefore(request.resource.data.listingId).status in ['AVAILABLE', 'RESERVED']
+        && optString(request.resource.data, 'lastMessage', 200)
+        && (request.resource.data.get('lastMessageAt', null) == null || serverStamp('lastMessageAt'))
+        && createStamps();
+
+      // Cập nhật bản xem trước tin nhắn cuối.
+      allow update: if isConversationParty()
+        && writerActive()
+        && onlyKeys(['lastMessage', 'lastMessageAt', 'updatedAt'])
+        && request.resource.data.lastMessage is string
+        && request.resource.data.lastMessage.size() <= 200
+        && serverStamp('lastMessageAt')
+        && serverStamp('updatedAt');
+
+      allow delete: if false;
+
+      // Tin nhắn (security-rules.md mục 12): chỉ thêm, không sửa, không xóa. Không có VIDEO (STT 45).
       match /messages/{messageId} {
+        function inConversation() {
+          return signedIn()
+            && (conversationBefore(id).buyerId == me() || conversationBefore(id).sellerId == me());
+        }
+
+        // Phần chung của mọi loại tin nhắn: người gửi là mình và thuộc cuộc trò chuyện.
+        function messageBase() {
+          return writerActive()
+            && inConversation()
+            && hasOnlyKeys(['conversationId', 'senderId', 'type', 'text', 'imageId', 'offerId',
+                            'createdAt', 'updatedAt'])
+            && request.resource.data.conversationId == id
+            && request.resource.data.senderId == me()
+            && createStamps();
+        }
+
         allow read: if signedIn() && (
-          get(/databases/$(database)/documents/conversations/$(id)).data.buyerId == me()
-          || get(/databases/$(database)/documents/conversations/$(id)).data.sellerId == me()
+          conversationBefore(id).buyerId == me()
+          || conversationBefore(id).sellerId == me()
           || isAdmin());
-        allow write: if false;
+
+        // Tin nhắn chữ.
+        allow create: if messageBase()
+          && request.resource.data.type == 'TEXT'
+          && reqString(request.resource.data, 'text', 2000)
+          && emptyString(request.resource.data, 'imageId')
+          && emptyString(request.resource.data, 'offerId');
+
+        // Tin nhắn ảnh: ảnh phải do người gửi tải lên.
+        allow create: if messageBase()
+          && request.resource.data.type == 'IMAGE'
+          && reqString(request.resource.data, 'imageId', 200)
+          && emptyString(request.resource.data, 'offerId')
+          && optString(request.resource.data, 'text', 2000)
+          && imageOwnedByMe(request.resource.data.imageId);
+
+        // Tin nhắn offer: chỉ người mua, đi cùng tài liệu offer PENDING ghi trong cùng lô.
+        allow create: if messageBase()
+          && request.resource.data.type == 'OFFER'
+          && conversationBefore(id).buyerId == me()
+          && reqString(request.resource.data, 'offerId', 200)
+          && emptyString(request.resource.data, 'imageId')
+          && optString(request.resource.data, 'text', 2000)
+          && offerAfter(request.resource.data.offerId).buyerId == me()
+          && offerAfter(request.resource.data.offerId).conversationId == id
+          && offerAfter(request.resource.data.offerId).status == 'PENDING';
+
+        allow update, delete: if false;
       }
     }
 
+    // Offer (security-rules.md mục 13). Người mua không sửa, không hủy offer (STT 47).
     match /offers/{id} {
+      function offerKeys() {
+        return ['listingId', 'conversationId', 'buyerId', 'sellerId', 'offerType', 'amount',
+                'exchangeItem', 'status', 'createdAt', 'updatedAt'];
+      }
+
+      // Loại và mức giá đúng như người bán chấp nhận; offer chỉ có vật thì tiền bằng 0.
+      function offerTermsOk(d, l) {
+        return d.offerType in l.get('acceptedOfferTypes', [])
+          && d.amount is int
+          && d.amount >= 0
+          && optString(d, 'exchangeItem', 500)
+          && (d.offerType != 'ITEM'
+              || (d.amount == 0 && reqString(d, 'exchangeItem', 500)))
+          && (d.offerType == 'ITEM' || d.amount >= l.get('minOfferPrice', 0));
+      }
+
       allow read: if signedIn()
         && (resource.data.buyerId == me() || resource.data.sellerId == me() || isAdmin());
-      allow write: if false;
+
+      // Gửi offer: người mua đã được duyệt xác thực, tin đang AVAILABLE.
+      allow create: if writerActive()
+        && verified()
+        && hasOnlyKeys(offerKeys())
+        && request.resource.data.buyerId == me()
+        && request.resource.data.status == 'PENDING'
+        && request.resource.data.listingId is string
+        && listingBefore(request.resource.data.listingId).status == 'AVAILABLE'
+        && request.resource.data.sellerId == listingBefore(request.resource.data.listingId).sellerId
+        && request.resource.data.buyerId != request.resource.data.sellerId
+        && request.resource.data.conversationId == request.resource.data.listingId + '_' + me()
+        && offerTermsOk(request.resource.data, listingBefore(request.resource.data.listingId))
+        && createStamps();
+
+      // Chấp nhận: cùng lô giữ chỗ tin và tạo giao dịch trỏ về offer này.
+      allow update: if signedIn()
+        && resource.data.sellerId == me()
+        && writerActive()
+        && resource.data.status == 'PENDING'
+        && request.resource.data.status == 'ACCEPTED'
+        && onlyKeys(['status', 'updatedAt'])
+        && listingAfter(resource.data.listingId).status == 'RESERVED'
+        && dealAfter(listingAfter(resource.data.listingId).reservedDealId).offerId == id
+        && serverStamp('updatedAt');
+
+      // Người bán từ chối (cũng dùng khi từ chối các offer còn lại lúc tin rời AVAILABLE).
+      allow update: if signedIn()
+        && resource.data.sellerId == me()
+        && writerActive()
+        && resource.data.status == 'PENDING'
+        && request.resource.data.status == 'REJECTED'
+        && onlyKeys(['status', 'updatedAt'])
+        && serverStamp('updatedAt');
+
+      // Admin từ chối offer còn chờ, cùng lô ẩn hoặc gỡ tin.
+      allow update: if isAdmin()
+        && writerActive()
+        && resource.data.status == 'PENDING'
+        && request.resource.data.status == 'REJECTED'
+        && onlyKeys(['status', 'updatedAt'])
+        && listingAfter(resource.data.listingId).status in ['HIDDEN', 'REMOVED']
+        && serverStamp('updatedAt');
+
+      allow delete: if false;
     }
 
+    // Giao dịch (security-rules.md mục 14 và 15). Mỗi chuyển trạng thái một nhánh "allow update";
+    // chuyển nào không có nhánh thì bị cấm. listingId, offerId, buyerId, sellerId, tradeType,
+    // itemTitle, itemThumb, createdAt không đổi vì không nhánh sửa nào cho đụng tới.
     match /deals/{id} {
+      function dealKeys() {
+        return ['listingId', 'offerId', 'buyerId', 'sellerId', 'tradeType', 'agreedPrice',
+                'exchangeItem', 'deliveryMethod', 'deliveryAddress', 'scheduledAt', 'agreedTerms',
+                'itemTitle', 'itemThumb', 'status', 'buyerConfirmed', 'sellerConfirmed',
+                'cancelReason', 'carrierName', 'trackingCode', 'trackingImageId', 'shippedAt',
+                'autoReleaseAt', 'receivedAt', 'receivedImageId', 'statusHistory', 'createdAt',
+                'updatedAt'];
+      }
+
+      function isDealParty() {
+        return signedIn()
+          && (resource.data.buyerId == me() || resource.data.sellerId == me());
+      }
+
+      function isDealBuyer() {
+        return signedIn() && resource.data.buyerId == me();
+      }
+
+      function isDealSeller() {
+        return signedIn() && resource.data.sellerId == me();
+      }
+
+      function moved(fromStatus, toStatus) {
+        return resource.data.status == fromStatus && request.resource.data.status == toStatus;
+      }
+
+      // Giới hạn kích thước và giá trị cho phép của các trường hai bên được sửa.
+      function dealTermsOk(d) {
+        return d.agreedPrice is int
+          && d.agreedPrice >= 0
+          && (d.get('deliveryMethod', null) == null || d.deliveryMethod in ['MEET_UP', 'SHIPPING'])
+          && optString(d, 'deliveryAddress', 300)
+          && optString(d, 'agreedTerms', 1000)
+          && optString(d, 'exchangeItem', 500);
+      }
+
+      // Cách giao đã chọn; giao qua vận chuyển thì phải có địa chỉ.
+      function deliveryReady(d) {
+        return d.get('deliveryMethod', null) in ['MEET_UP', 'SHIPPING']
+          && (d.deliveryMethod != 'SHIPPING' || reqString(d, 'deliveryAddress', 300));
+      }
+
+      // statusHistory chỉ thêm đúng một phần tử từ trạng thái cũ sang trạng thái mới (mục 15).
+      function historyAppended() {
+        let oldList = resource.data.statusHistory;
+        let newList = request.resource.data.statusHistory;
+        return newList is list
+          && newList.size() == oldList.size() + 1
+          && newList[0:oldList.size()] == oldList
+          && newList[oldList.size()].fromStatus == resource.data.status
+          && newList[oldList.size()].toStatus == request.resource.data.status;
+      }
+
+      // Khoản ký quỹ đang giữ tiền của giao dịch này (trước lô).
+      function paymentHeld() {
+        return paymentExists(id) && paymentBefore(id).status == 'HELD';
+      }
+
+      // Hạn đếm ngược bằng giờ máy chủ cộng 7 ngày; ứng dụng ghi bằng giờ máy nên cho sai số 5 phút.
+      function autoReleaseOk() {
+        let due = request.time + duration.value(7, 'd');
+        return request.resource.data.autoReleaseAt is timestamp
+          && request.resource.data.autoReleaseAt >= due - duration.value(5, 'm')
+          && request.resource.data.autoReleaseAt <= due + duration.value(5, 'm');
+      }
+
+      // Lô hoàn tất đặt tin của giao dịch sang SOLD.
+      function listingSoldAfter() {
+        return listingAfter(resource.data.listingId).status == 'SOLD';
+      }
+
       allow read: if signedIn()
         && (resource.data.buyerId == me() || resource.data.sellerId == me() || isAdmin());
-      allow write: if false;
+
+      // Tạo: người bán, chỉ cùng lô chấp nhận offer và giữ chỗ tin; giá và loại lấy từ offer.
+      allow create: if writerActive()
+        && verified()
+        && hasOnlyKeys(dealKeys())
+        && request.resource.data.sellerId == me()
+        && request.resource.data.status == 'PENDING_CONFIRM'
+        && request.resource.data.sellerConfirmed == true
+        && request.resource.data.buyerConfirmed == false
+        && request.resource.data.offerId is string
+        && offerAfter(request.resource.data.offerId).status == 'ACCEPTED'
+        && offerAfter(request.resource.data.offerId).sellerId == me()
+        && request.resource.data.buyerId == offerAfter(request.resource.data.offerId).buyerId
+        && request.resource.data.listingId == offerAfter(request.resource.data.offerId).listingId
+        && listingAfter(request.resource.data.listingId).status == 'RESERVED'
+        && listingAfter(request.resource.data.listingId).reservedDealId == id
+        && request.resource.data.agreedPrice == offerAfter(request.resource.data.offerId).amount
+        && ((offerAfter(request.resource.data.offerId).offerType == 'ITEM'
+             && request.resource.data.tradeType == 'EXCHANGE')
+            || (offerAfter(request.resource.data.offerId).offerType != 'ITEM'
+                && request.resource.data.tradeType == 'SELL'))
+        && dealTermsOk(request.resource.data)
+        && optString(request.resource.data, 'itemTitle', 150)
+        && optString(request.resource.data, 'itemThumb', 28000)
+        && request.resource.data.statusHistory is list
+        && request.resource.data.statusHistory.size() == 1
+        && request.resource.data.statusHistory[0].get('fromStatus', null) == null
+        && request.resource.data.statusHistory[0].toStatus == 'PENDING_CONFIRM'
+        && request.resource.data.get('shippedAt', null) == null
+        && request.resource.data.get('autoReleaseAt', null) == null
+        && request.resource.data.get('receivedAt', null) == null
+        && emptyString(request.resource.data, 'cancelReason')
+        && emptyString(request.resource.data, 'carrierName')
+        && emptyString(request.resource.data, 'trackingCode')
+        && emptyString(request.resource.data, 'trackingImageId')
+        && emptyString(request.resource.data, 'receivedImageId')
+        && createStamps();
+
+      // Sửa điều khoản: xóa cả hai cờ xác nhận; trạng thái và lịch sử giữ nguyên.
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('PENDING_CONFIRM', 'PENDING_CONFIRM')
+        && onlyKeys(['deliveryMethod', 'deliveryAddress', 'scheduledAt', 'agreedTerms',
+                     'exchangeItem', 'agreedPrice', 'buyerConfirmed', 'sellerConfirmed',
+                     'updatedAt'])
+        && request.resource.data.buyerConfirmed == false
+        && request.resource.data.sellerConfirmed == false
+        && dealTermsOk(request.resource.data)
+        && serverStamp('updatedAt');
+
+      // Xác nhận của bên thứ nhất: mỗi bên chỉ bật cờ của mình, cờ bên kia đang false.
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('PENDING_CONFIRM', 'PENDING_CONFIRM')
+        && ((isDealBuyer()
+             && onlyKeys(['buyerConfirmed', 'updatedAt'])
+             && request.resource.data.buyerConfirmed == true
+             && resource.data.sellerConfirmed == false)
+            || (isDealSeller()
+                && onlyKeys(['sellerConfirmed', 'updatedAt'])
+                && request.resource.data.sellerConfirmed == true
+                && resource.data.buyerConfirmed == false))
+        && resource.data.get('deliveryMethod', null) in ['MEET_UP', 'SHIPPING']
+        && serverStamp('updatedAt');
+
+      // Xác nhận của bên thứ hai: cờ bên kia đang true, sang CONFIRMED.
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('PENDING_CONFIRM', 'CONFIRMED')
+        && ((isDealBuyer()
+             && onlyKeys(['buyerConfirmed', 'status', 'statusHistory', 'updatedAt'])
+             && request.resource.data.buyerConfirmed == true
+             && resource.data.sellerConfirmed == true)
+            || (isDealSeller()
+                && onlyKeys(['sellerConfirmed', 'status', 'statusHistory', 'updatedAt'])
+                && request.resource.data.sellerConfirmed == true
+                && resource.data.buyerConfirmed == true))
+        && deliveryReady(resource.data)
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Hết hạn xác nhận 3 ngày (đại diện hệ thống): hủy và nhả giữ chỗ tin cùng lô.
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('PENDING_CONFIRM', 'CANCELLED')
+        && request.time > resource.data.createdAt + duration.value(3, 'd')
+        && onlyKeys(['status', 'statusHistory', 'updatedAt'])
+        && listingAfter(resource.data.listingId).status == 'AVAILABLE'
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Hủy: bắt buộc lý do; tiền đang giữ thì hoàn cùng lô.
+      allow update: if isDealParty()
+        && writerActive()
+        && resource.data.status in ['PENDING_CONFIRM', 'CONFIRMED']
+        && request.resource.data.status == 'CANCELLED'
+        && onlyKeys(['status', 'cancelReason', 'statusHistory', 'updatedAt'])
+        && reqString(request.resource.data, 'cancelReason', 500)
+        && (!paymentHeld() || paymentAfter(id).status == 'REFUNDED')
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Giao hàng: người bán, có vận đơn; đồng hồ đếm ngược đúng 7 ngày từ giờ máy chủ.
+      allow update: if isDealSeller()
+        && writerActive()
+        && moved('CONFIRMED', 'SHIPPED')
+        && resource.data.deliveryMethod == 'SHIPPING'
+        && onlyKeys(['status', 'carrierName', 'trackingCode', 'trackingImageId', 'shippedAt',
+                     'autoReleaseAt', 'statusHistory', 'updatedAt'])
+        && reqString(request.resource.data, 'carrierName', 100)
+        && reqString(request.resource.data, 'trackingCode', 100)
+        && reqString(request.resource.data, 'trackingImageId', 200)
+        && imageOwnedByMe(request.resource.data.trackingImageId)
+        && serverStamp('shippedAt')
+        && autoReleaseOk()
+        && (resource.data.agreedPrice == 0 || paymentBefore(id).status == 'HELD')
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Người mua nhận hàng: gặp trực tiếp (từ CONFIRMED) hoặc qua vận chuyển (từ SHIPPED),
+      // kèm ảnh lúc nhận; có tiền thì giải ngân cùng lô.
+      allow update: if isDealBuyer()
+        && writerActive()
+        && ((moved('CONFIRMED', 'RECEIVED') && resource.data.deliveryMethod == 'MEET_UP')
+            || moved('SHIPPED', 'RECEIVED'))
+        && onlyKeys(['status', 'receivedAt', 'receivedImageId', 'statusHistory', 'updatedAt'])
+        && serverStamp('receivedAt')
+        && reqString(request.resource.data, 'receivedImageId', 200)
+        && (resource.data.agreedPrice == 0
+            || (paymentBefore(id).status == 'HELD' && paymentAfter(id).status == 'RELEASED'))
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Hết đếm ngược (đại diện hệ thống): mốc so với giờ máy chủ nên người bán cũng chạy được.
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('SHIPPED', 'RECEIVED')
+        && request.time >= resource.data.autoReleaseAt
+        && onlyKeys(['status', 'receivedAt', 'statusHistory', 'updatedAt'])
+        && serverStamp('receivedAt')
+        && (resource.data.agreedPrice == 0 || paymentAfter(id).status == 'RELEASED')
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Mở khiếu nại: trong thời gian đếm ngược, hoặc khi gặp trực tiếp đã xác nhận;
+      // tài liệu khiếu nại ghi cùng lô.
+      allow update: if isDealParty()
+        && writerActive()
+        && ((resource.data.status == 'SHIPPED' && request.time < resource.data.autoReleaseAt)
+            || (resource.data.status == 'CONFIRMED' && resource.data.deliveryMethod == 'MEET_UP'))
+        && request.resource.data.status == 'DISPUTED'
+        && onlyKeys(['status', 'statusHistory', 'updatedAt'])
+        && complaintAfter(id).complainantId == me()
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Rút khiếu nại: về đúng trạng thái trước DISPUTED (fromStatus của phần tử cuối).
+      allow update: if isDealParty()
+        && writerActive()
+        && resource.data.status == 'DISPUTED'
+        && request.resource.data.status
+             == resource.data.statusHistory[resource.data.statusHistory.size() - 1].fromStatus
+        && onlyKeys(['status', 'statusHistory', 'updatedAt'])
+        && complaintAfter(id).status == 'WITHDRAWN'
+        && complaintAfter(id).complainantId == me()
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Admin quyết định hoàn tiền, trả hàng, hủy: giao dịch hủy, tiền hoàn, tin mở bán lại.
+      allow update: if isAdmin()
+        && writerActive()
+        && moved('DISPUTED', 'CANCELLED')
+        && complaintAfter(id).decision in ['REFUND', 'RETURN_ITEM', 'CANCEL_DEAL']
+        && complaintAfter(id).status == 'RESOLVED'
+        && onlyKeys(['status', 'statusHistory', 'updatedAt'])
+        && (!paymentExists(id) || paymentAfter(id).status == 'REFUNDED')
+        && listingAfter(resource.data.listingId).status == 'AVAILABLE'
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Admin bác khiếu nại: giao dịch sang RECEIVED, tiền giải ngân.
+      allow update: if isAdmin()
+        && writerActive()
+        && moved('DISPUTED', 'RECEIVED')
+        && complaintAfter(id).decision == 'REJECT'
+        && onlyKeys(['status', 'receivedAt', 'statusHistory', 'updatedAt'])
+        && serverStamp('receivedAt')
+        && (!paymentExists(id) || paymentAfter(id).status == 'RELEASED')
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Hoàn tất khi hai bên đã đánh giá (cả hai đánh giá có mặt sau lô); tin sang SOLD cùng lô.
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('RECEIVED', 'COMPLETED')
+        && existsAfter(/databases/$(database)/documents/reviews/$(id + '_' + resource.data.buyerId))
+        && existsAfter(/databases/$(database)/documents/reviews/$(id + '_' + resource.data.sellerId))
+        && onlyKeys(['status', 'statusHistory', 'updatedAt'])
+        && listingSoldAfter()
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      // Hoàn tất khi đã quá 3 ngày từ lúc nhận (đại diện hệ thống).
+      allow update: if isDealParty()
+        && writerActive()
+        && moved('RECEIVED', 'COMPLETED')
+        && request.time > resource.data.receivedAt + duration.value(3, 'd')
+        && onlyKeys(['status', 'statusHistory', 'updatedAt'])
+        && listingSoldAfter()
+        && historyAppended()
+        && serverStamp('updatedAt');
+
+      allow delete: if false;
     }
 
+    // Ký quỹ mô phỏng (security-rules.md mục 16). Mã tài liệu là dealId nên mỗi giao dịch
+    // tối đa một khoản. RELEASED và REFUNDED là cuối. Bảng của payments trong
+    // firestore-schema.md không có createdAt, nên hai mốc của BaseDocument được vắng.
     match /payments/{dealId} {
+      function isPaymentParty() {
+        return signedIn()
+          && (resource.data.payerId == me() || resource.data.payeeId == me());
+      }
+
+      function paymentMoved(fromStatus, toStatus) {
+        return resource.data.status == fromStatus && request.resource.data.status == toStatus;
+      }
+
+      // Lần sửa chỉ đổi trạng thái và mốc giải ngân hoặc hoàn tiền, theo giờ máy chủ.
+      function settleKeysOk() {
+        return onlyKeys(['status', 'releasedAt', 'updatedAt'])
+          && serverStamp('releasedAt')
+          && serverStamp('updatedAt');
+      }
+
       allow read: if signedIn()
         && (resource.data.payerId == me() || resource.data.payeeId == me() || isAdmin());
-      allow write: if false;
+
+      // Giữ tiền: người mua, giao dịch đã CONFIRMED, đúng số tiền thỏa thuận.
+      allow create: if writerActive()
+        && hasOnlyKeys(['dealId', 'payerId', 'payeeId', 'amount', 'status', 'method', 'heldAt',
+                        'releasedAt', 'createdAt', 'updatedAt'])
+        && request.resource.data.dealId == dealId
+        && dealBefore(dealId).buyerId == me()
+        && dealBefore(dealId).status == 'CONFIRMED'
+        && dealBefore(dealId).agreedPrice > 0
+        && request.resource.data.amount == dealBefore(dealId).agreedPrice
+        && request.resource.data.payerId == me()
+        && request.resource.data.payeeId == dealBefore(dealId).sellerId
+        && request.resource.data.status == 'HELD'
+        && request.resource.data.method in ['CARD', 'E_WALLET', 'BANK_TRANSFER']
+        && serverStamp('heldAt')
+        && request.resource.data.get('releasedAt', null) == null
+        && (request.resource.data.get('createdAt', null) == null || serverStamp('createdAt'))
+        && (request.resource.data.get('updatedAt', null) == null || serverStamp('updatedAt'));
+
+      // Giải ngân khi người mua nhận hàng, cùng lô giao dịch sang RECEIVED.
+      allow update: if signedIn()
+        && resource.data.payerId == me()
+        && writerActive()
+        && paymentMoved('HELD', 'RELEASED')
+        && settleKeysOk()
+        && dealAfter(dealId).status == 'RECEIVED'
+        && (dealBefore(dealId).status == 'SHIPPED'
+            || (dealBefore(dealId).status == 'CONFIRMED'
+                && dealBefore(dealId).deliveryMethod == 'MEET_UP'));
+
+      // Giải ngân khi hết đếm ngược: mốc là giờ máy chủ nên người bán cũng chạy được.
+      allow update: if isPaymentParty()
+        && writerActive()
+        && paymentMoved('HELD', 'RELEASED')
+        && settleKeysOk()
+        && dealBefore(dealId).status == 'SHIPPED'
+        && request.time >= dealBefore(dealId).autoReleaseAt
+        && dealAfter(dealId).status == 'RECEIVED';
+
+      // Giải ngân khi admin bác khiếu nại.
+      allow update: if isAdmin()
+        && writerActive()
+        && paymentMoved('HELD', 'RELEASED')
+        && settleKeysOk()
+        && complaintAfter(dealId).decision == 'REJECT'
+        && dealAfter(dealId).status == 'RECEIVED';
+
+      // Hoàn tiền khi một bên hủy giao dịch, cùng lô giao dịch sang CANCELLED.
+      allow update: if isPaymentParty()
+        && writerActive()
+        && paymentMoved('HELD', 'REFUNDED')
+        && settleKeysOk()
+        && dealAfter(dealId).status == 'CANCELLED';
+
+      // Hoàn tiền theo quyết định khiếu nại của admin.
+      allow update: if isAdmin()
+        && writerActive()
+        && paymentMoved('HELD', 'REFUNDED')
+        && settleKeysOk()
+        && complaintAfter(dealId).decision in ['REFUND', 'RETURN_ITEM', 'CANCEL_DEAL']
+        && dealAfter(dealId).status == 'CANCELLED';
+
+      allow delete: if false;
     }
 
+    // Đánh giá (security-rules.md mục 17). Mã dealId_reviewerId nên mỗi bên một đánh giá cho
+    // mỗi giao dịch; không sửa, không xóa vì điểm đã cộng.
     match /reviews/{id} {
+      // Sao từ 1 đến 5.
+      function starOk(d, f) {
+        return d.get(f, null) is int && d[f] >= 1 && d[f] <= 5;
+      }
+
+      // Người được đánh giá là bên còn lại của giao dịch.
+      function revieweeOk(d, deal) {
+        return (deal.buyerId == me() && d.revieweeId == deal.sellerId)
+          || (deal.sellerId == me() && d.revieweeId == deal.buyerId);
+      }
+
       allow read: if signedIn();
-      allow write: if false;
+
+      // Điểm của người được đánh giá tăng đúng bằng điểm viết, trong cùng lô.
+      allow create: if writerActive()
+        && hasOnlyKeys(['dealId', 'reviewerId', 'revieweeId', 'rating', 'accuracyRating',
+                        'attitudeRating', 'commitmentRating', 'comment', 'createdAt', 'updatedAt'])
+        && request.resource.data.reviewerId == me()
+        && request.resource.data.dealId is string
+        && id == request.resource.data.dealId + '_' + me()
+        && dealBefore(request.resource.data.dealId).status in ['RECEIVED', 'COMPLETED']
+        && revieweeOk(request.resource.data, dealBefore(request.resource.data.dealId))
+        && starOk(request.resource.data, 'rating')
+        && starOk(request.resource.data, 'accuracyRating')
+        && starOk(request.resource.data, 'attitudeRating')
+        && starOk(request.resource.data, 'commitmentRating')
+        && optString(request.resource.data, 'comment', 500)
+        && userAfter(request.resource.data.revieweeId).ratingCount
+             == userDoc(request.resource.data.revieweeId).ratingCount + 1
+        && userAfter(request.resource.data.revieweeId).ratingSum
+             == userDoc(request.resource.data.revieweeId).ratingSum + request.resource.data.rating
+        && createStamps();
+
+      allow update, delete: if false;
     }
 
     // ---- Báo cáo và khiếu nại ----
