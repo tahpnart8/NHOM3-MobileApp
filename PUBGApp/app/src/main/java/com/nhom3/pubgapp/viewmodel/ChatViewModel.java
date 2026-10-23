@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.nhom3.pubgapp.R;
+import com.nhom3.pubgapp.data.AuthRepository;
 import com.nhom3.pubgapp.data.ChatRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.ListingRepository;
@@ -37,14 +38,17 @@ public class ChatViewModel extends ViewModel {
     private final MutableLiveData<Boolean> loading = new MutableLiveData<Boolean>();
     private final MutableLiveData<String> error = new MutableLiveData<String>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<Boolean>();
+    private final MutableLiveData<String> createdDealId = new MutableLiveData<String>();
 
     private final ChatRepository chatRepository = new ChatRepository();
     private final UserRepository userRepository = new UserRepository();
     private final ListingRepository listingRepository = new ListingRepository();
+    private final AuthRepository authRepository = new AuthRepository();
 
     private String currentConversationId;
     private Conversation currentConversation;
     private ListenerRegistration messageListener;
+    private ListenerRegistration offersListener;
     private boolean isLoadingOlder = false;
 
     public LiveData<List<Conversation>> getConversations() {
@@ -77,6 +81,14 @@ public class ChatViewModel extends ViewModel {
 
     public LiveData<Boolean> getDone() {
         return done;
+    }
+
+    public LiveData<String> getCreatedDealId() {
+        return createdDealId;
+    }
+
+    public void clearCreatedDealId() {
+        createdDealId.setValue(null);
     }
 
     private String getString(int resId, String fallback) {
@@ -143,6 +155,7 @@ public class ChatViewModel extends ViewModel {
                     currentConversation = result;
                     currentConversationId = result.getId();
                     startObservingMessages(result.getId());
+                    observeOffers();
                     loadPartnerInternal(result);
                     loadListingInternal(result.getListingId());
                 }
@@ -171,6 +184,7 @@ public class ChatViewModel extends ViewModel {
         currentConversationId = id;
         loading.setValue(true);
         startObservingMessages(id);
+        observeOffers();
         chatRepository.getConversation(id, new DataCallback<Conversation>() {
             @Override
             public void onSuccess(Conversation result) {
@@ -196,12 +210,18 @@ public class ChatViewModel extends ViewModel {
             messageListener.remove();
             messageListener = null;
         }
+        if (offersListener != null) {
+            offersListener.remove();
+            offersListener = null;
+        }
         currentConversation = null;
         currentConversationId = null;
         isLoadingOlder = false;
         messages.setValue(new ArrayList<ChatMessage>());
         partner.setValue(null);
         listing.setValue(null);
+        offers.setValue(new ArrayList<Offer>());
+        createdDealId.setValue(null);
     }
 
     private void startObservingMessages(final String conversationId) {
@@ -341,7 +361,23 @@ public class ChatViewModel extends ViewModel {
     }
 
     public void observeOffers() {
-        error.setValue(DataCallback.NOT_READY);
+        if (currentConversationId == null || currentConversationId.isEmpty()) {
+            return;
+        }
+        if (offersListener != null) {
+            offersListener.remove();
+            offersListener = null;
+        }
+        offersListener = chatRepository.observeOffers(currentConversationId, new DataCallback<List<Offer>>() {
+            @Override
+            public void onSuccess(List<Offer> result) {
+                offers.postValue(result != null ? result : new ArrayList<Offer>());
+            }
+
+            @Override
+            public void onError(String message) {
+            }
+        });
     }
 
     public void sendText(String text) {
@@ -386,12 +422,104 @@ public class ChatViewModel extends ViewModel {
         });
     }
 
-    public void makeOffer(Offer offer) {
-        error.setValue(DataCallback.NOT_READY);
+    public void makeOffer(final Offer offer) {
+        loading.setValue(true);
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid.isEmpty()) {
+            loading.setValue(false);
+            error.setValue("Vui lòng đăng nhập để gửi đề nghị.");
+            return;
+        }
+        userRepository.getProfile(uid, new DataCallback<User>() {
+            @Override
+            public void onSuccess(User user) {
+                boolean emailVerified = authRepository.isEmailVerified();
+                if (!canUserBuy(user, emailVerified)) {
+                    loading.postValue(false);
+                    error.postValue("Tài khoản cần được admin duyệt "
+                            + "xác thực trước khi gửi đề nghị mua bán.");
+                    return;
+                }
+                chatRepository.sendOffer(offer, new DataCallback<String>() {
+                    @Override
+                    public void onSuccess(String offerId) {
+                        loading.postValue(false);
+                        done.postValue(true);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        loading.postValue(false);
+                        error.postValue(message);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
-    public void respondToOffer(String offerId, boolean accept) {
-        error.setValue(DataCallback.NOT_READY);
+    public void respondToOffer(final String offerId, final boolean accept) {
+        loading.setValue(true);
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid.isEmpty()) {
+            loading.setValue(false);
+            error.setValue("Vui lòng đăng nhập để thực hiện thao tác.");
+            return;
+        }
+        userRepository.getProfile(uid, new DataCallback<User>() {
+            @Override
+            public void onSuccess(User user) {
+                boolean emailVerified = authRepository.isEmailVerified();
+                if (!canUserSell(user, emailVerified)) {
+                    loading.postValue(false);
+                    error.postValue("Tài khoản cần được admin duyệt "
+                            + "xác thực trước khi phản hồi đề nghị.");
+                    return;
+                }
+                chatRepository.respondToOffer(offerId, accept, new DataCallback<String>() {
+                    @Override
+                    public void onSuccess(String dealId) {
+                        loading.postValue(false);
+                        loadListing();
+                        if (dealId != null && !dealId.isEmpty()) {
+                            createdDealId.postValue(dealId);
+                        }
+                        done.postValue(true);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        loading.postValue(false);
+                        error.postValue(message);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
+    }
+
+    static boolean canUserBuy(User user, boolean emailVerified) {
+        if (user == null) {
+            return false;
+        }
+        return user.canBuy(emailVerified);
+    }
+
+    static boolean canUserSell(User user, boolean emailVerified) {
+        if (user == null) {
+            return false;
+        }
+        return user.canSell(emailVerified);
     }
 
     public void clearError() {
@@ -408,6 +536,10 @@ public class ChatViewModel extends ViewModel {
         if (messageListener != null) {
             messageListener.remove();
             messageListener = null;
+        }
+        if (offersListener != null) {
+            offersListener.remove();
+            offersListener = null;
         }
     }
 }
