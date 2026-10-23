@@ -1673,7 +1673,7 @@ service cloud.firestore {
         && request.resource.data.keyword is string
         && request.resource.data.keyword.size() >= 2
         && request.resource.data.keyword.size() <= 60
-        && request.resource.data.keyword.matches('[ -~]+')
+        && request.resource.data.keyword.matches('^[ -~]+$')
         && request.resource.data.keyword.lower() == request.resource.data.keyword
         && createStamps();
 
