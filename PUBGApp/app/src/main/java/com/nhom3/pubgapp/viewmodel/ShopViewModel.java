@@ -19,6 +19,8 @@ import com.nhom3.pubgapp.model.enums.TradeType;
 import com.nhom3.pubgapp.util.KeywordFilter;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 // State for the seller shelf and the listing form. Action bodies report NOT_READY until the repositories are filled.
@@ -30,6 +32,20 @@ public class ShopViewModel extends ViewModel {
     public static final String FIELD_IMAGES = "images";
     public static final String FIELD_TRADE_TYPE = "tradeTypes";
     public static final String FIELD_PRICE = "price";
+
+    public static final int TAB_ACTIVE = 0;
+    public static final int TAB_SOLD = 1;
+    public static final int TAB_HIDDEN = 2;
+    public static final int TAB_DRAFT = 3;
+
+    public static final String ACTION_EDIT = "ACTION_EDIT";
+    public static final String ACTION_HIDE = "ACTION_HIDE";
+    public static final String ACTION_SHOW = "ACTION_SHOW";
+    public static final String ACTION_MARK_SOLD = "ACTION_MARK_SOLD";
+    public static final String ACTION_REOPEN = "ACTION_REOPEN";
+    public static final String ACTION_PUBLISH = "ACTION_PUBLISH";
+    public static final String ACTION_DELETE = "ACTION_DELETE";
+    public static final String ACTION_VIEW_REASON = "ACTION_VIEW_REASON";
 
     private final ListingRepository listingRepository = new ListingRepository();
     private final CategoryRepository categoryRepository = new CategoryRepository();
@@ -290,5 +306,119 @@ public class ShopViewModel extends ViewModel {
             return 0L;
         }
         return typedPrice;
+    }
+
+    // Filters listings for one of the four tabs on the seller shelf screen.
+    public static List<Listing> filterByTab(List<Listing> listings, int tab) {
+        List<Listing> result = new ArrayList<Listing>();
+        if (listings == null) {
+            return result;
+        }
+        for (Listing listing : listings) {
+            if (listing == null || listing.getStatus() == null) {
+                continue;
+            }
+            ListingStatus status = listing.getStatus();
+            if (tab == TAB_ACTIVE) {
+                if (status == ListingStatus.AVAILABLE || status == ListingStatus.RESERVED) {
+                    result.add(listing);
+                }
+            } else if (tab == TAB_SOLD) {
+                if (status == ListingStatus.SOLD) {
+                    result.add(listing);
+                }
+            } else if (tab == TAB_HIDDEN) {
+                if (status == ListingStatus.HIDDEN || status == ListingStatus.REMOVED) {
+                    result.add(listing);
+                }
+            } else if (tab == TAB_DRAFT) {
+                if (status == ListingStatus.DRAFT) {
+                    result.add(listing);
+                }
+            }
+        }
+        return result;
+    }
+
+    // Filters listings by category and sorts them by date descending for NEWEST.
+    public static List<Listing> sortAndFilter(List<Listing> listings, SortOrder order, String categoryId) {
+        List<Listing> result = new ArrayList<Listing>();
+        if (listings == null) {
+            return result;
+        }
+        boolean hasCategory = categoryId != null && !categoryId.trim().isEmpty();
+        for (Listing listing : listings) {
+            if (listing == null) {
+                continue;
+            }
+            if (hasCategory) {
+                if (listing.getCategoryId() != null && listing.getCategoryId().equals(categoryId.trim())) {
+                    result.add(listing);
+                }
+            } else {
+                result.add(listing);
+            }
+        }
+
+        Collections.sort(result, new Comparator<Listing>() {
+            @Override
+            public int compare(Listing o1, Listing o2) {
+                if (o1 == null && o2 == null) {
+                    return 0;
+                }
+                if (o1 == null || o1.getCreatedAt() == null) {
+                    return 1;
+                }
+                if (o2 == null || o2.getCreatedAt() == null) {
+                    return -1;
+                }
+                return o2.getCreatedAt().compareTo(o1.getCreatedAt());
+            }
+        });
+        return result;
+    }
+
+    // Returns action codes permitted on the card menu for a listing in its current state.
+    public static List<String> allowedActions(Listing listing) {
+        List<String> actions = new ArrayList<String>();
+        if (listing == null || listing.getStatus() == null) {
+            return actions;
+        }
+        ListingStatus status = listing.getStatus();
+        if (status == ListingStatus.AVAILABLE) {
+            actions.add(ACTION_EDIT);
+            actions.add(ACTION_MARK_SOLD);
+            actions.add(ACTION_HIDE);
+        } else if (status == ListingStatus.RESERVED) {
+            // Under reservation, seller cannot change state directly.
+        } else if (status == ListingStatus.HIDDEN) {
+            String reason = listing.getStatusReason();
+            if (reason == null || reason.trim().isEmpty()) {
+                actions.add(ACTION_SHOW);
+                actions.add(ACTION_EDIT);
+            } else {
+                actions.add(ACTION_VIEW_REASON);
+            }
+        } else if (status == ListingStatus.SOLD) {
+            actions.add(ACTION_REOPEN);
+        } else if (status == ListingStatus.DRAFT) {
+            actions.add(ACTION_EDIT);
+            actions.add(ACTION_PUBLISH);
+            actions.add(ACTION_DELETE);
+        } else if (status == ListingStatus.REMOVED) {
+            // Removed listing is read-only.
+        }
+        return actions;
+    }
+
+    // Checks whether transitioning between two listing statuses is permitted directly.
+    public static boolean isAllowedStatusChange(ListingStatus from, ListingStatus to) {
+        if (from == ListingStatus.AVAILABLE && to == ListingStatus.SOLD) {
+            return true;
+        }
+        if (from == ListingStatus.SOLD && to == ListingStatus.AVAILABLE) {
+            return true;
+        }
+        return false;
     }
 }
