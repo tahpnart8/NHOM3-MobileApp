@@ -54,21 +54,21 @@ public class NotificationListFragmentTest {
     }
 
     @Test
-    public void getDestinationAction_newMessage_returnsUnknown() {
+    public void getDestinationAction_newMessage_returnsChatAction() {
         int action = NotificationListFragment.getDestinationAction(NotificationType.NEW_MESSAGE);
-        assertEquals(NotificationListFragment.ACTION_UNKNOWN, action);
+        assertEquals(R.id.action_global_chat, action);
     }
 
     @Test
-    public void getDestinationAction_newOffer_returnsUnknown() {
+    public void getDestinationAction_newOffer_returnsChatAction() {
         int action = NotificationListFragment.getDestinationAction(NotificationType.NEW_OFFER);
-        assertEquals(NotificationListFragment.ACTION_UNKNOWN, action);
+        assertEquals(R.id.action_global_chat, action);
     }
 
     @Test
-    public void getDestinationAction_offerResult_returnsUnknown() {
+    public void getDestinationAction_offerResult_returnsChatAction() {
         int action = NotificationListFragment.getDestinationAction(NotificationType.OFFER_RESULT);
-        assertEquals(NotificationListFragment.ACTION_UNKNOWN, action);
+        assertEquals(R.id.action_global_chat, action);
     }
 
     @Test
@@ -84,7 +84,7 @@ public class NotificationListFragmentTest {
         for (int i = 0; i < types.length; i++) {
             NotificationType type = types[i];
             int action = NotificationListFragment.getDestinationAction(type);
-            assertNotEquals(0, action);
+            assertNotEquals(NotificationListFragment.ACTION_UNKNOWN, action);
         }
     }
 }

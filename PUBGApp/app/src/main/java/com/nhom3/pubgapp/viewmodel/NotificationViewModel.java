@@ -11,7 +11,7 @@ import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.List;
 
-// State for the notification list and the unread badge. Action bodies report NOT_READY until the repositories are filled.
+// State for the notification list and the unread badge.
 public class NotificationViewModel extends ViewModel {
 
     private final MutableLiveData<List<AppNotification>> notifications = new MutableLiveData<>();
@@ -20,6 +20,7 @@ public class NotificationViewModel extends ViewModel {
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
 
+    private final java.util.Set<String> pendingMarks = new java.util.HashSet<String>();
     private final NotificationRepository notificationRepository;
 
     public NotificationViewModel() {
@@ -57,8 +58,8 @@ public class NotificationViewModel extends ViewModel {
         notificationRepository.getForUser(uid, new DataCallback<List<AppNotification>>() {
             @Override
             public void onSuccess(List<AppNotification> list) {
-                loading.setValue(false);
-                notifications.setValue(list);
+                loading.postValue(false);
+                notifications.postValue(list);
                 int count = 0;
                 if (list != null) {
                     for (AppNotification item : list) {
@@ -67,13 +68,13 @@ public class NotificationViewModel extends ViewModel {
                         }
                     }
                 }
-                unreadCount.setValue(count);
+                unreadCount.postValue(Integer.valueOf(count));
             }
 
             @Override
             public void onError(String message) {
-                loading.setValue(false);
-                error.setValue(message != null ? message : "Không thể tải danh sách thông báo.");
+                loading.postValue(false);
+                error.postValue(message != null ? message : "Không thể tải danh sách thông báo.");
             }
         });
     }
@@ -82,9 +83,14 @@ public class NotificationViewModel extends ViewModel {
         if (id == null || id.isEmpty()) {
             return;
         }
+        if (pendingMarks.contains(id)) {
+            return;
+        }
+        pendingMarks.add(id);
         notificationRepository.markRead(id, new DataCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
+                pendingMarks.remove(id);
                 List<AppNotification> current = notifications.getValue();
                 if (current != null) {
                     int unread = 0;
@@ -96,14 +102,17 @@ public class NotificationViewModel extends ViewModel {
                             unread++;
                         }
                     }
-                    notifications.setValue(current);
-                    unreadCount.setValue(unread);
+                    notifications.postValue(current);
+                    unreadCount.postValue(Integer.valueOf(unread));
                 }
             }
 
             @Override
             public void onError(String message) {
-                error.setValue(message);
+                pendingMarks.remove(id);
+                if (notifications.getValue() == null) {
+                    error.postValue(message);
+                }
             }
         });
     }

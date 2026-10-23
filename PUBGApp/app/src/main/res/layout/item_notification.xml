@@ -11,11 +11,11 @@
 
     <ImageView
         android:id="@+id/imageNotificationType"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="@dimen/space_xl"
+        android:layout_height="@dimen/space_xl"
         android:layout_marginEnd="@dimen/space_md"
         android:background="@drawable/bg_avatar"
-        android:padding="6dp" />
+        android:padding="@dimen/space_xs" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -53,8 +53,8 @@
 
     <View
         android:id="@+id/viewUnreadDot"
-        android:layout_width="10dp"
-        android:layout_height="10dp"
+        android:layout_width="@dimen/space_sm"
+        android:layout_height="@dimen/space_sm"
         android:layout_marginStart="@dimen/space_sm"
         android:background="@drawable/bg_unread_dot" />
 </LinearLayout>

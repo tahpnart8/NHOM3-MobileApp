@@ -27,7 +27,7 @@ import java.util.List;
 // Screen C06: Notification list, marking notifications read, and navigation by type.
 public class NotificationListFragment extends Fragment {
 
-    public static final int ACTION_UNKNOWN = -1;
+    static final int ACTION_UNKNOWN = -1;
 
     private FragmentNotificationListBinding binding;
     private NotificationViewModel viewModel;
@@ -38,6 +38,10 @@ public class NotificationListFragment extends Fragment {
             return ACTION_UNKNOWN;
         }
         switch (type) {
+            case NEW_MESSAGE:
+            case NEW_OFFER:
+            case OFFER_RESULT:
+                return R.id.action_global_chat;
             case DEAL_UPDATE:
             case PAYMENT_UPDATE:
                 return R.id.action_global_deal_detail;
@@ -49,9 +53,6 @@ public class NotificationListFragment extends Fragment {
             case VERIFICATION_RESULT:
             case COMPLAINT_RESULT:
                 return R.id.action_global_my_profile;
-            case NEW_MESSAGE:
-            case NEW_OFFER:
-            case OFFER_RESULT:
             default:
                 return ACTION_UNKNOWN;
         }
@@ -140,6 +141,9 @@ public class NotificationListFragment extends Fragment {
             public void onChanged(Boolean loading) {
                 boolean isLoading = loading != null && loading;
                 binding.progressLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+                if (isLoading) {
+                    binding.viewErrorState.layoutErrorState.setVisibility(View.GONE);
+                }
             }
         });
 
@@ -147,10 +151,16 @@ public class NotificationListFragment extends Fragment {
             @Override
             public void onChanged(String err) {
                 if (err != null && !err.isEmpty()) {
-                    binding.recyclerNotifications.setVisibility(View.GONE);
-                    binding.viewEmptyState.layoutEmptyState.setVisibility(View.GONE);
-                    binding.viewErrorState.layoutErrorState.setVisibility(View.VISIBLE);
-                    binding.viewErrorState.textErrorMessage.setText(R.string.notification_list_error);
+                    List<AppNotification> currentList = viewModel.getNotifications().getValue();
+                    if (currentList == null || currentList.isEmpty()) {
+                        binding.recyclerNotifications.setVisibility(View.GONE);
+                        binding.viewEmptyState.layoutEmptyState.setVisibility(View.GONE);
+                        binding.viewErrorState.layoutErrorState.setVisibility(View.VISIBLE);
+                        binding.viewErrorState.textErrorMessage.setText(err);
+                    } else {
+                        Toast.makeText(requireContext(), err, Toast.LENGTH_SHORT).show();
+                    }
+                    viewModel.clearError();
                 }
             }
         });
@@ -173,17 +183,24 @@ public class NotificationListFragment extends Fragment {
         }
 
         Bundle args = new Bundle();
-        if (actionId == R.id.action_global_deal_detail) {
-            args.putString("dealId", notification.getTargetId() != null ? notification.getTargetId() : "");
+        if (actionId == R.id.action_global_chat) {
+            String targetId = notification.getTargetId();
+            if (targetId == null || targetId.isEmpty()) {
+                return;
+            }
+            args.putString("conversationId", targetId);
+            args.putString("listingId", "");
+        } else if (actionId == R.id.action_global_deal_detail) {
+            String targetId = notification.getTargetId();
+            if (targetId == null || targetId.isEmpty()) {
+                return;
+            }
+            args.putString("dealId", targetId);
         } else if (actionId == R.id.action_global_seller_trust) {
             String uid = SessionManager.getInstance().getCurrentUserId();
             args.putString("userId", uid != null ? uid : "");
         }
 
-        try {
-            NavHostFragment.findNavController(NotificationListFragment.this).navigate(actionId, args);
-        } catch (Exception ignored) {
-            // Screen destination might be in a different module during development
-        }
+        NavHostFragment.findNavController(NotificationListFragment.this).navigate(actionId, args);
     }
 }
