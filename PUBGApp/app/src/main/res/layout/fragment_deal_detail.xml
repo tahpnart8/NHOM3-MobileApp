@@ -677,6 +677,15 @@
                     app:strokeColor="?attr/colorError" />
             </LinearLayout>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonWriteReview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/touch_min"
+                android:text="@string/trade_deal_detail_write_review"
+                android:visibility="gone"
+                app:cornerRadius="@dimen/radius_md" />
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

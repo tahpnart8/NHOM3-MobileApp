@@ -31,6 +31,7 @@ import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.databinding.FragmentDealDetailBinding;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Payment;
+import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.DeliveryMethod;
@@ -80,6 +81,7 @@ public class DealDetailFragment extends Fragment {
         setupErrorAndEmptyStates();
         setupEditTermsControls();
         setupCancelControls();
+        setupWriteReviewButton();
         observeViewModel();
         checkAccountVerification();
 
@@ -366,7 +368,41 @@ public class DealDetailFragment extends Fragment {
         });
     }
 
+    private void setupWriteReviewButton() {
+        binding.buttonWriteReview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle args = new Bundle();
+                args.putString("dealId", dealId);
+                NavController navController = NavHostFragment.findNavController(DealDetailFragment.this);
+                navController.navigate(R.id.action_global_write_review, args);
+            }
+        });
+    }
+
+    // Shown to both sides once the deal is received or completed, until they have written their review.
+    private void renderWriteReviewButton(Deal deal) {
+        binding.buttonWriteReview.setVisibility(View.GONE);
+        boolean canReview = deal.getStatus() == DealStatus.RECEIVED || deal.getStatus() == DealStatus.COMPLETED;
+        if (canReview) {
+            viewModel.loadMyReview();
+        }
+    }
+
+    private void observeMyReview() {
+        viewModel.getMyReview().observe(getViewLifecycleOwner(), new Observer<Review>() {
+            @Override
+            public void onChanged(Review review) {
+                Deal deal = viewModel.getDeal().getValue();
+                boolean canReview = deal != null && (deal.getStatus() == DealStatus.RECEIVED
+                        || deal.getStatus() == DealStatus.COMPLETED);
+                binding.buttonWriteReview.setVisibility(canReview && review == null ? View.VISIBLE : View.GONE);
+            }
+        });
+    }
+
     private void observeViewModel() {
+        observeMyReview();
         viewModel.getLoading().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean isLoading) {
@@ -487,6 +523,7 @@ public class DealDetailFragment extends Fragment {
         renderProductCard(deal);
         renderDealInfo(deal, currentUid);
         renderActionButtons(deal, currentUid);
+        renderWriteReviewButton(deal);
         updateVerificationUI();
     }
 

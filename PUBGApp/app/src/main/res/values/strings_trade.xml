@@ -105,6 +105,27 @@
     <string name="trade_deal_detail_not_participant">Bạn không phải người tham gia giao dịch này.</string>
     <string name="trade_deal_detail_select_delivery_error">Chưa chọn phương thức giao nhận.</string>
     <string name="trade_deal_detail_shipping_address_error">Chưa có địa chỉ giao hàng.</string>
+    <string name="trade_deal_detail_write_review">Viết đánh giá</string>
+    <string name="trade_write_review_title">Đánh giá giao dịch</string>
+    <string name="trade_write_review_thumb_description">Ảnh món đồ của giao dịch</string>
+    <string name="trade_write_review_partner_seller">Với người bán</string>
+    <string name="trade_write_review_partner_buyer">Với người mua</string>
+    <string name="trade_write_review_overall_question">Bạn đánh giá tổng thể thế nào?</string>
+    <string name="trade_write_review_details_heading">Chi tiết đánh giá</string>
+    <string name="trade_write_review_accuracy">Độ chính xác thông tin</string>
+    <string name="trade_write_review_attitude">Thái độ giao dịch</string>
+    <string name="trade_write_review_commitment">Đúng cam kết</string>
+    <string name="trade_write_review_rating_value">%1$d/5</string>
+    <string name="trade_write_review_comment_hint">Chia sẻ trải nghiệm của bạn...</string>
+    <string name="trade_write_review_submit">Gửi đánh giá</string>
+    <string name="trade_write_review_submit_hint">Chọn đủ sao tổng thể và ba tiêu chí để gửi.</string>
+    <string name="trade_write_review_success">Đã gửi đánh giá. Cảm ơn bạn!</string>
+    <string name="trade_write_review_offline">Đang ngoại tuyến. Cần có mạng để gửi đánh giá.</string>
+    <string name="trade_write_review_already_title">Bạn đã đánh giá giao dịch này</string>
+    <string name="trade_write_review_already_note">Mỗi bên chỉ đánh giá một lần, không thể đánh giá lại.</string>
+    <string name="trade_write_review_not_allowed">Chỉ đánh giá được khi giao dịch đã nhận hàng hoặc đã hoàn tất.</string>
+    <string name="trade_write_review_not_participant">Bạn không phải người tham gia giao dịch này.</string>
+    <string name="trade_write_review_not_found">Không tìm thấy giao dịch để đánh giá.</string>
     <string name="trade_deal_detail_pay">Thanh toán</string>
     <string name="trade_deal_payment_heading">Thanh toán giao dịch</string>
     <string name="trade_deal_payment_step1_title">Chọn phương thức thanh toán</string>
@@ -131,6 +152,5 @@
     <string name="trade_deal_payment_return_button">Về chi tiết giao dịch</string>
     <string name="trade_deal_payment_not_buyer">Chỉ người mua mới có quyền thực hiện thanh toán cho giao dịch này.</string>
     <string name="trade_deal_payment_not_eligible">Giao dịch không đủ điều kiện thanh toán hoặc đã được thanh toán.</string>
-    <string name="trade_write_review_title">C05 Viết đánh giá</string>
     <string name="trade_deal_payment_title">C07 Thanh toán giao dịch</string>
 </resources>
