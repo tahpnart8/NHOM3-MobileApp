@@ -26,7 +26,17 @@ public class TrustViewModel extends ViewModel {
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
 
+    public static final int CRITERIA_ACCURACY = 0;
+    public static final int CRITERIA_ATTITUDE = 1;
+    public static final int CRITERIA_COMMITMENT = 2;
+    private static final int CRITERIA_COUNT = 3;
+    private static final double ONE_DECIMAL = 10.0;
+    private static final String MESSAGE_NOT_SIGNED_IN = "Bạn cần đăng nhập để xem đánh giá.";
+
     private final ReviewRepository reviewRepository = new ReviewRepository();
+
+    // Which list is in reviews ("uid:received"), so a rotation does not read it again.
+    private String loadedReviewsKey;
 
     public LiveData<List<Review>> getReviews() {
         return reviews;
@@ -81,7 +91,23 @@ public class TrustViewModel extends ViewModel {
     }
 
     public void loadReviews(String uid, boolean received) {
-        error.setValue(DataCallback.NOT_READY);
+        if (uid == null || uid.isEmpty()) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        String key = uid + ":" + received;
+        if (key.equals(loadedReviewsKey) && reviews.getValue() != null) {
+            return;
+        }
+        loadedReviewsKey = key;
+        reviews.setValue(null);
+        loading.setValue(true);
+        DataCallback<List<Review>> callback = new ReviewsCallback(key);
+        if (received) {
+            reviewRepository.getReceived(uid, callback);
+        } else {
+            reviewRepository.getGiven(uid, callback);
+        }
     }
 
     public void submitReport(Report report, List<Uri> imageUris) {
@@ -118,6 +144,58 @@ public class TrustViewModel extends ViewModel {
 
     public void withdrawComplaint(String id) {
         error.setValue(DataCallback.NOT_READY);
+    }
+
+    // Only the overall rating feeds ratingSum, so the three criteria are averaged here from the received reviews.
+    public static double[] averageCriteria(List<Review> received) {
+        double[] averages = new double[CRITERIA_COUNT];
+        if (received == null || received.isEmpty()) {
+            return averages;
+        }
+        double accuracySum = 0;
+        double attitudeSum = 0;
+        double commitmentSum = 0;
+        for (Review review : received) {
+            accuracySum = accuracySum + review.getAccuracyRating();
+            attitudeSum = attitudeSum + review.getAttitudeRating();
+            commitmentSum = commitmentSum + review.getCommitmentRating();
+        }
+        int count = received.size();
+        averages[CRITERIA_ACCURACY] = roundToOneDecimal(accuracySum / count);
+        averages[CRITERIA_ATTITUDE] = roundToOneDecimal(attitudeSum / count);
+        averages[CRITERIA_COMMITMENT] = roundToOneDecimal(commitmentSum / count);
+        return averages;
+    }
+
+    private static double roundToOneDecimal(double value) {
+        return Math.round(value * ONE_DECIMAL) / ONE_DECIMAL;
+    }
+
+    // A late answer for a list the screen no longer shows is dropped.
+    private final class ReviewsCallback implements DataCallback<List<Review>> {
+        private final String key;
+
+        ReviewsCallback(String key) {
+            this.key = key;
+        }
+
+        @Override
+        public void onSuccess(List<Review> result) {
+            if (!key.equals(loadedReviewsKey)) {
+                return;
+            }
+            reviews.postValue(result);
+            loading.postValue(false);
+        }
+
+        @Override
+        public void onError(String message) {
+            if (key.equals(loadedReviewsKey)) {
+                loadedReviewsKey = null;
+            }
+            loading.postValue(false);
+            error.postValue(message);
+        }
     }
 
     public void clearError() {
