@@ -1,12 +1,11 @@
 rules_version = '2';
 
-// Bản NỀN của Security Rules (đợt 0) cộng luật GHI của bốn chỗ (issue #131):
-// users, users/{uid}/private/identity, sellerVerifications, listings;
-// và các phần của issue #110: users/{uid}/warnings, notifications, rồi mạch mua bán
-// conversations, messages, offers, deals (kèm statusHistory), payments, reviews.
-// Bản đầy đủ theo workflow/docs/data/security-rules.md làm tiếp ở issue #110. Ở bản này:
-// chỉ ĐỌC được mở theo ma trận; GHI chỉ mở cho các chỗ trên và collection images
-// (tạo và xóa ảnh có giới hạn kích thước). Mọi collection khác vẫn từ chối ghi.
+// Security Rules theo workflow/docs/data/security-rules.md. Bản nền (đợt 0) cộng luật GHI của
+// issue #131 (users, users/{uid}/private/identity, sellerVerifications, listings) và issue #110:
+// warnings, notifications, mạch mua bán (conversations, messages, offers, deals kèm statusHistory,
+// payments, reviews), rồi addresses, saved, follows, admins, reports, complaints, adminNote,
+// activityLogs, bannedKeywords. Còn CHƯA mở: dòng "Ghi điểm đánh giá" của users (chờ leader chốt
+// ở #110). Mọi đường dẫn không nêu dưới đây vẫn từ chối.
 service cloud.firestore {
   match /databases/{database}/documents {
 
