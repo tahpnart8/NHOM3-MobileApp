@@ -172,7 +172,6 @@ service cloud.firestore {
     // Tin đăng (security-rules.md mục 10): khách đọc tin đang mở; tin DRAFT, HIDDEN, REMOVED
     // chỉ chủ tin và admin. Truy vấn của ứng dụng phải mang status in [AVAILABLE, RESERVED, SOLD].
     // Ghi: mỗi chuyển trạng thái là một nhánh "allow" riêng để lỗi từ chối dễ truy ra.
-    // CHƯA mở ở đây (thuộc #110, cần offers và deals): giữ chỗ, nhả giữ chỗ, bán xong khi hoàn tất.
     match /listings/{id} {
       // Người đang ghi là chủ tin hiện có.
       function isOwner() {
@@ -356,6 +355,43 @@ service cloud.firestore {
         && writerActive()
         && request.resource.data.flagged == false
         && onlyKeys(['flagged', 'updatedAt'])
+        && serverStamp('updatedAt');
+
+      // Giữ chỗ khi chấp nhận offer: cùng lô với offer ACCEPTED và giao dịch PENDING_CONFIRM
+      // trỏ về tin này; reservedDealId ghi lại giao dịch đang giữ tin.
+      allow update: if isOwner()
+        && writerActive()
+        && resource.data.status == 'AVAILABLE'
+        && request.resource.data.status == 'RESERVED'
+        && onlyKeys(['status', 'reservedDealId', 'updatedAt'])
+        && reqString(request.resource.data, 'reservedDealId', 200)
+        && dealAfter(request.resource.data.reservedDealId).listingId == id
+        && dealAfter(request.resource.data.reservedDealId).sellerId == me()
+        && dealAfter(request.resource.data.reservedDealId).status == 'PENDING_CONFIRM'
+        && offerAfter(dealAfter(request.resource.data.reservedDealId).offerId).status == 'ACCEPTED'
+        && offerAfter(dealAfter(request.resource.data.reservedDealId).offerId).listingId == id
+        && serverStamp('updatedAt');
+
+      // Nhả giữ chỗ khi giao dịch đang giữ tin bị hủy: một bên của giao dịch, hoặc admin.
+      allow update: if writerActive()
+        && resource.data.status == 'RESERVED'
+        && request.resource.data.status == 'AVAILABLE'
+        && onlyKeys(['status', 'reservedDealId', 'updatedAt'])
+        && emptyString(request.resource.data, 'reservedDealId')
+        && dealAfter(resource.data.reservedDealId).status == 'CANCELLED'
+        && (dealAfter(resource.data.reservedDealId).buyerId == me()
+            || dealAfter(resource.data.reservedDealId).sellerId == me()
+            || isAdmin())
+        && serverStamp('updatedAt');
+
+      // Bán xong khi giao dịch đang giữ tin hoàn tất: một bên của giao dịch đó.
+      allow update: if writerActive()
+        && resource.data.status == 'RESERVED'
+        && request.resource.data.status == 'SOLD'
+        && onlyKeys(['status', 'updatedAt'])
+        && dealAfter(resource.data.reservedDealId).status == 'COMPLETED'
+        && (dealAfter(resource.data.reservedDealId).buyerId == me()
+            || dealAfter(resource.data.reservedDealId).sellerId == me())
         && serverStamp('updatedAt');
 
       // Xóa: chỉ chủ tin và chỉ bản nháp. Tin đã đăng thì ẩn.
