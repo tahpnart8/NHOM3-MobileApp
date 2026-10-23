@@ -10,6 +10,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
@@ -571,6 +572,13 @@ public class ListingRepository extends BaseRepository {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
+                        if (e instanceof FirebaseFirestoreException) {
+                            FirebaseFirestoreException fe = (FirebaseFirestoreException) e;
+                            if (fe.getCode() == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                                fail(cb, e);
+                                return;
+                            }
+                        }
                         loadFromCache(id, cb);
                     }
                 });
