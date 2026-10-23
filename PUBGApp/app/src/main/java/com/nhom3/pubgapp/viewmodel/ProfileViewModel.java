@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.nhom3.pubgapp.data.AuthRepository;
 import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.ListingRepository;
 import com.nhom3.pubgapp.data.MediaRepository;
 import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.model.Listing;
@@ -58,15 +59,19 @@ public class ProfileViewModel extends ViewModel {
     private static final String MESSAGE_ALREADY_PENDING = "Yêu cầu xác thực tài khoản đang chờ duyệt.";
     private static final String MESSAGE_ALREADY_APPROVED = "Tài khoản đã xác thực.";
     private static final String MESSAGE_NO_RESUBMIT_LEFT = "Đã hết số lần gửi lại, hãy liên hệ admin.";
+    private static final String MESSAGE_CANNOT_FOLLOW_SELF = "Bạn không thể tự theo dõi chính mình.";
 
     private final UserRepository userRepository = new UserRepository();
     private final AuthRepository authRepository = new AuthRepository();
     private final MediaRepository mediaRepository = new MediaRepository();
+    private final ListingRepository listingRepository = new ListingRepository();
 
     // The uid whose profile is in profile, so a rotation does not read users/{uid} again.
     private String loadedUid;
     // The uid of the last read started, so a late answer for a previous account is dropped.
     private String requestedUid;
+    // The seller whose listings are in userListings, so a rotation does not query again.
+    private String listingsUid;
 
     public LiveData<User> getProfile() {
         return profile;
@@ -195,12 +200,23 @@ public class ProfileViewModel extends ViewModel {
         error.setValue(DataCallback.NOT_READY);
     }
 
+    // uid is the person being followed; the follower is always the signed-in user.
     public void follow(String uid) {
-        error.setValue(DataCallback.NOT_READY);
+        String me = followerIdOrReport(uid);
+        if (me == null) {
+            return;
+        }
+        loading.setValue(true);
+        userRepository.follow(me, uid, new FollowCallback(uid, true));
     }
 
     public void unfollow(String uid) {
-        error.setValue(DataCallback.NOT_READY);
+        String me = followerIdOrReport(uid);
+        if (me == null) {
+            return;
+        }
+        loading.setValue(true);
+        userRepository.unfollow(me, uid, new FollowCallback(uid, false));
     }
 
     public void loadSaved() {
@@ -211,8 +227,31 @@ public class ProfileViewModel extends ViewModel {
         error.setValue(DataCallback.NOT_READY);
     }
 
+    // Keeps AVAILABLE, RESERVED and SOLD as the repository returns them; each screen filters by tab.
     public void loadUserListings(String uid) {
-        error.setValue(DataCallback.NOT_READY);
+        if (uid == null || uid.isEmpty()) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        if (uid.equals(listingsUid) && userListings.getValue() != null) {
+            return;
+        }
+        listingsUid = uid;
+        userListings.setValue(null);
+        listingRepository.getBySeller(uid, new DataCallback<List<Listing>>() {
+            @Override
+            public void onSuccess(List<Listing> result) {
+                if (!uid.equals(listingsUid)) {
+                    return;
+                }
+                userListings.postValue(result);
+            }
+
+            @Override
+            public void onError(String message) {
+                error.postValue(message);
+            }
+        });
     }
 
     public void requestVerification(String nationalId, List<Uri> imageUris) {
@@ -286,6 +325,7 @@ public class ProfileViewModel extends ViewModel {
         profile.setValue(null);
         stats.setValue(null);
         verification.setValue(null);
+        following.setValue(null);
     }
 
     private void fetchProfile(String uid) {
@@ -299,6 +339,7 @@ public class ProfileViewModel extends ViewModel {
                 }
                 loadedUid = uid;
                 profile.postValue(result);
+                fetchFollowing(uid);
                 fetchStats(uid);
             }
 
@@ -328,6 +369,73 @@ public class ProfileViewModel extends ViewModel {
                 error.postValue(message);
             }
         });
+    }
+
+    // Only someone else's page has a Follow button, so the own profile skips this read.
+    private void fetchFollowing(String uid) {
+        String me = SessionManager.getInstance().getCurrentUserId();
+        if (me == null || me.equals(uid)) {
+            return;
+        }
+        userRepository.getFollowingIds(me, new DataCallback<List<String>>() {
+            @Override
+            public void onSuccess(List<String> result) {
+                if (!uid.equals(requestedUid)) {
+                    return;
+                }
+                following.postValue(result != null && result.contains(uid));
+            }
+
+            @Override
+            public void onError(String message) {
+                error.postValue(message);
+            }
+        });
+    }
+
+    // Returns the signed-in uid, or null after putting the reason into error.
+    private String followerIdOrReport(String uid) {
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return null;
+        }
+        String me = SessionManager.getInstance().getCurrentUserId();
+        if (me == null) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return null;
+        }
+        if (uid == null || uid.isEmpty() || me.equals(uid)) {
+            error.setValue(MESSAGE_CANNOT_FOLLOW_SELF);
+            return null;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return null;
+        }
+        return me;
+    }
+
+    // On success the flag flips and the follower count is read again; on failure the flag stays as it was.
+    private final class FollowCallback implements DataCallback<Void> {
+        private final String uid;
+        private final boolean nowFollowing;
+
+        FollowCallback(String uid, boolean nowFollowing) {
+            this.uid = uid;
+            this.nowFollowing = nowFollowing;
+        }
+
+        @Override
+        public void onSuccess(Void result) {
+            following.postValue(nowFollowing);
+            done.postValue(true);
+            fetchStats(uid);
+        }
+
+        @Override
+        public void onError(String message) {
+            loading.postValue(false);
+            error.postValue(message);
+        }
     }
 
     private void saveAvatar(User user, String base64) {
