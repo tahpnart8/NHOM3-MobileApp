@@ -35,11 +35,44 @@ public class MessageEntity {
     }
 
     public MessageEntity fromModel(ChatMessage model) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (model == null) {
+            return this;
+        }
+        this.id = model.getId() != null ? model.getId() : "";
+        this.conversationId = model.getConversationId();
+        this.senderId = model.getSenderId();
+        if (model.getType() != null) {
+            this.type = model.getType().name();
+        }
+        this.text = model.getText();
+        this.imageId = model.getImageId();
+        this.offerId = model.getOfferId();
+        if (model.getCreatedAt() != null) {
+            this.sentAtMillis = model.getCreatedAt().toDate().getTime();
+        }
+        return this;
     }
 
     public ChatMessage toModel() {
-        throw new UnsupportedOperationException("NOT_READY");
+        ChatMessage message = new ChatMessage();
+        message.setId(this.id);
+        message.setConversationId(this.conversationId);
+        message.setSenderId(this.senderId);
+        if (this.type != null) {
+            try {
+                message.setType(com.nhom3.pubgapp.model.enums.MessageType.valueOf(this.type));
+            } catch (IllegalArgumentException e) {
+                // Ignore invalid type
+            }
+        }
+        message.setText(this.text);
+        message.setImageId(this.imageId);
+        message.setOfferId(this.offerId);
+        if (this.sentAtMillis > 0) {
+            java.util.Date date = new java.util.Date(this.sentAtMillis);
+            message.setCreatedAt(new com.google.firebase.Timestamp(date));
+        }
+        return message;
     }
 
     @NonNull

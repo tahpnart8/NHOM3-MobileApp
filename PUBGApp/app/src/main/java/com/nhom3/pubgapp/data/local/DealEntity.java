@@ -43,11 +43,80 @@ public class DealEntity {
     }
 
     public DealEntity fromModel(Deal model) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (model == null) {
+            return this;
+        }
+        this.id = model.getId() != null ? model.getId() : "";
+        this.listingId = model.getListingId();
+        this.buyerId = model.getBuyerId();
+        this.sellerId = model.getSellerId();
+        this.itemTitle = model.getItemTitle();
+        this.itemThumb = model.getItemThumb();
+        this.agreedPrice = model.getAgreedPrice();
+        if (model.getStatus() != null) {
+            this.status = model.getStatus().name();
+        }
+        if (model.getTradeType() != null) {
+            this.tradeType = model.getTradeType().name();
+        }
+        if (model.getDeliveryMethod() != null) {
+            this.deliveryMethod = model.getDeliveryMethod().name();
+        }
+        if (model.getAutoReleaseAt() != null) {
+            this.autoReleaseAtMillis = model.getAutoReleaseAt().toDate().getTime();
+        }
+        if (model.getReceivedAt() != null) {
+            this.receivedAtMillis = model.getReceivedAt().toDate().getTime();
+        }
+        if (model.getUpdatedAt() != null) {
+            this.updatedAtMillis = model.getUpdatedAt().toDate().getTime();
+        }
+        return this;
     }
 
     public Deal toModel() {
-        throw new UnsupportedOperationException("NOT_READY");
+        Deal deal = new Deal();
+        deal.setId(this.id);
+        deal.setListingId(this.listingId);
+        deal.setBuyerId(this.buyerId);
+        deal.setSellerId(this.sellerId);
+        deal.setItemTitle(this.itemTitle);
+        deal.setItemThumb(this.itemThumb);
+        deal.setAgreedPrice(this.agreedPrice);
+        if (this.status != null) {
+            try {
+                deal.setStatus(com.nhom3.pubgapp.model.enums.DealStatus.valueOf(this.status));
+            } catch (IllegalArgumentException e) {
+                // Ignore
+            }
+        }
+        if (this.tradeType != null) {
+            try {
+                deal.setTradeType(com.nhom3.pubgapp.model.enums.TradeType.valueOf(this.tradeType));
+            } catch (IllegalArgumentException e) {
+                // Ignore
+            }
+        }
+        if (this.deliveryMethod != null) {
+            try {
+                deal.setDeliveryMethod(com.nhom3.pubgapp.model.enums.DeliveryMethod.valueOf(this.deliveryMethod));
+            } catch (IllegalArgumentException e) {
+                // Ignore
+            }
+        }
+        if (this.autoReleaseAtMillis > 0) {
+            java.util.Date date = new java.util.Date(this.autoReleaseAtMillis);
+            deal.setAutoReleaseAt(new com.google.firebase.Timestamp(date));
+        }
+        if (this.receivedAtMillis > 0) {
+            java.util.Date date = new java.util.Date(this.receivedAtMillis);
+            deal.setReceivedAt(new com.google.firebase.Timestamp(date));
+        }
+        if (this.updatedAtMillis > 0) {
+            java.util.Date date = new java.util.Date(this.updatedAtMillis);
+            deal.setUpdatedAt(new com.google.firebase.Timestamp(date));
+        }
+        return deal;
     }
 
     @NonNull
