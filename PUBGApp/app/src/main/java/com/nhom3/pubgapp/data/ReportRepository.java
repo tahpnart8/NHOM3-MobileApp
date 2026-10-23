@@ -8,7 +8,6 @@ import androidx.annotation.Nullable;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.AggregateQuerySnapshot;
 import com.google.firebase.firestore.AggregateSource;
 import com.google.firebase.firestore.DocumentReference;
@@ -65,11 +64,10 @@ public class ReportRepository extends BaseRepository {
             "Báo cáo chưa hợp lệ, vui lòng kiểm tra lại lý do, mô tả và ảnh.";
     private static final String ERROR_NOT_FOUND = "Không tìm thấy báo cáo.";
     private static final String ERROR_NOT_OPEN = "Báo cáo này đã được xử lý hoặc đã hủy.";
-    private static final String ERROR_GENERIC = "Không kết nối được máy chủ, vui lòng thử lại.";
 
     public void create(Report report, DataCallback<Void> cb) {
-        String uid = signedInUserId();
-        if (uid == null) {
+        String uid = currentUserId();
+        if (uid.isEmpty()) {
             cb.onError(ERROR_NOT_SIGNED_IN);
             return;
         }
@@ -297,16 +295,6 @@ public class ReportRepository extends BaseRepository {
         return "\"" + value.replace("\"", "\"\"") + "\"";
     }
 
-    // BaseRepository.currentUserId is still a skeleton, so the uid is read here.
-    @Nullable
-    private String signedInUserId() {
-        FirebaseUser user = auth.getCurrentUser();
-        if (user == null) {
-            return null;
-        }
-        return user.getUid();
-    }
-
     private OnSuccessListener<Void> voidSuccess(DataCallback<Void> cb) {
         final DataCallback<Void> callback = cb;
         return new OnSuccessListener<Void>() {
@@ -322,8 +310,7 @@ public class ReportRepository extends BaseRepository {
         return new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception error) {
-                Log.e(TAG, "Firestore call failed", error);
-                callback.onError(ERROR_GENERIC);
+                fail(callback, error);
             }
         };
     }
