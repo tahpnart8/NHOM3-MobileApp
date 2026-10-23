@@ -223,6 +223,105 @@
                         android:minHeight="@dimen/touch_min"
                         android:visibility="gone"
                         app:cornerRadius="@dimen/radius_md" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutVerificationForm"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_md"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/inputNationalId"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/profile_my_profile_verify_national_id"
+                            app:counterEnabled="true"
+                            app:counterMaxLength="12">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editNationalId"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:digits="0123456789"
+                                android:importantForAutofill="no"
+                                android:inputType="number"
+                                android:maxLength="12" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_sm"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/buttonPickIdImage"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:minHeight="@dimen/touch_min"
+                                android:text="@string/profile_my_profile_verify_pick_id_image"
+                                app:cornerRadius="@dimen/radius_md" />
+
+                            <ImageView
+                                android:id="@+id/imageIdPreview"
+                                android:layout_width="@dimen/touch_min"
+                                android:layout_height="@dimen/touch_min"
+                                android:layout_marginStart="@dimen/space_sm"
+                                android:contentDescription="@string/profile_my_profile_verify_id_image_preview"
+                                android:scaleType="centerCrop"
+                                android:visibility="gone" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_sm"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/buttonPickPortraitImage"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:minHeight="@dimen/touch_min"
+                                android:text="@string/profile_my_profile_verify_pick_portrait_image"
+                                app:cornerRadius="@dimen/radius_md" />
+
+                            <ImageView
+                                android:id="@+id/imagePortraitPreview"
+                                android:layout_width="@dimen/touch_min"
+                                android:layout_height="@dimen/touch_min"
+                                android:layout_marginStart="@dimen/space_sm"
+                                android:contentDescription="@string/profile_my_profile_verify_portrait_image_preview"
+                                android:scaleType="centerCrop"
+                                android:visibility="gone" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/textImageHint"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_sm"
+                            android:text="@string/profile_my_profile_verify_image_hint"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonSubmitVerification"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_md"
+                            android:minHeight="@dimen/touch_min"
+                            android:text="@string/profile_my_profile_verify_submit"
+                            app:cornerRadius="@dimen/radius_md" />
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

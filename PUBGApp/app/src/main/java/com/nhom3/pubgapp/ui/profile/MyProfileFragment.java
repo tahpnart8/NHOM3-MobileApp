@@ -1,19 +1,27 @@
 package com.nhom3.pubgapp.ui.profile;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.core.os.BundleCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -25,6 +33,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentMyProfileBinding;
 import com.nhom3.pubgapp.model.ProfileStats;
+import com.nhom3.pubgapp.model.SellerVerification;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
 import com.nhom3.pubgapp.ui.admin.AdminActivity;
@@ -33,16 +42,64 @@ import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.AuthViewModel;
 import com.nhom3.pubgapp.viewmodel.ProfileViewModel;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /** D01: the signed-in user's own profile, shortcuts, account verification and sign out. */
 public class MyProfileFragment extends Fragment {
 
     private static final String ARG_USER_ID = "userId";
+    private static final String STATE_FORM_OPEN = "verificationFormOpen";
+    private static final String STATE_ID_IMAGE = "verificationIdImage";
+    private static final String STATE_PORTRAIT_IMAGE = "verificationPortraitImage";
+    private static final String IMAGE_TYPE_PREFIX = "image/";
+    private static final int PREVIEW_SAMPLE_SIZE = 8;
 
     private FragmentMyProfileBinding binding;
     private ProfileViewModel profileViewModel;
     private AuthViewModel authViewModel;
+
+    private ActivityResultLauncher<PickVisualMediaRequest> pickIdImage;
+    private ActivityResultLauncher<PickVisualMediaRequest> pickPortraitImage;
+    // The chosen images and the open form survive rotation through onSaveInstanceState (UC31 NFR3).
+    private Uri idImageUri;
+    private Uri portraitImageUri;
+    private boolean formOpen;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        pickIdImage = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(),
+                new ActivityResultCallback<Uri>() {
+                    @Override
+                    public void onActivityResult(Uri uri) {
+                        onIdImagePicked(uri);
+                    }
+                });
+        pickPortraitImage = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(),
+                new ActivityResultCallback<Uri>() {
+                    @Override
+                    public void onActivityResult(Uri uri) {
+                        onPortraitImagePicked(uri);
+                    }
+                });
+        if (savedInstanceState != null) {
+            formOpen = savedInstanceState.getBoolean(STATE_FORM_OPEN);
+            idImageUri = BundleCompat.getParcelable(savedInstanceState, STATE_ID_IMAGE, Uri.class);
+            portraitImageUri = BundleCompat.getParcelable(savedInstanceState, STATE_PORTRAIT_IMAGE, Uri.class);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_FORM_OPEN, formOpen);
+        outState.putParcelable(STATE_ID_IMAGE, idImageUri);
+        outState.putParcelable(STATE_PORTRAIT_IMAGE, portraitImageUri);
+    }
 
     @Nullable
     @Override
@@ -76,6 +133,9 @@ public class MyProfileFragment extends Fragment {
         }
         boolean online = NetworkMonitor.getInstance().isOnline();
         binding.includeOfflineBanner.getRoot().setVisibility(online ? View.GONE : View.VISIBLE);
+        if (profileViewModel != null) {
+            updateSubmitEnabled();
+        }
     }
 
     private void setUpClicks() {
@@ -103,6 +163,142 @@ public class MyProfileFragment extends Fragment {
         binding.textRowEditProfile.setOnClickListener(openEditProfile);
         setUpShortcutRows();
         setUpAccountButtons();
+        setUpVerificationForm();
+    }
+
+    private void setUpVerificationForm() {
+        binding.buttonStartVerification.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View clicked) {
+                formOpen = true;
+                binding.layoutVerificationForm.setVisibility(View.VISIBLE);
+                binding.buttonStartVerification.setVisibility(View.GONE);
+            }
+        });
+        binding.buttonPickIdImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View clicked) {
+                pickIdImage.launch(imageOnlyRequest());
+            }
+        });
+        binding.buttonPickPortraitImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View clicked) {
+                pickPortraitImage.launch(imageOnlyRequest());
+            }
+        });
+        binding.buttonSubmitVerification.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View clicked) {
+                submitVerification();
+            }
+        });
+        showPreview(binding.imageIdPreview, idImageUri);
+        showPreview(binding.imagePortraitPreview, portraitImageUri);
+    }
+
+    private PickVisualMediaRequest imageOnlyRequest() {
+        return new PickVisualMediaRequest.Builder()
+                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                .build();
+    }
+
+    private void onIdImagePicked(Uri uri) {
+        if (!isImage(uri)) {
+            return;
+        }
+        idImageUri = uri;
+        showPreview(binding.imageIdPreview, uri);
+    }
+
+    private void onPortraitImagePicked(Uri uri) {
+        if (!isImage(uri)) {
+            return;
+        }
+        portraitImageUri = uri;
+        showPreview(binding.imagePortraitPreview, uri);
+    }
+
+    // The picker can still hand back a non-image from some providers, so the type is checked here.
+    private boolean isImage(Uri uri) {
+        if (uri == null || binding == null) {
+            return false;
+        }
+        String type = requireContext().getContentResolver().getType(uri);
+        if (type == null || !type.startsWith(IMAGE_TYPE_PREFIX)) {
+            Snackbar.make(binding.getRoot(), R.string.profile_my_profile_verify_not_image, Snackbar.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
+    }
+
+    private void submitVerification() {
+        String nationalId = "";
+        if (binding.editNationalId.getText() != null) {
+            nationalId = binding.editNationalId.getText().toString();
+        }
+        List<Uri> imageUris = new ArrayList<Uri>();
+        imageUris.add(idImageUri);
+        imageUris.add(portraitImageUri);
+        profileViewModel.requestVerification(nationalId, imageUris);
+    }
+
+    private void updateSubmitEnabled() {
+        boolean loading = Boolean.TRUE.equals(profileViewModel.getLoading().getValue());
+        boolean online = NetworkMonitor.getInstance().isOnline();
+        binding.buttonSubmitVerification.setEnabled(online && !loading);
+    }
+
+    private void clearVerificationForm() {
+        formOpen = false;
+        idImageUri = null;
+        portraitImageUri = null;
+        binding.editNationalId.setText("");
+        binding.imageIdPreview.setVisibility(View.GONE);
+        binding.imagePortraitPreview.setVisibility(View.GONE);
+        binding.layoutVerificationForm.setVisibility(View.GONE);
+    }
+
+    private void showPreview(ImageView target, Uri uri) {
+        if (uri == null) {
+            target.setVisibility(View.GONE);
+            return;
+        }
+        Context appContext = requireContext().getApplicationContext();
+        Thread worker = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                postPreview(target, decodePreview(appContext, uri));
+            }
+        });
+        worker.start();
+    }
+
+    // A small sample is enough for a thumbnail and keeps a large photo from filling memory.
+    private static Bitmap decodePreview(Context context, Uri uri) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = PREVIEW_SAMPLE_SIZE;
+        try (InputStream input = context.getContentResolver().openInputStream(uri)) {
+            return BitmapFactory.decodeStream(input, null, options);
+        } catch (IOException | SecurityException readError) {
+            return null;
+        }
+    }
+
+    private void postPreview(ImageView target, Bitmap bitmap) {
+        if (bitmap == null || binding == null) {
+            return;
+        }
+        binding.getRoot().post(new Runnable() {
+            @Override
+            public void run() {
+                if (binding == null) {
+                    return;
+                }
+                target.setImageBitmap(bitmap);
+                target.setVisibility(View.VISIBLE);
+            }
+        });
     }
 
     private void setUpShortcutRows() {
@@ -167,12 +363,30 @@ public class MyProfileFragment extends Fragment {
             @Override
             public void onChanged(Boolean loading) {
                 updateScreenState();
+                updateSubmitEnabled();
             }
         });
         profileViewModel.getError().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String message) {
                 showError(message);
+            }
+        });
+        profileViewModel.getVerification().observe(getViewLifecycleOwner(), new Observer<SellerVerification>() {
+            @Override
+            public void onChanged(SellerVerification request) {
+                showRejectedRequest(request);
+            }
+        });
+        profileViewModel.getDone().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean finished) {
+                if (Boolean.TRUE.equals(finished)) {
+                    profileViewModel.clearDone();
+                    clearVerificationForm();
+                    Snackbar.make(binding.getRoot(), R.string.profile_my_profile_verify_sent,
+                            Snackbar.LENGTH_LONG).show();
+                }
             }
         });
     }
@@ -183,9 +397,9 @@ public class MyProfileFragment extends Fragment {
         boolean hasProfile = profileViewModel.getProfile().getValue() != null;
         binding.progressLoading.setVisibility(loading && !hasProfile ? View.VISIBLE : View.GONE);
         binding.scrollContent.setVisibility(hasProfile ? View.VISIBLE : View.GONE);
-        if (hasProfile || loading) {
-            binding.includeErrorState.getRoot().setVisibility(View.GONE);
-        }
+        // Nothing loaded and nothing loading means the last read failed, also after a rotation.
+        boolean failed = !hasProfile && !loading;
+        binding.includeErrorState.getRoot().setVisibility(failed ? View.VISIBLE : View.GONE);
     }
 
     private void showError(String message) {
@@ -240,7 +454,8 @@ public class MyProfileFragment extends Fragment {
         if (user == null || user.getRatingCount() == 0) {
             binding.textRatingAverage.setText(R.string.profile_my_profile_no_rating);
         } else {
-            binding.textRatingAverage.setText(getString(R.string.profile_my_profile_rating_value, user.ratingAverage()));
+            String average = getString(R.string.profile_my_profile_rating_value, user.ratingAverage());
+            binding.textRatingAverage.setText(average);
         }
     }
 
@@ -311,11 +526,51 @@ public class MyProfileFragment extends Fragment {
         } else if (status == VerificationStatus.REJECTED) {
             showChip(R.string.profile_my_profile_verify_chip_rejected, R.color.on_primary, R.color.error);
             binding.textVerificationMessage.setText(R.string.profile_my_profile_verify_rejected_message);
+            showRejectedRequest(profileViewModel.getVerification().getValue());
+            if (profileViewModel.getVerification().getValue() == null) {
+                profileViewModel.loadVerification();
+            }
         } else {
             // giao-dien.md section 4 gives NONE no chip, only the explanation.
             binding.includeVerificationChip.getRoot().setVisibility(View.GONE);
             binding.textVerificationMessage.setText(R.string.profile_my_profile_verify_none_message);
+            showStartButton(R.string.profile_my_profile_verify_start);
         }
+        if (status == VerificationStatus.PENDING || status == VerificationStatus.APPROVED) {
+            formOpen = false;
+            binding.layoutVerificationForm.setVisibility(View.GONE);
+        }
+    }
+
+    // The reason and the resend button come from the user's own sellerVerifications document.
+    private void showRejectedRequest(SellerVerification request) {
+        User user = profileViewModel.getProfile().getValue();
+        if (request == null || user == null || user.getVerificationStatus() != VerificationStatus.REJECTED) {
+            return;
+        }
+        String note = request.getNote();
+        if (note != null && !note.isEmpty()) {
+            binding.textVerificationNote.setText(getString(R.string.profile_my_profile_verify_note, note));
+            binding.textVerificationNote.setVisibility(View.VISIBLE);
+        }
+        binding.textResubmitLeft.setVisibility(View.VISIBLE);
+        if (request.canResubmit()) {
+            binding.textResubmitLeft.setText(getString(R.string.profile_my_profile_verify_resubmit_left,
+                    request.remainingResubmits()));
+            showStartButton(R.string.profile_my_profile_verify_resend);
+        } else {
+            binding.textResubmitLeft.setText(R.string.profile_my_profile_verify_no_resubmit);
+            binding.buttonStartVerification.setVisibility(View.GONE);
+            formOpen = false;
+            binding.layoutVerificationForm.setVisibility(View.GONE);
+        }
+    }
+
+    // While the form is open the button that opens it is hidden.
+    private void showStartButton(int labelId) {
+        binding.buttonStartVerification.setText(labelId);
+        binding.buttonStartVerification.setVisibility(formOpen ? View.GONE : View.VISIBLE);
+        binding.layoutVerificationForm.setVisibility(formOpen ? View.VISIBLE : View.GONE);
     }
 
     private void showChip(int labelId, int textColorId, int backgroundColorId) {
