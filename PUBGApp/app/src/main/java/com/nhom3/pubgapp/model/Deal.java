@@ -27,14 +27,14 @@ public class Deal extends BaseDocument {
     private DealStatus status;
     private boolean buyerConfirmed;
     private boolean sellerConfirmed;
-    private String cancelReason;
-    private String carrierName;
-    private String trackingCode;
-    private String trackingImageId;
+    private String cancelReason = "";
+    private String carrierName = "";
+    private String trackingCode = "";
+    private String trackingImageId = "";
     private Timestamp shippedAt;
     private Timestamp autoReleaseAt;
     private Timestamp receivedAt;
-    private String receivedImageId;
+    private String receivedImageId = "";
     private List<StatusChange> statusHistory;
 
     public Deal() {
@@ -173,7 +173,7 @@ public class Deal extends BaseDocument {
     }
 
     public void setCancelReason(String cancelReason) {
-        this.cancelReason = cancelReason;
+        this.cancelReason = cancelReason != null ? cancelReason : "";
     }
 
     public String getCarrierName() {
@@ -181,7 +181,7 @@ public class Deal extends BaseDocument {
     }
 
     public void setCarrierName(String carrierName) {
-        this.carrierName = carrierName;
+        this.carrierName = carrierName != null ? carrierName : "";
     }
 
     public String getTrackingCode() {
@@ -189,7 +189,7 @@ public class Deal extends BaseDocument {
     }
 
     public void setTrackingCode(String trackingCode) {
-        this.trackingCode = trackingCode;
+        this.trackingCode = trackingCode != null ? trackingCode : "";
     }
 
     public String getTrackingImageId() {
@@ -197,7 +197,7 @@ public class Deal extends BaseDocument {
     }
 
     public void setTrackingImageId(String trackingImageId) {
-        this.trackingImageId = trackingImageId;
+        this.trackingImageId = trackingImageId != null ? trackingImageId : "";
     }
 
     public Timestamp getShippedAt() {
@@ -229,7 +229,7 @@ public class Deal extends BaseDocument {
     }
 
     public void setReceivedImageId(String receivedImageId) {
-        this.receivedImageId = receivedImageId;
+        this.receivedImageId = receivedImageId != null ? receivedImageId : "";
     }
 
     public List<StatusChange> getStatusHistory() {
@@ -280,16 +280,23 @@ public class Deal extends BaseDocument {
         } else if (userId.equals(sellerId)) {
             sellerConfirmed = true;
         }
-        if (buyerConfirmed && sellerConfirmed && status == DealStatus.PENDING_CONFIRM) {
+        if (buyerConfirmed && sellerConfirmed && status == DealStatus.PENDING_CONFIRM
+                && canMoveTo(DealStatus.CONFIRMED)) {
             status = DealStatus.CONFIRMED;
         }
     }
 
     public void markShipped(String carrier, String trackingCode, String imageId) {
-        this.carrierName = carrier;
-        this.trackingCode = trackingCode;
-        this.trackingImageId = imageId;
-        if (status == DealStatus.CONFIRMED && deliveryMethod == DeliveryMethod.SHIPPING && hasShippingProof()) {
+        if (!canMoveTo(DealStatus.SHIPPED)) {
+            return;
+        }
+        if (deliveryMethod != DeliveryMethod.SHIPPING) {
+            return;
+        }
+        this.carrierName = carrier != null ? carrier : "";
+        this.trackingCode = trackingCode != null ? trackingCode : "";
+        this.trackingImageId = imageId != null ? imageId : "";
+        if (hasShippingProof()) {
             this.status = DealStatus.SHIPPED;
             this.shippedAt = Timestamp.now();
             long sevenDaysInMillis = (long) AUTO_RELEASE_DAYS * 24 * 60 * 60 * 1000;
@@ -305,6 +312,12 @@ public class Deal extends BaseDocument {
     }
 
     public void markReceived(String imageId) {
+        if (!canMoveTo(DealStatus.RECEIVED)) {
+            return;
+        }
+        if (imageId == null || imageId.trim().isEmpty()) {
+            return;
+        }
         this.receivedImageId = imageId;
         this.status = DealStatus.RECEIVED;
         this.receivedAt = Timestamp.now();
@@ -318,7 +331,7 @@ public class Deal extends BaseDocument {
     }
 
     public void autoReceive() {
-        if (status == DealStatus.SHIPPED) {
+        if (status == DealStatus.SHIPPED && canMoveTo(DealStatus.RECEIVED)) {
             this.status = DealStatus.RECEIVED;
             this.receivedAt = Timestamp.now();
             this.receivedImageId = "";
@@ -335,7 +348,9 @@ public class Deal extends BaseDocument {
     }
 
     public void complete() {
-        this.status = DealStatus.COMPLETED;
+        if (canMoveTo(DealStatus.COMPLETED)) {
+            this.status = DealStatus.COMPLETED;
+        }
     }
 
     public boolean isPendingExpired(Timestamp now) {
@@ -361,12 +376,23 @@ public class Deal extends BaseDocument {
     }
 
     public void cancel(String userId, String reason) {
+        if (!canMoveTo(DealStatus.CANCELLED)) {
+            return;
+        }
+        if (reason == null || reason.trim().isEmpty()) {
+            return;
+        }
+        if (!isParticipant(userId) && !"system".equals(userId)) {
+            return;
+        }
         this.status = DealStatus.CANCELLED;
         this.cancelReason = reason;
     }
 
     public void dispute() {
-        this.status = DealStatus.DISPUTED;
+        if (canMoveTo(DealStatus.DISPUTED)) {
+            this.status = DealStatus.DISPUTED;
+        }
     }
 
     public void resolveDispute(DealStatus target) {

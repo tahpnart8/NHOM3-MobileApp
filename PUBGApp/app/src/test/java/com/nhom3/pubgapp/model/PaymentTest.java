@@ -30,4 +30,20 @@ public class PaymentTest {
         assertEquals(PaymentStatus.REFUNDED, payment.getStatus());
         assertNotNull(payment.getReleasedAt());
     }
+
+    @Test
+    public void testReleaseWhenNotHeldDoesNotChangeStatus() {
+        Payment payment = new Payment();
+        payment.setStatus(PaymentStatus.REFUNDED);
+        payment.release();
+        assertEquals(PaymentStatus.REFUNDED, payment.getStatus());
+
+        payment.setStatus(PaymentStatus.RELEASED);
+        payment.refund();
+        assertEquals(PaymentStatus.RELEASED, payment.getStatus());
+
+        Payment uninitialized = new Payment();
+        uninitialized.release();
+        org.junit.Assert.assertNull(uninitialized.getStatus());
+    }
 }

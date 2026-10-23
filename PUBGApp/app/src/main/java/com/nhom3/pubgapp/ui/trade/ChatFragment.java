@@ -22,16 +22,18 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.Timestamp;
-import com.google.firebase.auth.FirebaseAuth;
 import com.nhom3.pubgapp.R;
-import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.databinding.FragmentChatBinding;
 import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Listing;
+import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.util.FormatUtils;
 import com.nhom3.pubgapp.util.NetworkMonitor;
+import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.ChatViewModel;
 
 import java.util.Date;
@@ -91,7 +93,6 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         observeViewModel();
 
         checkNetwork();
-        touchActiveUser();
 
         if (currentConversationId != null && !currentConversationId.isEmpty()) {
             viewModel.openConversationById(currentConversationId);
@@ -101,25 +102,23 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
     }
 
     private void setupRecyclerView() {
-        adapter = new MessageAdapter(this);
-        String myUid = FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
-        adapter.setCurrentUserId(myUid);
-        adapter.setOfferActionListener(new MessageAdapter.OnOfferActionListener() {
+        adapter = new MessageAdapter(this, new MessageAdapter.OnOfferActionListener() {
             @Override
-            public void onOfferAccept(com.nhom3.pubgapp.model.Offer offer) {
+            public void onOfferAccept(Offer offer) {
                 if (offer != null && offer.getId() != null) {
                     viewModel.respondToOffer(offer.getId(), true);
                 }
             }
 
             @Override
-            public void onOfferReject(com.nhom3.pubgapp.model.Offer offer) {
+            public void onOfferReject(Offer offer) {
                 if (offer != null && offer.getId() != null) {
                     viewModel.respondToOffer(offer.getId(), false);
                 }
             }
         });
+        String myUid = SessionManager.getInstance().getCurrentUserId();
+        adapter.setCurrentUserId(myUid);
 
         final LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
         layoutManager.setStackFromEnd(true);
@@ -167,7 +166,6 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
                         ? binding.editMessage.getText().toString().trim() : "";
                 if (!text.isEmpty()) {
                     viewModel.sendText(text);
-                    binding.editMessage.setText("");
                 }
             }
         });
@@ -177,21 +175,14 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         binding.buttonBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Navigation.findNavController(v).navigateUp();
-            }
-        });
-
-        binding.layoutPartnerInfo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                navigateToPartnerProfile();
+                Navigation.findNavController(requireView()).navigateUp();
             }
         });
 
         binding.buttonMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showMenuPopup(v);
+                showMenu(v);
             }
         });
     }
@@ -200,30 +191,41 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         binding.cardProductBanner.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Listing listing = viewModel.getListing().getValue();
-                if (listing != null && listing.getId() != null) {
-                    Bundle bundle = new Bundle();
-                    bundle.putString("listingId", listing.getId());
-                    Navigation.findNavController(v).navigate(R.id.action_global_listing_detail, bundle);
+                if (currentListingId != null && !currentListingId.isEmpty()) {
+                    Bundle args = new Bundle();
+                    args.putString("listingId", currentListingId);
+                    try {
+                        Navigation.findNavController(requireView()).navigate(R.id.action_global_listing_detail, args);
+                    } catch (Exception ignored) {
+                    }
                 }
             }
         });
     }
 
-    private void showMenuPopup(View anchor) {
+    private void showMenu(View anchor) {
         PopupMenu popup = new PopupMenu(requireContext(), anchor);
         popup.getMenu().add(0, 1, 0, R.string.trade_chat_menu_profile);
         popup.getMenu().add(0, 2, 1, R.string.trade_chat_menu_report_user);
-
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                if (item.getItemId() == 1) {
-                    navigateToPartnerProfile();
-                    return true;
-                } else if (item.getItemId() == 2) {
-                    navigateToReportUser();
-                    return true;
+                int id = item.getItemId();
+                if (id == 1) {
+                    if (currentPartnerId != null && !currentPartnerId.isEmpty()) {
+                        Bundle bundle = new Bundle();
+                        bundle.putString("userId", currentPartnerId);
+                        Navigation.findNavController(requireView()).navigate(R.id.action_global_user_profile, bundle);
+                        return true;
+                    }
+                } else if (id == 2) {
+                    if (currentPartnerId != null && !currentPartnerId.isEmpty()) {
+                        Bundle bundle = new Bundle();
+                        bundle.putString("targetType", "USER");
+                        bundle.putString("targetId", currentPartnerId);
+                        Navigation.findNavController(requireView()).navigate(R.id.action_global_report, bundle);
+                        return true;
+                    }
                 }
                 return false;
             }
@@ -231,57 +233,64 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         popup.show();
     }
 
-    private void navigateToPartnerProfile() {
-        if (currentPartnerId != null && !currentPartnerId.isEmpty()) {
-            Bundle bundle = new Bundle();
-            bundle.putString("userId", currentPartnerId);
-            Navigation.findNavController(requireView()).navigate(R.id.action_global_user_profile, bundle);
-        }
-    }
-
-    private void navigateToReportUser() {
-        if (currentPartnerId != null && !currentPartnerId.isEmpty()) {
-            Bundle bundle = new Bundle();
-            bundle.putString("targetType", "USER");
-            bundle.putString("targetId", currentPartnerId);
-            Navigation.findNavController(requireView()).navigate(R.id.action_global_report, bundle);
-        }
-    }
-
-    private void touchActiveUser() {
-        String myUid = FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
-        if (!myUid.isEmpty()) {
-            try {
-                new UserRepository().touchLastActive(myUid);
-            } catch (UnsupportedOperationException ignored) {
-            }
-        }
-    }
-
     private void checkNetwork() {
         try {
             isOnline = NetworkMonitor.getInstance().isOnline();
-            binding.includeOfflineBanner.layoutOfflineBanner.setVisibility(
-                    isOnline ? View.GONE : View.VISIBLE
-            );
-            binding.buttonAttachImage.setEnabled(isOnline);
-            String text = binding.editMessage.getText() != null
-                    ? binding.editMessage.getText().toString().trim() : "";
-            binding.buttonSend.setEnabled(!text.isEmpty() && isOnline);
         } catch (UnsupportedOperationException e) {
             isOnline = true;
-            binding.includeOfflineBanner.layoutOfflineBanner.setVisibility(View.GONE);
         }
+        binding.includeOfflineBanner.layoutOfflineBanner.setVisibility(isOnline ? View.GONE : View.VISIBLE);
+        String text = binding.editMessage.getText() != null
+                ? binding.editMessage.getText().toString().trim() : "";
+        binding.buttonSend.setEnabled(!text.isEmpty() && isOnline);
+        binding.buttonAttachImage.setEnabled(isOnline);
     }
 
     private void observeViewModel() {
         viewModel.getMessages().observe(getViewLifecycleOwner(), new Observer<List<ChatMessage>>() {
             @Override
             public void onChanged(List<ChatMessage> chatMessages) {
+                int previousCount = adapter.getItemCount();
                 adapter.setMessages(chatMessages);
                 if (chatMessages != null && !chatMessages.isEmpty()) {
-                    binding.recyclerMessages.scrollToPosition(chatMessages.size() - 1);
+                    if (previousCount == 0) {
+                        binding.recyclerMessages.scrollToPosition(chatMessages.size() - 1);
+                    }
+                }
+            }
+        });
+
+        viewModel.getOffers().observe(getViewLifecycleOwner(), new Observer<List<Offer>>() {
+            @Override
+            public void onChanged(List<Offer> offers) {
+                if (adapter != null) {
+                    adapter.setOffers(offers);
+                }
+            }
+        });
+
+        viewModel.getCreatedDealId().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String dealId) {
+                if (dealId != null && !dealId.isEmpty()) {
+                    viewModel.clearCreatedDealId();
+                    Bundle args = new Bundle();
+                    args.putString("dealId", dealId);
+                    try {
+                        Navigation.findNavController(requireView())
+                                .navigate(R.id.action_global_deal_detail, args);
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        });
+
+        viewModel.getDone().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean isDone) {
+                if (isDone != null && isDone) {
+                    binding.editMessage.setText("");
+                    viewModel.clearDone();
                 }
             }
         });
@@ -293,25 +302,33 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
                     currentPartnerId = partnerUser.getId();
                     String name = partnerUser.getDisplayName();
                     binding.textPartnerName.setText(name != null && !name.isEmpty() ? name : "Người dùng");
-                    binding.includeAvatar.textInitial.setText(
-                            name != null && !name.isEmpty() ? name.substring(0, 1).toUpperCase() : "U"
-                    );
 
-                    // Trạng thái hoạt động trong vòng 5 phút
-                    long fiveMinutesAgo = System.currentTimeMillis() - (5 * 60 * 1000);
-                    Timestamp fiveMinTimestamp = new Timestamp(new Date(fiveMinutesAgo));
-                    if (partnerUser.isActiveSince(fiveMinTimestamp)) {
-                        binding.textPartnerStatus.setText(R.string.trade_chat_active_now);
-                    } else if (partnerUser.getLastActiveAt() != null) {
-                        String timeStr = formatUtils.formatTime(partnerUser.getLastActiveAt());
-                        binding.textPartnerStatus.setText(
-                                String.format(getString(R.string.trade_chat_active_recent), timeStr)
+                    if (partnerUser.getAvatarBase64() != null && !partnerUser.getAvatarBase64().isEmpty()) {
+                        ImageLoader.load(
+                                partnerUser.getAvatarBase64(),
+                                binding.includeAvatar.imageAvatar,
+                                R.drawable.bg_avatar,
+                                R.drawable.bg_avatar
                         );
+                        binding.includeAvatar.imageAvatar.setVisibility(View.VISIBLE);
+                    } else {
+                        binding.includeAvatar.imageAvatar.setImageResource(R.drawable.bg_avatar);
+                        binding.includeAvatar.imageAvatar.setVisibility(View.VISIBLE);
+                    }
+
+                    Timestamp lastActive = partnerUser.getLastActiveAt();
+                    if (lastActive != null) {
+                        long fiveMinutesAgo = System.currentTimeMillis() - 5 * 60 * 1000L;
+                        if (partnerUser.isActiveSince(new Timestamp(new Date(fiveMinutesAgo)))) {
+                            binding.textPartnerStatus.setText(R.string.trade_chat_active_now);
+                        } else {
+                            String timeStr = formatUtils.formatTime(lastActive);
+                            binding.textPartnerStatus.setText(getString(R.string.trade_chat_active_recent, timeStr));
+                        }
                     } else {
                         binding.textPartnerStatus.setText("");
                     }
 
-                    // Kiểm tra tài khoản bị khóa hoặc xóa
                     if (partnerUser.isLocked() || partnerUser.isDeleted()) {
                         binding.editMessage.setEnabled(false);
                         binding.buttonSend.setEnabled(false);
@@ -319,6 +336,9 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
                         binding.textLockedWarning.setVisibility(View.VISIBLE);
                     } else {
                         binding.editMessage.setEnabled(true);
+                        String text = binding.editMessage.getText() != null
+                                ? binding.editMessage.getText().toString().trim() : "";
+                        binding.buttonSend.setEnabled(!text.isEmpty() && isOnline);
                         binding.buttonAttachImage.setEnabled(isOnline);
                         binding.textLockedWarning.setVisibility(View.GONE);
                     }
@@ -332,6 +352,14 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
                 if (listing != null) {
                     binding.textProductTitle.setText(listing.getTitle());
                     binding.textProductPrice.setText(formatUtils.formatPrice(listing.getPrice()));
+                    if (listing.getCoverThumb() != null && !listing.getCoverThumb().isEmpty()) {
+                        ImageLoader.load(
+                                listing.getCoverThumb(),
+                                binding.imageProductThumb,
+                                R.drawable.bg_status_chip,
+                                R.drawable.bg_status_chip
+                        );
+                    }
                 } else {
                     binding.textProductTitle.setText(R.string.trade_chat_listing_unavailable);
                     binding.textProductPrice.setText("");
@@ -350,66 +378,25 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
             }
         });
 
-        viewModel.getOffers().observe(getViewLifecycleOwner(), new Observer<List<com.nhom3.pubgapp.model.Offer>>() {
-            @Override
-            public void onChanged(List<com.nhom3.pubgapp.model.Offer> offers) {
-                if (adapter != null) {
-                    adapter.setOffers(offers);
-                }
-            }
-        });
-
-        viewModel.getDone().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean isDone) {
-                if (Boolean.TRUE.equals(isDone)) {
-                    viewModel.clearDone();
-                    Listing currentListing = viewModel.getListing().getValue();
-                    if (currentListing != null && currentListing.getReservedDealId() != null
-                            && !currentListing.getReservedDealId().isEmpty()) {
-                        Bundle args = new Bundle();
-                        args.putString("dealId", currentListing.getReservedDealId());
-                        try {
-                            Navigation.findNavController(requireView()).navigate(
-                                    R.id.action_global_deal_detail, args);
-                        } catch (Exception ignored) {
-                        }
-                    }
-                }
-            }
-        });
-
         viewModel.getError().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String err) {
                 if (err != null && !err.isEmpty()) {
                     if (err.contains("xác thực")) {
-                        com.google.android.material.snackbar.Snackbar.make(
-                                binding.getRoot(), err,
-                                com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                        Snackbar.make(binding.getRoot(), err, Snackbar.LENGTH_LONG)
                                 .setAction(R.string.trade_chat_offer_register_verification,
                                         new View.OnClickListener() {
                                             @Override
                                             public void onClick(View v) {
                                                 try {
-                                                    Navigation.findNavController(requireView()).navigate(
-                                                            R.id.action_global_my_profile);
+                                                    Navigation.findNavController(requireView())
+                                                            .navigate(R.id.action_global_my_profile);
                                                 } catch (Exception ignored) {
                                                 }
                                             }
                                         }).show();
                     } else {
-                        binding.includeErrorState.layoutErrorState.setVisibility(View.VISIBLE);
-                        binding.includeErrorState.textErrorMessage.setText(err);
-                        binding.includeErrorState.buttonRetry.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                binding.includeErrorState.layoutErrorState.setVisibility(View.GONE);
-                                if (currentConversationId != null && !currentConversationId.isEmpty()) {
-                                    viewModel.openConversationById(currentConversationId);
-                                }
-                            }
-                        });
+                        Snackbar.make(binding.getRoot(), err, Snackbar.LENGTH_LONG).show();
                     }
                     viewModel.clearError();
                 }

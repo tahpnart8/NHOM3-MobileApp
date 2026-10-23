@@ -4,12 +4,12 @@ import com.google.firebase.firestore.Exclude;
 import com.nhom3.pubgapp.model.enums.MessageType;
 
 public class ChatMessage extends BaseDocument {
-    private String conversationId;
-    private String senderId;
+    private String conversationId = "";
+    private String senderId = "";
     private MessageType type;
-    private String text;
-    private String imageId;
-    private String offerId;
+    private String text = "";
+    private String imageId = "";
+    private String offerId = "";
 
     public ChatMessage() {
     }
@@ -19,7 +19,7 @@ public class ChatMessage extends BaseDocument {
     }
 
     public void setConversationId(String conversationId) {
-        this.conversationId = conversationId;
+        this.conversationId = conversationId != null ? conversationId : "";
     }
 
     public String getSenderId() {
@@ -27,7 +27,7 @@ public class ChatMessage extends BaseDocument {
     }
 
     public void setSenderId(String senderId) {
-        this.senderId = senderId;
+        this.senderId = senderId != null ? senderId : "";
     }
 
     public MessageType getType() {
@@ -43,7 +43,7 @@ public class ChatMessage extends BaseDocument {
     }
 
     public void setText(String text) {
-        this.text = text;
+        this.text = text != null ? text : "";
     }
 
     public String getImageId() {
@@ -51,7 +51,7 @@ public class ChatMessage extends BaseDocument {
     }
 
     public void setImageId(String imageId) {
-        this.imageId = imageId;
+        this.imageId = imageId != null ? imageId : "";
     }
 
     public String getOfferId() {
@@ -59,7 +59,7 @@ public class ChatMessage extends BaseDocument {
     }
 
     public void setOfferId(String offerId) {
-        this.offerId = offerId;
+        this.offerId = offerId != null ? offerId : "";
     }
 
     @Exclude

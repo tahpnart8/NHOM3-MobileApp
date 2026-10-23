@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Listing card for B01, B02, B05, B06 and D02. Width is match_parent and height wraps the content,
+    so the same layout sits in a two column grid or in a one column list.
+    Load the cover with ImageLoader and colour the chip with StatusChips (both in ui.common).
+    Hide the chip (visibility gone on includeStatusChip) on screens that do not show a status.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardListing"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/space_xs"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="@dimen/radius_md"
+    app:cardElevation="@dimen/elevation_card">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/listing_card_image_height">
+
+            <ImageView
+                android:id="@+id/imageCover"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?attr/colorOutline"
+                android:importantForAccessibility="no"
+                android:scaleType="centerCrop" />
+
+            <include
+                android:id="@+id/includeStatusChip"
+                layout="@layout/view_status_chip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:layout_margin="@dimen/space_sm" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/space_md">
+
+            <TextView
+                android:id="@+id/textTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:minLines="2"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="@tools:sample/lorem" />
+
+            <TextView
+                android:id="@+id/textPrice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorPrimary"
+                tools:text="@tools:sample/us_zipcodes" />
+
+            <TextView
+                android:id="@+id/textCondition"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="@tools:sample/lorem" />
+
+            <TextView
+                android:id="@+id/textProvince"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="@tools:sample/cities" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

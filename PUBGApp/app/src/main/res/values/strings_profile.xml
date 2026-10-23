@@ -1,9 +1,154 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Screen placeholders of module D (profile and trust), replaced by the real screens in phase 2. -->
-    <string name="profile_my_profile_title">D01 Hồ sơ cá nhân</string>
-    <string name="profile_edit_profile_title">A05 Chỉnh sửa hồ sơ</string>
-    <string name="profile_user_profile_title">D02 Trang cá nhân</string>
-    <string name="profile_seller_trust_title">D03 Hồ sơ uy tín người bán</string>
-    <string name="profile_report_title">D04 Báo cáo</string>
+    <string name="profile_my_profile_title">Hồ sơ cá nhân</string>
+    <string name="profile_edit_profile_title">Chỉnh sửa hồ sơ</string>
+    <string name="profile_user_profile_title">Trang cá nhân</string>
+    <string name="profile_seller_trust_title">Hồ sơ người bán</string>
+    <string name="profile_report_title">Báo cáo</string>
+
+    <!-- D01 MyProfileFragment -->
+    <string name="profile_my_profile_edit_action">Sửa hồ sơ</string>
+    <string name="profile_my_profile_location">%1$s, %2$s</string>
+    <string name="profile_my_profile_no_location">Chưa cập nhật khu vực</string>
+    <string name="profile_my_profile_sold_label">Đã bán</string>
+    <string name="profile_my_profile_rating_label">Đánh giá</string>
+    <string name="profile_my_profile_follower_label">Người theo dõi</string>
+    <string name="profile_my_profile_rating_value">%1$.1f</string>
+    <string name="profile_my_profile_no_rating">-</string>
+    <string name="profile_my_profile_stat_unknown">-</string>
+    <string name="profile_my_profile_row_my_shop">Sản phẩm của tôi</string>
+    <string name="profile_my_profile_row_my_shop_hint">Bạn chưa bán món nào. Hãy đăng tin đầu tiên.</string>
+    <string name="profile_my_profile_row_saved">Tin đã lưu</string>
+    <string name="profile_my_profile_row_trust">Hồ sơ uy tín</string>
+    <string name="profile_my_profile_row_edit_profile">Chỉnh sửa hồ sơ</string>
+    <string name="profile_my_profile_admin_area">Khu vực quản trị</string>
+    <string name="profile_my_profile_logout">Đăng xuất</string>
+    <string name="profile_my_profile_logout_title">Đăng xuất?</string>
+    <string name="profile_my_profile_logout_message">Bạn có chắc muốn đăng xuất khỏi tài khoản này?</string>
+
+    <!-- D01 account verification block and form -->
+    <string name="profile_my_profile_verify_title">Xác thực tài khoản</string>
+    <string name="profile_my_profile_verify_none_message">Tài khoản chưa xác thực. Bạn vẫn xem, tìm kiếm, nhắn tin và theo dõi bình thường, nhưng chưa đăng tin, gửi đề nghị hay tạo giao dịch được.</string>
+    <string name="profile_my_profile_verify_pending_message">Yêu cầu xác thực đang chờ admin duyệt. Trong lúc chờ, bạn chưa đăng tin, gửi đề nghị hay tạo giao dịch được.</string>
+    <string name="profile_my_profile_verify_rejected_message">Yêu cầu xác thực bị từ chối. Bạn chưa đăng tin, gửi đề nghị hay tạo giao dịch được.</string>
+    <string name="profile_my_profile_verify_approved_message">Tài khoản đã xác thực. Bạn đăng tin, gửi đề nghị và tạo giao dịch được.</string>
+    <string name="profile_my_profile_verify_chip_pending">Đang chờ duyệt</string>
+    <string name="profile_my_profile_verify_chip_rejected">Bị từ chối</string>
+    <string name="profile_my_profile_verify_chip_approved">Đã xác thực</string>
+    <string name="profile_my_profile_verify_note">Lý do: %1$s</string>
+    <string name="profile_my_profile_verify_resubmit_left">Còn %1$d lần gửi lại</string>
+    <string name="profile_my_profile_verify_no_resubmit">Đã hết số lần gửi lại, hãy liên hệ admin.</string>
+    <string name="profile_my_profile_verify_start">Đăng ký xác thực</string>
+    <string name="profile_my_profile_verify_resend">Gửi lại yêu cầu</string>
+    <string name="profile_my_profile_verify_national_id">Số CCCD (12 chữ số)</string>
+    <string name="profile_my_profile_verify_pick_id_image">Chọn ảnh giấy tờ</string>
+    <string name="profile_my_profile_verify_pick_portrait_image">Chọn ảnh chân dung cầm giấy tờ</string>
+    <string name="profile_my_profile_verify_id_image_preview">Ảnh giấy tờ đã chọn</string>
+    <string name="profile_my_profile_verify_portrait_image_preview">Ảnh chân dung cầm giấy tờ đã chọn</string>
+    <string name="profile_my_profile_verify_image_hint">Chỉ nhận ảnh; ảnh được nén trên máy.</string>
+    <string name="profile_my_profile_verify_submit">Gửi yêu cầu</string>
+    <string name="profile_my_profile_verify_sent">Đã gửi yêu cầu xác thực tài khoản.</string>
+    <string name="profile_my_profile_verify_not_image">Không dùng được tệp này, hãy chọn một ảnh.</string>
+
+    <!-- A05 EditProfileFragment -->
+    <string name="profile_edit_profile_change_avatar">Đổi ảnh đại diện</string>
+    <string name="profile_edit_profile_display_name">Tên hiển thị</string>
+    <string name="profile_edit_profile_bio">Giới thiệu ngắn</string>
+    <string name="profile_edit_profile_phone">Số điện thoại</string>
+    <string name="profile_edit_profile_province">Tỉnh hoặc thành phố</string>
+    <string name="profile_edit_profile_district">Quận hoặc huyện</string>
+    <string name="profile_edit_profile_name_empty">Hãy nhập tên hiển thị.</string>
+    <string name="profile_edit_profile_name_too_long">Tên hiển thị tối đa 50 ký tự.</string>
+    <string name="profile_edit_profile_bio_too_long">Giới thiệu tối đa 200 ký tự.</string>
+    <string name="profile_edit_profile_phone_invalid">Số điện thoại gồm 10 chữ số, bắt đầu bằng 0.</string>
+    <string name="profile_edit_profile_unsaved_message">Bạn có thay đổi chưa lưu. Bạn có muốn thoát?</string>
+    <string name="profile_edit_profile_unsaved_leave">Thoát</string>
+    <string name="profile_edit_profile_unsaved_stay">Ở lại</string>
+    <string name="profile_edit_profile_saved">Đã lưu hồ sơ.</string>
+
+    <!-- D02 and D03 listing grid (ProfileListingAdapter), labels of ItemCondition -->
+    <string name="profile_listing_card_condition_new">Mới</string>
+    <string name="profile_listing_card_condition_like_new">Như mới</string>
+    <string name="profile_listing_card_condition_used">Đã sử dụng</string>
+    <string name="profile_listing_card_condition_repaired">Đã sửa chữa</string>
+    <string name="profile_listing_card_condition_defective">Có lỗi</string>
+
+    <!-- D02 UserProfileFragment -->
+    <string name="profile_user_profile_follow">Theo dõi</string>
+    <string name="profile_user_profile_following">Đang theo dõi</string>
+    <string name="profile_user_profile_edit">Chỉnh sửa trang</string>
+    <string name="profile_user_profile_report">Báo cáo người dùng</string>
+    <string name="profile_user_profile_verified">Tài khoản đã xác thực</string>
+    <string name="profile_user_profile_joined">tham gia %1$s</string>
+    <string name="profile_user_profile_rating_label">Đánh giá</string>
+    <string name="profile_user_profile_sold_label">Đã bán</string>
+    <string name="profile_user_profile_completion_label">Hoàn tất</string>
+    <string name="profile_user_profile_follower_label">Người theo dõi</string>
+    <string name="profile_user_profile_rating_value">%1$.1f</string>
+    <string name="profile_user_profile_rating_count">(%1$d)</string>
+    <string name="profile_user_profile_completion_value">%1$d%%</string>
+    <string name="profile_user_profile_stat_unknown">-</string>
+    <string name="profile_user_profile_tab_selling">Đang bán (%1$d)</string>
+    <string name="profile_user_profile_tab_sold">Đã bán (%1$d)</string>
+    <string name="profile_user_profile_tab_reviews">Đánh giá</string>
+    <string name="profile_user_profile_empty_selling_title">Chưa có món đang bán</string>
+    <string name="profile_user_profile_empty_selling_message">Người này hiện không có tin nào đang bán.</string>
+    <string name="profile_user_profile_empty_sold_title">Chưa bán món nào</string>
+    <string name="profile_user_profile_empty_sold_message">Các món đã bán sẽ hiện ở đây.</string>
+    <string name="profile_user_profile_listings_failed_title">Không tải được danh sách tin</string>
+    <string name="profile_user_profile_unavailable">Người dùng không tồn tại hoặc không khả dụng</string>
+    <string name="profile_user_profile_reviews_received">Đã nhận</string>
+    <string name="profile_user_profile_reviews_given">Đã gửi</string>
+    <string name="profile_user_profile_reviews_empty_title">Chưa có đánh giá nào</string>
+    <string name="profile_user_profile_reviews_empty_received">Chưa ai đánh giá người này.</string>
+    <string name="profile_user_profile_reviews_empty_given">Bạn chưa đánh giá ai.</string>
+    <string name="profile_user_profile_reviews_failed_title">Không tải được đánh giá</string>
+
+    <!-- Review rows on D02 and D03 (ReviewAdapter); Review has no reviewer name -->
+    <string name="profile_review_item_reviewer">Người dùng</string>
+
+    <!-- D03 SellerTrustFragment -->
+    <string name="profile_seller_trust_joined">tham gia %1$s</string>
+    <string name="profile_seller_trust_completion_label">Tỉ lệ hoàn tất</string>
+    <string name="profile_seller_trust_deal_label">Giao dịch</string>
+    <string name="profile_seller_trust_criteria_title">Điểm theo tiêu chí</string>
+    <string name="profile_seller_trust_criteria_accuracy">Độ chính xác thông tin</string>
+    <string name="profile_seller_trust_criteria_attitude">Thái độ giao dịch</string>
+    <string name="profile_seller_trust_criteria_commitment">Đúng cam kết</string>
+    <string name="profile_seller_trust_criteria_value">%1$.1f</string>
+    <string name="profile_seller_trust_recent_reviews">Đánh giá gần đây</string>
+    <string name="profile_seller_trust_selling">Đang bán (%1$d)</string>
+    <string name="profile_seller_trust_reviews_empty_title">Chưa có đánh giá nào</string>
+    <string name="profile_seller_trust_reviews_empty_message">Người bán này chưa nhận được đánh giá.</string>
+    <string name="profile_seller_trust_selling_empty_title">Không có món đang bán</string>
+    <string name="profile_seller_trust_selling_empty_message">Người bán này hiện không còn món nào đang bán.</string>
+
+    <!-- D04 ReportFragment -->
+    <string name="profile_report_title_listing">Báo cáo tin đăng</string>
+    <string name="profile_report_title_user">Báo cáo người dùng</string>
+    <string name="profile_report_title_message">Báo cáo tin nhắn</string>
+    <string name="profile_report_target_listing">Bạn đang báo cáo một tin đăng.</string>
+    <string name="profile_report_target_user">Bạn đang báo cáo một người dùng.</string>
+    <string name="profile_report_target_message">Bạn đang báo cáo một tin nhắn.</string>
+    <string name="profile_report_question">Vì sao bạn báo cáo?</string>
+    <string name="profile_report_reason_fake_item">Nghi ngờ hàng giả</string>
+    <string name="profile_report_reason_fake_item_hint">Món đồ có dấu hiệu là hàng nhái, hàng giả.</string>
+    <string name="profile_report_reason_misleading_info">Thông tin sai lệch</string>
+    <string name="profile_report_reason_misleading_info_hint">Mô tả, ảnh hoặc giá không đúng với thực tế.</string>
+    <string name="profile_report_reason_scam">Dấu hiệu lừa đảo</string>
+    <string name="profile_report_reason_scam_hint">Đòi chuyển tiền trước, dẫn ra ngoài ứng dụng hoặc giả mạo.</string>
+    <string name="profile_report_reason_inappropriate">Nội dung không phù hợp</string>
+    <string name="profile_report_reason_inappropriate_hint">Lời lẽ thô tục, hình ảnh phản cảm hoặc hàng cấm.</string>
+    <string name="profile_report_reason_other">Khác</string>
+    <string name="profile_report_reason_other_hint">Lý do khác, hãy ghi rõ ở phần mô tả.</string>
+    <string name="profile_report_description">Mô tả thêm (không bắt buộc)</string>
+    <string name="profile_report_evidence_title">Ảnh bằng chứng (không bắt buộc, tối đa 3 ảnh)</string>
+    <string name="profile_report_evidence_add">Thêm ảnh</string>
+    <string name="profile_report_evidence_full">Đã đủ 3 ảnh. Xóa bớt một ảnh nếu muốn thay.</string>
+    <string name="profile_report_evidence_thumb">Ảnh bằng chứng đã chọn</string>
+    <string name="profile_report_evidence_remove">Xóa</string>
+    <string name="profile_report_not_image">Không dùng được tệp này, hãy chọn một ảnh.</string>
+    <string name="profile_report_submit">Gửi báo cáo</string>
+    <string name="profile_report_sent">Cảm ơn bạn đã báo cáo</string>
 </resources>
