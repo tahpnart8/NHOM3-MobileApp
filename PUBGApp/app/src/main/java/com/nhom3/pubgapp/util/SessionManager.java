@@ -11,8 +11,11 @@ public class SessionManager {
     // Only drives the UI; the real permission is decided by the Security Rules.
     private boolean admin;
 
-    public static SessionManager getInstance() {
-        throw new UnsupportedOperationException("NOT_READY");
+    public static synchronized SessionManager getInstance() {
+        if (instance == null) {
+            instance = new SessionManager();
+        }
+        return instance;
     }
 
     public void start(User user, boolean isAdmin) {
@@ -31,9 +34,13 @@ public class SessionManager {
 
     public String getCurrentUserId() {
         if (currentUser == null) {
-            return null;
+            return "";
         }
-        return currentUser.getId();
+        String id = currentUser.getId();
+        if (id == null) {
+            return "";
+        }
+        return id;
     }
 
     public boolean isAdmin() {
@@ -44,3 +51,4 @@ public class SessionManager {
         return currentUser != null;
     }
 }
+
