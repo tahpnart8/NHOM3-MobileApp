@@ -569,9 +569,42 @@ service cloud.firestore {
       allow delete: if false;
 
       // Địa chỉ giao nhận: riêng tư.
+      // Địa chỉ giao nhận (security-rules.md mục 2): chỉ chính chủ đọc, ghi và xóa.
+      // Rules không ép "mỗi người một địa chỉ mặc định"; ứng dụng giữ (mục Giới hạn).
       match /addresses/{addressId} {
+        function addressKeys() {
+          return ['userId', 'label', 'receiverName', 'phone', 'province', 'district', 'detail',
+                  'location', 'isDefault', 'createdAt', 'updatedAt'];
+        }
+
+        function addressDataOk(d) {
+          return d.userId == uid
+            && optString(d, 'label', 50)
+            && optString(d, 'receiverName', 100)
+            && optString(d, 'phone', 20)
+            && optString(d, 'province', 100)
+            && optString(d, 'district', 100)
+            && optString(d, 'detail', 300)
+            && (d.get('location', null) == null || d.location is latlng)
+            && (d.get('isDefault', null) == null || d.isDefault is bool);
+        }
+
         allow read: if signedIn() && me() == uid;
-        allow write: if false;
+
+        allow create: if signedIn() && me() == uid
+          && writerActive()
+          && hasOnlyKeys(addressKeys())
+          && addressDataOk(request.resource.data)
+          && createStamps();
+
+        allow update: if signedIn() && me() == uid
+          && writerActive()
+          && request.resource.data.keys().hasOnly(addressKeys())
+          && addressDataOk(request.resource.data)
+          && request.resource.data.get('createdAt', null) == resource.data.get('createdAt', null)
+          && serverStamp('updatedAt');
+
+        allow delete: if signedIn() && me() == uid && writerActive();
       }
 
       // CCCD và định danh (security-rules.md mục 3): chủ tài khoản và admin đọc;
@@ -618,10 +651,20 @@ service cloud.firestore {
         allow delete: if false;
       }
 
-      // Tin đã lưu: riêng tư.
+      // Tin đã lưu (security-rules.md mục 4): riêng tư; chỉ có hoặc không có, nên không ai sửa.
       match /saved/{listingId} {
         allow read: if signedIn() && me() == uid;
-        allow write: if false;
+
+        allow create: if signedIn() && me() == uid
+          && writerActive()
+          && hasOnlyKeys(['userId', 'listingId', 'savedAt'])
+          && request.resource.data.userId == uid
+          && request.resource.data.listingId == listingId
+          && serverStamp('savedAt');
+
+        allow update: if false;
+
+        allow delete: if signedIn() && me() == uid && writerActive();
       }
 
       // Cảnh báo (security-rules.md mục 7): chỉ màn quản trị đọc; admin tạo cùng lô
