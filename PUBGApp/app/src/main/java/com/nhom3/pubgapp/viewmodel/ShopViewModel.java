@@ -17,6 +17,7 @@ import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.SortOrder;
 import com.nhom3.pubgapp.model.enums.TradeType;
 import com.nhom3.pubgapp.util.KeywordFilter;
+import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,6 +53,7 @@ public class ShopViewModel extends ViewModel {
     private final MediaRepository mediaRepository = new MediaRepository();
     private final KeywordFilter keywordFilter = new KeywordFilter();
 
+    private List<Listing> rawListings;
     private final MutableLiveData<List<Listing>> myListings = new MutableLiveData<>();
     private final MutableLiveData<Boolean> keywordFlag = new MutableLiveData<>();
     private final MutableLiveData<List<Category>> categories = new MutableLiveData<>();
@@ -88,8 +90,35 @@ public class ShopViewModel extends ViewModel {
         return done;
     }
 
-    public void loadMyListings(SortOrder order, String categoryId) {
-        error.setValue(DataCallback.NOT_READY);
+    public void loadMyListings(final SortOrder order, final String categoryId) {
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null || uid.isEmpty()) {
+            error.setValue("Chưa đăng nhập");
+            return;
+        }
+
+        if (rawListings != null) {
+            List<Listing> filtered = sortAndFilter(rawListings, order, categoryId);
+            myListings.setValue(filtered);
+            return;
+        }
+
+        loading.setValue(true);
+        listingRepository.getBySeller(uid, new DataCallback<List<Listing>>() {
+            @Override
+            public void onSuccess(List<Listing> data) {
+                rawListings = data;
+                List<Listing> filtered = sortAndFilter(rawListings, order, categoryId);
+                myListings.setValue(filtered);
+                loading.setValue(false);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                loading.setValue(false);
+                error.setValue(errorMessage);
+            }
+        });
     }
 
     public void loadCategories() {
@@ -241,28 +270,286 @@ public class ShopViewModel extends ViewModel {
         }
     }
 
-    public void saveDraft(Listing listing, List<Uri> imageUris) {
-        error.setValue(DataCallback.NOT_READY);
+    public void saveDraft(final Listing listing, final List<Uri> imageUris) {
+        if (listing == null) {
+            error.setValue("Thông tin tin đăng không hợp lệ");
+            return;
+        }
+        loading.setValue(true);
+        clearError();
+
+        if (imageUris == null || imageUris.isEmpty()) {
+            listingRepository.saveDraft(listing, new DataCallback<String>() {
+                @Override
+                public void onSuccess(String id) {
+                    createdListingId.setValue(id);
+                    loading.setValue(false);
+                    done.setValue(true);
+                    rawListings = null;
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    loading.setValue(false);
+                    error.setValue(errorMessage);
+                }
+            });
+            return;
+        }
+
+        final List<String> savedIds = new ArrayList<String>();
+        saveNextDraftImage(0, imageUris, savedIds, listing);
     }
 
-    public void publishDraft(String id) {
-        error.setValue(DataCallback.NOT_READY);
+    private void saveNextDraftImage(final int index, final List<Uri> imageUris,
+                                    final List<String> savedIds, final Listing listing) {
+        if (index >= imageUris.size()) {
+            finishSaveDraft(listing, imageUris, savedIds);
+            return;
+        }
+
+        Uri uri = imageUris.get(index);
+        mediaRepository.saveImage(uri, ImagePurpose.LISTING, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String imageId) {
+                savedIds.add(imageId);
+                saveNextDraftImage(index + 1, imageUris, savedIds, listing);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                rollbackImages(savedIds);
+                loading.setValue(false);
+                error.setValue(errorMessage);
+            }
+        });
     }
 
-    public void updateListing(Listing listing, List<Uri> imageUris) {
-        error.setValue(DataCallback.NOT_READY);
+    private void finishSaveDraft(final Listing listing, final List<Uri> imageUris,
+                                 final List<String> savedIds) {
+        listing.setImageIds(savedIds);
+        Uri firstUri = imageUris.get(0);
+        mediaRepository.makeThumb(firstUri, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String thumbBase64) {
+                listing.setCoverThumb(thumbBase64);
+                submitSaveDraft(listing, savedIds);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                rollbackImages(savedIds);
+                loading.setValue(false);
+                error.setValue(errorMessage);
+            }
+        });
     }
 
-    public void changeStatus(String id, ListingStatus status) {
-        error.setValue(DataCallback.NOT_READY);
+    private void submitSaveDraft(final Listing listing, final List<String> savedIds) {
+        listingRepository.saveDraft(listing, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String id) {
+                createdListingId.setValue(id);
+                loading.setValue(false);
+                done.setValue(true);
+                rawListings = null;
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                rollbackImages(savedIds);
+                loading.setValue(false);
+                error.setValue(errorMessage);
+            }
+        });
     }
 
-    public void setHidden(String id, boolean hidden) {
-        error.setValue(DataCallback.NOT_READY);
+    public void publishDraft(final String id) {
+        Listing target = null;
+        if (rawListings != null) {
+            for (Listing item : rawListings) {
+                if (item != null && id != null && id.equals(item.getId())) {
+                    target = item;
+                    break;
+                }
+            }
+        }
+        if (target == null) {
+            error.setValue("Không tìm thấy bản nháp");
+            return;
+        }
+
+        loading.setValue(true);
+        clearError();
+        listingRepository.publish(target, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String resultId) {
+                loading.setValue(false);
+                done.setValue(true);
+                rawListings = null;
+                loadMyListings(SortOrder.NEWEST, "");
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                loading.setValue(false);
+                error.setValue(errorMessage);
+            }
+        });
     }
 
-    public void deleteListing(String id) {
-        error.setValue(DataCallback.NOT_READY);
+    public void updateListing(final Listing listing, final List<Uri> imageUris) {
+        if (listing == null || listing.getId() == null || listing.getId().isEmpty()) {
+            error.setValue("Mã tin đăng không được để trống");
+            return;
+        }
+        loading.setValue(true);
+        clearError();
+
+        if (imageUris == null || imageUris.isEmpty()) {
+            listingRepository.update(listing, new DataCallback<Void>() {
+                @Override
+                public void onSuccess(Void unused) {
+                    loading.setValue(false);
+                    done.setValue(true);
+                    rawListings = null;
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    loading.setValue(false);
+                    error.setValue(errorMessage);
+                }
+            });
+            return;
+        }
+
+        final List<String> newSavedIds = new ArrayList<String>();
+        saveNextUpdateImage(0, imageUris, newSavedIds, listing);
+    }
+
+    private void saveNextUpdateImage(final int index, final List<Uri> imageUris,
+                                     final List<String> newSavedIds, final Listing listing) {
+        if (index >= imageUris.size()) {
+            finishUpdateListing(listing, imageUris, newSavedIds);
+            return;
+        }
+
+        Uri uri = imageUris.get(index);
+        mediaRepository.saveImage(uri, ImagePurpose.LISTING, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String imageId) {
+                newSavedIds.add(imageId);
+                saveNextUpdateImage(index + 1, imageUris, newSavedIds, listing);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                rollbackImages(newSavedIds);
+                loading.setValue(false);
+                error.setValue(errorMessage);
+            }
+        });
+    }
+
+    private void finishUpdateListing(final Listing listing, final List<Uri> imageUris,
+                                     final List<String> newSavedIds) {
+        List<String> currentIds = listing.getImageIds();
+        if (currentIds == null) {
+            currentIds = new ArrayList<String>();
+        }
+        currentIds.addAll(newSavedIds);
+        listing.setImageIds(currentIds);
+
+        listingRepository.update(listing, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                loading.setValue(false);
+                done.setValue(true);
+                rawListings = null;
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                rollbackImages(newSavedIds);
+                loading.setValue(false);
+                error.setValue(errorMessage);
+            }
+        });
+    }
+
+    public void changeStatus(final String id, final ListingStatus status) {
+        Listing target = null;
+        if (rawListings != null) {
+            for (Listing item : rawListings) {
+                if (item != null && id != null && id.equals(item.getId())) {
+                    target = item;
+                    break;
+                }
+            }
+        }
+        if (target == null) {
+            error.setValue("Không tìm thấy tin đăng");
+            return;
+        }
+        ListingStatus from = target.getStatus();
+        loading.setValue(true);
+        clearError();
+        listingRepository.setStatus(id, from, status, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                loading.setValue(false);
+                done.setValue(true);
+                rawListings = null;
+                loadMyListings(SortOrder.NEWEST, "");
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                loading.setValue(false);
+                error.setValue(errorMessage);
+            }
+        });
+    }
+
+    public void setHidden(final String id, final boolean hidden) {
+        loading.setValue(true);
+        clearError();
+        listingRepository.setHidden(id, hidden, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                loading.setValue(false);
+                done.setValue(true);
+                rawListings = null;
+                loadMyListings(SortOrder.NEWEST, "");
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                loading.setValue(false);
+                error.setValue(errorMessage);
+            }
+        });
+    }
+
+    public void deleteListing(final String id) {
+        loading.setValue(true);
+        clearError();
+        listingRepository.delete(id, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                loading.setValue(false);
+                done.setValue(true);
+                rawListings = null;
+                loadMyListings(SortOrder.NEWEST, "");
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                loading.setValue(false);
+                error.setValue(errorMessage);
+            }
+        });
     }
 
     public void clearError() {
