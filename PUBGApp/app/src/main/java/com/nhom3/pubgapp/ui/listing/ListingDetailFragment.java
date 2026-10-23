@@ -1,16 +1,14 @@
 package com.nhom3.pubgapp.ui.listing;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -28,6 +26,8 @@ import com.nhom3.pubgapp.model.enums.ItemCondition;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.TradeType;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
+import com.nhom3.pubgapp.ui.common.ImageLoader;
+import com.nhom3.pubgapp.ui.common.StatusChips;
 import com.nhom3.pubgapp.util.FormatUtils;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
@@ -42,6 +42,7 @@ import java.util.Map;
 public class ListingDetailFragment extends Fragment {
 
     private static final String ARG_LISTING_ID = "listingId";
+    private static final String TARGET_TYPE_LISTING = "LISTING";
 
     private FragmentListingDetailBinding binding;
     private ListingDetailViewModel viewModel;
@@ -82,6 +83,12 @@ public class ListingDetailFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        checkNetworkBanner();
+    }
+
     private void setupToolbar() {
         binding.toolbarDetail.textTitle.setText(R.string.listing_detail_title);
         binding.toolbarDetail.buttonBack.setOnClickListener(new View.OnClickListener() {
@@ -98,13 +105,33 @@ public class ListingDetailFragment extends Fragment {
                     Navigation.findNavController(v).navigate(R.id.action_global_sign_in);
                     return;
                 }
-                if (!NetworkMonitor.getInstance().isOnline()) {
-                    Snackbar.make(binding.getRoot(),
-                            R.string.listing_detail_offline_save_warning,
-                            Snackbar.LENGTH_SHORT).show();
-                    return;
+                try {
+                    if (!NetworkMonitor.getInstance().isOnline()) {
+                        Snackbar.make(binding.getRoot(),
+                                R.string.listing_detail_offline_save_warning,
+                                Snackbar.LENGTH_SHORT).show();
+                        return;
+                    }
+                } catch (UnsupportedOperationException e) {
+                    // Fallback when NetworkMonitor is not yet configured
                 }
                 viewModel.toggleSave();
+            }
+        });
+
+        binding.buttonReport.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!SessionManager.getInstance().isLoggedIn()) {
+                    Navigation.findNavController(v).navigate(R.id.action_global_sign_in);
+                    return;
+                }
+                if (listingId != null) {
+                    Bundle args = new Bundle();
+                    args.putString("targetType", TARGET_TYPE_LISTING);
+                    args.putString("targetId", listingId);
+                    Navigation.findNavController(v).navigate(R.id.action_global_report, args);
+                }
             }
         });
 
@@ -134,13 +161,22 @@ public class ListingDetailFragment extends Fragment {
     }
 
     private void updateImageCounter() {
+        if (imageAdapter.isOnlyCoverThumb()) {
+            binding.textImageCount.setVisibility(View.GONE);
+            return;
+        }
+        int total = imageAdapter.getItemCount();
+        if (total <= 1) {
+            binding.textImageCount.setVisibility(View.GONE);
+            return;
+        }
         LinearLayoutManager layoutManager = (LinearLayoutManager) binding.recyclerImages.getLayoutManager();
         if (layoutManager != null) {
             int position = layoutManager.findFirstVisibleItemPosition();
-            int total = imageAdapter.getItemCount();
-            if (position >= 0 && total > 0) {
+            if (position >= 0) {
                 String counter = getString(R.string.listing_detail_image_count_format, position + 1, total);
                 binding.textImageCount.setText(counter);
+                binding.textImageCount.setVisibility(View.VISIBLE);
             }
         }
     }
@@ -161,9 +197,13 @@ public class ListingDetailFragment extends Fragment {
     }
 
     private void checkNetworkBanner() {
-        if (!NetworkMonitor.getInstance().isOnline()) {
-            binding.offlineBanner.layoutOfflineBanner.setVisibility(View.VISIBLE);
-        } else {
+        try {
+            if (!NetworkMonitor.getInstance().isOnline()) {
+                binding.offlineBanner.layoutOfflineBanner.setVisibility(View.VISIBLE);
+            } else {
+                binding.offlineBanner.layoutOfflineBanner.setVisibility(View.GONE);
+            }
+        } catch (UnsupportedOperationException e) {
             binding.offlineBanner.layoutOfflineBanner.setVisibility(View.GONE);
         }
     }
@@ -184,10 +224,16 @@ public class ListingDetailFragment extends Fragment {
             @Override
             public void onChanged(String err) {
                 if (err != null && !err.isEmpty()) {
-                    binding.errorState.layoutErrorState.setVisibility(View.VISIBLE);
-                    binding.errorState.textErrorMessage.setText(err);
-                    binding.scrollContent.setVisibility(View.GONE);
-                    binding.emptyState.layoutEmptyState.setVisibility(View.GONE);
+                    if (viewModel.getListing().getValue() != null) {
+                        Snackbar.make(binding.getRoot(), err, Snackbar.LENGTH_SHORT).show();
+                        viewModel.clearError();
+                    } else {
+                        binding.errorState.layoutErrorState.setVisibility(View.VISIBLE);
+                        binding.errorState.textErrorMessage.setText(err);
+                        binding.scrollContent.setVisibility(View.GONE);
+                        binding.layoutBottomBar.setVisibility(View.GONE);
+                        binding.emptyState.layoutEmptyState.setVisibility(View.GONE);
+                    }
                 } else {
                     binding.errorState.layoutErrorState.setVisibility(View.GONE);
                 }
@@ -210,7 +256,11 @@ public class ListingDetailFragment extends Fragment {
                 binding.layoutBottomBar.setVisibility(View.VISIBLE);
 
                 displayListingDetails(listing, currentUid);
-                viewModel.loadImages();
+
+                List<byte[]> currentImages = viewModel.getImages().getValue();
+                if (currentImages == null || currentImages.isEmpty()) {
+                    viewModel.loadImages();
+                }
             }
         });
 
@@ -227,7 +277,8 @@ public class ListingDetailFragment extends Fragment {
         viewModel.getSeller().observe(getViewLifecycleOwner(), new Observer<User>() {
             @Override
             public void onChanged(User seller) {
-                displaySeller(seller);
+                String currentUid = SessionManager.getInstance().getCurrentUserId();
+                displaySeller(seller, currentUid);
             }
         });
 
@@ -235,9 +286,20 @@ public class ListingDetailFragment extends Fragment {
             @Override
             public void onChanged(Boolean isSaved) {
                 if (Boolean.TRUE.equals(isSaved)) {
-                    binding.buttonSave.setImageResource(android.R.drawable.btn_star_big_on);
+                    binding.buttonSave.setImageResource(R.drawable.ic_heart_filled);
                 } else {
-                    binding.buttonSave.setImageResource(android.R.drawable.btn_star_big_off);
+                    binding.buttonSave.setImageResource(R.drawable.ic_heart_outline);
+                }
+            }
+        });
+
+        viewModel.getFollowingSeller().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean isFollowing) {
+                if (Boolean.TRUE.equals(isFollowing)) {
+                    binding.buttonFollowSeller.setText(R.string.listing_detail_btn_following);
+                } else {
+                    binding.buttonFollowSeller.setText(R.string.listing_detail_btn_follow);
                 }
             }
         });
@@ -275,7 +337,7 @@ public class ListingDetailFragment extends Fragment {
         imageAdapter.setCoverThumb(listing.getCoverThumb());
         updateImageCounter();
 
-        bindStatusChip(listing.getStatus());
+        StatusChips.bind(binding.chipStatus.textStatusChip, listing.getStatus());
 
         if (listing.getStatus() == ListingStatus.SOLD) {
             binding.textSoldOverlay.setVisibility(View.VISIBLE);
@@ -286,10 +348,11 @@ public class ListingDetailFragment extends Fragment {
         StringBuilder tradeBuilder = new StringBuilder();
         List<TradeType> types = listing.getTradeTypes();
         if (types != null) {
+            String separator = getString(R.string.listing_detail_separator);
             for (int i = 0; i < types.size(); i++) {
                 TradeType t = types.get(i);
                 if (tradeBuilder.length() > 0) {
-                    tradeBuilder.append(" • ");
+                    tradeBuilder.append(separator);
                 }
                 if (t == TradeType.SELL) {
                     tradeBuilder.append(getString(R.string.listing_detail_trade_sell));
@@ -345,37 +408,6 @@ public class ListingDetailFragment extends Fragment {
         setupActionButtons(listing, currentUid);
     }
 
-    private void bindStatusChip(ListingStatus status) {
-        if (status == null) {
-            binding.chipStatus.textStatusChip.setVisibility(View.GONE);
-            return;
-        }
-        binding.chipStatus.textStatusChip.setVisibility(View.VISIBLE);
-        int variantColor = ContextCompat.getColor(requireContext(), R.color.on_surface_variant);
-        if (status == ListingStatus.AVAILABLE) {
-            binding.chipStatus.textStatusChip.setText(R.string.listing_detail_status_available);
-            binding.chipStatus.textStatusChip.setTextColor(
-                    ContextCompat.getColor(requireContext(), R.color.success));
-        } else if (status == ListingStatus.RESERVED) {
-            binding.chipStatus.textStatusChip.setText(R.string.listing_detail_status_reserved);
-            binding.chipStatus.textStatusChip.setTextColor(
-                    ContextCompat.getColor(requireContext(), R.color.warning));
-        } else if (status == ListingStatus.SOLD) {
-            binding.chipStatus.textStatusChip.setText(R.string.listing_detail_status_sold);
-            binding.chipStatus.textStatusChip.setTextColor(variantColor);
-        } else if (status == ListingStatus.HIDDEN) {
-            binding.chipStatus.textStatusChip.setText(R.string.listing_detail_status_hidden);
-            binding.chipStatus.textStatusChip.setTextColor(variantColor);
-        } else if (status == ListingStatus.REMOVED) {
-            binding.chipStatus.textStatusChip.setText(R.string.listing_detail_status_removed);
-            binding.chipStatus.textStatusChip.setTextColor(
-                    ContextCompat.getColor(requireContext(), R.color.error));
-        } else if (status == ListingStatus.DRAFT) {
-            binding.chipStatus.textStatusChip.setText(R.string.listing_detail_status_draft);
-            binding.chipStatus.textStatusChip.setTextColor(variantColor);
-        }
-    }
-
     private String formatCondition(ItemCondition condition) {
         if (condition == ItemCondition.NEW) {
             return getString(R.string.listing_post_condition_new);
@@ -391,10 +423,16 @@ public class ListingDetailFragment extends Fragment {
         return "";
     }
 
-    private void displaySeller(User seller) {
+    private void displaySeller(final User seller, String currentUid) {
         if (!SessionManager.getInstance().isLoggedIn()) {
             binding.layoutSellerBlock.setVisibility(View.GONE);
             binding.layoutGuestBlock.setVisibility(View.VISIBLE);
+            binding.cardSeller.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Navigation.findNavController(v).navigate(R.id.action_global_sign_in);
+                }
+            });
             return;
         }
 
@@ -414,16 +452,9 @@ public class ListingDetailFragment extends Fragment {
         binding.avatarSeller.textInitial.setText(initial);
 
         if (seller.getAvatarBase64() != null && !seller.getAvatarBase64().isEmpty()) {
-            try {
-                byte[] bytes = Base64.decode(seller.getAvatarBase64(), Base64.DEFAULT);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                binding.avatarSeller.imageAvatar.setImageBitmap(bitmap);
-                binding.avatarSeller.imageAvatar.setVisibility(View.VISIBLE);
-                binding.avatarSeller.textInitial.setVisibility(View.GONE);
-            } catch (IllegalArgumentException e) {
-                binding.avatarSeller.imageAvatar.setVisibility(View.GONE);
-                binding.avatarSeller.textInitial.setVisibility(View.VISIBLE);
-            }
+            ImageLoader.load(seller.getAvatarBase64(), binding.avatarSeller.imageAvatar, 0, 0);
+            binding.avatarSeller.imageAvatar.setVisibility(View.VISIBLE);
+            binding.avatarSeller.textInitial.setVisibility(View.GONE);
         } else {
             binding.avatarSeller.imageAvatar.setVisibility(View.GONE);
             binding.avatarSeller.textInitial.setVisibility(View.VISIBLE);
@@ -439,6 +470,42 @@ public class ListingDetailFragment extends Fragment {
         } else {
             binding.textVerifiedBadge.setVisibility(View.GONE);
         }
+
+        final String sellerId = seller.getId();
+        binding.cardSeller.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (sellerId != null) {
+                    Bundle args = new Bundle();
+                    args.putString("userId", sellerId);
+                    Navigation.findNavController(v).navigate(R.id.action_global_user_profile, args);
+                }
+            }
+        });
+
+        binding.buttonSellerReviews.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (sellerId != null) {
+                    Bundle args = new Bundle();
+                    args.putString("userId", sellerId);
+                    Navigation.findNavController(v).navigate(R.id.action_global_seller_trust, args);
+                }
+            }
+        });
+
+        boolean isSelf = currentUid != null && currentUid.equals(sellerId);
+        if (isSelf) {
+            binding.buttonFollowSeller.setVisibility(View.GONE);
+        } else {
+            binding.buttonFollowSeller.setVisibility(View.VISIBLE);
+            binding.buttonFollowSeller.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    viewModel.toggleFollowSeller();
+                }
+            });
+        }
     }
 
     private void setupActionButtons(final Listing listing, String currentUid) {
@@ -447,15 +514,6 @@ public class ListingDetailFragment extends Fragment {
         if (isOwner) {
             binding.layoutBuyerActions.setVisibility(View.GONE);
             binding.layoutSellerActions.setVisibility(View.VISIBLE);
-
-            binding.buttonEdit.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Bundle bundle = new Bundle();
-                    bundle.putString("listingId", listing.getId());
-                    Navigation.findNavController(v).navigate(R.id.postListingFragment, bundle);
-                }
-            });
 
             boolean canMarkSold = (listing.getStatus() == ListingStatus.AVAILABLE);
             binding.buttonMarkSold.setEnabled(canMarkSold);
@@ -477,22 +535,46 @@ public class ListingDetailFragment extends Fragment {
 
             binding.buttonChat.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
+                public void onClick(final View v) {
                     if (!SessionManager.getInstance().isLoggedIn()) {
-                        Navigation.findNavController(v).navigate(R.id.action_global_sign_in);
+                        showGuestLoginDialog(v);
+                        return;
                     }
+                    Bundle args = new Bundle();
+                    args.putString("listingId", listing.getId());
+                    args.putString("conversationId", "");
+                    Navigation.findNavController(v).navigate(R.id.action_global_chat, args);
                 }
             });
 
             binding.buttonOffer.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
+                public void onClick(final View v) {
                     if (!SessionManager.getInstance().isLoggedIn()) {
-                        Navigation.findNavController(v).navigate(R.id.action_global_sign_in);
+                        showGuestLoginDialog(v);
+                        return;
                     }
+                    Bundle args = new Bundle();
+                    args.putString("listingId", listing.getId());
+                    Navigation.findNavController(v).navigate(R.id.action_global_make_offer, args);
                 }
             });
         }
+    }
+
+    private void showGuestLoginDialog(final View v) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.listing_detail_guest_dialog_title)
+                .setMessage(R.string.listing_detail_guest_dialog_msg)
+                .setPositiveButton(R.string.listing_detail_guest_dialog_btn_login,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Navigation.findNavController(v).navigate(R.id.action_global_sign_in);
+                            }
+                        })
+                .setNegativeButton(R.string.listing_detail_guest_dialog_btn_cancel, null)
+                .show();
     }
 
     @Override
