@@ -21,6 +21,7 @@ import com.nhom3.pubgapp.model.StatusChange;
 import com.nhom3.pubgapp.model.enums.ComplaintDecision;
 import com.nhom3.pubgapp.model.enums.ComplaintStatus;
 import com.nhom3.pubgapp.model.enums.DealStatus;
+import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.NotificationType;
 import com.nhom3.pubgapp.model.enums.Priority;
@@ -253,7 +254,8 @@ public class ComplaintRepository extends BaseRepository {
             cb.onError(ERROR_DEAL_NOT_FOUND);
             return;
         }
-        if (!deal.isParticipant(uid) || !deal.canMoveTo(DealStatus.DISPUTED) || isCountdownOver(deal)) {
+        if (!deal.isParticipant(uid) || !deal.canMoveTo(DealStatus.DISPUTED) || isCountdownOver(deal)
+                || isConfirmedWithoutMeetUp(deal)) {
             cb.onError(ERROR_CANNOT_COMPLAIN);
             return;
         }
@@ -549,6 +551,14 @@ public class ComplaintRepository extends BaseRepository {
             return false;
         }
         return Timestamp.now().compareTo(deal.getAutoReleaseAt()) >= 0;
+    }
+
+    // canMoveTo follows the state table only; a CONFIRMED deal is disputable only when meeting in person.
+    private boolean isConfirmedWithoutMeetUp(Deal deal) {
+        if (deal.getStatus() != DealStatus.CONFIRMED) {
+            return false;
+        }
+        return deal.getDeliveryMethod() != DeliveryMethod.MEET_UP;
     }
 
     private String otherParty(Deal deal, String uid) {
