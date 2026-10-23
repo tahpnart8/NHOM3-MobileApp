@@ -1607,14 +1607,40 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Nhật ký hoạt động (security-rules.md mục 22): chỉ thêm, không ghi hộ người khác.
     match /activityLogs/{id} {
       allow read: if isAdmin();
-      allow write: if false;
+
+      allow create: if writerActive()
+        && hasOnlyKeys(['userId', 'action', 'targetType', 'targetId', 'createdAt'])
+        && request.resource.data.userId == me()
+        && reqString(request.resource.data, 'action', 60)
+        && optString(request.resource.data, 'targetType', 40)
+        && optString(request.resource.data, 'targetId', 200)
+        && serverStamp('createdAt');
+
+      allow update, delete: if false;
     }
 
+    // Từ khóa cấm (security-rules.md mục 23). Muốn đổi thì xóa rồi thêm.
+    // "Đã bỏ dấu, viết thường": chỉ ký tự ASCII in được và không có chữ hoa (FormatUtils.removeAccents).
     match /bannedKeywords/{id} {
       allow read: if signedIn();
-      allow write: if false;
+
+      allow create: if isAdmin()
+        && writerActive()
+        && hasOnlyKeys(['keyword', 'createdBy', 'createdAt', 'updatedAt'])
+        && request.resource.data.createdBy == me()
+        && request.resource.data.keyword is string
+        && request.resource.data.keyword.size() >= 2
+        && request.resource.data.keyword.size() <= 60
+        && request.resource.data.keyword.matches('[ -~]+')
+        && request.resource.data.keyword.lower() == request.resource.data.keyword
+        && createStamps();
+
+      allow update: if false;
+
+      allow delete: if isAdmin() && writerActive();
     }
   }
 }
