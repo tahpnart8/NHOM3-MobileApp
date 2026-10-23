@@ -14,6 +14,7 @@ import com.google.firebase.firestore.AggregateSource;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
@@ -111,7 +112,10 @@ public class UserRepository extends BaseRepository {
             idMap.put("createdAt", FieldValue.serverTimestamp());
             idMap.put("updatedAt", FieldValue.serverTimestamp());
 
-            DocumentReference idRef = db.collection(COLLECTION_USERS).document(uid).collection(SUB_PRIVATE).document(DOC_IDENTITY);
+            DocumentReference idRef = db.collection(COLLECTION_USERS)
+                    .document(uid)
+                    .collection(SUB_PRIVATE)
+                    .document(DOC_IDENTITY);
             batch.set(idRef, idMap);
         }
 
@@ -218,101 +222,132 @@ public class UserRepository extends BaseRepository {
                 });
     }
 
+    private static class ProfileStatsFetcher {
+        private final FirebaseFirestore db;
+        private final String uid;
+        private final DataCallback<ProfileStats> cb;
+        private final ProfileStats stats = new ProfileStats();
+        private int sellerDeals = 0;
+
+        ProfileStatsFetcher(FirebaseFirestore db, String uid, DataCallback<ProfileStats> cb) {
+            this.db = db;
+            this.uid = uid;
+            this.cb = cb;
+        }
+
+        void fetch() {
+            fetchSoldDeals();
+        }
+
+        private void fetchSoldDeals() {
+            db.collection(COLLECTION_DEALS)
+                    .whereEqualTo("sellerId", uid)
+                    .whereEqualTo("status", "COMPLETED")
+                    .count()
+                    .get(AggregateSource.SERVER)
+                    .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
+                        @Override
+                        public void onSuccess(AggregateQuerySnapshot snapshot) {
+                            stats.setSoldCount((int) snapshot.getCount());
+                            fetchBuyerCompletedDeals();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            cb.onError(e != null ? e.getMessage() : "Lỗi tải thống kê");
+                        }
+                    });
+        }
+
+        private void fetchBuyerCompletedDeals() {
+            db.collection(COLLECTION_DEALS)
+                    .whereEqualTo("buyerId", uid)
+                    .whereEqualTo("status", "COMPLETED")
+                    .count()
+                    .get(AggregateSource.SERVER)
+                    .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
+                        @Override
+                        public void onSuccess(AggregateQuerySnapshot snapshot) {
+                            int buyerCompleted = (int) snapshot.getCount();
+                            stats.setCompletedDealCount(stats.getSoldCount() + buyerCompleted);
+                            fetchFollowers();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            cb.onError(e != null ? e.getMessage() : "Lỗi tải thống kê");
+                        }
+                    });
+        }
+
+        private void fetchFollowers() {
+            db.collection(COLLECTION_FOLLOWS)
+                    .whereEqualTo("followedId", uid)
+                    .count()
+                    .get(AggregateSource.SERVER)
+                    .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
+                        @Override
+                        public void onSuccess(AggregateQuerySnapshot snapshot) {
+                            stats.setFollowerCount((int) snapshot.getCount());
+                            fetchSellerDeals();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            cb.onError(e != null ? e.getMessage() : "Lỗi tải thống kê");
+                        }
+                    });
+        }
+
+        private void fetchSellerDeals() {
+            db.collection(COLLECTION_DEALS)
+                    .whereEqualTo("sellerId", uid)
+                    .whereNotEqualTo("status", "CANCELLED")
+                    .count()
+                    .get(AggregateSource.SERVER)
+                    .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
+                        @Override
+                        public void onSuccess(AggregateQuerySnapshot snapshot) {
+                            sellerDeals = (int) snapshot.getCount();
+                            fetchBuyerDeals();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            cb.onError(e != null ? e.getMessage() : "Lỗi tải thống kê");
+                        }
+                    });
+        }
+
+        private void fetchBuyerDeals() {
+            db.collection(COLLECTION_DEALS)
+                    .whereEqualTo("buyerId", uid)
+                    .whereNotEqualTo("status", "CANCELLED")
+                    .count()
+                    .get(AggregateSource.SERVER)
+                    .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
+                        @Override
+                        public void onSuccess(AggregateQuerySnapshot snapshot) {
+                            int buyerDeals = (int) snapshot.getCount();
+                            stats.setDealCount(sellerDeals + buyerDeals);
+                            cb.onSuccess(stats);
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            cb.onError(e != null ? e.getMessage() : "Lỗi tải thống kê");
+                        }
+                    });
+        }
+    }
+
     public void getStats(final String uid, final DataCallback<ProfileStats> cb) {
-        final ProfileStats stats = new ProfileStats();
-        // Query 1: deals sold by seller and completed
-        db.collection(COLLECTION_DEALS)
-                .whereEqualTo("sellerId", uid)
-                .whereEqualTo("status", "COMPLETED")
-                .count()
-                .get(AggregateSource.SERVER)
-                .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
-                    @Override
-                    public void onSuccess(AggregateQuerySnapshot soldSnapshot) {
-                        int sold = (int) soldSnapshot.getCount();
-                        stats.setSoldCount(sold);
-                        // Query 2: deals completed as buyer
-                        db.collection(COLLECTION_DEALS)
-                                .whereEqualTo("buyerId", uid)
-                                .whereEqualTo("status", "COMPLETED")
-                                .count()
-                                .get(AggregateSource.SERVER)
-                                .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
-                                    @Override
-                                    public void onSuccess(AggregateQuerySnapshot buyerCompletedSnapshot) {
-                                        int buyerCompleted = (int) buyerCompletedSnapshot.getCount();
-                                        stats.setCompletedDealCount(stats.getSoldCount() + buyerCompleted);
-                                        // Query 3: followers count
-                                        db.collection(COLLECTION_FOLLOWS)
-                                                .whereEqualTo("followedId", uid)
-                                                .count()
-                                                .get(AggregateSource.SERVER)
-                                                .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
-                                                    @Override
-                                                    public void onSuccess(AggregateQuerySnapshot followerSnapshot) {
-                                                        stats.setFollowerCount((int) followerSnapshot.getCount());
-                                                        // Query 4: non-cancelled deals as seller
-                                                        db.collection(COLLECTION_DEALS)
-                                                                .whereEqualTo("sellerId", uid)
-                                                                .whereNotEqualTo("status", "CANCELLED")
-                                                                .count()
-                                                                .get(AggregateSource.SERVER)
-                                                                .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
-                                                                    @Override
-                                                                    public void onSuccess(AggregateQuerySnapshot sellerDealsSnapshot) {
-                                                                        final int sellerDeals = (int) sellerDealsSnapshot.getCount();
-                                                                        // Query 5: non-cancelled deals as buyer
-                                                                        db.collection(COLLECTION_DEALS)
-                                                                                .whereEqualTo("buyerId", uid)
-                                                                                .whereNotEqualTo("status", "CANCELLED")
-                                                                                .count()
-                                                                                .get(AggregateSource.SERVER)
-                                                                                .addOnSuccessListener(new OnSuccessListener<AggregateQuerySnapshot>() {
-                                                                                    @Override
-                                                                                    public void onSuccess(AggregateQuerySnapshot buyerDealsSnapshot) {
-                                                                                        int buyerDeals = (int) buyerDealsSnapshot.getCount();
-                                                                                        stats.setDealCount(sellerDeals + buyerDeals);
-                                                                                        cb.onSuccess(stats);
-                                                                                    }
-                                                                                })
-                                                                                .addOnFailureListener(new OnFailureListener() {
-                                                                                    @Override
-                                                                                    public void onFailure(@NonNull Exception e) {
-                                                                                        fail(cb, e);
-                                                                                    }
-                                                                                });
-                                                                    }
-                                                                })
-                                                                .addOnFailureListener(new OnFailureListener() {
-                                                                    @Override
-                                                                    public void onFailure(@NonNull Exception e) {
-                                                                        fail(cb, e);
-                                                                    }
-                                                                });
-                                                    }
-                                                })
-                                                .addOnFailureListener(new OnFailureListener() {
-                                                    @Override
-                                                    public void onFailure(@NonNull Exception e) {
-                                                        fail(cb, e);
-                                                    }
-                                                });
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        fail(cb, e);
-                                    }
-                                });
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        fail(cb, e);
-                    }
-                });
+        new ProfileStatsFetcher(db, uid, cb).fetch();
     }
 
     public void clearExpiredLock(String uid, final DataCallback<Void> cb) {
@@ -360,7 +395,9 @@ public class UserRepository extends BaseRepository {
                             if (task.getResult() != null) {
                                 for (DocumentSnapshot doc : task.getResult().getDocuments()) {
                                     if (!doc.getId().equals(ref.getId())) {
-                                        batch.update(doc.getReference(), "isDefault", false, "updatedAt", FieldValue.serverTimestamp());
+                                        batch.update(doc.getReference(),
+                                                "isDefault", false,
+                                                "updatedAt", FieldValue.serverTimestamp());
                                     }
                                 }
                             }
@@ -550,7 +587,10 @@ public class UserRepository extends BaseRepository {
                 });
     }
 
-    public void requestVerification(final String uid, final SellerVerification verification, final DataCallback<Void> cb) {
+    public void requestVerification(
+            final String uid,
+            final SellerVerification verification,
+            final DataCallback<Void> cb) {
         final DocumentReference verRef = db.collection(COLLECTION_SELLER_VERIFICATIONS).document(uid);
         verRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -581,7 +621,9 @@ public class UserRepository extends BaseRepository {
                     updates.put("updatedAt", FieldValue.serverTimestamp());
 
                     batch.update(verRef, updates);
-                    batch.update(userRef, "verificationStatus", VerificationStatus.PENDING.name(), "updatedAt", FieldValue.serverTimestamp());
+                    batch.update(userRef,
+                            "verificationStatus", VerificationStatus.PENDING.name(),
+                            "updatedAt", FieldValue.serverTimestamp());
                 } else {
                     Map<String, Object> data = new HashMap<String, Object>();
                     data.put("userId", uid);
@@ -596,7 +638,9 @@ public class UserRepository extends BaseRepository {
                     data.put("updatedAt", FieldValue.serverTimestamp());
 
                     batch.set(verRef, data);
-                    batch.update(userRef, "verificationStatus", VerificationStatus.PENDING.name(), "updatedAt", FieldValue.serverTimestamp());
+                    batch.update(userRef,
+                            "verificationStatus", VerificationStatus.PENDING.name(),
+                            "updatedAt", FieldValue.serverTimestamp());
                 }
 
                 batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -635,7 +679,10 @@ public class UserRepository extends BaseRepository {
 
     public void saveIdentity(final String uid, final UserIdentity identity, final DataCallback<Void> cb) {
         identity.setUserId(uid);
-        final DocumentReference ref = db.collection(COLLECTION_USERS).document(uid).collection(SUB_PRIVATE).document(DOC_IDENTITY);
+        final DocumentReference ref = db.collection(COLLECTION_USERS)
+                .document(uid)
+                .collection(SUB_PRIVATE)
+                .document(DOC_IDENTITY);
 
         ref.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -650,7 +697,8 @@ public class UserRepository extends BaseRepository {
                     updates.put("nationalId", identity.getNationalId());
                     updates.put("dateOfBirth", identity.getDateOfBirth());
                     updates.put("gender", identity.getGender() != null ? identity.getGender().name() : null);
-                    updates.put("permanentAddress", identity.getPermanentAddress() != null ? identity.getPermanentAddress() : "");
+                    updates.put("permanentAddress",
+                            identity.getPermanentAddress() != null ? identity.getPermanentAddress() : "");
                     updates.put("updatedAt", FieldValue.serverTimestamp());
 
                     ref.update(updates).addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -669,7 +717,8 @@ public class UserRepository extends BaseRepository {
                     data.put("nationalId", identity.getNationalId());
                     data.put("dateOfBirth", identity.getDateOfBirth());
                     data.put("gender", identity.getGender() != null ? identity.getGender().name() : null);
-                    data.put("permanentAddress", identity.getPermanentAddress() != null ? identity.getPermanentAddress() : "");
+                    data.put("permanentAddress",
+                            identity.getPermanentAddress() != null ? identity.getPermanentAddress() : "");
                     data.put("createdAt", FieldValue.serverTimestamp());
                     data.put("updatedAt", FieldValue.serverTimestamp());
 
@@ -689,7 +738,11 @@ public class UserRepository extends BaseRepository {
     }
 
     public void getIdentity(String uid, final DataCallback<UserIdentity> cb) {
-        db.collection(COLLECTION_USERS).document(uid).collection(SUB_PRIVATE).document(DOC_IDENTITY).get()
+        db.collection(COLLECTION_USERS)
+                .document(uid)
+                .collection(SUB_PRIVATE)
+                .document(DOC_IDENTITY)
+                .get()
                 .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -709,7 +762,8 @@ public class UserRepository extends BaseRepository {
     }
 
     public void updateNotificationPrefs(String uid, Map<String, Boolean> prefs, final DataCallback<Void> cb) {
-        db.collection(COLLECTION_USERS).document(uid).update("notificationPrefs", prefs, "updatedAt", FieldValue.serverTimestamp())
+        db.collection(COLLECTION_USERS).document(uid)
+                .update("notificationPrefs", prefs, "updatedAt", FieldValue.serverTimestamp())
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
@@ -732,77 +786,119 @@ public class UserRepository extends BaseRepository {
                 });
     }
 
-    public void deactivate(final String uid, final DataCallback<Void> cb) {
-        List<String> activeStatuses = Arrays.asList("PENDING_CONFIRM", "CONFIRMED", "SHIPPED", "RECEIVED", "DISPUTED");
-        db.collection(COLLECTION_DEALS)
-                .whereEqualTo("sellerId", uid)
-                .whereIn("status", activeStatuses)
-                .limit(1)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> sellerTask) {
-                        if (!sellerTask.isSuccessful()) {
-                            fail(cb, sellerTask.getException());
-                            return;
-                        }
-                        if (sellerTask.getResult() != null && !sellerTask.getResult().isEmpty()) {
-                            cb.onError("Bạn còn giao dịch chưa hoàn tất. Không thể vô hiệu hóa tài khoản lúc này.");
-                            return;
-                        }
-                        List<String> activeStatusesInner = Arrays.asList("PENDING_CONFIRM", "CONFIRMED", "SHIPPED", "RECEIVED", "DISPUTED");
-                        db.collection(COLLECTION_DEALS)
-                                .whereEqualTo("buyerId", uid)
-                                .whereIn("status", activeStatusesInner)
-                                .limit(1)
-                                .get()
-                                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<QuerySnapshot> buyerTask) {
-                                        if (!buyerTask.isSuccessful()) {
-                                            fail(cb, buyerTask.getException());
-                                            return;
-                                        }
-                                        if (buyerTask.getResult() != null && !buyerTask.getResult().isEmpty()) {
-                                            cb.onError("Bạn còn giao dịch chưa hoàn tất. Không thể vô hiệu hóa tài khoản lúc này.");
-                                            return;
-                                        }
-                                        db.collection(COLLECTION_LISTINGS)
-                                                .whereEqualTo("sellerId", uid)
-                                                .whereEqualTo("status", "AVAILABLE")
-                                                .get()
-                                                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                                    @Override
-                                                    public void onComplete(@NonNull Task<QuerySnapshot> listTask) {
-                                                        if (!listTask.isSuccessful()) {
-                                                            fail(cb, listTask.getException());
-                                                            return;
-                                                        }
-                                                        WriteBatch batch = db.batch();
-                                                        DocumentReference userRef = db.collection(COLLECTION_USERS).document(uid);
-                                                        batch.update(userRef, "status", UserStatus.DELETED.name(), "updatedAt", FieldValue.serverTimestamp());
+    private static class DeactivateHandler {
+        private final FirebaseFirestore db;
+        private final String uid;
+        private final DataCallback<Void> cb;
 
-                                                        if (listTask.getResult() != null) {
-                                                            for (DocumentSnapshot doc : listTask.getResult().getDocuments()) {
-                                                                batch.update(doc.getReference(), "status", "HIDDEN", "statusReason", "Tài khoản đã xóa", "updatedAt", FieldValue.serverTimestamp());
-                                                            }
-                                                        }
+        DeactivateHandler(FirebaseFirestore db, String uid, DataCallback<Void> cb) {
+            this.db = db;
+            this.uid = uid;
+            this.cb = cb;
+        }
 
-                                                        batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                            @Override
-                                                            public void onComplete(@NonNull Task<Void> commitTask) {
-                                                                if (commitTask.isSuccessful()) {
-                                                                    cb.onSuccess(null);
-                                                                } else {
-                                                                    fail(cb, commitTask.getException());
-                                                                }
-                                                            }
-                                                        });
-                                                    }
-                                                });
+        void run() {
+            checkSellerDeals();
+        }
+
+        private void checkSellerDeals() {
+            List<String> activeStatuses = Arrays.asList(
+                    "PENDING_CONFIRM", "CONFIRMED", "SHIPPED", "RECEIVED", "DISPUTED"
+            );
+            db.collection(COLLECTION_DEALS)
+                    .whereEqualTo("sellerId", uid)
+                    .whereIn("status", activeStatuses)
+                    .limit(1)
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (!task.isSuccessful()) {
+                                Exception e = task.getException();
+                                cb.onError(e != null ? e.getMessage() : "Lỗi kiểm tra giao dịch");
+                                return;
+                            }
+                            if (task.getResult() != null && !task.getResult().isEmpty()) {
+                                cb.onError("Bạn còn giao dịch chưa hoàn tất. "
+                                        + "Không thể vô hiệu hóa tài khoản lúc này.");
+                                return;
+                            }
+                            checkBuyerDeals();
+                        }
+                    });
+        }
+
+        private void checkBuyerDeals() {
+            List<String> activeStatuses = Arrays.asList(
+                    "PENDING_CONFIRM", "CONFIRMED", "SHIPPED", "RECEIVED", "DISPUTED"
+            );
+            db.collection(COLLECTION_DEALS)
+                    .whereEqualTo("buyerId", uid)
+                    .whereIn("status", activeStatuses)
+                    .limit(1)
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (!task.isSuccessful()) {
+                                Exception e = task.getException();
+                                cb.onError(e != null ? e.getMessage() : "Lỗi kiểm tra giao dịch");
+                                return;
+                            }
+                            if (task.getResult() != null && !task.getResult().isEmpty()) {
+                                cb.onError("Bạn còn giao dịch chưa hoàn tất. "
+                                        + "Không thể vô hiệu hóa tài khoản lúc này.");
+                                return;
+                            }
+                            hideListingsAndDeactivate();
+                        }
+                    });
+        }
+
+        private void hideListingsAndDeactivate() {
+            db.collection(COLLECTION_LISTINGS)
+                    .whereEqualTo("sellerId", uid)
+                    .whereEqualTo("status", "AVAILABLE")
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (!task.isSuccessful()) {
+                                Exception e = task.getException();
+                                cb.onError(e != null ? e.getMessage() : "Lỗi kiểm tra tin đăng");
+                                return;
+                            }
+                            WriteBatch batch = db.batch();
+                            DocumentReference userRef = db.collection(COLLECTION_USERS).document(uid);
+                            batch.update(userRef, "status", UserStatus.DELETED.name(),
+                                    "updatedAt", FieldValue.serverTimestamp());
+
+                            if (task.getResult() != null) {
+                                for (DocumentSnapshot doc : task.getResult().getDocuments()) {
+                                    batch.update(doc.getReference(),
+                                            "status", "HIDDEN",
+                                            "statusReason", "Tài khoản đã xóa",
+                                            "updatedAt", FieldValue.serverTimestamp());
+                                }
+                            }
+
+                            batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> commitTask) {
+                                    if (commitTask.isSuccessful()) {
+                                        cb.onSuccess(null);
+                                    } else {
+                                        Exception e = commitTask.getException();
+                                        cb.onError(e != null ? e.getMessage() : "Lỗi xóa tài khoản");
                                     }
-                                });
-                    }
-                });
+                                }
+                            });
+                        }
+                    });
+        }
+    }
+
+    public void deactivate(final String uid, final DataCallback<Void> cb) {
+        new DeactivateHandler(db, uid, cb).run();
     }
 }
