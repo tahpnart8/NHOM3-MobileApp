@@ -29,6 +29,12 @@ ok "vietnamese subject"       subject_ok "feat(auth): thêm nút đăng nhập b
 ok "long vietnamese subject"  subject_ok "fix(offline): sửa lỗi mất dữ liệu đã lưu khi xoay màn hình"
 no "vietnamese too long"      subject_ok "feat(listing): thêm màn hình đăng tin bán đồ cũ có chọn nhiều ảnh và xem trước trước khi đăng"
 no "capital vietnamese start" subject_ok "feat: Thêm nút đăng nhập"
+ok "screen code leads"        subject_ok "feat(listing): B05 kệ hàng của tôi"
+ok "screen code two digits"   subject_ok "feat(chat): C02 trò chuyện chữ và ảnh"
+ok "screen code then english" subject_ok "feat(admin): E03 user detail screen"
+no "code is not a module"     subject_ok "feat(plan): F99 mã màn không tồn tại"
+no "code without a space"     subject_ok "feat(listing): B05kệ hàng của tôi"
+no "capital that is no code"  subject_ok "feat(listing): Kệ hàng của tôi"
 
 ok "branch"                   branch_ok "feat/12-google-sign-in"
 no "branch wrong type"        branch_ok "feature/12-google"
