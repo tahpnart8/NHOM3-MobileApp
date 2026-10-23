@@ -309,6 +309,159 @@ public class DealRepositoryTest {
         assertNotNull(payment.getHeldAt());
     }
 
+    @Test
+    public void validateShipping_rejectsMeetUp() {
+        Deal deal = createSampleConfirmedDeal(0);
+        deal.setDeliveryMethod(DeliveryMethod.MEET_UP);
+        String error = DealRepository.validateShipping(deal, null, "seller1",
+                "GHTK", "TRACK123", "img1");
+        assertNotNull(error);
+        assertEquals("Chỉ giao dịch vận chuyển mới có thể xác nhận giao hàng.", error);
+    }
+
+    @Test
+    public void validateShipping_rejectsMissingEvidence() {
+        Deal deal = createSampleConfirmedDeal(0);
+        deal.setDeliveryMethod(DeliveryMethod.SHIPPING);
+
+        String err1 = DealRepository.validateShipping(deal, null, "seller1", "", "TRACK123", "img1");
+        assertNotNull(err1);
+
+        String err2 = DealRepository.validateShipping(deal, null, "seller1", "GHTK", "", "img1");
+        assertNotNull(err2);
+
+        String err3 = DealRepository.validateShipping(deal, null, "seller1", "GHTK", "TRACK123", "");
+        assertNotNull(err3);
+    }
+
+    @Test
+    public void validateShipping_rejectsWhenNeedsPaymentAndNotHeld() {
+        Deal deal = createSampleConfirmedDeal(200000);
+        deal.setDeliveryMethod(DeliveryMethod.SHIPPING);
+
+        String errNull = DealRepository.validateShipping(deal, null, "seller1",
+                "GHTK", "TRACK123", "img1");
+        assertNotNull(errNull);
+        assertEquals("Giao dịch cần được người mua thanh toán ký quỹ trước khi giao.", errNull);
+
+        Payment unheld = new Payment();
+        unheld.setStatus(PaymentStatus.RELEASED);
+        String errNotHeld = DealRepository.validateShipping(deal, unheld, "seller1",
+                "GHTK", "TRACK123", "img1");
+        assertNotNull(errNotHeld);
+    }
+
+    @Test
+    public void validateShipping_acceptsWhenPriceZeroWithoutPayment() {
+        Deal deal = createSampleConfirmedDeal(0);
+        deal.setDeliveryMethod(DeliveryMethod.SHIPPING);
+        String error = DealRepository.validateShipping(deal, null, "seller1",
+                "GHTK", "TRACK123", "img1");
+        assertNull(error);
+    }
+
+    @Test
+    public void validateShipping_acceptsWhenNeedsPaymentAndHeld() {
+        Deal deal = createSampleConfirmedDeal(300000);
+        deal.setDeliveryMethod(DeliveryMethod.SHIPPING);
+        Payment held = new Payment();
+        held.setStatus(PaymentStatus.HELD);
+
+        String error = DealRepository.validateShipping(deal, held, "seller1",
+                "GHTK", "TRACK123", "img1");
+        assertNull(error);
+    }
+
+    @Test
+    public void calculateAutoReleaseAt_addsSevenDays() {
+        Timestamp shippedAt = new Timestamp(new java.util.Date(1700000000000L));
+        Timestamp autoReleaseAt = DealRepository.calculateAutoReleaseAt(shippedAt);
+        assertNotNull(autoReleaseAt);
+
+        long expected = 1700000000000L + 7L * 24 * 60 * 60 * 1000;
+        assertEquals(expected, autoReleaseAt.toDate().getTime());
+        assertNull(DealRepository.calculateAutoReleaseAt(null));
+    }
+
+    @Test
+    public void validateReceiving_acceptsShippedAndConfirmedMeetUp() {
+        Deal shippingDeal = createSampleConfirmedDeal(0);
+        shippingDeal.setDeliveryMethod(DeliveryMethod.SHIPPING);
+        shippingDeal.setStatus(DealStatus.SHIPPED);
+
+        String errShipping = DealRepository.validateReceiving(shippingDeal, null, "buyer1", "img_recv");
+        assertNull(errShipping);
+
+        Deal meetUpDeal = createSampleConfirmedDeal(0);
+        meetUpDeal.setDeliveryMethod(DeliveryMethod.MEET_UP);
+        meetUpDeal.setStatus(DealStatus.CONFIRMED);
+
+        String errMeetUp = DealRepository.validateReceiving(meetUpDeal, null, "buyer1", "img_recv");
+        assertNull(errMeetUp);
+    }
+
+    @Test
+    public void validateReceiving_rejectsConfirmedShipping() {
+        Deal deal = createSampleConfirmedDeal(0);
+        deal.setDeliveryMethod(DeliveryMethod.SHIPPING);
+        deal.setStatus(DealStatus.CONFIRMED);
+
+        String error = DealRepository.validateReceiving(deal, null, "buyer1", "img_recv");
+        assertNotNull(error);
+        assertEquals("Người bán chưa giao hàng.", error);
+    }
+
+    @Test
+    public void validateReceiving_rejectsSeller() {
+        Deal deal = createSampleConfirmedDeal(0);
+        deal.setDeliveryMethod(DeliveryMethod.SHIPPING);
+        deal.setStatus(DealStatus.SHIPPED);
+
+        String error = DealRepository.validateReceiving(deal, null, "seller1", "img_recv");
+        assertNotNull(error);
+        assertEquals("Chỉ người mua mới có quyền xác nhận đã nhận hàng.", error);
+    }
+
+    @Test
+    public void validateReceiving_rejectsMissingImage() {
+        Deal deal = createSampleConfirmedDeal(0);
+        deal.setDeliveryMethod(DeliveryMethod.SHIPPING);
+        deal.setStatus(DealStatus.SHIPPED);
+
+        String errNull = DealRepository.validateReceiving(deal, null, "buyer1", null);
+        assertNotNull(errNull);
+
+        String errEmpty = DealRepository.validateReceiving(deal, null, "buyer1", "   ");
+        assertNotNull(errEmpty);
+    }
+
+    @Test
+    public void validateReceiving_rejectsWhenNeedsPaymentAndNotHeld() {
+        Deal deal = createSampleConfirmedDeal(500000);
+        deal.setDeliveryMethod(DeliveryMethod.SHIPPING);
+        deal.setStatus(DealStatus.SHIPPED);
+
+        String errNull = DealRepository.validateReceiving(deal, null, "buyer1", "img_recv");
+        assertNotNull(errNull);
+
+        Payment payment = new Payment();
+        payment.setStatus(PaymentStatus.RELEASED);
+        String errNotHeld = DealRepository.validateReceiving(deal, payment, "buyer1", "img_recv");
+        assertNotNull(errNotHeld);
+    }
+
+    @Test
+    public void validateReceiving_acceptsWhenNeedsPaymentAndHeld() {
+        Deal deal = createSampleConfirmedDeal(500000);
+        deal.setDeliveryMethod(DeliveryMethod.SHIPPING);
+        deal.setStatus(DealStatus.SHIPPED);
+
+        Payment payment = new Payment();
+        payment.setStatus(PaymentStatus.HELD);
+        String error = DealRepository.validateReceiving(deal, payment, "buyer1", "img_recv");
+        assertNull(error);
+    }
+
     private Deal createSampleConfirmedDeal(long price) {
         Deal deal = new Deal();
         deal.setId("deal1");
