@@ -220,7 +220,7 @@ public class MakeOfferFragment extends BottomSheetDialogFragment {
                                                 try {
                                                     Navigation.findNavController(
                                                             requireActivity(),
-                                                            R.id.nav_host_fragment_activity_main)
+                                                            R.id.navHostMain)
                                                             .navigate(R.id.action_global_my_profile);
                                                 } catch (Exception ignored) {
                                                 }
@@ -244,7 +244,7 @@ public class MakeOfferFragment extends BottomSheetDialogFragment {
                     args.putString("listingId", listingId);
                     try {
                         Navigation.findNavController(requireActivity(),
-                                R.id.nav_host_fragment_activity_main)
+                                R.id.navHostMain)
                                 .navigate(R.id.action_global_chat, args);
                     } catch (Exception ignored) {
                     }

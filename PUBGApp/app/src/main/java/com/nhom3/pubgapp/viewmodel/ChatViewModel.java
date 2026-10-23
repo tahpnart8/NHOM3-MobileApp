@@ -293,7 +293,7 @@ public class ChatViewModel extends ViewModel {
             offersListener.remove();
             offersListener = null;
         }
-        offersListener = chatRepository.observeOffersData(currentConversationId, new DataCallback<List<Offer>>() {
+        offersListener = chatRepository.observeOffers(currentConversationId, new DataCallback<List<Offer>>() {
             @Override
             public void onSuccess(List<Offer> result) {
                 offers.postValue(result);
@@ -442,11 +442,27 @@ public class ChatViewModel extends ViewModel {
     }
 
     static boolean canUserBuy(User user, boolean emailVerified) {
-        return user != null && user.canBuy(emailVerified);
+        if (user == null) {
+            return false;
+        }
+        try {
+            return user.canBuy(emailVerified);
+        } catch (UnsupportedOperationException e) {
+            return user.getVerificationStatus()
+                    == com.nhom3.pubgapp.model.enums.VerificationStatus.APPROVED && emailVerified;
+        }
     }
 
     static boolean canUserSell(User user, boolean emailVerified) {
-        return user != null && user.canSell(emailVerified);
+        if (user == null) {
+            return false;
+        }
+        try {
+            return user.canSell(emailVerified);
+        } catch (UnsupportedOperationException e) {
+            return user.getVerificationStatus()
+                    == com.nhom3.pubgapp.model.enums.VerificationStatus.APPROVED && emailVerified;
+        }
     }
 
     public void clearError() {

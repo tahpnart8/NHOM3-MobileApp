@@ -293,7 +293,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             if (offer.getAmount() > 0) {
                 binding.textOfferAmount.setVisibility(View.VISIBLE);
-                binding.textOfferAmount.setText(FormatUtils.formatPrice(offer.getAmount()));
+                binding.textOfferAmount.setText(formatUtils.formatPrice(offer.getAmount()));
             } else {
                 binding.textOfferAmount.setVisibility(View.GONE);
             }

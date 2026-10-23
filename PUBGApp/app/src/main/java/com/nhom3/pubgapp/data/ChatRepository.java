@@ -30,6 +30,7 @@ import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.MessageType;
 import com.nhom3.pubgapp.model.enums.NotificationType;
 import com.nhom3.pubgapp.model.enums.OfferStatus;
+import com.nhom3.pubgapp.model.enums.OfferType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -897,21 +898,7 @@ public class ChatRepository extends BaseRepository {
                 });
     }
 
-    public ListenerRegistration observeOffers(String conversationId, DataCallback<Void> cb) {
-        return observeOffersData(conversationId, new DataCallback<List<Offer>>() {
-            @Override
-            public void onSuccess(List<Offer> result) {
-                cb.onSuccess(null);
-            }
-
-            @Override
-            public void onError(String message) {
-                cb.onError(message);
-            }
-        });
-    }
-
-    ListenerRegistration observeOffersData(String conversationId, DataCallback<List<Offer>> cb) {
+    public ListenerRegistration observeOffers(String conversationId, DataCallback<List<Offer>> cb) {
         Query query = db.collection(COLLECTION_OFFERS).whereEqualTo("conversationId", conversationId);
         return query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
@@ -973,8 +960,9 @@ public class ChatRepository extends BaseRepository {
         if (offer == null || offer.getOfferType() == null) {
             return "Đề nghị giá mới";
         }
+        com.nhom3.pubgapp.util.FormatUtils formatUtils = new com.nhom3.pubgapp.util.FormatUtils();
         if (offer.getOfferType() == OfferType.MONEY) {
-            return "Đề nghị: " + com.nhom3.pubgapp.util.FormatUtils.formatPrice(offer.getAmount());
+            return "Đề nghị: " + formatUtils.formatPrice(offer.getAmount());
         }
         if (offer.getOfferType() == OfferType.ITEM) {
             String item = offer.getExchangeItem() != null ? offer.getExchangeItem().trim() : "";
@@ -982,8 +970,7 @@ public class ChatRepository extends BaseRepository {
         }
         if (offer.getOfferType() == OfferType.MONEY_AND_ITEM) {
             String item = offer.getExchangeItem() != null ? offer.getExchangeItem().trim() : "";
-            return "Đề nghị: " + com.nhom3.pubgapp.util.FormatUtils.formatPrice(offer.getAmount())
-                    + " + " + item;
+            return "Đề nghị: " + formatUtils.formatPrice(offer.getAmount()) + " + " + item;
         }
         return "Đề nghị giá mới";
     }

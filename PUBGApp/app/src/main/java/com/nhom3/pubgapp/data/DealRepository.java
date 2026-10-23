@@ -42,6 +42,10 @@ public class DealRepository extends BaseRepository {
     private static final String COLLECTION_NOTIFICATIONS = "notifications";
 
     public Deal buildFromOffer(Offer offer, Listing listing) {
+        return createDealFromOffer(offer, listing);
+    }
+
+    static Deal createDealFromOffer(Offer offer, Listing listing) {
         Deal deal = new Deal();
         deal.setListingId(offer.getListingId());
         deal.setOfferId(offer.getId());
