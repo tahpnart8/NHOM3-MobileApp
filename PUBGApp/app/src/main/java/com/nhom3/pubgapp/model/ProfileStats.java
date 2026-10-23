@@ -42,6 +42,10 @@ public class ProfileStats {
     }
 
     public double completionRate() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (dealCount <= 0) {
+            return 0.0;
+        }
+        return (double) completedDealCount / (double) dealCount;
     }
 }
+

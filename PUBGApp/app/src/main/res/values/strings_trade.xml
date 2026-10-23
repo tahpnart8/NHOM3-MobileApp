@@ -6,6 +6,10 @@
     <string name="trade_conversation_list_empty_message">Hãy dạo xem tin đăng và nhắn tin cho người bán nhé!</string>
     <string name="trade_conversation_list_empty_search">Không có cuộc trò chuyện nào khớp</string>
     <string name="trade_conversation_list_partner_fallback">Người dùng</string>
+    <string name="trade_conversation_avatar_default">U</string>
+    <string name="trade_error_not_signed_in_messages">Vui lòng đăng nhập để xem tin nhắn.</string>
+    <string name="trade_error_not_signed_in_chat">Vui lòng đăng nhập để nhắn tin.</string>
+    <string name="trade_error_invalid_conversation_id">Mã cuộc trò chuyện không hợp lệ.</string>
     <string name="trade_chat_title">Trò chuyện</string>
     <string name="trade_chat_active_now">Đang hoạt động</string>
     <string name="trade_chat_active_recent">Hoạt động %1$s</string>

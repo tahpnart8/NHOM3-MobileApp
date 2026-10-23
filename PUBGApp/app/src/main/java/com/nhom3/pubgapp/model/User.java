@@ -186,36 +186,69 @@ public class User extends BaseDocument {
 
     @Exclude
     public boolean isLocked() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status == UserStatus.PERM_LOCKED) {
+            return true;
+        }
+        if (status == UserStatus.TEMP_LOCKED) {
+            if (lockedUntil == null) {
+                return true;
+            }
+            Timestamp now = Timestamp.now();
+            return lockedUntil.compareTo(now) > 0;
+        }
+        return false;
     }
 
     @Exclude
     public boolean isDeleted() {
-        throw new UnsupportedOperationException("NOT_READY");
+        return status == UserStatus.DELETED;
     }
 
     public boolean canSell(boolean emailVerified) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status != UserStatus.ACTIVE) {
+            return false;
+        }
+        if (isLocked()) {
+            return false;
+        }
+        if (!emailVerified) {
+            return false;
+        }
+        return verificationStatus == VerificationStatus.APPROVED;
     }
 
     public boolean canBuy(boolean emailVerified) {
-        throw new UnsupportedOperationException("NOT_READY");
+        return canSell(emailVerified);
     }
 
     public void applyRating(int stars) {
-        throw new UnsupportedOperationException("NOT_READY");
+        this.ratingSum = this.ratingSum + stars;
+        this.ratingCount = this.ratingCount + 1;
     }
 
     @Exclude
     public double ratingAverage() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (ratingCount <= 0) {
+            return 0.0;
+        }
+        return (double) ratingSum / (double) ratingCount;
     }
 
     public boolean isActiveSince(Timestamp since) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (lastActiveAt == null || since == null) {
+            return false;
+        }
+        return lastActiveAt.compareTo(since) > 0;
     }
 
     public void buildSearchKeywords() {
-        throw new UnsupportedOperationException("NOT_READY");
+        com.nhom3.pubgapp.util.FormatUtils formatUtils = new com.nhom3.pubgapp.util.FormatUtils();
+        List<String> keywords = formatUtils.toKeywords(displayName);
+        if (keywords.size() > 20) {
+            this.searchKeywords = new java.util.ArrayList<String>(keywords.subList(0, 20));
+        } else {
+            this.searchKeywords = keywords;
+        }
     }
 }
+

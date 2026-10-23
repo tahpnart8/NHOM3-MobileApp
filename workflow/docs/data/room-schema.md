@@ -225,6 +225,8 @@ erDiagram
 | `ChatDao` | `getConversations(): List<ConversationEntity>` | `SELECT * FROM conversation_cache ORDER BY lastMessageAt DESC` |
 | `ChatDao` | `upsertMessages(List<MessageEntity>): void` | `@Insert(onConflict = OnConflictStrategy.REPLACE)` |
 | `ChatDao` | `getMessages(String): List<MessageEntity>` | `SELECT * FROM message_cache WHERE conversationId = :id ORDER BY sentAtMillis ASC` |
+| `ChatDao` | `clearConversations(): void` |  |
+| `ChatDao` | `clearMessages(): void` |  |
 | `ChatDao` | `clearAll(): void` |  |
 | `DealDao` | `upsertAll(List<DealEntity>): void` | `@Insert(onConflict = OnConflictStrategy.REPLACE)` |
 | `DealDao` | `getMyDeals(String): List<DealEntity>` | `SELECT * FROM deal_cache WHERE buyerId = :uid OR sellerId = :uid ORDER BY updatedAtMillis DESC` |
@@ -235,4 +237,6 @@ erDiagram
 | `HistoryDao` | `getRecentSearches(int): List<RecentSearchEntity>` | `SELECT * FROM recent_search ORDER BY searchedAtMillis DESC LIMIT :limit` |
 | `HistoryDao` | `trimViews(int): void` | `DELETE FROM recent_view WHERE listingId NOT IN (SELECT listingId FROM recent_view ORDER BY viewedAtMillis DESC LIMIT :keep)` |
 | `HistoryDao` | `trimSearches(int): void` | `DELETE FROM recent_search WHERE keyword NOT IN (SELECT keyword FROM recent_search ORDER BY searchedAtMillis DESC LIMIT :keep)` |
+| `HistoryDao` | `clearViews(): void` |  |
+| `HistoryDao` | `clearSearches(): void` |  |
 | `HistoryDao` | `clearAll(): void` | Hai câu `DELETE FROM recent_view` và `DELETE FROM recent_search`, chạy trong một transaction |

@@ -22,16 +22,17 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.Timestamp;
-import com.google.firebase.auth.FirebaseAuth;
 import com.nhom3.pubgapp.R;
-import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.databinding.FragmentChatBinding;
 import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.util.FormatUtils;
 import com.nhom3.pubgapp.util.NetworkMonitor;
+import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.ChatViewModel;
 
 import java.util.Date;
@@ -91,7 +92,6 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         observeViewModel();
 
         checkNetwork();
-        touchActiveUser();
 
         if (currentConversationId != null && !currentConversationId.isEmpty()) {
             viewModel.openConversationById(currentConversationId);
@@ -102,8 +102,7 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
 
     private void setupRecyclerView() {
         adapter = new MessageAdapter(this);
-        String myUid = FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        String myUid = SessionManager.getInstance().getCurrentUserId();
         adapter.setCurrentUserId(myUid);
 
         final LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
@@ -152,7 +151,6 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
                         ? binding.editMessage.getText().toString().trim() : "";
                 if (!text.isEmpty()) {
                     viewModel.sendText(text);
-                    binding.editMessage.setText("");
                 }
             }
         });
@@ -233,17 +231,6 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         }
     }
 
-    private void touchActiveUser() {
-        String myUid = FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
-        if (!myUid.isEmpty()) {
-            try {
-                new UserRepository().touchLastActive(myUid);
-            } catch (UnsupportedOperationException ignored) {
-            }
-        }
-    }
-
     private void checkNetwork() {
         try {
             isOnline = NetworkMonitor.getInstance().isOnline();
@@ -264,9 +251,22 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         viewModel.getMessages().observe(getViewLifecycleOwner(), new Observer<List<ChatMessage>>() {
             @Override
             public void onChanged(List<ChatMessage> chatMessages) {
+                int previousCount = adapter.getItemCount();
                 adapter.setMessages(chatMessages);
                 if (chatMessages != null && !chatMessages.isEmpty()) {
-                    binding.recyclerMessages.scrollToPosition(chatMessages.size() - 1);
+                    if (previousCount == 0) {
+                        binding.recyclerMessages.scrollToPosition(chatMessages.size() - 1);
+                    }
+                }
+            }
+        });
+
+        viewModel.getDone().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean isDone) {
+                if (isDone != null && isDone) {
+                    binding.editMessage.setText("");
+                    viewModel.clearDone();
                 }
             }
         });
@@ -278,9 +278,23 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
                     currentPartnerId = partnerUser.getId();
                     String name = partnerUser.getDisplayName();
                     binding.textPartnerName.setText(name != null && !name.isEmpty() ? name : "Người dùng");
-                    binding.includeAvatar.textInitial.setText(
-                            name != null && !name.isEmpty() ? name.substring(0, 1).toUpperCase() : "U"
-                    );
+
+                    if (partnerUser.getAvatarBase64() != null && !partnerUser.getAvatarBase64().isEmpty()) {
+                        ImageLoader.load(
+                                partnerUser.getAvatarBase64(),
+                                binding.includeAvatar.imageAvatar,
+                                R.drawable.ic_profile,
+                                R.drawable.ic_profile
+                        );
+                        binding.includeAvatar.imageAvatar.setVisibility(View.VISIBLE);
+                        binding.includeAvatar.textInitial.setVisibility(View.GONE);
+                    } else {
+                        binding.includeAvatar.imageAvatar.setVisibility(View.GONE);
+                        binding.includeAvatar.textInitial.setVisibility(View.VISIBLE);
+                        binding.includeAvatar.textInitial.setText(
+                                name != null && !name.isEmpty() ? name.substring(0, 1).toUpperCase() : "U"
+                        );
+                    }
 
                     // Trạng thái hoạt động trong vòng 5 phút
                     long fiveMinutesAgo = System.currentTimeMillis() - (5 * 60 * 1000);
@@ -317,6 +331,14 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
                 if (listing != null) {
                     binding.textProductTitle.setText(listing.getTitle());
                     binding.textProductPrice.setText(formatUtils.formatPrice(listing.getPrice()));
+                    if (listing.getCoverThumb() != null && !listing.getCoverThumb().isEmpty()) {
+                        ImageLoader.load(
+                                listing.getCoverThumb(),
+                                binding.imageProductThumb,
+                                R.drawable.bg_status_chip,
+                                R.drawable.bg_status_chip
+                        );
+                    }
                 } else {
                     binding.textProductTitle.setText(R.string.trade_chat_listing_unavailable);
                     binding.textProductPrice.setText("");
@@ -339,17 +361,7 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
             @Override
             public void onChanged(String err) {
                 if (err != null && !err.isEmpty()) {
-                    binding.includeErrorState.layoutErrorState.setVisibility(View.VISIBLE);
-                    binding.includeErrorState.textErrorMessage.setText(err);
-                    binding.includeErrorState.buttonRetry.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            binding.includeErrorState.layoutErrorState.setVisibility(View.GONE);
-                            if (currentConversationId != null && !currentConversationId.isEmpty()) {
-                                viewModel.openConversationById(currentConversationId);
-                            }
-                        }
-                    });
+                    Snackbar.make(binding.getRoot(), err, Snackbar.LENGTH_LONG).show();
                     viewModel.clearError();
                 }
             }

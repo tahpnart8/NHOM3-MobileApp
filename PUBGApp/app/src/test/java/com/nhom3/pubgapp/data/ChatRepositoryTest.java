@@ -62,7 +62,6 @@ public class ChatRepositoryTest {
         assertFalse(ChatRepository.isListingStatusAllowed(ListingStatus.HIDDEN));
         assertFalse(ChatRepository.isListingStatusAllowed(ListingStatus.REMOVED));
     }
-
     @Test
     public void validateMessageText_rejectsEmptyOrWhitespace() {
         assertNotNull(ChatRepository.validateMessageText(null));

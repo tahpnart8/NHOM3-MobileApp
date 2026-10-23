@@ -1,12 +1,9 @@
 package com.nhom3.pubgapp.ui.trade;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -18,6 +15,7 @@ import com.nhom3.pubgapp.databinding.ItemTradeMessageImageBinding;
 import com.nhom3.pubgapp.databinding.ItemTradeMessageTextBinding;
 import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.enums.MessageType;
+import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.util.FormatUtils;
 
 import java.util.ArrayList;
@@ -36,7 +34,6 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final List<ChatMessage> messages = new ArrayList<ChatMessage>();
     private final FormatUtils formatUtils = new FormatUtils();
     private final MediaRepository mediaRepository = new MediaRepository();
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private String currentUserId = "";
     private final OnMessageLongClickListener longClickListener;
 
@@ -175,7 +172,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
         }
 
-        private void loadImage(String imageId, final android.widget.ImageView imageView) {
+        private void loadImage(final String imageId, final ImageView imageView) {
             if (imageId == null || imageId.isEmpty()) {
                 imageView.setImageDrawable(null);
                 return;
@@ -183,20 +180,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mediaRepository.getImage(imageId, new DataCallback<byte[]>() {
                 @Override
                 public void onSuccess(final byte[] bytes) {
-                    if (bytes != null && bytes.length > 0) {
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                final Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                                mainHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        imageView.setImageBitmap(bmp);
-                                    }
-                                });
-                            }
-                        }).start();
-                    }
+                    ImageLoader.load(
+                            bytes, imageId, imageView,
+                            R.drawable.bg_status_chip, R.drawable.bg_status_chip
+                    );
                 }
 
                 @Override

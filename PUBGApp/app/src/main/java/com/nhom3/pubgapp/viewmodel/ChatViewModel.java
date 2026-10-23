@@ -1,37 +1,51 @@
 package com.nhom3.pubgapp.viewmodel;
 
+import android.content.Context;
 import android.net.Uri;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.data.ChatRepository;
 import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.ListingRepository;
+import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Conversation;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.util.SessionManager;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-// State for the conversation list and the chat screen. Action bodies report NOT_READY until the repositories are filled.
+// State for the conversation list and the chat screen.
 public class ChatViewModel extends ViewModel {
 
-    private final MutableLiveData<List<Conversation>> conversations = new MutableLiveData<>();
-    private final MutableLiveData<List<ChatMessage>> messages = new MutableLiveData<>();
-    private final MutableLiveData<User> partner = new MutableLiveData<>();
-    private final MutableLiveData<Listing> listing = new MutableLiveData<>();
-    private final MutableLiveData<List<Offer>> offers = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> loading = new MutableLiveData<>();
-    private final MutableLiveData<String> error = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> done = new MutableLiveData<>();
+    private final MutableLiveData<List<Conversation>> conversations = new MutableLiveData<List<Conversation>>();
+    private final MutableLiveData<List<ChatMessage>> messages = new MutableLiveData<List<ChatMessage>>();
+    private final MutableLiveData<User> partner = new MutableLiveData<User>();
+    private final MutableLiveData<Listing> listing = new MutableLiveData<Listing>();
+    private final MutableLiveData<List<Offer>> offers = new MutableLiveData<List<Offer>>();
+    private final MutableLiveData<Boolean> loading = new MutableLiveData<Boolean>();
+    private final MutableLiveData<String> error = new MutableLiveData<String>();
+    private final MutableLiveData<Boolean> done = new MutableLiveData<Boolean>();
 
     private final ChatRepository chatRepository = new ChatRepository();
+    private final UserRepository userRepository = new UserRepository();
+    private final ListingRepository listingRepository = new ListingRepository();
+
     private String currentConversationId;
     private Conversation currentConversation;
-    private com.google.firebase.firestore.ListenerRegistration messageListener;
+    private ListenerRegistration messageListener;
+    private boolean isLoadingOlder = false;
 
     public LiveData<List<Conversation>> getConversations() {
         return conversations;
@@ -65,15 +79,28 @@ public class ChatViewModel extends ViewModel {
         return done;
     }
 
+    private String getString(int resId, String fallback) {
+        try {
+            Context context = FirebaseApp.getInstance().getApplicationContext();
+            if (context != null) {
+                return context.getString(resId);
+            }
+        } catch (Exception ignored) {
+        }
+        return fallback;
+    }
+
     public void loadConversations() {
         loading.setValue(true);
-        String uid = null;
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String uid = chatRepository.currentUserId();
+        if (uid.isEmpty()) {
+            uid = SessionManager.getInstance().getCurrentUserId();
         }
-        if (uid == null || uid.isEmpty()) {
+        if (uid.isEmpty()) {
             loading.setValue(false);
-            error.setValue("Vui lòng đăng nhập để xem tin nhắn.");
+            error.setValue(getString(
+                    R.string.trade_error_not_signed_in_messages,
+                    "Vui lòng đăng nhập để xem tin nhắn."));
             return;
         }
         chatRepository.getConversations(uid, new DataCallback<List<Conversation>>() {
@@ -92,16 +119,22 @@ public class ChatViewModel extends ViewModel {
     }
 
     public void openConversation(String listingId) {
-        loading.setValue(true);
-        String uid = null;
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String uid = chatRepository.currentUserId();
+        if (uid.isEmpty()) {
+            uid = SessionManager.getInstance().getCurrentUserId();
         }
-        if (uid == null || uid.isEmpty()) {
-            loading.setValue(false);
-            error.setValue("Vui lòng đăng nhập để nhắn tin.");
+        if (uid.isEmpty()) {
+            error.setValue(getString(
+                    R.string.trade_error_not_signed_in_chat,
+                    "Vui lòng đăng nhập để nhắn tin."));
             return;
         }
+        String expectedConvId = listingId + "_" + uid;
+        if (expectedConvId.equals(currentConversationId) && currentConversation != null) {
+            return;
+        }
+        clearPreviousConversation();
+        loading.setValue(true);
         chatRepository.getOrCreateConversation(listingId, uid, new DataCallback<Conversation>() {
             @Override
             public void onSuccess(Conversation result) {
@@ -124,35 +157,51 @@ public class ChatViewModel extends ViewModel {
         });
     }
 
-    public void openConversationById(String id) {
+    public void openConversationById(final String id) {
         if (id == null || id.isEmpty()) {
-            error.setValue("Mã cuộc trò chuyện không hợp lệ.");
+            error.setValue(getString(
+                    R.string.trade_error_invalid_conversation_id,
+                    "Mã cuộc trò chuyện không hợp lệ."));
             return;
         }
+        if (id.equals(currentConversationId) && currentConversation != null) {
+            return;
+        }
+        clearPreviousConversation();
         currentConversationId = id;
+        loading.setValue(true);
         startObservingMessages(id);
-        com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                .collection("conversations").document(id).get()
-                .addOnCompleteListener(
-                        new com.google.android.gms.tasks.OnCompleteListener<
-                                com.google.firebase.firestore.DocumentSnapshot>() {
-                            @Override
-                            public void onComplete(
-                                    @androidx.annotation.NonNull
-                                    com.google.android.gms.tasks.Task<
-                                            com.google.firebase.firestore.DocumentSnapshot> task) {
-                                if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
-                                    Conversation conv = task.getResult().toObject(Conversation.class);
-                                    if (conv != null) {
-                                        conv.setId(id);
-                                        currentConversation = conv;
-                                        loadPartnerInternal(conv);
-                                        loadListingInternal(conv.getListingId());
-                                    }
-                                }
-                            }
-                        });
-        done.setValue(true);
+        chatRepository.getConversation(id, new DataCallback<Conversation>() {
+            @Override
+            public void onSuccess(Conversation result) {
+                loading.postValue(false);
+                if (result != null) {
+                    currentConversation = result;
+                    loadPartnerInternal(result);
+                    loadListingInternal(result.getListingId());
+                }
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
+    }
+
+    public void clearPreviousConversation() {
+        if (messageListener != null) {
+            messageListener.remove();
+            messageListener = null;
+        }
+        currentConversation = null;
+        currentConversationId = null;
+        isLoadingOlder = false;
+        messages.setValue(new ArrayList<ChatMessage>());
+        partner.setValue(null);
+        listing.setValue(null);
     }
 
     private void startObservingMessages(final String conversationId) {
@@ -160,36 +209,31 @@ public class ChatViewModel extends ViewModel {
             messageListener.remove();
             messageListener = null;
         }
-        try {
-            final android.content.Context ctx =
-                    com.google.firebase.FirebaseApp.getInstance().getApplicationContext();
-            if (ctx != null) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        com.nhom3.pubgapp.data.local.ChatDao dao =
-                                com.nhom3.pubgapp.data.local.AppDatabase.getInstance(ctx).chatDao();
-                        if (dao != null) {
-                            List<com.nhom3.pubgapp.data.local.MessageEntity> cached =
-                                    dao.getMessages(conversationId);
-                            if (cached != null && !cached.isEmpty()) {
-                                List<ChatMessage> list = new java.util.ArrayList<ChatMessage>();
-                                for (int i = 0; i < cached.size(); i++) {
-                                    list.add(cached.get(i).toModel());
-                                }
-                                messages.postValue(list);
-                            }
-                        }
-                    }
-                }).start();
-            }
-        } catch (Exception ignored) {
-        }
-
         messageListener = chatRepository.observeMessages(conversationId, new DataCallback<List<ChatMessage>>() {
             @Override
             public void onSuccess(List<ChatMessage> result) {
-                messages.postValue(result);
+                if (result == null) {
+                    return;
+                }
+                List<ChatMessage> currentList = messages.getValue();
+                if (currentList == null || currentList.isEmpty()) {
+                    messages.postValue(new ArrayList<ChatMessage>(result));
+                } else {
+                    Map<String, ChatMessage> map = new LinkedHashMap<String, ChatMessage>();
+                    for (int i = 0; i < currentList.size(); i++) {
+                        ChatMessage m = currentList.get(i);
+                        if (m != null && m.getId() != null) {
+                            map.put(m.getId(), m);
+                        }
+                    }
+                    for (int i = 0; i < result.size(); i++) {
+                        ChatMessage m = result.get(i);
+                        if (m != null && m.getId() != null) {
+                            map.put(m.getId(), m);
+                        }
+                    }
+                    messages.postValue(new ArrayList<ChatMessage>(map.values()));
+                }
             }
 
             @Override
@@ -200,7 +244,7 @@ public class ChatViewModel extends ViewModel {
     }
 
     public void loadOlder() {
-        if (currentConversationId == null || currentConversationId.isEmpty()) {
+        if (isLoadingOlder || currentConversationId == null || currentConversationId.isEmpty()) {
             return;
         }
         List<ChatMessage> currentList = messages.getValue();
@@ -208,28 +252,39 @@ public class ChatViewModel extends ViewModel {
             return;
         }
         ChatMessage oldest = currentList.get(0);
-        if (oldest.getCreatedAt() == null) {
+        if (oldest == null || oldest.getCreatedAt() == null) {
             return;
         }
-        loading.setValue(true);
+        isLoadingOlder = true;
         chatRepository.loadOlder(currentConversationId, oldest.getCreatedAt(),
                 new DataCallback<List<ChatMessage>>() {
                     @Override
                     public void onSuccess(List<ChatMessage> olderMessages) {
-                        loading.postValue(false);
+                        isLoadingOlder = false;
                         if (olderMessages != null && !olderMessages.isEmpty()) {
-                            List<ChatMessage> combined = new java.util.ArrayList<ChatMessage>(olderMessages);
+                            Map<String, ChatMessage> map = new LinkedHashMap<String, ChatMessage>();
+                            for (int i = 0; i < olderMessages.size(); i++) {
+                                ChatMessage m = olderMessages.get(i);
+                                if (m != null && m.getId() != null) {
+                                    map.put(m.getId(), m);
+                                }
+                            }
                             List<ChatMessage> existing = messages.getValue();
                             if (existing != null) {
-                                combined.addAll(existing);
+                                for (int i = 0; i < existing.size(); i++) {
+                                    ChatMessage m = existing.get(i);
+                                    if (m != null && m.getId() != null) {
+                                        map.put(m.getId(), m);
+                                    }
+                                }
                             }
-                            messages.postValue(combined);
+                            messages.postValue(new ArrayList<ChatMessage>(map.values()));
                         }
                     }
 
                     @Override
                     public void onError(String message) {
-                        loading.postValue(false);
+                        isLoadingOlder = false;
                         error.postValue(message);
                     }
                 });
@@ -242,11 +297,13 @@ public class ChatViewModel extends ViewModel {
     }
 
     private void loadPartnerInternal(Conversation conv) {
-        String uid = FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        String uid = chatRepository.currentUserId();
+        if (uid.isEmpty()) {
+            uid = SessionManager.getInstance().getCurrentUserId();
+        }
         String partnerId = conv.otherParty(uid);
         if (partnerId != null && !partnerId.isEmpty()) {
-            new com.nhom3.pubgapp.data.UserRepository().getProfile(partnerId, new DataCallback<User>() {
+            userRepository.getProfile(partnerId, new DataCallback<User>() {
                 @Override
                 public void onSuccess(User result) {
                     partner.postValue(result);
@@ -254,9 +311,11 @@ public class ChatViewModel extends ViewModel {
 
                 @Override
                 public void onError(String message) {
-                    error.postValue(message);
                 }
             });
+        }
+        if (!uid.isEmpty()) {
+            userRepository.touchLastActive(uid);
         }
     }
 
@@ -268,7 +327,7 @@ public class ChatViewModel extends ViewModel {
 
     private void loadListingInternal(String listingId) {
         if (listingId != null && !listingId.isEmpty()) {
-            new com.nhom3.pubgapp.data.ListingRepository().getById(listingId, new DataCallback<Listing>() {
+            listingRepository.getById(listingId, new DataCallback<Listing>() {
                 @Override
                 public void onSuccess(Listing result) {
                     listing.postValue(result);
@@ -276,7 +335,6 @@ public class ChatViewModel extends ViewModel {
 
                 @Override
                 public void onError(String message) {
-                    error.postValue(message);
                 }
             });
         }
