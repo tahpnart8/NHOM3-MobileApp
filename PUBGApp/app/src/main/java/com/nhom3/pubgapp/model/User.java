@@ -1,0 +1,221 @@
+package com.nhom3.pubgapp.model;
+
+import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.Exclude;
+import com.nhom3.pubgapp.model.enums.UserStatus;
+import com.nhom3.pubgapp.model.enums.VerificationStatus;
+
+import java.util.List;
+import java.util.Map;
+
+public class User extends BaseDocument {
+    private String email;
+    private String displayName;
+    private String phone;
+    private String avatarBase64;
+    private String bio;
+    private UserStatus status;
+    private Timestamp lockedUntil;
+    private VerificationStatus verificationStatus;
+    private int ratingSum;
+    private int ratingCount;
+    private int warningCount;
+    private List<String> interestedCategoryIds;
+    private String province;
+    private String district;
+    private Timestamp termsAcceptedAt;
+    private Map<String, Boolean> notificationPrefs;
+    private Timestamp lastActiveAt;
+    private String lockReason;
+    private List<String> searchKeywords;
+
+    public User() {
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getAvatarBase64() {
+        return avatarBase64;
+    }
+
+    public void setAvatarBase64(String avatarBase64) {
+        this.avatarBase64 = avatarBase64;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public UserStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(UserStatus status) {
+        this.status = status;
+    }
+
+    public Timestamp getLockedUntil() {
+        return lockedUntil;
+    }
+
+    public void setLockedUntil(Timestamp lockedUntil) {
+        this.lockedUntil = lockedUntil;
+    }
+
+    public VerificationStatus getVerificationStatus() {
+        return verificationStatus;
+    }
+
+    public void setVerificationStatus(VerificationStatus verificationStatus) {
+        this.verificationStatus = verificationStatus;
+    }
+
+    public int getRatingSum() {
+        return ratingSum;
+    }
+
+    public void setRatingSum(int ratingSum) {
+        this.ratingSum = ratingSum;
+    }
+
+    public int getRatingCount() {
+        return ratingCount;
+    }
+
+    public void setRatingCount(int ratingCount) {
+        this.ratingCount = ratingCount;
+    }
+
+    public int getWarningCount() {
+        return warningCount;
+    }
+
+    public void setWarningCount(int warningCount) {
+        this.warningCount = warningCount;
+    }
+
+    public List<String> getInterestedCategoryIds() {
+        return interestedCategoryIds;
+    }
+
+    public void setInterestedCategoryIds(List<String> interestedCategoryIds) {
+        this.interestedCategoryIds = interestedCategoryIds;
+    }
+
+    public String getProvince() {
+        return province;
+    }
+
+    public void setProvince(String province) {
+        this.province = province;
+    }
+
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String district) {
+        this.district = district;
+    }
+
+    public Timestamp getTermsAcceptedAt() {
+        return termsAcceptedAt;
+    }
+
+    public void setTermsAcceptedAt(Timestamp termsAcceptedAt) {
+        this.termsAcceptedAt = termsAcceptedAt;
+    }
+
+    public Map<String, Boolean> getNotificationPrefs() {
+        return notificationPrefs;
+    }
+
+    public void setNotificationPrefs(Map<String, Boolean> notificationPrefs) {
+        this.notificationPrefs = notificationPrefs;
+    }
+
+    public Timestamp getLastActiveAt() {
+        return lastActiveAt;
+    }
+
+    public void setLastActiveAt(Timestamp lastActiveAt) {
+        this.lastActiveAt = lastActiveAt;
+    }
+
+    public String getLockReason() {
+        return lockReason;
+    }
+
+    public void setLockReason(String lockReason) {
+        this.lockReason = lockReason;
+    }
+
+    public List<String> getSearchKeywords() {
+        return searchKeywords;
+    }
+
+    public void setSearchKeywords(List<String> searchKeywords) {
+        this.searchKeywords = searchKeywords;
+    }
+
+    @Exclude
+    public boolean isLocked() {
+        throw new UnsupportedOperationException("NOT_READY");
+    }
+
+    @Exclude
+    public boolean isDeleted() {
+        throw new UnsupportedOperationException("NOT_READY");
+    }
+
+    public boolean canSell(boolean emailVerified) {
+        throw new UnsupportedOperationException("NOT_READY");
+    }
+
+    public boolean canBuy(boolean emailVerified) {
+        throw new UnsupportedOperationException("NOT_READY");
+    }
+
+    public void applyRating(int stars) {
+        throw new UnsupportedOperationException("NOT_READY");
+    }
+
+    @Exclude
+    public double ratingAverage() {
+        throw new UnsupportedOperationException("NOT_READY");
+    }
+
+    public boolean isActiveSince(Timestamp since) {
+        throw new UnsupportedOperationException("NOT_READY");
+    }
+
+    public void buildSearchKeywords() {
+        throw new UnsupportedOperationException("NOT_READY");
+    }
+}
