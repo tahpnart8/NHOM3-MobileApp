@@ -21,7 +21,7 @@ import java.util.List;
 public class DealViewModel extends ViewModel {
 
     private final DealRepository dealRepository;
-    // Created on first use, so unit tests that build this with a fake DealRepository never touch Firestore.
+    // Built lazily, so unit tests that pass a fake DealRepository never reach Firestore.
     private ReviewRepository reviewRepository;
 
     private final MutableLiveData<Deal> deal = new MutableLiveData<>();
