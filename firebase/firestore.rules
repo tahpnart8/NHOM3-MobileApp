@@ -193,15 +193,14 @@ service cloud.firestore {
         && twoLevels(request.resource.data)
         && createStamps();
 
-      // Sửa tên, cha, thuộc tính tình trạng, ẩn hiện. updatedAt giữ nguyên hoặc là giờ máy chủ,
-      // vì CategoryRepository.update ghi set(POJO) với updatedAt đã nạp.
+      // Sửa tên, cha, thuộc tính tình trạng, ẩn hiện. updatedAt luôn là giờ máy chủ như mọi collection;
+      // CategoryRepository.update cần ghi update(Map) kèm FieldValue.serverTimestamp().
       allow update: if isAdmin()
         && writerActive()
         && onlyKeys(['name', 'parentId', 'conditionFields', 'isActive', 'updatedAt'])
         && validCategory(request.resource.data)
         && twoLevels(request.resource.data)
-        && (request.resource.data.get('updatedAt', null) == resource.data.get('updatedAt', null)
-          || serverStamp('updatedAt'));
+        && serverStamp('updatedAt');
 
       // "Không xóa khi còn tin hoặc danh mục con" kiểm ở ứng dụng bằng count() (Rules không đếm được).
       allow delete: if isAdmin() && writerActive();
