@@ -1,9 +1,13 @@
 package com.nhom3.pubgapp.data;
 
+import android.content.Context;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -11,6 +15,9 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
+import com.nhom3.pubgapp.data.local.AppDatabase;
+import com.nhom3.pubgapp.data.local.DealDao;
+import com.nhom3.pubgapp.data.local.DealEntity;
 import com.nhom3.pubgapp.model.AppNotification;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Listing;
@@ -35,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 
 public class DealRepository extends BaseRepository {
+
+    private static final String TAG = "DealRepository";
 
     private static final String COLLECTION_DEALS = "deals";
     private static final String COLLECTION_PAYMENTS = "payments";
@@ -91,22 +100,177 @@ public class DealRepository extends BaseRepository {
         return deal;
     }
 
+    static void applyUpdateTerms(Deal deal) {
+        deal.setBuyerConfirmed(false);
+        deal.setSellerConfirmed(false);
+        deal.setUpdatedAt(Timestamp.now());
+    }
+
+    static String validateConfirm(Deal deal, String userId) {
+        if (deal == null) {
+            return "Không tìm thấy giao dịch.";
+        }
+        if (deal.getStatus() != DealStatus.PENDING_CONFIRM) {
+            return "Giao dịch không còn ở trạng thái chờ xác nhận.";
+        }
+        if (!deal.isParticipant(userId)) {
+            return "Bạn không phải là người tham gia giao dịch này.";
+        }
+        if (deal.getDeliveryMethod() == null) {
+            return "Chưa chọn phương thức giao nhận.";
+        }
+        boolean isSecondConfirm = (userId.equals(deal.getBuyerId()) && deal.isSellerConfirmed())
+                || (userId.equals(deal.getSellerId()) && deal.isBuyerConfirmed());
+        if (deal.getDeliveryMethod() == DeliveryMethod.SHIPPING && isSecondConfirm) {
+            String addr = deal.getDeliveryAddress();
+            if (addr == null || addr.trim().isEmpty()) {
+                return "Chưa có địa chỉ giao hàng.";
+            }
+        }
+        return null;
+    }
+
+    static boolean applyConfirm(Deal deal, String userId) {
+        DealStatus previousStatus = deal.getStatus();
+        deal.confirmBy(userId);
+        if (previousStatus == DealStatus.PENDING_CONFIRM && deal.getStatus() == DealStatus.CONFIRMED) {
+            addStatusHistoryStatic(deal, previousStatus, DealStatus.CONFIRMED, userId, "");
+            deal.setUpdatedAt(Timestamp.now());
+            return true;
+        }
+        deal.setUpdatedAt(Timestamp.now());
+        return false;
+    }
+
+    static String validateCancel(Deal deal, String userId, String reason) {
+        if (reason == null || reason.trim().isEmpty()) {
+            return "Lý do hủy không được để trống.";
+        }
+        if (deal == null) {
+            return "Không tìm thấy giao dịch.";
+        }
+        if (!deal.isParticipant(userId)) {
+            return "Bạn không phải là người tham gia giao dịch này.";
+        }
+        if (deal.getStatus() != DealStatus.PENDING_CONFIRM
+                && deal.getStatus() != DealStatus.CONFIRMED) {
+            return "Không thể hủy giao dịch ở trạng thái này. Vui lòng gửi khiếu nại.";
+        }
+        if (!deal.canMoveTo(DealStatus.CANCELLED)) {
+            return "Không thể hủy giao dịch ở trạng thái này. Vui lòng gửi khiếu nại.";
+        }
+        return null;
+    }
+
+    static void applyCancel(Deal deal, String userId, String reason) {
+        DealStatus previous = deal.getStatus();
+        deal.cancel(userId, reason.trim());
+        addStatusHistoryStatic(deal, previous, DealStatus.CANCELLED, userId, reason.trim());
+        deal.setUpdatedAt(Timestamp.now());
+    }
+
+    static boolean shouldRefundPayment(Payment payment) {
+        return payment != null && payment.isHeld();
+    }
+
+    static boolean shouldReleaseListing(Listing listing, String dealId) {
+        return listing != null
+                && listing.getStatus() == ListingStatus.RESERVED
+                && dealId != null
+                && dealId.equals(listing.getReservedDealId());
+    }
+
+    private static void addStatusHistoryStatic(Deal deal, DealStatus from, DealStatus to,
+                                               String changedBy, String reason) {
+        List<StatusChange> history = deal.getStatusHistory();
+        if (history == null) {
+            history = new ArrayList<>();
+        }
+        StatusChange sc = new StatusChange();
+        sc.setFromStatus(from);
+        sc.setToStatus(to);
+        sc.setChangedBy(changedBy);
+        sc.setReason(reason);
+        sc.setChangedAt(Timestamp.now());
+        history.add(sc);
+        deal.setStatusHistory(history);
+    }
+
     public void getById(String dealId, DataCallback<Deal> cb) {
         db.collection(COLLECTION_DEALS).document(dealId).get()
                 .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                        if (!task.isSuccessful() || task.getResult() == null || !task.getResult().exists()) {
-                            cb.onError(getErrorMessage(task.getException(), "Không tìm thấy giao dịch."));
-                            return;
+                        if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                            Deal deal = task.getResult().toObject(Deal.class);
+                            if (deal != null) {
+                                deal.setId(task.getResult().getId());
+                                saveDealToCache(deal);
+                                cb.onSuccess(deal);
+                                return;
+                            }
                         }
-                        Deal deal = task.getResult().toObject(Deal.class);
-                        if (deal != null) {
-                            deal.setId(task.getResult().getId());
-                        }
-                        cb.onSuccess(deal);
+                        loadDealFromCache(dealId, cb, task.getException());
                     }
                 });
+    }
+
+    private void saveDealToCache(Deal deal) {
+        try {
+            Context context = FirebaseApp.getInstance().getApplicationContext();
+            if (context != null) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            DealDao dao = AppDatabase.getInstance(context).dealDao();
+                            DealEntity entity = new DealEntity().fromModel(deal);
+                            List<DealEntity> list = new ArrayList<>();
+                            list.add(entity);
+                            dao.upsertAll(list);
+                        } catch (Exception e) {
+                            Log.w(TAG, "Cannot cache deal to Room", e);
+                        }
+                    }
+                }).start();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Cannot access Context for Room", e);
+        }
+    }
+
+    private void loadDealFromCache(String dealId, DataCallback<Deal> cb, Exception originalException) {
+        try {
+            Context context = FirebaseApp.getInstance().getApplicationContext();
+            if (context != null) {
+                String currentUid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            DealDao dao = AppDatabase.getInstance(context).dealDao();
+                            List<DealEntity> cached = dao.getMyDeals(currentUid);
+                            if (cached != null) {
+                                for (DealEntity entity : cached) {
+                                    if (dealId.equals(entity.getId())) {
+                                        Deal deal = entity.toModel();
+                                        cb.onSuccess(deal);
+                                        return;
+                                    }
+                                }
+                            }
+                            cb.onError(getErrorMessage(originalException, "Không tìm thấy giao dịch."));
+                        } catch (Exception e) {
+                            cb.onError(getErrorMessage(originalException, "Không tìm thấy giao dịch."));
+                        }
+                    }
+                }).start();
+                return;
+            }
+        } catch (Exception e) {
+            // Context unavailable
+        }
+        cb.onError(getErrorMessage(originalException, "Không tìm thấy giao dịch."));
     }
 
     public void getPayment(String dealId, DataCallback<Payment> cb) {
@@ -114,9 +278,13 @@ public class DealRepository extends BaseRepository {
                 .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                        if (!task.isSuccessful() || task.getResult() == null || !task.getResult().exists()) {
+                        if (!task.isSuccessful()) {
                             cb.onError(getErrorMessage(task.getException(),
-                                    "Không tìm thấy khoản ký quỹ."));
+                                    "Không tìm thấy khoản thanh toán."));
+                            return;
+                        }
+                        if (task.getResult() == null || !task.getResult().exists()) {
+                            cb.onSuccess(null);
                             return;
                         }
                         Payment payment = task.getResult().toObject(Payment.class);
@@ -129,25 +297,27 @@ public class DealRepository extends BaseRepository {
     }
 
     public void updateTerms(Deal deal, DataCallback<Void> cb) {
-        // Khi sửa điều khoản: xóa cả hai cờ xác nhận, giữ nguyên trạng thái
-        deal.setBuyerConfirmed(false);
-        deal.setSellerConfirmed(false);
-        deal.setUpdatedAt(Timestamp.now());
+        String currentUid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
+        if (!deal.isParticipant(currentUid)) {
+            cb.onError("Bạn không phải là người tham gia giao dịch này.");
+            return;
+        }
+        if (deal.getStatus() != DealStatus.PENDING_CONFIRM) {
+            cb.onError("Chỉ có thể sửa điều khoản khi giao dịch đang chờ xác nhận.");
+            return;
+        }
+
+        applyUpdateTerms(deal);
 
         WriteBatch batch = db.batch();
         DocumentReference dealRef = db.collection(COLLECTION_DEALS).document(deal.getId());
         batch.set(dealRef, deal);
 
-        String currentUid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
-        String otherParty = deal.isParticipant(currentUid)
-                ? (currentUid.equals(deal.getBuyerId()) ? deal.getSellerId() : deal.getBuyerId())
-                : null;
-        if (otherParty != null) {
-            queueNotification(otherParty, NotificationType.DEAL_UPDATE,
-                    "Điều khoản giao dịch đã cập nhật",
-                    "Đối tác đã sửa đổi điều khoản giao dịch. Vui lòng xác nhận lại.",
-                    deal.getId(), batch);
-        }
+        String otherParty = currentUid.equals(deal.getBuyerId()) ? deal.getSellerId() : deal.getBuyerId();
+        queueNotification(otherParty, NotificationType.DEAL_UPDATE,
+                "Điều khoản giao dịch đã cập nhật",
+                "Đối tác đã sửa đổi điều khoản giao dịch. Vui lòng xác nhận lại.",
+                deal.getId(), batch);
 
         commitBatch(batch, cb, "Lỗi cập nhật điều khoản.");
     }
@@ -168,28 +338,16 @@ public class DealRepository extends BaseRepository {
                 }
                 deal.setId(dealId);
 
-                if (deal.getDeliveryMethod() == null) {
-                    cb.onError("Chưa chọn phương thức giao nhận.");
+                String currentUid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
+                String error = validateConfirm(deal, currentUid);
+                if (error != null) {
+                    cb.onError(error);
                     return;
                 }
-                if (deal.getDeliveryMethod() == DeliveryMethod.SHIPPING) {
-                    String addr = deal.getDeliveryAddress();
-                    if (addr == null || addr.trim().isEmpty()) {
-                        cb.onError("Chưa có địa chỉ giao hàng.");
-                        return;
-                    }
-                }
 
-                String currentUid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
-                DealStatus previousStatus = deal.getStatus();
-                deal.confirmBy(currentUid);
+                applyConfirm(deal, currentUid);
 
                 WriteBatch batch = db.batch();
-                if (previousStatus == DealStatus.PENDING_CONFIRM
-                        && deal.getStatus() == DealStatus.CONFIRMED) {
-                    addStatusHistory(deal, previousStatus, DealStatus.CONFIRMED, currentUid, "");
-                }
-                deal.setUpdatedAt(Timestamp.now());
                 batch.set(dealRef, deal);
 
                 String otherParty = currentUid.equals(deal.getBuyerId())
@@ -542,6 +700,7 @@ public class DealRepository extends BaseRepository {
     }
 
     public void cancel(String dealId, String reason, DataCallback<Void> cb) {
+        String currentUid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
         DocumentReference dealRef = db.collection(COLLECTION_DEALS).document(dealId);
         dealRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -556,39 +715,108 @@ public class DealRepository extends BaseRepository {
                     return;
                 }
                 deal.setId(dealId);
-                String currentUid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "";
-                DealStatus from = deal.getStatus();
-                deal.cancel(currentUid, reason);
 
-                addStatusHistory(deal, from, DealStatus.CANCELLED, currentUid, reason);
-                deal.setUpdatedAt(Timestamp.now());
+                String error = validateCancel(deal, currentUid, reason);
+                if (error != null) {
+                    cb.onError(error);
+                    return;
+                }
+
+                applyCancel(deal, currentUid, reason);
 
                 WriteBatch batch = db.batch();
                 batch.set(dealRef, deal);
 
-                // Tin đăng trở về AVAILABLE
-                if (deal.getListingId() != null) {
-                    DocumentReference listingRef = db.collection(COLLECTION_LISTINGS)
-                            .document(deal.getListingId());
-                    batch.update(listingRef, "status", ListingStatus.AVAILABLE.name());
+                boolean hasListing = deal.getListingId() != null && !deal.getListingId().trim().isEmpty();
+                boolean needsPaymentCheck = deal.needsPayment();
+
+                if (hasListing && needsPaymentCheck) {
+                    DocumentReference listingRef = db.collection(COLLECTION_LISTINGS).document(deal.getListingId());
+                    DocumentReference paymentRef = db.collection(COLLECTION_PAYMENTS).document(dealId);
+
+                    listingRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<DocumentSnapshot> listTask) {
+                            if (listTask.isSuccessful() && listTask.getResult() != null
+                                    && listTask.getResult().exists()) {
+                                Listing listing = listTask.getResult().toObject(Listing.class);
+                                if (shouldReleaseListing(listing, dealId)) {
+                                    listing.release();
+                                    batch.set(listingRef, listing);
+                                }
+                            }
+                            paymentRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> payTask) {
+                                    boolean refunded = false;
+                                    if (payTask.isSuccessful() && payTask.getResult() != null
+                                            && payTask.getResult().exists()) {
+                                        Payment payment = payTask.getResult().toObject(Payment.class);
+                                        if (shouldRefundPayment(payment)) {
+                                            payment.refund();
+                                            batch.set(paymentRef, payment);
+                                            refunded = true;
+                                        }
+                                    }
+                                    finishCancelBatch(batch, deal, currentUid, reason, refunded, cb);
+                                }
+                            });
+                        }
+                    });
+                } else if (hasListing) {
+                    DocumentReference listingRef = db.collection(COLLECTION_LISTINGS).document(deal.getListingId());
+                    listingRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<DocumentSnapshot> listTask) {
+                            if (listTask.isSuccessful() && listTask.getResult() != null
+                                    && listTask.getResult().exists()) {
+                                Listing listing = listTask.getResult().toObject(Listing.class);
+                                if (shouldReleaseListing(listing, dealId)) {
+                                    listing.release();
+                                    batch.set(listingRef, listing);
+                                }
+                            }
+                            finishCancelBatch(batch, deal, currentUid, reason, false, cb);
+                        }
+                    });
+                } else if (needsPaymentCheck) {
+                    DocumentReference paymentRef = db.collection(COLLECTION_PAYMENTS).document(dealId);
+                    paymentRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<DocumentSnapshot> payTask) {
+                            boolean refunded = false;
+                            if (payTask.isSuccessful() && payTask.getResult() != null && payTask.getResult().exists()) {
+                                Payment payment = payTask.getResult().toObject(Payment.class);
+                                if (shouldRefundPayment(payment)) {
+                                    payment.refund();
+                                    batch.set(paymentRef, payment);
+                                    refunded = true;
+                                }
+                            }
+                            finishCancelBatch(batch, deal, currentUid, reason, refunded, cb);
+                        }
+                    });
+                } else {
+                    finishCancelBatch(batch, deal, currentUid, reason, false, cb);
                 }
-
-                // Hoàn tiền ký quỹ nếu có
-                if (deal.needsPayment()) {
-                    DocumentReference payRef = db.collection(COLLECTION_PAYMENTS).document(dealId);
-                    batch.update(payRef, "status", PaymentStatus.REFUNDED.name(),
-                            "releasedAt", Timestamp.now());
-                }
-
-                String otherParty = currentUid.equals(deal.getBuyerId())
-                        ? deal.getSellerId() : deal.getBuyerId();
-                queueNotification(otherParty, NotificationType.DEAL_UPDATE,
-                        "Giao dịch đã bị hủy",
-                        "Lý do: " + reason, dealId, batch);
-
-                commitBatch(batch, cb, "Lỗi hủy giao dịch.");
             }
         });
+    }
+
+    private void finishCancelBatch(WriteBatch batch, Deal deal, String currentUid, String reason,
+                                   boolean refunded, DataCallback<Void> cb) {
+        String otherParty = currentUid.equals(deal.getBuyerId())
+                ? deal.getSellerId() : deal.getBuyerId();
+        queueNotification(otherParty, NotificationType.DEAL_UPDATE,
+                "Giao dịch đã bị hủy",
+                "Lý do: " + reason, deal.getId(), batch);
+        if (refunded && !currentUid.equals(deal.getBuyerId())) {
+            queueNotification(deal.getBuyerId(), NotificationType.PAYMENT_UPDATE,
+                    "Hoàn tiền giao dịch",
+                    "Khoản thanh toán đã được hoàn lại do giao dịch bị hủy.",
+                    deal.getId(), batch);
+        }
+        commitBatch(batch, cb, "Lỗi hủy giao dịch.");
     }
 
     public void getMyDeals(String uid, DataCallback<List<Deal>> cb) {
