@@ -253,6 +253,9 @@ public class MyProfileFragment extends Fragment {
         boolean loading = Boolean.TRUE.equals(profileViewModel.getLoading().getValue());
         boolean online = NetworkMonitor.getInstance().isOnline();
         binding.buttonSubmitVerification.setEnabled(online && !loading);
+        // The form only stays open while a request can be sent, so loading here means sending.
+        boolean sending = loading && formOpen;
+        binding.progressSubmitVerification.setVisibility(sending ? View.VISIBLE : View.GONE);
     }
 
     private void clearVerificationForm() {

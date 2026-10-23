@@ -332,6 +332,16 @@
                             android:minHeight="@dimen/touch_min"
                             android:text="@string/profile_my_profile_verify_submit"
                             app:cornerRadius="@dimen/radius_md" />
+
+                        <ProgressBar
+                            android:id="@+id/progressSubmitVerification"
+                            style="?android:attr/progressBarStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_marginTop="@dimen/space_sm"
+                            android:contentDescription="@string/common_loading"
+                            android:visibility="gone" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
