@@ -276,4 +276,9 @@ public class Listing extends BaseDocument {
         com.nhom3.pubgapp.util.FormatUtils utils = new com.nhom3.pubgapp.util.FormatUtils();
         searchKeywords = utils.toKeywords(combined);
     }
+
+    @Override
+    public void touch() {
+        setUpdatedAt(com.google.firebase.Timestamp.now());
+    }
 }

@@ -55,24 +55,20 @@ public class ListingEntity {
         this.title = model.getTitle();
         this.description = model.getDescription();
         if (model.getImageIds() != null) {
-            org.json.JSONArray array = new org.json.JSONArray();
-            for (int i = 0; i < model.getImageIds().size(); i++) {
-                array.put(model.getImageIds().get(i));
-            }
-            this.imageIdsJson = array.toString();
+            this.imageIdsJson = serializeStringList(model.getImageIds());
         }
         this.coverThumb = model.getCoverThumb();
         this.price = model.getPrice();
         this.categoryId = model.getCategoryId();
         if (model.getTradeTypes() != null) {
-            org.json.JSONArray array = new org.json.JSONArray();
+            java.util.List<String> types = new java.util.ArrayList<String>();
             for (int i = 0; i < model.getTradeTypes().size(); i++) {
                 com.nhom3.pubgapp.model.enums.TradeType type = model.getTradeTypes().get(i);
                 if (type != null) {
-                    array.put(type.name());
+                    types.add(type.name());
                 }
             }
-            this.tradeTypesJson = array.toString();
+            this.tradeTypesJson = serializeStringList(types);
         }
         if (model.getItemCondition() != null) {
             this.itemCondition = model.getItemCondition().name();
@@ -96,36 +92,23 @@ public class ListingEntity {
         listing.setTitle(title);
         listing.setDescription(description);
         if (imageIdsJson != null && !imageIdsJson.isEmpty()) {
-            try {
-                org.json.JSONArray array = new org.json.JSONArray(imageIdsJson);
-                java.util.List<String> list = new java.util.ArrayList<String>();
-                for (int i = 0; i < array.length(); i++) {
-                    list.add(array.getString(i));
-                }
-                listing.setImageIds(list);
-            } catch (org.json.JSONException e) {
-                // Ignore malformed json
-            }
+            listing.setImageIds(deserializeStringList(imageIdsJson));
         }
         listing.setCoverThumb(coverThumb);
         listing.setPrice(price);
         listing.setCategoryId(categoryId);
         if (tradeTypesJson != null && !tradeTypesJson.isEmpty()) {
-            try {
-                org.json.JSONArray array = new org.json.JSONArray(tradeTypesJson);
-                java.util.List<com.nhom3.pubgapp.model.enums.TradeType> list =
-                        new java.util.ArrayList<com.nhom3.pubgapp.model.enums.TradeType>();
-                for (int i = 0; i < array.length(); i++) {
-                    try {
-                        list.add(com.nhom3.pubgapp.model.enums.TradeType.valueOf(array.getString(i)));
-                    } catch (IllegalArgumentException ex) {
-                        // Ignore unknown enum
-                    }
+            java.util.List<String> typeStrings = deserializeStringList(tradeTypesJson);
+            java.util.List<com.nhom3.pubgapp.model.enums.TradeType> list =
+                    new java.util.ArrayList<com.nhom3.pubgapp.model.enums.TradeType>();
+            for (int i = 0; i < typeStrings.size(); i++) {
+                try {
+                    list.add(com.nhom3.pubgapp.model.enums.TradeType.valueOf(typeStrings.get(i)));
+                } catch (IllegalArgumentException ex) {
+                    // Ignore unknown enum
                 }
-                listing.setTradeTypes(list);
-            } catch (org.json.JSONException e) {
-                // Ignore malformed json
             }
+            listing.setTradeTypes(list);
         }
         if (itemCondition != null && !itemCondition.isEmpty()) {
             try {
@@ -268,5 +251,42 @@ public class ListingEntity {
 
     public void setCachedAtMillis(long cachedAtMillis) {
         this.cachedAtMillis = cachedAtMillis;
+    }
+
+    private String serializeStringList(java.util.List<String> list) {
+        if (list == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < list.size(); i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            sb.append("\"").append(list.get(i).replace("\"", "\\\"")).append("\"");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private java.util.List<String> deserializeStringList(String json) {
+        java.util.List<String> list = new java.util.ArrayList<String>();
+        if (json == null) {
+            return list;
+        }
+        String trimmed = json.trim();
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+            String inner = trimmed.substring(1, trimmed.length() - 1).trim();
+            if (!inner.isEmpty()) {
+                String[] parts = inner.split(",");
+                for (int i = 0; i < parts.length; i++) {
+                    String part = parts[i].trim();
+                    if (part.startsWith("\"") && part.endsWith("\"") && part.length() >= 2) {
+                        part = part.substring(1, part.length() - 1);
+                    }
+                    list.add(part.replace("\\\"", "\""));
+                }
+            }
+        }
+        return list;
     }
 }

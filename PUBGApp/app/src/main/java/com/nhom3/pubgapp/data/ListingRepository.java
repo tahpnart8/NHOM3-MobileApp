@@ -46,7 +46,9 @@ public class ListingRepository extends BaseRepository {
                     @Override
                     public void onSuccess(DocumentSnapshot doc) {
                         User user = doc != null ? doc.toObject(User.class) : null;
-                        if (user == null || !user.canSell()) {
+                        boolean emailVerified = auth.getCurrentUser() != null
+                                && auth.getCurrentUser().isEmailVerified();
+                        if (user == null || !user.canSell(emailVerified)) {
                             cb.onError("Tài khoản chưa đủ điều kiện bán hàng");
                             return;
                         }
@@ -144,7 +146,9 @@ public class ListingRepository extends BaseRepository {
                     @Override
                     public void onSuccess(DocumentSnapshot doc) {
                         User user = doc != null ? doc.toObject(User.class) : null;
-                        if (user == null || !user.canSell()) {
+                        boolean emailVerified = auth.getCurrentUser() != null
+                                && auth.getCurrentUser().isEmailVerified();
+                        if (user == null || !user.canSell(emailVerified)) {
                             cb.onError("Tài khoản chưa đủ điều kiện bán hàng");
                             return;
                         }
