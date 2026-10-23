@@ -25,6 +25,8 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.nhom3.pubgapp.R;
+import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.ListingRepository;
 import com.nhom3.pubgapp.databinding.FragmentPostListingBinding;
 import com.nhom3.pubgapp.model.Category;
 import com.nhom3.pubgapp.model.Listing;
@@ -45,6 +47,8 @@ import java.util.List;
 public class PostListingFragment extends Fragment {
 
     private static final String KEY_IMAGES = "key_post_images";
+    private static final String KEY_EXISTING_IMAGE_IDS = "key_existing_image_ids";
+    private static final String KEY_EDITING_ID = "key_editing_id";
 
     private FragmentPostListingBinding binding;
     private ShopViewModel viewModel;
@@ -54,6 +58,8 @@ public class PostListingFragment extends Fragment {
 
     private final List<Category> loadedCategories = new ArrayList<Category>();
     private VerificationStatus currentVerification = VerificationStatus.NONE;
+    private String editingListingId = null;
+    private Listing editingListing = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -81,8 +87,14 @@ public class PostListingFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        viewModel = new ViewModelProvider(this).get(ShopViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(ShopViewModel.class);
         profileViewModel = new ViewModelProvider(requireActivity()).get(ProfileViewModel.class);
+
+        if (savedInstanceState != null) {
+            editingListingId = savedInstanceState.getString(KEY_EDITING_ID);
+        } else if (getArguments() != null) {
+            editingListingId = getArguments().getString("listingId");
+        }
 
         setupImageRecycler();
         setupProvincesSpinner();
@@ -92,6 +104,12 @@ public class PostListingFragment extends Fragment {
 
         if (savedInstanceState != null) {
             restoreInstanceState(savedInstanceState);
+        } else if (isEditMode()) {
+            loadEditingListing();
+        }
+
+        if (isEditMode()) {
+            binding.buttonPost.setText(R.string.listing_post_edit_button_save);
         }
 
         viewModel.loadCategories();
@@ -101,10 +119,8 @@ public class PostListingFragment extends Fragment {
         imageAdapter = new PostImageAdapter(new PostImageAdapter.OnRemoveImageListener() {
             @Override
             public void onRemoveImage(int position) {
-                List<Uri> current = imageAdapter.getImages();
-                if (position >= 0 && position < current.size()) {
-                    current.remove(position);
-                    imageAdapter.setImages(current);
+                imageAdapter.removeImage(position);
+                if (imageAdapter.getAllImageCount() < 5) {
                     binding.buttonAddImage.setVisibility(View.VISIBLE);
                 }
             }
@@ -114,7 +130,7 @@ public class PostListingFragment extends Fragment {
         binding.buttonAddImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (imageAdapter.getItemCount() >= 5) {
+                if (imageAdapter.getAllImageCount() >= 5) {
                     Toast.makeText(requireContext(),
                             R.string.listing_post_max_images_reached, Toast.LENGTH_SHORT).show();
                     return;
@@ -131,14 +147,12 @@ public class PostListingFragment extends Fragment {
         if (uris == null || uris.isEmpty()) {
             return;
         }
-        List<Uri> current = imageAdapter.getImages();
         for (Uri uri : uris) {
-            if (current.size() < 5) {
-                current.add(uri);
+            if (imageAdapter.getAllImageCount() < 5) {
+                imageAdapter.addImageUri(uri);
             }
         }
-        imageAdapter.setImages(current);
-        if (current.size() >= 5) {
+        if (imageAdapter.getAllImageCount() >= 5) {
             binding.buttonAddImage.setVisibility(View.GONE);
         }
     }
@@ -231,6 +245,10 @@ public class PostListingFragment extends Fragment {
                 );
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 binding.spinnerCategory.setAdapter(adapter);
+
+                if (editingListing != null) {
+                    selectCategory(editingListing.getCategoryId());
+                }
             }
         });
 
@@ -282,6 +300,18 @@ public class PostListingFragment extends Fragment {
                 }
             }
         });
+
+        viewModel.getDone().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean isDone) {
+                if (isDone != null && isDone && isEditMode()) {
+                    Toast.makeText(requireContext(), R.string.listing_post_edit_success,
+                            Toast.LENGTH_SHORT).show();
+                    viewModel.clearDone();
+                    NavHostFragment.findNavController(PostListingFragment.this).popBackStack();
+                }
+            }
+        });
     }
 
     private void attemptPublish() {
@@ -296,8 +326,26 @@ public class PostListingFragment extends Fragment {
             return;
         }
 
+        if (imageAdapter.getAllImageCount() == 0) {
+            binding.textErrorMessage.setText(R.string.listing_post_missing_fields);
+            binding.textErrorMessage.setVisibility(View.VISIBLE);
+            return;
+        }
+
         Listing listing = buildListingFromInputs();
-        viewModel.createListing(listing, imageAdapter.getImages());
+        if (isEditMode()) {
+            listing.setId(editingListingId);
+            if (editingListing != null) {
+                listing.setSellerId(editingListing.getSellerId());
+                listing.setStatus(editingListing.getStatus());
+                listing.setCreatedAt(editingListing.getCreatedAt());
+                listing.setCoverThumb(editingListing.getCoverThumb());
+            }
+            listing.setImageIds(imageAdapter.getExistingImageIds());
+            viewModel.updateListing(listing, imageAdapter.getNewImageUris());
+        } else {
+            viewModel.createListing(listing, imageAdapter.getNewImageUris());
+        }
     }
 
     private Listing buildListingFromInputs() {
@@ -409,23 +457,131 @@ public class PostListingFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        List<Uri> current = imageAdapter.getImages();
-        ArrayList<Parcelable> parcelables = new ArrayList<Parcelable>(current);
+        List<Uri> newUris = imageAdapter.getNewImageUris();
+        ArrayList<Parcelable> parcelables = new ArrayList<Parcelable>(newUris);
         outState.putParcelableArrayList(KEY_IMAGES, parcelables);
+        outState.putStringArrayList(KEY_EXISTING_IMAGE_IDS,
+                new ArrayList<String>(imageAdapter.getExistingImageIds()));
+        outState.putString(KEY_EDITING_ID, editingListingId);
     }
 
     private void restoreInstanceState(Bundle state) {
+        ArrayList<String> existingIds = state.getStringArrayList(KEY_EXISTING_IMAGE_IDS);
         ArrayList<Parcelable> parcelables = state.getParcelableArrayList(KEY_IMAGES);
+        List<Uri> restoredUris = new ArrayList<Uri>();
         if (parcelables != null) {
-            List<Uri> restored = new ArrayList<Uri>();
             for (Parcelable p : parcelables) {
                 if (p instanceof Uri) {
-                    restored.add((Uri) p);
+                    restoredUris.add((Uri) p);
                 }
             }
-            imageAdapter.setImages(restored);
-            if (restored.size() >= 5) {
-                binding.buttonAddImage.setVisibility(View.GONE);
+        }
+        imageAdapter.setInitialImages(existingIds, restoredUris);
+        if (imageAdapter.getAllImageCount() >= 5) {
+            binding.buttonAddImage.setVisibility(View.GONE);
+        }
+    }
+
+    private boolean isEditMode() {
+        return editingListingId != null && !editingListingId.isEmpty();
+    }
+
+    private void loadEditingListing() {
+        new ListingRepository().getById(editingListingId, new DataCallback<Listing>() {
+            @Override
+            public void onSuccess(Listing listing) {
+                if (binding == null) {
+                    return;
+                }
+                editingListing = listing;
+                populateForm(listing);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                if (binding != null) {
+                    binding.textErrorMessage.setText(errorMessage);
+                    binding.textErrorMessage.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+    }
+
+    private void populateForm(Listing listing) {
+        if (listing == null) {
+            return;
+        }
+        binding.editTitle.setText(listing.getTitle());
+        binding.editDescription.setText(listing.getDescription());
+        if (listing.getPrice() > 0) {
+            binding.editPrice.setText(String.valueOf(listing.getPrice()));
+        }
+        if (listing.getMinOfferPrice() > 0) {
+            binding.editMinOfferPrice.setText(String.valueOf(listing.getMinOfferPrice()));
+        }
+
+        List<TradeType> tradeTypes = listing.getTradeTypes();
+        if (tradeTypes != null) {
+            binding.checkTradeSell.setChecked(tradeTypes.contains(TradeType.SELL));
+            binding.checkTradeExchange.setChecked(tradeTypes.contains(TradeType.EXCHANGE));
+            binding.checkTradeGiveaway.setChecked(tradeTypes.contains(TradeType.GIVEAWAY));
+        }
+
+        ItemCondition cond = listing.getItemCondition();
+        if (cond == ItemCondition.NEW) {
+            binding.radioGroupCondition.check(R.id.radioConditionNew);
+        } else if (cond == ItemCondition.LIKE_NEW) {
+            binding.radioGroupCondition.check(R.id.radioConditionLikeNew);
+        } else if (cond == ItemCondition.USED) {
+            binding.radioGroupCondition.check(R.id.radioConditionUsed);
+        } else if (cond == ItemCondition.REPAIRED) {
+            binding.radioGroupCondition.check(R.id.radioConditionRepaired);
+        } else if (cond == ItemCondition.DEFECTIVE) {
+            binding.radioGroupCondition.check(R.id.radioConditionDefective);
+        }
+
+        List<OfferType> offers = listing.getAcceptedOfferTypes();
+        if (offers != null) {
+            if (offers.contains(OfferType.MONEY_AND_ITEM)) {
+                binding.radioGroupOffer.check(R.id.radioOfferBoth);
+            } else if (offers.contains(OfferType.ITEM)) {
+                binding.radioGroupOffer.check(R.id.radioOfferItem);
+            } else if (offers.contains(OfferType.MONEY)) {
+                binding.radioGroupOffer.check(R.id.radioOfferMoney);
+            }
+        }
+
+        selectCategory(listing.getCategoryId());
+        selectProvince(listing.getProvince());
+
+        imageAdapter.setInitialImages(listing.getImageIds(), null);
+        if (imageAdapter.getAllImageCount() >= 5) {
+            binding.buttonAddImage.setVisibility(View.GONE);
+        }
+    }
+
+    private void selectCategory(String categoryId) {
+        if (categoryId == null || loadedCategories.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < loadedCategories.size(); i++) {
+            Category cat = loadedCategories.get(i);
+            if (cat != null && categoryId.equals(cat.getId())) {
+                binding.spinnerCategory.setSelection(i);
+                break;
+            }
+        }
+    }
+
+    private void selectProvince(String province) {
+        if (province == null || province.isEmpty()) {
+            return;
+        }
+        String[] provinces = getResources().getStringArray(R.array.listing_provinces);
+        for (int i = 0; i < provinces.length; i++) {
+            if (province.equals(provinces[i])) {
+                binding.spinnerProvince.setSelection(i);
+                break;
             }
         }
     }
