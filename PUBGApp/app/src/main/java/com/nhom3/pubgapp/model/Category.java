@@ -50,10 +50,13 @@ public class Category extends BaseDocument {
 
     @Exclude
     public boolean isRoot() {
-        throw new UnsupportedOperationException("NOT_READY");
+        return parentId == null || parentId.trim().isEmpty();
     }
 
     public boolean hasConditionField(String fieldName) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (conditionFields == null || fieldName == null) {
+            return false;
+        }
+        return conditionFields.contains(fieldName);
     }
 }

@@ -64,6 +64,9 @@ public class MediaImage extends BaseDocument {
 
     @Exclude
     public byte[] toBytes() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (data == null || data.isEmpty()) {
+            return new byte[0];
+        }
+        return android.util.Base64.decode(data, android.util.Base64.DEFAULT);
     }
 }
