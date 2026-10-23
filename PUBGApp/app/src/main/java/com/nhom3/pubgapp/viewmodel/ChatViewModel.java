@@ -1,16 +1,21 @@
 package com.nhom3.pubgapp.viewmodel;
 
+import android.content.Context;
 import android.net.Uri;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.firebase.FirebaseApp;
+import com.nhom3.pubgapp.R;
+import com.nhom3.pubgapp.data.ChatRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Conversation;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.List;
 
@@ -25,6 +30,9 @@ public class ChatViewModel extends ViewModel {
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>();
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
+
+    private final ChatRepository chatRepository = new ChatRepository();
+    private String currentConversationId;
 
     public LiveData<List<Conversation>> getConversations() {
         return conversations;
@@ -58,16 +66,85 @@ public class ChatViewModel extends ViewModel {
         return done;
     }
 
+    private String getString(int resId, String fallback) {
+        try {
+            Context context = FirebaseApp.getInstance().getApplicationContext();
+            if (context != null) {
+                return context.getString(resId);
+            }
+        } catch (Exception ignored) {
+        }
+        return fallback;
+    }
+
     public void loadConversations() {
-        error.setValue(DataCallback.NOT_READY);
+        loading.setValue(true);
+        String uid = chatRepository.currentUserId();
+        if (uid.isEmpty()) {
+            uid = SessionManager.getInstance().getCurrentUserId();
+        }
+        if (uid.isEmpty()) {
+            loading.setValue(false);
+            error.setValue(getString(
+                    R.string.trade_error_not_signed_in_messages,
+                    "Vui lòng đăng nhập để xem tin nhắn."));
+            return;
+        }
+        chatRepository.getConversations(uid, new DataCallback<List<Conversation>>() {
+            @Override
+            public void onSuccess(List<Conversation> result) {
+                loading.postValue(false);
+                conversations.postValue(result);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void openConversation(String listingId) {
-        error.setValue(DataCallback.NOT_READY);
+        loading.setValue(true);
+        String uid = chatRepository.currentUserId();
+        if (uid.isEmpty()) {
+            uid = SessionManager.getInstance().getCurrentUserId();
+        }
+        if (uid.isEmpty()) {
+            loading.setValue(false);
+            error.setValue(getString(
+                    R.string.trade_error_not_signed_in_chat,
+                    "Vui lòng đăng nhập để nhắn tin."));
+            return;
+        }
+        chatRepository.getOrCreateConversation(listingId, uid, new DataCallback<Conversation>() {
+            @Override
+            public void onSuccess(Conversation result) {
+                loading.postValue(false);
+                if (result != null) {
+                    currentConversationId = result.getId();
+                }
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void openConversationById(String id) {
-        error.setValue(DataCallback.NOT_READY);
+        if (id == null || id.isEmpty()) {
+            error.setValue(getString(
+                    R.string.trade_error_invalid_conversation_id,
+                    "Mã cuộc trò chuyện không hợp lệ."));
+            return;
+        }
+        currentConversationId = id;
+        done.setValue(true);
     }
 
     public void loadOlder() {

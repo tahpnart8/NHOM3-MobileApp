@@ -70,6 +70,36 @@ public class ChatRepository extends BaseRepository {
         return null;
     }
 
+    @Override
+    public String currentUserId() {
+        return super.currentUserId();
+    }
+
+    static String buildConversationId(String listingId, String buyerId) {
+        return listingId + "_" + buyerId;
+    }
+
+    static boolean isSameUser(String buyerId, String sellerId) {
+        return buyerId != null && buyerId.equals(sellerId);
+    }
+
+    static boolean isListingStatusAllowed(ListingStatus status) {
+        return status == ListingStatus.AVAILABLE || status == ListingStatus.RESERVED;
+    }
+
+    static String validateNewConversation(String buyerId, String sellerId, ListingStatus status) {
+        if (buyerId == null || buyerId.trim().isEmpty()) {
+            return "Vui lòng đăng nhập để nhắn tin.";
+        }
+        if (isSameUser(buyerId, sellerId)) {
+            return "Không thể nhắn tin cho chính mình.";
+        }
+        if (status != null && !isListingStatusAllowed(status)) {
+            return "Tin đăng không còn hoạt động.";
+        }
+        return null;
+    }
+
     public void getOrCreateConversation(String listingId, String buyerId, DataCallback<Conversation> cb) {
         String currentUid = currentUserId();
         if (currentUid.isEmpty()) {
@@ -81,7 +111,7 @@ public class ChatRepository extends BaseRepository {
             return;
         }
 
-        String convId = listingId + "_" + buyerId;
+        String convId = buildConversationId(listingId, buyerId);
         DocumentReference docRef = db.collection(COLLECTION_CONVERSATIONS).document(convId);
         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -110,13 +140,23 @@ public class ChatRepository extends BaseRepository {
                 .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                        if (!task.isSuccessful() || task.getResult() == null || !task.getResult().exists()) {
+                        DocumentSnapshot doc = task.getResult();
+                        if (!task.isSuccessful() || doc == null || !doc.exists()) {
                             cb.onError("Không tìm thấy tin đăng.");
                             return;
                         }
-                        String sellerId = task.getResult().getString("sellerId");
-                        if (sellerId != null && sellerId.equals(buyerId)) {
-                            cb.onError("Không thể nhắn tin cho chính mình.");
+                        String sellerId = doc.getString("sellerId");
+                        String statusStr = doc.getString("status");
+                        ListingStatus status = null;
+                        if (statusStr != null) {
+                            try {
+                                status = ListingStatus.valueOf(statusStr);
+                            } catch (IllegalArgumentException ignored) {
+                            }
+                        }
+                        String validationError = validateNewConversation(buyerId, sellerId, status);
+                        if (validationError != null) {
+                            cb.onError(validationError);
                             return;
                         }
                         Conversation conv = new Conversation();
@@ -150,9 +190,14 @@ public class ChatRepository extends BaseRepository {
                     if (cached != null && !cached.isEmpty()) {
                         List<Conversation> cachedList = new ArrayList<Conversation>();
                         for (int i = 0; i < cached.size(); i++) {
-                            cachedList.add(cached.get(i).toModel());
+                            Conversation conv = cached.get(i).toModel();
+                            if (conv != null && conv.isParticipant(uid)) {
+                                cachedList.add(conv);
+                            }
                         }
-                        cb.onSuccess(cachedList);
+                        if (!cachedList.isEmpty()) {
+                            cb.onSuccess(cachedList);
+                        }
                     }
                 }
             }
