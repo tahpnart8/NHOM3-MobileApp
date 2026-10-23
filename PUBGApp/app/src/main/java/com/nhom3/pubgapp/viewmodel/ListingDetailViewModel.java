@@ -9,10 +9,41 @@ import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.ProfileStats;
 import com.nhom3.pubgapp.model.User;
 
+import com.nhom3.pubgapp.model.enums.ListingStatus;
+
 import java.util.List;
 
 // State for the listing detail screen. Action bodies report NOT_READY until the repositories are filled.
 public class ListingDetailViewModel extends ViewModel {
+
+    static boolean canShowListing(Listing listing, String viewerId) {
+        if (listing == null) {
+            return false;
+        }
+        ListingStatus status = listing.getStatus();
+        if (status == ListingStatus.AVAILABLE || status == ListingStatus.RESERVED || status == ListingStatus.SOLD) {
+            return true;
+        }
+        if (status == ListingStatus.DRAFT || status == ListingStatus.HIDDEN || status == ListingStatus.REMOVED) {
+            return viewerId != null && viewerId.equals(listing.getSellerId());
+        }
+        return false;
+    }
+
+    static boolean canStartChat(Listing listing, String viewerId) {
+        if (listing == null || viewerId == null || viewerId.equals(listing.getSellerId())) {
+            return false;
+        }
+        ListingStatus status = listing.getStatus();
+        return status == ListingStatus.AVAILABLE || status == ListingStatus.RESERVED;
+    }
+
+    static boolean canSendOffer(Listing listing, String viewerId) {
+        if (listing == null || viewerId == null || viewerId.equals(listing.getSellerId())) {
+            return false;
+        }
+        return listing.getStatus() == ListingStatus.AVAILABLE;
+    }
 
     private final MutableLiveData<Listing> listing = new MutableLiveData<>();
     private final MutableLiveData<User> seller = new MutableLiveData<>();
