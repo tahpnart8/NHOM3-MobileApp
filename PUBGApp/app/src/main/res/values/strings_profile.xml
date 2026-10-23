@@ -1,9 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Screen placeholders of module D (profile and trust), replaced by the real screens in phase 2. -->
-    <string name="profile_my_profile_title">D01 Hồ sơ cá nhân</string>
+    <string name="profile_my_profile_title">Hồ sơ cá nhân</string>
     <string name="profile_edit_profile_title">A05 Chỉnh sửa hồ sơ</string>
     <string name="profile_user_profile_title">D02 Trang cá nhân</string>
     <string name="profile_seller_trust_title">D03 Hồ sơ uy tín người bán</string>
     <string name="profile_report_title">D04 Báo cáo</string>
+
+    <!-- D01 MyProfileFragment -->
+    <string name="profile_my_profile_settings">Cài đặt</string>
+    <string name="profile_my_profile_location">%1$s, %2$s</string>
+    <string name="profile_my_profile_no_location">Chưa cập nhật khu vực</string>
+    <string name="profile_my_profile_sold_label">Đã bán</string>
+    <string name="profile_my_profile_rating_label">Đánh giá</string>
+    <string name="profile_my_profile_follower_label">Người theo dõi</string>
+    <string name="profile_my_profile_rating_value">%1$.1f</string>
+    <string name="profile_my_profile_no_rating">-</string>
+    <string name="profile_my_profile_row_my_shop">Sản phẩm của tôi</string>
+    <string name="profile_my_profile_row_my_shop_hint">Bạn chưa bán món nào. Hãy đăng tin đầu tiên.</string>
+    <string name="profile_my_profile_row_saved">Tin đã lưu</string>
+    <string name="profile_my_profile_row_trust">Hồ sơ uy tín</string>
+    <string name="profile_my_profile_row_edit_profile">Chỉnh sửa hồ sơ</string>
+    <string name="profile_my_profile_admin_area">Khu vực quản trị</string>
+    <string name="profile_my_profile_logout">Đăng xuất</string>
+    <string name="profile_my_profile_logout_title">Đăng xuất?</string>
+    <string name="profile_my_profile_logout_message">Bạn có chắc muốn đăng xuất khỏi tài khoản này?</string>
+
+    <!-- D01 account verification block and form -->
+    <string name="profile_my_profile_verify_title">Xác thực tài khoản</string>
+    <string name="profile_my_profile_verify_none_message">Tài khoản chưa xác thực. Bạn vẫn xem, tìm kiếm, nhắn tin và theo dõi bình thường, nhưng chưa đăng tin, gửi đề nghị hay tạo giao dịch được.</string>
+    <string name="profile_my_profile_verify_pending_message">Yêu cầu xác thực đang chờ admin duyệt. Trong lúc chờ, bạn chưa đăng tin, gửi đề nghị hay tạo giao dịch được.</string>
+    <string name="profile_my_profile_verify_rejected_message">Yêu cầu xác thực bị từ chối. Bạn chưa đăng tin, gửi đề nghị hay tạo giao dịch được.</string>
+    <string name="profile_my_profile_verify_approved_message">Tài khoản đã xác thực. Bạn đăng tin, gửi đề nghị và tạo giao dịch được.</string>
+    <string name="profile_my_profile_verify_chip_pending">Đang chờ duyệt</string>
+    <string name="profile_my_profile_verify_chip_rejected">Bị từ chối</string>
+    <string name="profile_my_profile_verify_chip_approved">Đã xác thực</string>
+    <string name="profile_my_profile_verify_note">Lý do: %1$s</string>
+    <string name="profile_my_profile_verify_resubmit_left">Còn %1$d lần gửi lại</string>
+    <string name="profile_my_profile_verify_no_resubmit">Đã hết số lần gửi lại, hãy liên hệ admin.</string>
+    <string name="profile_my_profile_verify_start">Đăng ký xác thực</string>
+    <string name="profile_my_profile_verify_resend">Gửi lại yêu cầu</string>
+    <string name="profile_my_profile_verify_national_id">Số CCCD (12 chữ số)</string>
+    <string name="profile_my_profile_verify_pick_id_image">Chọn ảnh giấy tờ</string>
+    <string name="profile_my_profile_verify_pick_portrait_image">Chọn ảnh chân dung cầm giấy tờ</string>
+    <string name="profile_my_profile_verify_id_image_preview">Ảnh giấy tờ đã chọn</string>
+    <string name="profile_my_profile_verify_portrait_image_preview">Ảnh chân dung cầm giấy tờ đã chọn</string>
+    <string name="profile_my_profile_verify_image_hint">Chỉ nhận ảnh; ảnh được nén trên máy.</string>
+    <string name="profile_my_profile_verify_submit">Gửi yêu cầu</string>
+    <string name="profile_my_profile_verify_sent">Đã gửi yêu cầu xác thực tài khoản.</string>
+    <string name="profile_my_profile_verify_not_image">Không dùng được tệp này, hãy chọn một ảnh.</string>
 </resources>
