@@ -66,4 +66,11 @@
     <string name="profile_edit_profile_unsaved_leave">Thoát</string>
     <string name="profile_edit_profile_unsaved_stay">Ở lại</string>
     <string name="profile_edit_profile_saved">Đã lưu hồ sơ.</string>
+
+    <!-- D02 and D03 listing grid (ProfileListingAdapter), labels of ItemCondition -->
+    <string name="profile_listing_card_condition_new">Mới</string>
+    <string name="profile_listing_card_condition_like_new">Như mới</string>
+    <string name="profile_listing_card_condition_used">Đã sử dụng</string>
+    <string name="profile_listing_card_condition_repaired">Đã sửa chữa</string>
+    <string name="profile_listing_card_condition_defective">Có lỗi</string>
 </resources>
