@@ -64,6 +64,6 @@ public class ChatMessage extends BaseDocument {
 
     @Exclude
     public boolean isMedia() {
-        throw new UnsupportedOperationException("NOT_READY");
+        return type == MessageType.IMAGE;
     }
 }

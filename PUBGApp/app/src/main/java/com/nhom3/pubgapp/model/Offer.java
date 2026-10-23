@@ -81,10 +81,12 @@ public class Offer extends BaseDocument {
     }
 
     public void accept() {
-        throw new UnsupportedOperationException("NOT_READY");
+        this.status = OfferStatus.ACCEPTED;
+        touch();
     }
 
     public void reject() {
-        throw new UnsupportedOperationException("NOT_READY");
+        this.status = OfferStatus.REJECTED;
+        touch();
     }
 }
