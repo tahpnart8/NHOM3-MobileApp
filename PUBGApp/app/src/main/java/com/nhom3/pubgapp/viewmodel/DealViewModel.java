@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.DealRepository;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Payment;
 import com.nhom3.pubgapp.model.Review;
@@ -16,6 +17,8 @@ import java.util.List;
 // State for the deal screens, from creation to completion. Action bodies report NOT_READY until the repositories are filled.
 public class DealViewModel extends ViewModel {
 
+    private final DealRepository dealRepository;
+
     private final MutableLiveData<Deal> deal = new MutableLiveData<>();
     private final MutableLiveData<List<Deal>> deals = new MutableLiveData<>();
     private final MutableLiveData<Payment> payment = new MutableLiveData<>();
@@ -24,6 +27,14 @@ public class DealViewModel extends ViewModel {
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>();
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
+
+    public DealViewModel() {
+        this(new DealRepository());
+    }
+
+    DealViewModel(DealRepository dealRepository) {
+        this.dealRepository = dealRepository;
+    }
 
     public LiveData<Deal> getDeal() {
         return deal;
@@ -58,15 +69,84 @@ public class DealViewModel extends ViewModel {
     }
 
     public void loadDeal(String id) {
-        error.setValue(DataCallback.NOT_READY);
+        if (id == null || id.trim().isEmpty()) {
+            return;
+        }
+        loading.setValue(true);
+        dealRepository.getById(id, new DataCallback<Deal>() {
+            @Override
+            public void onSuccess(Deal result) {
+                deal.setValue(result);
+                if (result != null && result.needsPayment()) {
+                    dealRepository.getPayment(id, new DataCallback<Payment>() {
+                        @Override
+                        public void onSuccess(Payment paymentResult) {
+                            payment.setValue(paymentResult);
+                            loading.setValue(false);
+                        }
+
+                        @Override
+                        public void onError(String message) {
+                            payment.setValue(null);
+                            loading.setValue(false);
+                        }
+                    });
+                } else {
+                    payment.setValue(null);
+                    loading.setValue(false);
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.setValue(false);
+                error.setValue(message);
+            }
+        });
     }
 
-    public void updateTerms(Deal deal) {
-        error.setValue(DataCallback.NOT_READY);
+    public void updateTerms(Deal dealToUpdate) {
+        if (dealToUpdate == null) {
+            return;
+        }
+        loading.setValue(true);
+        dealRepository.updateTerms(dealToUpdate, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.setValue(false);
+                done.setValue(true);
+                loadDeal(dealToUpdate.getId());
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.setValue(false);
+                error.setValue(message);
+            }
+        });
     }
 
     public void confirm() {
-        error.setValue(DataCallback.NOT_READY);
+        Deal current = deal.getValue();
+        if (current == null) {
+            error.setValue("Không tìm thấy giao dịch để xác nhận.");
+            return;
+        }
+        loading.setValue(true);
+        dealRepository.confirm(current.getId(), new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.setValue(false);
+                done.setValue(true);
+                loadDeal(current.getId());
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.setValue(false);
+                error.setValue(message);
+            }
+        });
     }
 
     public void pay(PaymentMethod method) {
@@ -86,11 +166,56 @@ public class DealViewModel extends ViewModel {
     }
 
     public void checkAutoRelease() {
-        error.setValue(DataCallback.NOT_READY);
+        dealRepository.releaseDueDeals(new DataCallback<Integer>() {
+            @Override
+            public void onSuccess(Integer result) {
+                dealRepository.completeDueDeals(new DataCallback<Integer>() {
+                    @Override
+                    public void onSuccess(Integer res2) {
+                        dealRepository.expirePendingDeals(new DataCallback<Integer>() {
+                            @Override
+                            public void onSuccess(Integer res3) {
+                            }
+
+                            @Override
+                            public void onError(String message) {
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+            }
+        });
     }
 
     public void cancel(String reason) {
-        error.setValue(DataCallback.NOT_READY);
+        Deal current = deal.getValue();
+        if (current == null) {
+            error.setValue("Không tìm thấy giao dịch để hủy.");
+            return;
+        }
+        loading.setValue(true);
+        dealRepository.cancel(current.getId(), reason, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.setValue(false);
+                done.setValue(true);
+                loadDeal(current.getId());
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.setValue(false);
+                error.setValue(message);
+            }
+        });
     }
 
     public void loadHistory() {
@@ -107,5 +232,42 @@ public class DealViewModel extends ViewModel {
 
     public void clearDone() {
         done.setValue(false);
+    }
+
+    static boolean canEditTerms(Deal deal, String userId, boolean isVerified, boolean isOnline) {
+        if (deal == null || !isOnline || !isVerified) {
+            return false;
+        }
+        return deal.getStatus() == com.nhom3.pubgapp.model.enums.DealStatus.PENDING_CONFIRM
+                && deal.isParticipant(userId);
+    }
+
+    static boolean canConfirm(Deal deal, String userId, boolean isVerified, boolean isOnline) {
+        if (deal == null || !isOnline || !isVerified) {
+            return false;
+        }
+        if (deal.getStatus() != com.nhom3.pubgapp.model.enums.DealStatus.PENDING_CONFIRM
+                || !deal.isParticipant(userId)) {
+            return false;
+        }
+        boolean alreadyConfirmed = userId.equals(deal.getBuyerId())
+                ? deal.isBuyerConfirmed() : deal.isSellerConfirmed();
+        return !alreadyConfirmed;
+    }
+
+    static boolean canCancel(Deal deal, String userId, boolean isOnline) {
+        if (deal == null || !isOnline) {
+            return false;
+        }
+        if (!deal.isParticipant(userId)) {
+            return false;
+        }
+        boolean allowedStatus = deal.getStatus() == com.nhom3.pubgapp.model.enums.DealStatus.PENDING_CONFIRM
+                || deal.getStatus() == com.nhom3.pubgapp.model.enums.DealStatus.CONFIRMED;
+        return allowedStatus && deal.canMoveTo(com.nhom3.pubgapp.model.enums.DealStatus.CANCELLED);
+    }
+
+    static boolean isPaymentInfoVisible(Deal deal) {
+        return deal != null && deal.needsPayment();
     }
 }
