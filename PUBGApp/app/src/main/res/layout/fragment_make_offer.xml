@@ -6,124 +6,130 @@
     app:cardBackgroundColor="?android:attr/colorBackground"
     app:cardCornerRadius="@dimen/radius_lg">
 
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/space_md">
+        android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/textMakeOfferHeading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/trade_make_offer_heading"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="?attr/colorOnSurface" />
-
-        <TextView
-            android:id="@+id/textListingTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xs"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:maxLines="2"
-            android:ellipsize="end" />
+            android:orientation="vertical"
+            android:padding="@dimen/space_md">
 
-        <TextView
-            android:id="@+id/textListingPrice"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xs"
-            android:textAppearance="?attr/textAppearanceTitleSmall"
-            android:textColor="?attr/colorPrimary" />
-
-        <TextView
-            android:id="@+id/textSelectTypeLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_md"
-            android:text="@string/trade_make_offer_select_type"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant" />
-
-        <RadioGroup
-            android:id="@+id/radioGroupOfferType"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xs"
-            android:orientation="vertical">
-
-            <RadioButton
-                android:id="@+id/radioOfferMoney"
+            <TextView
+                android:id="@+id/textMakeOfferHeading"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="@string/trade_chat_offer_type_money" />
+                android:text="@string/trade_make_offer_heading"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorOnSurface" />
 
-            <RadioButton
-                android:id="@+id/radioOfferItem"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/trade_chat_offer_type_item" />
-
-            <RadioButton
-                android:id="@+id/radioOfferBoth"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/trade_chat_offer_type_both" />
-
-        </RadioGroup>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/inputLayoutOfferAmount"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_sm"
-            android:hint="@string/trade_make_offer_amount_hint">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/editOfferAmount"
+            <TextView
+                android:id="@+id/textListingTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="number" />
+                android:layout_marginTop="@dimen/space_xs"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:maxLines="2"
+                android:ellipsize="end" />
 
-        </com.google.android.material.textfield.TextInputLayout>
+            <TextView
+                android:id="@+id/textListingPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:textAppearance="?attr/textAppearanceTitleSmall"
+                android:textColor="?attr/colorPrimary" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/inputLayoutOfferItem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_sm"
-            android:visibility="gone"
-            android:hint="@string/trade_make_offer_item_hint">
+            <TextView
+                android:id="@+id/textSelectTypeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:text="@string/trade_make_offer_select_type"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/editOfferItem"
+            <RadioGroup
+                android:id="@+id/radioGroupOfferType"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textMultiLine"
-                android:maxLines="3" />
+                android:layout_marginTop="@dimen/space_xs"
+                android:orientation="vertical">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <RadioButton
+                    android:id="@+id/radioOfferMoney"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="@string/trade_chat_offer_type_money" />
 
-        <ProgressBar
-            android:id="@+id/progressLoading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="@dimen/space_sm"
-            android:visibility="gone" />
+                <RadioButton
+                    android:id="@+id/radioOfferItem"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/trade_chat_offer_type_item" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonSendOffer"
-            style="?attr/materialButtonStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_md"
-            android:text="@string/trade_make_offer_submit"
-            app:backgroundTint="?attr/colorPrimary" />
+                <RadioButton
+                    android:id="@+id/radioOfferBoth"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/trade_chat_offer_type_both" />
 
-    </LinearLayout>
+            </RadioGroup>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/inputLayoutOfferAmount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:hint="@string/trade_make_offer_amount_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editOfferAmount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/inputLayoutOfferItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:visibility="gone"
+                android:hint="@string/trade_make_offer_item_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editOfferItem"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textMultiLine"
+                    android:maxLines="3" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <ProgressBar
+                android:id="@+id/progressLoading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/space_sm"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonSendOffer"
+                style="?attr/materialButtonStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:text="@string/trade_make_offer_submit"
+                app:backgroundTint="?attr/colorPrimary" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
 
 </com.google.android.material.card.MaterialCardView>

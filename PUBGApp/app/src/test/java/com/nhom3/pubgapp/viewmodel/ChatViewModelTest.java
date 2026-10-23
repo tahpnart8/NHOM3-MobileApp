@@ -4,16 +4,18 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.model.enums.UserStatus;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
 
 import org.junit.Test;
 
-// Tests user verification guard rules in ChatViewModel without Firebase.
+// Tests user verification and status guard rules in ChatViewModel without Firebase.
 public class ChatViewModelTest {
 
     @Test
-    public void canUserBuy_allowsOnlyApprovedAndEmailVerified() {
+    public void canUserBuy_allowsOnlyApprovedAndEmailVerifiedAndActive() {
         User user = new User();
+        user.setStatus(UserStatus.ACTIVE);
         user.setVerificationStatus(VerificationStatus.APPROVED);
 
         assertTrue(ChatViewModel.canUserBuy(user, true));
@@ -28,18 +30,29 @@ public class ChatViewModelTest {
         user.setVerificationStatus(VerificationStatus.NONE);
         assertFalse(ChatViewModel.canUserBuy(user, true));
 
+        user.setVerificationStatus(VerificationStatus.APPROVED);
+        user.setStatus(UserStatus.LOCKED);
+        assertFalse(ChatViewModel.canUserBuy(user, true));
+
+        user.setStatus(UserStatus.DELETED);
+        assertFalse(ChatViewModel.canUserBuy(user, true));
+
         assertFalse(ChatViewModel.canUserBuy(null, true));
     }
 
     @Test
-    public void canUserSell_allowsOnlyApprovedAndEmailVerified() {
+    public void canUserSell_allowsOnlyApprovedAndEmailVerifiedAndActive() {
         User user = new User();
+        user.setStatus(UserStatus.ACTIVE);
         user.setVerificationStatus(VerificationStatus.APPROVED);
 
         assertTrue(ChatViewModel.canUserSell(user, true));
         assertFalse(ChatViewModel.canUserSell(user, false));
 
         user.setVerificationStatus(VerificationStatus.PENDING);
+        assertFalse(ChatViewModel.canUserSell(user, true));
+
+        user.setStatus(UserStatus.LOCKED);
         assertFalse(ChatViewModel.canUserSell(user, true));
 
         assertFalse(ChatViewModel.canUserSell(null, true));

@@ -67,7 +67,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
 
         void bind(final Conversation conversation) {
             binding.textPartnerName.setText(R.string.trade_conversation_list_partner_fallback);
-            binding.includeAvatar.textInitial.setText("U");
+            binding.includeAvatar.textInitial.setText(R.string.trade_conversation_avatar_default);
 
             String lastMsg = conversation.getLastMessage();
             if (lastMsg != null && !lastMsg.isEmpty()) {

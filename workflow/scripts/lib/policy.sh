@@ -6,7 +6,10 @@
 TYPES='feat|fix|docs|refactor|test|chore|build|ci'
 # The summary after the colon may be English or Vietnamese: it must not start with a space or an ASCII
 # capital, and must not end with a period. Checked with LC_ALL=C, so accented letters are just bytes.
-SUBJECT_RE="^(${TYPES})(\\([a-z0-9-]+\\))?: [^[:space:][:upper:]].*[^.]\$"
+# A screen code such as B05 or C02 may lead the summary: the delivery plan names every screen that
+# way and the issue titles carry it, so a pull request copying its issue title has to pass.
+SCREEN_CODE="[A-E][0-9][0-9] "
+SUBJECT_RE="^(${TYPES})(\\([a-z0-9-]+\\))?: (${SCREEN_CODE})?[^[:space:][:upper:]].*[^.]\$"
 # A subject is at most this many BYTES: about 72 English characters or 55 Vietnamese ones. Bytes, because
 # dash (CI) counts bytes and bash (Git for Windows) counts characters, and both must give the same answer.
 SUBJECT_MAX_BYTES=100

@@ -1,12 +1,9 @@
 package com.nhom3.pubgapp.ui.trade;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,6 +19,8 @@ import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.enums.MessageType;
 import com.nhom3.pubgapp.model.enums.OfferStatus;
 import com.nhom3.pubgapp.model.enums.OfferType;
+import com.nhom3.pubgapp.ui.common.ImageLoader;
+import com.nhom3.pubgapp.ui.common.StatusChips;
 import com.nhom3.pubgapp.util.FormatUtils;
 
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Adapter for chat messages displaying text, image, and offer bubbles.
+// Adapter for chat messages displaying text, image bubbles, and offer cards.
 public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public interface OnMessageLongClickListener {
@@ -49,17 +48,18 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final Map<String, Offer> offerMap = new HashMap<String, Offer>();
     private final FormatUtils formatUtils = new FormatUtils();
     private final MediaRepository mediaRepository = new MediaRepository();
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private String currentUserId = "";
     private final OnMessageLongClickListener longClickListener;
-    private OnOfferActionListener offerActionListener;
+    private final OnOfferActionListener offerActionListener;
 
     public MessageAdapter(OnMessageLongClickListener longClickListener) {
-        this.longClickListener = longClickListener;
+        this(longClickListener, null);
     }
 
-    public void setOfferActionListener(OnOfferActionListener listener) {
-        this.offerActionListener = listener;
+    public MessageAdapter(OnMessageLongClickListener longClickListener,
+                          OnOfferActionListener offerActionListener) {
+        this.longClickListener = longClickListener;
+        this.offerActionListener = offerActionListener;
     }
 
     public void setCurrentUserId(String currentUserId) {
@@ -75,11 +75,11 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         notifyDataSetChanged();
     }
 
-    public void setOffers(List<Offer> items) {
+    public void setOffers(List<Offer> offerList) {
         offerMap.clear();
-        if (items != null) {
-            for (int i = 0; i < items.size(); i++) {
-                Offer offer = items.get(i);
+        if (offerList != null) {
+            for (int i = 0; i < offerList.size(); i++) {
+                Offer offer = offerList.get(i);
                 if (offer != null && offer.getId() != null) {
                     offerMap.put(offer.getId(), offer);
                 }
@@ -93,8 +93,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ChatMessage msg = messages.get(position);
         if (msg.getType() == MessageType.OFFER) {
             return VIEW_TYPE_OFFER;
-        }
-        if (msg.getType() == MessageType.IMAGE) {
+        } else if (msg.getType() == MessageType.IMAGE) {
             return VIEW_TYPE_IMAGE;
         }
         return VIEW_TYPE_TEXT;
@@ -105,17 +104,16 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         if (viewType == VIEW_TYPE_OFFER) {
-            ItemTradeMessageOfferBinding binding =
-                    ItemTradeMessageOfferBinding.inflate(inflater, parent, false);
+            ItemTradeMessageOfferBinding binding = ItemTradeMessageOfferBinding.inflate(
+                    inflater, parent, false);
             return new OfferMessageViewHolder(binding);
-        }
-        if (viewType == VIEW_TYPE_IMAGE) {
-            ItemTradeMessageImageBinding binding =
-                    ItemTradeMessageImageBinding.inflate(inflater, parent, false);
+        } else if (viewType == VIEW_TYPE_IMAGE) {
+            ItemTradeMessageImageBinding binding = ItemTradeMessageImageBinding.inflate(
+                    inflater, parent, false);
             return new ImageMessageViewHolder(binding);
         }
-        ItemTradeMessageTextBinding binding =
-                ItemTradeMessageTextBinding.inflate(inflater, parent, false);
+        ItemTradeMessageTextBinding binding = ItemTradeMessageTextBinding.inflate(
+                inflater, parent, false);
         return new TextMessageViewHolder(binding);
     }
 
@@ -205,7 +203,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 binding.textTimeImageReceived.setText(time);
                 loadImage(message.getImageId(), binding.imageReceived);
 
-                binding.cardImageReceived.setOnLongClickListener(new View.OnLongClickListener() {
+                binding.cardReceived.setOnLongClickListener(new View.OnLongClickListener() {
                     @Override
                     public boolean onLongClick(View v) {
                         if (longClickListener != null) {
@@ -218,7 +216,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
         }
 
-        private void loadImage(String imageId, final android.widget.ImageView imageView) {
+        private void loadImage(final String imageId, final ImageView imageView) {
             if (imageId == null || imageId.isEmpty()) {
                 imageView.setImageDrawable(null);
                 return;
@@ -226,20 +224,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mediaRepository.getImage(imageId, new DataCallback<byte[]>() {
                 @Override
                 public void onSuccess(final byte[] bytes) {
-                    if (bytes != null && bytes.length > 0) {
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                final Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                                mainHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        imageView.setImageBitmap(bmp);
-                                    }
-                                });
-                            }
-                        }).start();
-                    }
+                    ImageLoader.load(
+                            bytes, imageId, imageView,
+                            R.drawable.bg_status_chip, R.drawable.bg_status_chip
+                    );
                 }
 
                 @Override
@@ -263,17 +251,18 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             String time = formatUtils.formatTime(message.getCreatedAt());
             binding.textOfferTime.setText(time);
 
-            final Offer offer = message.getOfferId() != null ? offerMap.get(message.getOfferId()) : null;
+            final Offer offer = message.getOfferId() != null
+                    ? offerMap.get(message.getOfferId()) : null;
             if (offer != null) {
                 bindOfferDetails(offer);
             } else {
                 binding.textOfferTitle.setText(R.string.trade_chat_offer_title);
-                binding.textOfferType.setText(message.getText());
+                binding.textOfferType.setText(message.getText() != null ? message.getText() : "");
                 binding.textOfferAmount.setVisibility(View.GONE);
                 binding.textOfferExchangeItem.setVisibility(View.GONE);
                 binding.textOfferWaitingBuyer.setVisibility(View.GONE);
                 binding.layoutSellerActions.setVisibility(View.GONE);
-                binding.textOfferStatus.setText(R.string.trade_chat_offer_status_pending);
+                StatusChips.bind(binding.chipOfferStatus.textStatusChip, OfferStatus.PENDING);
             }
         }
 
@@ -308,15 +297,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 binding.textOfferExchangeItem.setVisibility(View.GONE);
             }
 
-            OfferStatus status = offer.getStatus();
-            if (status == OfferStatus.ACCEPTED) {
-                binding.textOfferStatus.setText(R.string.trade_chat_offer_status_accepted);
-            } else if (status == OfferStatus.REJECTED) {
-                binding.textOfferStatus.setText(R.string.trade_chat_offer_status_rejected);
-            } else {
-                binding.textOfferStatus.setText(R.string.trade_chat_offer_status_pending);
-            }
+            StatusChips.bind(binding.chipOfferStatus.textStatusChip, offer.getStatus());
 
+            OfferStatus status = offer.getStatus();
             boolean isSeller = currentUserId != null && currentUserId.equals(offer.getSellerId());
             if (isSeller) {
                 binding.textOfferWaitingBuyer.setVisibility(View.GONE);

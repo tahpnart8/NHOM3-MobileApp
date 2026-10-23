@@ -65,6 +65,7 @@ public class AppNotification extends BaseDocument {
     }
 
     public void markRead() {
-        throw new UnsupportedOperationException("NOT_READY");
+        this.isRead = true;
     }
 }
+
