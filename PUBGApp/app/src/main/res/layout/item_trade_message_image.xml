@@ -27,9 +27,8 @@
 
             <ImageView
                 android:id="@+id/imageReceived"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
                 android:contentDescription="@string/trade_chat_image_sent"
                 android:scaleType="centerCrop" />
 
@@ -64,9 +63,8 @@
 
             <ImageView
                 android:id="@+id/imageSent"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
                 android:contentDescription="@string/trade_chat_image_sent"
                 android:scaleType="centerCrop" />
 

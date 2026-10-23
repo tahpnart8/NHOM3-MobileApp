@@ -81,10 +81,14 @@ public class Offer extends BaseDocument {
     }
 
     public void accept() {
-        this.status = OfferStatus.ACCEPTED;
+        if (status == OfferStatus.PENDING) {
+            this.status = OfferStatus.ACCEPTED;
+        }
     }
 
     public void reject() {
-        this.status = OfferStatus.REJECTED;
+        if (status == OfferStatus.PENDING) {
+            this.status = OfferStatus.REJECTED;
+        }
     }
 }

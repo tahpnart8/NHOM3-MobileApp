@@ -2,6 +2,7 @@ package com.nhom3.pubgapp.model;
 
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.Exclude;
+import com.google.firebase.firestore.ServerTimestamp;
 import com.nhom3.pubgapp.model.enums.PaymentMethod;
 import com.nhom3.pubgapp.model.enums.PaymentStatus;
 
@@ -66,6 +67,7 @@ public class Payment extends BaseDocument {
         this.method = method;
     }
 
+    @ServerTimestamp
     public Timestamp getHeldAt() {
         return heldAt;
     }
@@ -83,11 +85,17 @@ public class Payment extends BaseDocument {
     }
 
     public void release() {
+        if (!isHeld()) {
+            return;
+        }
         this.status = PaymentStatus.RELEASED;
         this.releasedAt = Timestamp.now();
     }
 
     public void refund() {
+        if (!isHeld()) {
+            return;
+        }
         this.status = PaymentStatus.REFUNDED;
         this.releasedAt = Timestamp.now();
     }

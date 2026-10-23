@@ -38,6 +38,7 @@ Firestore không có khóa ngoại thật: cột FK là mã tài liệu khác, �
 | `sellerVerifications.userId` | users |
 | `sellerVerifications.reviewedBy` | users |
 | `admins.uid` | users |
+| `users.lastReviewId` | reviews |
 | `follows.followerId` | users |
 | `follows.followedId` | users |
 | `savedListings.userId` | users |

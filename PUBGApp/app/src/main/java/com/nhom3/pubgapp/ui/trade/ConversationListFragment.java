@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentConversationListBinding;
 import com.nhom3.pubgapp.model.Conversation;
@@ -52,10 +53,12 @@ public class ConversationListFragment extends Fragment implements ConversationAd
         observeViewModel();
 
         checkNetworkAndShowBanner();
+    }
 
-        if (viewModel.getConversations().getValue() == null) {
-            viewModel.loadConversations();
-        }
+    @Override
+    public void onStart() {
+        super.onStart();
+        viewModel.loadConversations();
     }
 
     private void setupRecyclerView() {
@@ -97,7 +100,9 @@ public class ConversationListFragment extends Fragment implements ConversationAd
             @Override
             public void onChanged(Boolean isLoading) {
                 if (isLoading != null && isLoading) {
-                    binding.progressLoading.setVisibility(View.VISIBLE);
+                    if (fullList.isEmpty()) {
+                        binding.progressLoading.setVisibility(View.VISIBLE);
+                    }
                     binding.includeErrorState.layoutErrorState.setVisibility(View.GONE);
                 } else {
                     binding.progressLoading.setVisibility(View.GONE);
@@ -127,8 +132,7 @@ public class ConversationListFragment extends Fragment implements ConversationAd
                         binding.recyclerConversations.setVisibility(View.GONE);
                         binding.includeEmptyState.layoutEmptyState.setVisibility(View.GONE);
                     } else {
-                        // Have cached data, show offline banner
-                        binding.includeOfflineBanner.layoutOfflineBanner.setVisibility(View.VISIBLE);
+                        Snackbar.make(binding.getRoot(), errorMessage, Snackbar.LENGTH_LONG).show();
                     }
                     viewModel.clearError();
                 }

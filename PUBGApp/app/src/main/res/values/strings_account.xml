@@ -1,7 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="account_login_title">A01 Đăng nhập</string>
-    <string name="account_register_title">A02 Đăng ký</string>
-    <string name="account_forgot_password_title">A03 Quên mật khẩu</string>
-    <string name="account_notification_title">C06 Thông báo</string>
+    <string name="account_login_title">Đăng nhập</string>
+    <string name="account_login_welcome">Chào mừng trở lại</string>
+    <string name="account_login_welcome_sub">Đăng nhập để tiếp tục khám phá và mua bán</string>
+    <string name="account_login_email_hint">Email</string>
+    <string name="account_login_email_empty">Vui lòng nhập email</string>
+    <string name="account_login_email_invalid">Email không đúng định dạng</string>
+    <string name="account_login_password_hint">Mật khẩu</string>
+    <string name="account_login_password_empty">Vui lòng nhập mật khẩu</string>
+    <string name="account_login_forgot_password">Quên mật khẩu?</string>
+    <string name="account_login_button">Đăng nhập</string>
+    <string name="account_login_or">hoặc</string>
+    <string name="account_login_google">Đăng nhập bằng Google</string>
+    <string name="account_login_no_account">Chưa có tài khoản?</string>
+    <string name="account_login_register_now">Đăng ký ngay</string>
+    <string name="account_login_offline">Mất kết nối mạng, vui lòng kiểm tra lại đường truyền</string>
+
+    <string name="account_register_title">Đăng ký</string>
+
+    <string name="account_forgot_password_title">Quên mật khẩu</string>
+    <string name="account_forgot_password_instruction">Nhập email của bạn để nhận liên kết đặt lại mật khẩu</string>
+    <string name="account_forgot_password_send_button">Gửi liên kết</string>
+    <string name="account_forgot_password_back_to_login">Nhớ mật khẩu? Đăng nhập</string>
+    <string name="account_forgot_password_success">Đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư của bạn.</string>
+    <string name="account_forgot_password_offline">Mất kết nối mạng, vui lòng kiểm tra lại đường truyền</string>
+
+    <string name="account_login_google_cancelled">Đã hủy đăng nhập Google.</string>
+    <string name="account_login_google_no_credential">Không tìm thấy tài khoản Google trên thiết bị.</string>
+    <string name="account_login_google_failed">Không thể đăng nhập bằng Google. Vui lòng thử lại.</string>
+    <string name="account_login_google_parse_error">Lỗi xử lý tài khoản Google.</string>
+    <string name="account_login_google_init_error">Không thể khởi động đăng nhập Google.</string>
+
+    <string name="account_notification_title">Thông báo</string>
+    <string name="notification_list_empty">Bạn chưa có thông báo mới</string>
+    <string name="notification_list_error">Không có kết nối. Vui lòng thử lại.</string>
+    <string name="notification_list_account_inactive">Tài khoản của bạn hiện không thể thực hiện thao tác này.</string>
+
+    <string name="notification_type_new_message">Tin nhắn mới</string>
+    <string name="notification_type_new_offer">Đề nghị giá mới</string>
+    <string name="notification_type_offer_result">Kết quả đề nghị giá</string>
+    <string name="notification_type_deal_update">Cập nhật đơn hàng</string>
+    <string name="notification_type_payment_update">Cập nhật thanh toán</string>
+    <string name="notification_type_new_review">Đánh giá mới</string>
+    <string name="notification_type_complaint_result">Kết quả khiếu nại</string>
+    <string name="notification_type_warning">Cảnh báo từ quản trị viên</string>
+    <string name="notification_type_listing_moderated">Kết quả duyệt tin đăng</string>
+    <string name="notification_type_verification_result">Kết quả xác thực tài khoản</string>
 </resources>
