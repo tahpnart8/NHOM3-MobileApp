@@ -1,12 +1,11 @@
 rules_version = '2';
 
-// Bản NỀN của Security Rules (đợt 0) cộng luật GHI của bốn chỗ (issue #131):
-// users, users/{uid}/private/identity, sellerVerifications, listings;
-// và các phần của issue #110: users/{uid}/warnings, notifications, rồi mạch mua bán
-// conversations, messages, offers, deals (kèm statusHistory), payments, reviews.
-// Bản đầy đủ theo workflow/docs/data/security-rules.md làm tiếp ở issue #110. Ở bản này:
-// chỉ ĐỌC được mở theo ma trận; GHI chỉ mở cho các chỗ trên và collection images
-// (tạo và xóa ảnh có giới hạn kích thước). Mọi collection khác vẫn từ chối ghi.
+// Security Rules theo workflow/docs/data/security-rules.md. Bản nền (đợt 0) cộng luật GHI của
+// issue #131 (users, users/{uid}/private/identity, sellerVerifications, listings) và issue #110:
+// warnings, notifications, mạch mua bán (conversations, messages, offers, deals kèm statusHistory,
+// payments, reviews), rồi addresses, saved, follows, admins, reports, complaints, adminNote,
+// activityLogs, bannedKeywords. Còn CHƯA mở: dòng "Ghi điểm đánh giá" của users (chờ leader chốt
+// ở #110). Mọi đường dẫn không nêu dưới đây vẫn từ chối.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -434,9 +433,23 @@ service cloud.firestore {
     // ---- Quyền admin: chỉ đọc từ ứng dụng ----
 
     // Cấm mọi ghi từ ứng dụng; leader tạo tài liệu admin bằng tay trên Console (luật R12).
+    // Tài khoản admin (security-rules.md mục 8). Admin đầu tiên do leader tạo tay trên Console;
+    // sau đó admin cấp quyền cho tài khoản ACTIVE khác. Không ai tự cấp hay tự gỡ quyền của mình.
+    // "Phải còn ít nhất một admin" không ép được vì Rules không đếm được (mục Giới hạn).
     match /admins/{uid} {
       allow read: if signedIn() && (me() == uid || isAdmin());
-      allow write: if false;
+
+      allow create: if isAdmin()
+        && writerActive()
+        && uid != me()
+        && hasOnlyKeys(['uid', 'createdAt'])
+        && request.resource.data.uid == uid
+        && serverStamp('createdAt')
+        && userDoc(uid).status == 'ACTIVE';
+
+      allow update: if false;
+
+      allow delete: if isAdmin() && writerActive() && uid != me();
     }
 
     // ---- Người dùng ----
@@ -569,9 +582,42 @@ service cloud.firestore {
       allow delete: if false;
 
       // Địa chỉ giao nhận: riêng tư.
+      // Địa chỉ giao nhận (security-rules.md mục 2): chỉ chính chủ đọc, ghi và xóa.
+      // Rules không ép "mỗi người một địa chỉ mặc định"; ứng dụng giữ (mục Giới hạn).
       match /addresses/{addressId} {
+        function addressKeys() {
+          return ['userId', 'label', 'receiverName', 'phone', 'province', 'district', 'detail',
+                  'location', 'isDefault', 'createdAt', 'updatedAt'];
+        }
+
+        function addressDataOk(d) {
+          return d.userId == uid
+            && optString(d, 'label', 50)
+            && optString(d, 'receiverName', 100)
+            && optString(d, 'phone', 20)
+            && optString(d, 'province', 100)
+            && optString(d, 'district', 100)
+            && optString(d, 'detail', 300)
+            && (d.get('location', null) == null || d.location is latlng)
+            && (d.get('isDefault', null) == null || d.isDefault is bool);
+        }
+
         allow read: if signedIn() && me() == uid;
-        allow write: if false;
+
+        allow create: if signedIn() && me() == uid
+          && writerActive()
+          && hasOnlyKeys(addressKeys())
+          && addressDataOk(request.resource.data)
+          && createStamps();
+
+        allow update: if signedIn() && me() == uid
+          && writerActive()
+          && request.resource.data.keys().hasOnly(addressKeys())
+          && addressDataOk(request.resource.data)
+          && request.resource.data.get('createdAt', null) == resource.data.get('createdAt', null)
+          && serverStamp('updatedAt');
+
+        allow delete: if signedIn() && me() == uid && writerActive();
       }
 
       // CCCD và định danh (security-rules.md mục 3): chủ tài khoản và admin đọc;
@@ -618,10 +664,20 @@ service cloud.firestore {
         allow delete: if false;
       }
 
-      // Tin đã lưu: riêng tư.
+      // Tin đã lưu (security-rules.md mục 4): riêng tư; chỉ có hoặc không có, nên không ai sửa.
       match /saved/{listingId} {
         allow read: if signedIn() && me() == uid;
-        allow write: if false;
+
+        allow create: if signedIn() && me() == uid
+          && writerActive()
+          && hasOnlyKeys(['userId', 'listingId', 'savedAt'])
+          && request.resource.data.userId == uid
+          && request.resource.data.listingId == listingId
+          && serverStamp('savedAt');
+
+        allow update: if false;
+
+        allow delete: if signedIn() && me() == uid && writerActive();
       }
 
       // Cảnh báo (security-rules.md mục 7): chỉ màn quản trị đọc; admin tạo cùng lô
@@ -653,9 +709,24 @@ service cloud.firestore {
       }
     }
 
+    // Theo dõi (security-rules.md mục 5). Mã cố định followerId_followedId nên mỗi cặp một
+    // tài liệu. Sửa bị từ chối: theo dõi lại khi tài liệu đã có là một lần sửa, ứng dụng phải bỏ qua.
     match /follows/{id} {
       allow read: if signedIn();
-      allow write: if false;
+
+      allow create: if writerActive()
+        && hasOnlyKeys(['id', 'followerId', 'followedId', 'createdAt'])
+        && request.resource.data.followerId == me()
+        && request.resource.data.followedId is string
+        && request.resource.data.followedId.size() > 0
+        && request.resource.data.followedId != me()
+        && id == request.resource.data.followerId + '_' + request.resource.data.followedId
+        && (request.resource.data.get('id', null) == null || request.resource.data.id == id)
+        && serverStamp('createdAt');
+
+      allow update: if false;
+
+      allow delete: if writerActive() && resource.data.followerId == me();
     }
 
     // Yêu cầu xác thực tài khoản (security-rules.md mục 6). Mã tài liệu là mã người gửi,
@@ -1323,23 +1394,169 @@ service cloud.firestore {
 
     // ---- Báo cáo và khiếu nại ----
 
+    // Báo cáo (security-rules.md mục 18). Tạo không sửa tài liệu người bị báo cáo.
+    // Trùng báo cáo đang chờ không ép được (mã ngẫu nhiên); ReportRepository.create kiểm trước.
     match /reports/{id} {
+      function reportKeys() {
+        return ['reporterId', 'targetType', 'targetId', 'reason', 'description', 'status',
+                'evidenceImageIds', 'conversationId', 'handledBy', 'createdAt', 'updatedAt'];
+      }
+
+      function reportReasons() {
+        return ['FAKE_ITEM', 'MISLEADING_INFO', 'SCAM', 'INAPPROPRIATE', 'OTHER'];
+      }
+
       allow read: if signedIn() && (resource.data.reporterId == me() || isAdmin());
-      allow write: if false;
+
+      // conversationId khác rỗng khi và chỉ khi targetType là MESSAGE.
+      allow create: if writerActive()
+        && hasOnlyKeys(reportKeys())
+        && request.resource.data.reporterId == me()
+        && request.resource.data.status == 'OPEN'
+        && request.resource.data.get('handledBy', null) == null
+        && request.resource.data.targetType in ['LISTING', 'USER', 'MESSAGE']
+        && reqString(request.resource.data, 'targetId', 200)
+        && request.resource.data.reason in reportReasons()
+        && optString(request.resource.data, 'description', 1000)
+        && optList(request.resource.data, 'evidenceImageIds', 3)
+        && ((request.resource.data.targetType == 'MESSAGE')
+          == reqString(request.resource.data, 'conversationId', 200))
+        && createStamps();
+
+      // Hủy: người báo cáo, chỉ khi còn OPEN.
+      allow update: if signedIn()
+        && resource.data.reporterId == me()
+        && writerActive()
+        && onlyKeys(['status', 'updatedAt'])
+        && resource.data.status == 'OPEN'
+        && request.resource.data.status == 'CANCELLED'
+        && serverStamp('updatedAt');
+
+      // Xử lý: admin đóng báo cáo OPEN thành RESOLVED hoặc DISMISSED.
+      allow update: if isAdmin()
+        && writerActive()
+        && onlyKeys(['status', 'handledBy', 'updatedAt'])
+        && resource.data.status == 'OPEN'
+        && request.resource.data.status in ['RESOLVED', 'DISMISSED']
+        && request.resource.data.handledBy == me()
+        && serverStamp('updatedAt');
+
+      allow delete: if false;
     }
 
+    // Khiếu nại (security-rules.md mục 19). Mã là dealId nên mỗi giao dịch một khiếu nại;
+    // hệ quả lên deals, payments, listings kiểm ở các khối của chính chúng (mục 14, 16, 10).
     match /complaints/{id} {
+      function complaintKeys() {
+        return ['complainantId', 'dealId', 'reason', 'description', 'evidenceImageIds', 'status',
+                'priority', 'decision', 'evidenceRequest', 'resolutionMessage', 'handledBy',
+                'createdAt', 'updatedAt'];
+      }
+
+      // Chỉ mở trong lúc đếm ngược (SHIPPED, trước autoReleaseAt), hoặc khi gặp trực tiếp đã CONFIRMED.
+      function complaintWindowOpen(d) {
+        return (d.status == 'SHIPPED' && request.time < d.autoReleaseAt)
+          || (d.status == 'CONFIRMED' && d.deliveryMethod == 'MEET_UP');
+      }
+
       allow read: if signedIn() && (
         resource.data.complainantId == me()
         || get(/databases/$(database)/documents/deals/$(id)).data.buyerId == me()
         || get(/databases/$(database)/documents/deals/$(id)).data.sellerId == me()
         || isAdmin());
-      allow write: if false;
 
-      // Ghi chú nội bộ: chỉ admin, kể cả người khiếu nại cũng không đọc được.
+      allow create: if writerActive()
+        && hasOnlyKeys(complaintKeys())
+        && (dealBefore(id).buyerId == me() || dealBefore(id).sellerId == me())
+        && request.resource.data.complainantId == me()
+        && request.resource.data.dealId == id
+        && complaintWindowOpen(dealBefore(id))
+        && dealAfter(id).status == 'DISPUTED'
+        && request.resource.data.reason in ['NOT_AS_DESCRIBED', 'NOT_RECEIVED', 'DAMAGED', 'OTHER']
+        && request.resource.data.status == 'OPEN'
+        && request.resource.data.priority == 'MEDIUM'
+        && request.resource.data.get('decision', null) == null
+        && emptyString(request.resource.data, 'evidenceRequest')
+        && emptyString(request.resource.data, 'resolutionMessage')
+        && request.resource.data.get('handledBy', null) == null
+        && request.resource.data.evidenceImageIds is list
+        && request.resource.data.evidenceImageIds.size() >= 1
+        && request.resource.data.evidenceImageIds.size() <= 5
+        && imageOwnedByMe(request.resource.data.evidenceImageIds[0])
+        && optString(request.resource.data, 'description', 2000)
+        && createStamps();
+
+      // Bổ sung bằng chứng: chỉ thêm ảnh mới vào cuối, ảnh cũ giữ nguyên thứ tự.
+      allow update: if signedIn()
+        && resource.data.complainantId == me()
+        && writerActive()
+        && onlyKeys(['evidenceImageIds', 'status', 'updatedAt'])
+        && resource.data.status == 'NEEDS_EVIDENCE'
+        && request.resource.data.status == 'OPEN'
+        && request.resource.data.evidenceImageIds is list
+        && request.resource.data.evidenceImageIds.size() > resource.data.evidenceImageIds.size()
+        && request.resource.data.evidenceImageIds.size() <= resource.data.evidenceImageIds.size() + 5
+        && request.resource.data.evidenceImageIds[0:resource.data.evidenceImageIds.size()]
+          == resource.data.evidenceImageIds
+        && serverStamp('updatedAt');
+
+      // Rút đơn: giao dịch cùng lô rời DISPUTED; khối deals kiểm nó về đúng trạng thái trước.
+      allow update: if signedIn()
+        && resource.data.complainantId == me()
+        && writerActive()
+        && onlyKeys(['status', 'updatedAt'])
+        && resource.data.status in ['OPEN', 'NEEDS_EVIDENCE']
+        && request.resource.data.status == 'WITHDRAWN'
+        && dealAfter(id).status != 'DISPUTED'
+        && serverStamp('updatedAt');
+
+      // Admin đặt mức ưu tiên.
+      allow update: if isAdmin()
+        && writerActive()
+        && onlyKeys(['priority', 'updatedAt'])
+        && request.resource.data.priority in ['LOW', 'MEDIUM', 'HIGH']
+        && serverStamp('updatedAt');
+
+      // Admin yêu cầu bổ sung bằng chứng.
+      allow update: if isAdmin()
+        && writerActive()
+        && onlyKeys(['status', 'decision', 'evidenceRequest', 'handledBy', 'updatedAt'])
+        && resource.data.status == 'OPEN'
+        && request.resource.data.status == 'NEEDS_EVIDENCE'
+        && request.resource.data.decision == 'REQUEST_EVIDENCE'
+        && reqString(request.resource.data, 'evidenceRequest', 1000)
+        && request.resource.data.handledBy == me()
+        && serverStamp('updatedAt');
+
+      // Admin ra quyết định cuối.
+      allow update: if isAdmin()
+        && writerActive()
+        && onlyKeys(['status', 'decision', 'resolutionMessage', 'handledBy', 'updatedAt'])
+        && resource.data.status in ['OPEN', 'NEEDS_EVIDENCE']
+        && request.resource.data.status == 'RESOLVED'
+        && request.resource.data.decision in ['REFUND', 'RETURN_ITEM', 'CANCEL_DEAL', 'REJECT']
+        && optString(request.resource.data, 'resolutionMessage', 1000)
+        && request.resource.data.handledBy == me()
+        && serverStamp('updatedAt');
+
+      allow delete: if false;
+
+      // Ghi chú nội bộ (security-rules.md mục 20): chỉ admin, kể cả người khiếu nại cũng
+      // không đọc được. Một tài liệu duy nhất complaints/{id}/adminNote/note.
       match /adminNote/{noteId} {
         allow read: if isAdmin();
-        allow write: if false;
+
+        allow create, update: if isAdmin()
+          && writerActive()
+          && noteId == 'note'
+          && request.resource.data.keys().hasOnly(['complaintId', 'text', 'adminId', 'updatedAt'])
+          && request.resource.data.complaintId == id
+          && request.resource.data.adminId == me()
+          && request.resource.data.text is string
+          && request.resource.data.text.size() <= 2000
+          && serverStamp('updatedAt');
+
+        allow delete: if false;
       }
     }
 
@@ -1389,14 +1606,40 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Nhật ký hoạt động (security-rules.md mục 22): chỉ thêm, không ghi hộ người khác.
     match /activityLogs/{id} {
       allow read: if isAdmin();
-      allow write: if false;
+
+      allow create: if writerActive()
+        && hasOnlyKeys(['userId', 'action', 'targetType', 'targetId', 'createdAt'])
+        && request.resource.data.userId == me()
+        && reqString(request.resource.data, 'action', 60)
+        && optString(request.resource.data, 'targetType', 40)
+        && optString(request.resource.data, 'targetId', 200)
+        && serverStamp('createdAt');
+
+      allow update, delete: if false;
     }
 
+    // Từ khóa cấm (security-rules.md mục 23). Muốn đổi thì xóa rồi thêm.
+    // "Đã bỏ dấu, viết thường": chỉ ký tự ASCII in được và không có chữ hoa (FormatUtils.removeAccents).
     match /bannedKeywords/{id} {
       allow read: if signedIn();
-      allow write: if false;
+
+      allow create: if isAdmin()
+        && writerActive()
+        && hasOnlyKeys(['keyword', 'createdBy', 'createdAt', 'updatedAt'])
+        && request.resource.data.createdBy == me()
+        && request.resource.data.keyword is string
+        && request.resource.data.keyword.size() >= 2
+        && request.resource.data.keyword.size() <= 60
+        && request.resource.data.keyword.matches('[ -~]+')
+        && request.resource.data.keyword.lower() == request.resource.data.keyword
+        && createStamps();
+
+      allow update: if false;
+
+      allow delete: if isAdmin() && writerActive();
     }
   }
 }
