@@ -93,6 +93,69 @@ service cloud.firestore {
       return d.get(f, null) == null || (d[f] is number && d[f] >= 0);
     }
 
+    // Chuỗi vắng, null hoặc rỗng (POJO để null thì cũng coi là rỗng).
+    function emptyString(d, f) {
+      return d.get(f, null) == null || d[f] == '';
+    }
+
+    // Chuỗi bắt buộc: khác rỗng và không dài quá max.
+    function reqString(d, f, max) {
+      return d.get(f, null) is string && d[f].size() > 0 && d[f].size() <= max;
+    }
+
+    // Lần tạo: createdAt bằng giờ máy chủ; updatedAt (BaseDocument) vắng hoặc cũng bằng giờ máy chủ.
+    function createStamps() {
+      return serverStamp('createdAt')
+        && (request.resource.data.get('updatedAt', null) == null || serverStamp('updatedAt'));
+    }
+
+    // ---- Đọc tài liệu khác trong cùng lô (security-rules.md, before và after) ----
+
+    function listingBefore(listingId) {
+      return get(/databases/$(database)/documents/listings/$(listingId)).data;
+    }
+
+    function listingAfter(listingId) {
+      return getAfter(/databases/$(database)/documents/listings/$(listingId)).data;
+    }
+
+    function conversationBefore(conversationId) {
+      return get(/databases/$(database)/documents/conversations/$(conversationId)).data;
+    }
+
+    function offerAfter(offerId) {
+      return getAfter(/databases/$(database)/documents/offers/$(offerId)).data;
+    }
+
+    function dealBefore(dealId) {
+      return get(/databases/$(database)/documents/deals/$(dealId)).data;
+    }
+
+    function dealAfter(dealId) {
+      return getAfter(/databases/$(database)/documents/deals/$(dealId)).data;
+    }
+
+    function paymentExists(dealId) {
+      return exists(/databases/$(database)/documents/payments/$(dealId));
+    }
+
+    function paymentBefore(dealId) {
+      return get(/databases/$(database)/documents/payments/$(dealId)).data;
+    }
+
+    function paymentAfter(dealId) {
+      return getAfter(/databases/$(database)/documents/payments/$(dealId)).data;
+    }
+
+    function complaintAfter(dealId) {
+      return getAfter(/databases/$(database)/documents/complaints/$(dealId)).data;
+    }
+
+    // Ảnh phải do chính người ghi tải lên.
+    function imageOwnedByMe(imageId) {
+      return get(/databases/$(database)/documents/images/$(imageId)).data.ownerId == request.auth.uid;
+    }
+
     // Mặc định: từ chối mọi đường dẫn không được nêu ở dưới.
     match /{document=**} {
       allow read, write: if false;
@@ -646,17 +709,92 @@ service cloud.firestore {
 
     // ---- Trò chuyện, offer, giao dịch ----
 
+    // Cuộc trò chuyện (security-rules.md mục 11). Mã tài liệu listingId_buyerId nên mỗi người
+    // mua một cuộc trò chuyện cho một tin; không ai tự nhắn cho mình.
     match /conversations/{id} {
+      function isConversationParty() {
+        return signedIn()
+          && (resource.data.buyerId == me() || resource.data.sellerId == me());
+      }
+
       allow read: if signedIn()
         && (resource.data.buyerId == me() || resource.data.sellerId == me() || isAdmin());
-      allow write: if false;
 
+      // Người mua mở cuộc trò chuyện với tin còn AVAILABLE hoặc RESERVED.
+      allow create: if writerActive()
+        && hasOnlyKeys(['listingId', 'buyerId', 'sellerId', 'lastMessage', 'lastMessageAt',
+                        'createdAt', 'updatedAt'])
+        && request.resource.data.buyerId == me()
+        && request.resource.data.listingId is string
+        && id == request.resource.data.listingId + '_' + me()
+        && request.resource.data.sellerId == listingBefore(request.resource.data.listingId).sellerId
+        && request.resource.data.sellerId != me()
+        && listingBefore(request.resource.data.listingId).status in ['AVAILABLE', 'RESERVED']
+        && optString(request.resource.data, 'lastMessage', 200)
+        && (request.resource.data.get('lastMessageAt', null) == null || serverStamp('lastMessageAt'))
+        && createStamps();
+
+      // Cập nhật bản xem trước tin nhắn cuối.
+      allow update: if isConversationParty()
+        && writerActive()
+        && onlyKeys(['lastMessage', 'lastMessageAt', 'updatedAt'])
+        && request.resource.data.lastMessage is string
+        && request.resource.data.lastMessage.size() <= 200
+        && serverStamp('lastMessageAt')
+        && serverStamp('updatedAt');
+
+      allow delete: if false;
+
+      // Tin nhắn (security-rules.md mục 12): chỉ thêm, không sửa, không xóa. Không có VIDEO (STT 45).
       match /messages/{messageId} {
+        function inConversation() {
+          return signedIn()
+            && (conversationBefore(id).buyerId == me() || conversationBefore(id).sellerId == me());
+        }
+
+        // Phần chung của mọi loại tin nhắn: người gửi là mình và thuộc cuộc trò chuyện.
+        function messageBase() {
+          return writerActive()
+            && inConversation()
+            && hasOnlyKeys(['conversationId', 'senderId', 'type', 'text', 'imageId', 'offerId',
+                            'createdAt', 'updatedAt'])
+            && request.resource.data.conversationId == id
+            && request.resource.data.senderId == me()
+            && createStamps();
+        }
+
         allow read: if signedIn() && (
-          get(/databases/$(database)/documents/conversations/$(id)).data.buyerId == me()
-          || get(/databases/$(database)/documents/conversations/$(id)).data.sellerId == me()
+          conversationBefore(id).buyerId == me()
+          || conversationBefore(id).sellerId == me()
           || isAdmin());
-        allow write: if false;
+
+        // Tin nhắn chữ.
+        allow create: if messageBase()
+          && request.resource.data.type == 'TEXT'
+          && reqString(request.resource.data, 'text', 2000)
+          && emptyString(request.resource.data, 'imageId')
+          && emptyString(request.resource.data, 'offerId');
+
+        // Tin nhắn ảnh: ảnh phải do người gửi tải lên.
+        allow create: if messageBase()
+          && request.resource.data.type == 'IMAGE'
+          && reqString(request.resource.data, 'imageId', 200)
+          && emptyString(request.resource.data, 'offerId')
+          && optString(request.resource.data, 'text', 2000)
+          && imageOwnedByMe(request.resource.data.imageId);
+
+        // Tin nhắn offer: chỉ người mua, đi cùng tài liệu offer PENDING ghi trong cùng lô.
+        allow create: if messageBase()
+          && request.resource.data.type == 'OFFER'
+          && conversationBefore(id).buyerId == me()
+          && reqString(request.resource.data, 'offerId', 200)
+          && emptyString(request.resource.data, 'imageId')
+          && optString(request.resource.data, 'text', 2000)
+          && offerAfter(request.resource.data.offerId).buyerId == me()
+          && offerAfter(request.resource.data.offerId).conversationId == id
+          && offerAfter(request.resource.data.offerId).status == 'PENDING';
+
+        allow update, delete: if false;
       }
     }
 
