@@ -67,7 +67,7 @@ public class ComplaintRepository extends BaseRepository {
     private static final String ERROR_NOT_FOUND = "Không tìm thấy đơn khiếu nại.";
     private static final String ERROR_NOT_NEEDS_EVIDENCE =
             "Đơn khiếu nại này không cần bổ sung bằng chứng.";
-    private static final String ERROR_INVALID_EVIDENCE = "Mỗi lần bổ sung từ 1 đến 5 ảnh.";
+    private static final String ERROR_INVALID_EVIDENCE = "Mỗi lần bổ sung từ 1 đến 5 ảnh, tổng không quá 10 ảnh.";
     private static final String ERROR_INVALID_COMPLAINT =
             "Đơn khiếu nại cần lý do, mô tả không quá 2000 ký tự và từ 1 đến 5 ảnh.";
     private static final String ERROR_DEAL_NOT_FOUND = "Không tìm thấy giao dịch.";

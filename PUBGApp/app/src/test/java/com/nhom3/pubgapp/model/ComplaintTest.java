@@ -63,6 +63,29 @@ public class ComplaintTest {
         assertEquals(ComplaintStatus.OPEN, complaint.getStatus());
     }
 
+    @Test
+    public void addEvidence_upToTenInTotal_isAccepted() {
+        Complaint complaint = complaintWith(ComplaintStatus.NEEDS_EVIDENCE);
+        complaint.setEvidenceImageIds(imageList("old_", 5));
+        complaint.addEvidence(imageList("new_", 5));
+        assertEquals(10, complaint.getEvidenceImageIds().size());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void addEvidence_moreThanTenInTotal_throws() {
+        Complaint complaint = complaintWith(ComplaintStatus.NEEDS_EVIDENCE);
+        complaint.setEvidenceImageIds(imageList("old_", 6));
+        complaint.addEvidence(imageList("new_", 5));
+    }
+
+    private List<String> imageList(String prefix, int count) {
+        List<String> images = new ArrayList<>();
+        for (int index = 0; index < count; index++) {
+            images.add(prefix + index);
+        }
+        return images;
+    }
+
     @Test(expected = IllegalStateException.class)
     public void withdraw_resolved_throws() {
         complaintWith(ComplaintStatus.RESOLVED).withdraw();

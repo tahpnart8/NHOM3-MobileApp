@@ -12,6 +12,8 @@ import java.util.List;
 public class Complaint extends BaseDocument {
     // Images added after an evidence request, per request (firestore-schema.md, complaints).
     private static final int MAX_ADDED_EVIDENCE = 5;
+    // 5 at creation plus at most 5 added; the leader fixed the total at 10 on PR #126.
+    private static final int MAX_TOTAL_EVIDENCE = 10;
 
     private String complainantId;
     private String dealId;
@@ -166,6 +168,9 @@ public class Complaint extends BaseDocument {
             merged.addAll(evidenceImageIds);
         }
         merged.addAll(imageIds);
+        if (merged.size() > MAX_TOTAL_EVIDENCE) {
+            throw new IllegalArgumentException("At most " + MAX_TOTAL_EVIDENCE + " images in total");
+        }
         this.evidenceImageIds = merged;
         this.status = ComplaintStatus.OPEN;
     }
