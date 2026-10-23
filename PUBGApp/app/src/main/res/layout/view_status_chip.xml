@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Status label. Root is the TextView itself.
+    Set text and colours in code from the table in giao-dien.md section 4:
+    setText(label), setTextColor(stateColor), setBackgroundTintList(chipBackground).
+    Defaults below are the neutral look (grey text on surface).
+-->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/textStatusChip"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_status_chip"
+    android:paddingHorizontal="@dimen/space_sm"
+    android:paddingVertical="@dimen/space_xs"
+    android:singleLine="true"
+    android:textAppearance="?attr/textAppearanceBodySmall"
+    android:textColor="?attr/colorOnSurfaceVariant" />

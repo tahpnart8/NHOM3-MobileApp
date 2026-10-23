@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Graph of MainActivity. Rule R22: other modules reach screens through the global actions below only.
+    Arguments are declared on the destinations, so every caller passes a Bundle with the same keys.
+    There is no action_global_tab: the five tabs are destinations of this graph, so a caller navigates to a tab by its id.
+    Screens dropped in ke-hoach-rut-gon.md section 4 have no destination and no action here.
+-->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_main"
+    app:startDestination="@id/homeFragment">
+
+    <!-- Global actions, so-huu.md section 4 -->
+    <action
+        android:id="@+id/action_global_listing_detail"
+        app:destination="@id/listingDetailFragment" />
+    <action
+        android:id="@+id/action_global_chat"
+        app:destination="@id/chatFragment" />
+    <action
+        android:id="@+id/action_global_deal_detail"
+        app:destination="@id/dealDetailFragment" />
+    <action
+        android:id="@+id/action_global_write_review"
+        app:destination="@id/writeReviewFragment" />
+    <action
+        android:id="@+id/action_global_user_profile"
+        app:destination="@id/userProfileFragment" />
+    <action
+        android:id="@+id/action_global_seller_trust"
+        app:destination="@id/sellerTrustFragment" />
+    <action
+        android:id="@+id/action_global_report"
+        app:destination="@id/reportFragment" />
+    <action
+        android:id="@+id/action_global_my_shop"
+        app:destination="@id/myShopFragment" />
+    <action
+        android:id="@+id/action_global_saved_listings"
+        app:destination="@id/savedListingsFragment" />
+    <action
+        android:id="@+id/action_global_edit_profile"
+        app:destination="@id/editProfileFragment" />
+    <action
+        android:id="@+id/action_global_notifications"
+        app:destination="@id/notificationListFragment" />
+    <action
+        android:id="@+id/action_global_sign_in"
+        app:destination="@id/authActivity" />
+    <action
+        android:id="@+id/action_global_my_profile"
+        app:destination="@id/myProfileFragment" />
+    <action
+        android:id="@+id/action_global_deal_payment"
+        app:destination="@id/dealPaymentFragment" />
+    <action
+        android:id="@+id/action_global_make_offer"
+        app:destination="@id/makeOfferFragment" />
+
+    <!-- Five bottom bar tabs; the ids match menu_bottom_nav.xml -->
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.nhom3.pubgapp.ui.listing.HomeFragment" />
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.nhom3.pubgapp.ui.listing.SearchFragment" />
+    <fragment
+        android:id="@+id/postListingFragment"
+        android:name="com.nhom3.pubgapp.ui.listing.PostListingFragment" />
+    <fragment
+        android:id="@+id/conversationListFragment"
+        android:name="com.nhom3.pubgapp.ui.trade.ConversationListFragment" />
+    <fragment
+        android:id="@+id/myProfileFragment"
+        android:name="com.nhom3.pubgapp.ui.profile.MyProfileFragment" />
+
+    <!-- Module B: listings -->
+    <fragment
+        android:id="@+id/listingDetailFragment"
+        android:name="com.nhom3.pubgapp.ui.listing.ListingDetailFragment">
+        <argument
+            android:name="listingId"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/myShopFragment"
+        android:name="com.nhom3.pubgapp.ui.listing.MyShopFragment" />
+    <fragment
+        android:id="@+id/savedListingsFragment"
+        android:name="com.nhom3.pubgapp.ui.listing.SavedListingsFragment" />
+
+    <!-- Module C: chat and deals. conversationId is empty when the buyer opens a chat for the first time. -->
+    <fragment
+        android:id="@+id/chatFragment"
+        android:name="com.nhom3.pubgapp.ui.trade.ChatFragment">
+        <argument
+            android:name="listingId"
+            app:argType="string" />
+        <argument
+            android:name="conversationId"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+    <dialog
+        android:id="@+id/makeOfferFragment"
+        android:name="com.nhom3.pubgapp.ui.trade.MakeOfferFragment">
+        <argument
+            android:name="listingId"
+            app:argType="string" />
+    </dialog>
+    <fragment
+        android:id="@+id/dealDetailFragment"
+        android:name="com.nhom3.pubgapp.ui.trade.DealDetailFragment">
+        <argument
+            android:name="dealId"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/writeReviewFragment"
+        android:name="com.nhom3.pubgapp.ui.trade.WriteReviewFragment">
+        <argument
+            android:name="dealId"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/dealPaymentFragment"
+        android:name="com.nhom3.pubgapp.ui.trade.DealPaymentFragment">
+        <argument
+            android:name="dealId"
+            app:argType="string" />
+    </fragment>
+
+    <!-- Module A: notifications -->
+    <fragment
+        android:id="@+id/notificationListFragment"
+        android:name="com.nhom3.pubgapp.ui.notification.NotificationListFragment" />
+
+    <!-- Module D: profile and trust. conversationId is used only when targetType is MESSAGE. -->
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.nhom3.pubgapp.ui.profile.EditProfileFragment" />
+    <fragment
+        android:id="@+id/userProfileFragment"
+        android:name="com.nhom3.pubgapp.ui.profile.UserProfileFragment">
+        <argument
+            android:name="userId"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/sellerTrustFragment"
+        android:name="com.nhom3.pubgapp.ui.trust.SellerTrustFragment">
+        <argument
+            android:name="userId"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/reportFragment"
+        android:name="com.nhom3.pubgapp.ui.trust.ReportFragment">
+        <argument
+            android:name="targetType"
+            app:argType="string" />
+        <argument
+            android:name="targetId"
+            app:argType="string" />
+        <argument
+            android:name="conversationId"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+
+    <!-- A01 lives in AuthActivity, so signing in leaves this graph. -->
+    <activity
+        android:id="@+id/authActivity"
+        android:name="com.nhom3.pubgapp.ui.account.AuthActivity" />
+</navigation>

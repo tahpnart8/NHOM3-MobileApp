@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- E01 dashboard is the root; E02 and E03 are users, E04 and the listing detail are moderation. -->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_admin"
+    app:startDestination="@id/adminDashboardFragment">
+
+    <fragment
+        android:id="@+id/adminDashboardFragment"
+        android:name="com.nhom3.pubgapp.ui.admin.AdminDashboardFragment">
+        <action
+            android:id="@+id/action_admin_dashboard_to_user_list"
+            app:destination="@id/adminUserListFragment" />
+        <action
+            android:id="@+id/action_admin_dashboard_to_moderation"
+            app:destination="@id/adminModerationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminUserListFragment"
+        android:name="com.nhom3.pubgapp.ui.admin.AdminUserListFragment">
+        <action
+            android:id="@+id/action_admin_user_list_to_user_detail"
+            app:destination="@id/adminUserDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminUserDetailFragment"
+        android:name="com.nhom3.pubgapp.ui.admin.AdminUserDetailFragment">
+        <argument
+            android:name="userId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminModerationFragment"
+        android:name="com.nhom3.pubgapp.ui.admin.AdminModerationFragment">
+        <action
+            android:id="@+id/action_admin_moderation_to_listing_detail"
+            app:destination="@id/adminListingDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminListingDetailFragment"
+        android:name="com.nhom3.pubgapp.ui.admin.AdminListingDetailFragment">
+        <argument
+            android:name="listingId"
+            app:argType="string" />
+    </fragment>
+</navigation>

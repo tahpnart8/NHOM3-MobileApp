@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="account_login_title">A01 Đăng nhập</string>
+    <string name="account_register_title">A02 Đăng ký</string>
+    <string name="account_forgot_password_title">A03 Quên mật khẩu</string>
+    <string name="account_notification_title">C06 Thông báo</string>
+</resources>

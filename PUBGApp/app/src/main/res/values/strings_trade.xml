@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="trade_conversation_list_title">C01 Danh sách tin nhắn</string>
+    <string name="trade_chat_title">C02 Trò chuyện và đề nghị giá</string>
+    <string name="trade_make_offer_title">C02 Gửi đề nghị giá</string>
+    <string name="trade_deal_detail_title">C03 Chi tiết giao dịch</string>
+    <string name="trade_write_review_title">C05 Viết đánh giá</string>
+    <string name="trade_deal_payment_title">C07 Thanh toán giao dịch</string>
+</resources>
