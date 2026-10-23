@@ -1445,7 +1445,8 @@ service cloud.firestore {
 
       allow read: if signedIn() && (resource.data.reporterId == me() || isAdmin());
 
-      // conversationId khác rỗng khi và chỉ khi targetType là MESSAGE.
+      // conversationId khác rỗng khi và chỉ khi targetType là MESSAGE. Ảnh bằng chứng đầu phải của
+      // người báo cáo, giống complaints.
       allow create: if writerActive()
         && hasOnlyKeys(reportKeys())
         && request.resource.data.reporterId == me()
@@ -1456,6 +1457,8 @@ service cloud.firestore {
         && request.resource.data.reason in reportReasons()
         && optString(request.resource.data, 'description', 1000)
         && optList(request.resource.data, 'evidenceImageIds', 3)
+        && (request.resource.data.get('evidenceImageIds', []).size() == 0
+          || imageOwnedByMe(request.resource.data.evidenceImageIds[0]))
         && ((request.resource.data.targetType == 'MESSAGE')
           == reqString(request.resource.data, 'conversationId', 200))
         && createStamps();
