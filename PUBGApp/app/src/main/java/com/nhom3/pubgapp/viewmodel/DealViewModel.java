@@ -5,11 +5,16 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.DealRepository;
+import com.nhom3.pubgapp.data.MediaRepository;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Payment;
 import com.nhom3.pubgapp.model.Review;
+import com.nhom3.pubgapp.model.enums.DealStatus;
+import com.nhom3.pubgapp.model.enums.DeliveryMethod;
+import com.nhom3.pubgapp.model.enums.ImagePurpose;
 import com.nhom3.pubgapp.model.enums.PaymentMethod;
 
 import java.util.List;
@@ -18,6 +23,7 @@ import java.util.List;
 public class DealViewModel extends ViewModel {
 
     private final DealRepository dealRepository;
+    private final MediaRepository mediaRepository;
 
     private final MutableLiveData<Deal> deal = new MutableLiveData<>();
     private final MutableLiveData<List<Deal>> deals = new MutableLiveData<>();
@@ -29,11 +35,16 @@ public class DealViewModel extends ViewModel {
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
 
     public DealViewModel() {
-        this(new DealRepository());
+        this(new DealRepository(), new MediaRepository());
     }
 
     DealViewModel(DealRepository dealRepository) {
+        this(dealRepository, new MediaRepository());
+    }
+
+    DealViewModel(DealRepository dealRepository, MediaRepository mediaRepository) {
         this.dealRepository = dealRepository;
+        this.mediaRepository = mediaRepository;
     }
 
     public LiveData<Deal> getDeal() {
@@ -179,12 +190,191 @@ public class DealViewModel extends ViewModel {
         error.setValue(DataCallback.NOT_READY);
     }
 
-    public void markShipped(String carrier, String trackingCode, Uri photoUri) {
-        error.setValue(DataCallback.NOT_READY);
+    static String formatRemainingTime(Timestamp autoReleaseAt, Timestamp now) {
+        if (autoReleaseAt == null || now == null) {
+            return "";
+        }
+        long diffMillis = autoReleaseAt.toDate().getTime() - now.toDate().getTime();
+        if (diffMillis <= 0) {
+            return "Đã hết đếm ngược, hệ thống sẽ tự chuyển sang Đã nhận";
+        }
+        if (diffMillis < 24L * 60 * 60 * 1000) {
+            long hours = diffMillis / (60L * 60 * 1000);
+            long minutes = (diffMillis % (60L * 60 * 1000)) / (60L * 1000);
+            return "Còn " + hours + " giờ " + minutes + " phút để xác nhận";
+        }
+        long days = diffMillis / (24L * 60 * 60 * 1000);
+        return "Còn " + days + " ngày để xác nhận";
+    }
+
+    static boolean canMarkShipped(Deal deal, Payment payment, String currentUid,
+                                  boolean isSellerVerified) {
+        if (deal == null || currentUid == null || !currentUid.equals(deal.getSellerId())) {
+            return false;
+        }
+        if (deal.getStatus() != DealStatus.CONFIRMED) {
+            return false;
+        }
+        if (deal.getDeliveryMethod() != DeliveryMethod.SHIPPING) {
+            return false;
+        }
+        if (!isSellerVerified) {
+            return false;
+        }
+        if (deal.needsPayment()) {
+            return payment != null && payment.isHeld();
+        }
+        return true;
+    }
+
+    static boolean canMarkReceived(Deal deal, Payment payment, String currentUid,
+                                   boolean isBuyerVerified) {
+        if (deal == null || currentUid == null || !currentUid.equals(deal.getBuyerId())) {
+            return false;
+        }
+        if (!isBuyerVerified) {
+            return false;
+        }
+        if (deal.getDeliveryMethod() == DeliveryMethod.SHIPPING) {
+            if (deal.getStatus() != DealStatus.SHIPPED) {
+                return false;
+            }
+        } else if (deal.getDeliveryMethod() == DeliveryMethod.MEET_UP) {
+            if (deal.getStatus() != DealStatus.CONFIRMED && deal.getStatus() != DealStatus.SHIPPED) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+        if (deal.needsPayment()) {
+            return payment != null && payment.isHeld();
+        }
+        return true;
+    }
+
+    static boolean canComplain(Deal deal, String currentUid, Timestamp now) {
+        if (deal == null || currentUid == null) {
+            return false;
+        }
+        boolean isBuyer = currentUid.equals(deal.getBuyerId());
+        boolean isSeller = currentUid.equals(deal.getSellerId());
+        if (!isBuyer && !isSeller) {
+            return false;
+        }
+        if (deal.getStatus() == DealStatus.SHIPPED) {
+            return deal.getAutoReleaseAt() != null && now != null
+                    && now.compareTo(deal.getAutoReleaseAt()) < 0;
+        }
+        if (deal.getStatus() == DealStatus.CONFIRMED
+                && deal.getDeliveryMethod() == DeliveryMethod.MEET_UP) {
+            return isBuyer;
+        }
+        return false;
+    }
+
+    public void markShipped(final String carrier, final String trackingCode, Uri photoUri) {
+        final Deal currentDeal = deal.getValue();
+        if (currentDeal == null) {
+            error.setValue("Không tìm thấy thông tin giao dịch.");
+            return;
+        }
+        if (carrier == null || carrier.trim().isEmpty()
+                || trackingCode == null || trackingCode.trim().isEmpty()
+                || photoUri == null) {
+            error.setValue("Vui lòng nhập đầy đủ thông tin vận đơn và chọn ảnh.");
+            return;
+        }
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+
+        loading.setValue(true);
+        mediaRepository.saveImage(photoUri, ImagePurpose.WAYBILL, new DataCallback<String>() {
+            @Override
+            public void onSuccess(final String imageId) {
+                dealRepository.markShipped(currentDeal.getId(), carrier.trim(),
+                        trackingCode.trim(), imageId, new DataCallback<Void>() {
+                            @Override
+                            public void onSuccess(Void unused) {
+                                loadDeal(currentDeal.getId());
+                                done.setValue(true);
+                                loading.setValue(false);
+                            }
+
+                            @Override
+                            public void onError(String message) {
+                                mediaRepository.delete(imageId, new DataCallback<Void>() {
+                                    @Override
+                                    public void onSuccess(Void ignored) {
+                                    }
+
+                                    @Override
+                                    public void onError(String ignored) {
+                                    }
+                                });
+                                loading.setValue(false);
+                                error.setValue(message);
+                            }
+                        });
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.setValue(false);
+                error.setValue("Lỗi tải ảnh vận đơn: " + message);
+            }
+        });
     }
 
     public void markReceived(Uri photoUri) {
-        error.setValue(DataCallback.NOT_READY);
+        final Deal currentDeal = deal.getValue();
+        if (currentDeal == null) {
+            error.setValue("Không tìm thấy thông tin giao dịch.");
+            return;
+        }
+        if (photoUri == null) {
+            error.setValue("Vui lòng chụp hoặc chọn ảnh món đồ đã nhận.");
+            return;
+        }
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+
+        loading.setValue(true);
+        mediaRepository.saveImage(photoUri, ImagePurpose.RECEIVED, new DataCallback<String>() {
+            @Override
+            public void onSuccess(final String imageId) {
+                dealRepository.markReceived(currentDeal.getId(), imageId, new DataCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        loadDeal(currentDeal.getId());
+                        done.setValue(true);
+                        loading.setValue(false);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        mediaRepository.delete(imageId, new DataCallback<Void>() {
+                            @Override
+                            public void onSuccess(Void ignored) {
+                            }
+
+                            @Override
+                            public void onError(String ignored) {
+                            }
+                        });
+                        loading.setValue(false);
+                        error.setValue(message);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.setValue(false);
+                error.setValue("Lỗi tải ảnh nhận hàng: " + message);
+            }
+        });
     }
 
     public void checkAutoRelease() {
