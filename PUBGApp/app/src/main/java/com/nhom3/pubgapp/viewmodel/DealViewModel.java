@@ -150,7 +150,29 @@ public class DealViewModel extends ViewModel {
     }
 
     public void pay(PaymentMethod method) {
-        error.setValue(DataCallback.NOT_READY);
+        Deal current = deal.getValue();
+        if (current == null) {
+            error.setValue("Không tìm thấy giao dịch để thanh toán.");
+            return;
+        }
+        loading.setValue(true);
+        dealRepository.pay(current.getId(), method, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.setValue(false);
+                done.setValue(true);
+                loadDeal(current.getId());
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.setValue(false);
+                error.setValue(message);
+                if (message != null && message.contains("đã được thanh toán")) {
+                    loadDeal(current.getId());
+                }
+            }
+        });
     }
 
     public void loadMyReview() {
@@ -265,6 +287,23 @@ public class DealViewModel extends ViewModel {
         boolean allowedStatus = deal.getStatus() == com.nhom3.pubgapp.model.enums.DealStatus.PENDING_CONFIRM
                 || deal.getStatus() == com.nhom3.pubgapp.model.enums.DealStatus.CONFIRMED;
         return allowedStatus && deal.canMoveTo(com.nhom3.pubgapp.model.enums.DealStatus.CANCELLED);
+    }
+
+    static boolean canPay(Deal deal, Payment payment, String userId,
+                          boolean isVerified, boolean isOnline) {
+        if (deal == null || !isOnline || !isVerified) {
+            return false;
+        }
+        if (deal.getStatus() != com.nhom3.pubgapp.model.enums.DealStatus.CONFIRMED) {
+            return false;
+        }
+        if (!deal.needsPayment()) {
+            return false;
+        }
+        if (payment != null && payment.isHeld()) {
+            return false;
+        }
+        return userId != null && userId.equals(deal.getBuyerId());
     }
 
     static boolean isPaymentInfoVisible(Deal deal) {
