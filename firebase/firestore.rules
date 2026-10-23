@@ -1395,9 +1395,54 @@ service cloud.firestore {
 
     // ---- Báo cáo và khiếu nại ----
 
+    // Báo cáo (security-rules.md mục 18). Tạo không sửa tài liệu người bị báo cáo.
+    // Trùng báo cáo đang chờ không ép được (mã ngẫu nhiên); ReportRepository.create kiểm trước.
     match /reports/{id} {
+      function reportKeys() {
+        return ['reporterId', 'targetType', 'targetId', 'reason', 'description', 'status',
+                'evidenceImageIds', 'conversationId', 'handledBy', 'createdAt', 'updatedAt'];
+      }
+
+      function reportReasons() {
+        return ['FAKE_ITEM', 'MISLEADING_INFO', 'SCAM', 'INAPPROPRIATE', 'OTHER'];
+      }
+
       allow read: if signedIn() && (resource.data.reporterId == me() || isAdmin());
-      allow write: if false;
+
+      // conversationId khác rỗng khi và chỉ khi targetType là MESSAGE.
+      allow create: if writerActive()
+        && hasOnlyKeys(reportKeys())
+        && request.resource.data.reporterId == me()
+        && request.resource.data.status == 'OPEN'
+        && request.resource.data.get('handledBy', null) == null
+        && request.resource.data.targetType in ['LISTING', 'USER', 'MESSAGE']
+        && reqString(request.resource.data, 'targetId', 200)
+        && request.resource.data.reason in reportReasons()
+        && optString(request.resource.data, 'description', 1000)
+        && optList(request.resource.data, 'evidenceImageIds', 3)
+        && ((request.resource.data.targetType == 'MESSAGE')
+          == reqString(request.resource.data, 'conversationId', 200))
+        && createStamps();
+
+      // Hủy: người báo cáo, chỉ khi còn OPEN.
+      allow update: if signedIn()
+        && resource.data.reporterId == me()
+        && writerActive()
+        && onlyKeys(['status', 'updatedAt'])
+        && resource.data.status == 'OPEN'
+        && request.resource.data.status == 'CANCELLED'
+        && serverStamp('updatedAt');
+
+      // Xử lý: admin đóng báo cáo OPEN thành RESOLVED hoặc DISMISSED.
+      allow update: if isAdmin()
+        && writerActive()
+        && onlyKeys(['status', 'handledBy', 'updatedAt'])
+        && resource.data.status == 'OPEN'
+        && request.resource.data.status in ['RESOLVED', 'DISMISSED']
+        && request.resource.data.handledBy == me()
+        && serverStamp('updatedAt');
+
+      allow delete: if false;
     }
 
     match /complaints/{id} {
