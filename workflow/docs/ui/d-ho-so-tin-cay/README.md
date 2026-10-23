@@ -90,6 +90,9 @@
 - Ảnh vẽ tab "Đánh giá" chỉ có đánh giá nhận được; còn danh sách "Đã gửi" (STT 60).
 - Ảnh vẽ thanh dưới 5 mục; ở đây thanh dưới không hiện.
 - Ảnh vẽ nút cài đặt không rõ đích; đích là A04.
+- **Số liệu giao dịch bị ẩn khi xem trang của người khác.** `UserRepository.getStats` truy vấn `deals` theo `sellerId` và `buyerId`, mà luật đọc `deals` chỉ cho người mua, người bán hoặc admin. Nên số tin đã bán, tỉ lệ hoàn tất và số người theo dõi chỉ hiện trên trang của chính mình; ở trang người khác thì ẩn hẳn các ô đó thay vì hiện dấu gạch kèm nút Thử lại vô ích. Điểm đánh giá vẫn hiện, vì `ratingSum` và `ratingCount` nằm thẳng trong `users`. Cách đúng về lâu dài là đưa bộ đếm vào `users`, nhưng việc đó cần mở thêm nhánh Rules nên để sau đợt này.
+- **Tên người đánh giá hiện "Người dùng" cho mọi dòng.** Đọc tên thật cần một lần đọc `users/{reviewerId}` cho mỗi dòng. Để nguyên ở đợt này.
+- **Tự báo cáo tin đăng của chính mình không bị chặn.** UC33 viết chung cho cả tin đăng, nhưng ứng dụng chỉ chặn với mục tiêu USER. Chặn với LISTING cần đọc `sellerId` và có thể phải đổi tham số điều hướng, mà thiệt hại bằng không: admin bỏ qua báo cáo đó.
 
 ## D03. Hồ sơ uy tín người bán
 
