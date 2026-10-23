@@ -35,7 +35,10 @@ public class ListingDetailViewModel extends ViewModel {
     }
 
     public static boolean canStartChat(Listing listing, String viewerId) {
-        if (listing == null || viewerId == null || viewerId.equals(listing.getSellerId())) {
+        if (listing == null) {
+            return false;
+        }
+        if (viewerId != null && viewerId.equals(listing.getSellerId())) {
             return false;
         }
         ListingStatus status = listing.getStatus();
@@ -43,7 +46,10 @@ public class ListingDetailViewModel extends ViewModel {
     }
 
     public static boolean canSendOffer(Listing listing, String viewerId) {
-        if (listing == null || viewerId == null || viewerId.equals(listing.getSellerId())) {
+        if (listing == null) {
+            return false;
+        }
+        if (viewerId != null && viewerId.equals(listing.getSellerId())) {
             return false;
         }
         return listing.getStatus() == ListingStatus.AVAILABLE;
@@ -118,8 +124,8 @@ public class ListingDetailViewModel extends ViewModel {
         listingRepository.getById(listingId, new DataCallback<Listing>() {
             @Override
             public void onSuccess(final Listing result) {
-                loading.setValue(false);
-                listing.setValue(result);
+                loading.postValue(false);
+                listing.postValue(result);
                 if (result != null) {
                     listingRepository.recordView(result);
                     if (SessionManager.getInstance().isLoggedIn()) {
@@ -128,7 +134,7 @@ public class ListingDetailViewModel extends ViewModel {
                             userRepository.getProfile(result.getSellerId(), new DataCallback<User>() {
                                 @Override
                                 public void onSuccess(User sellerUser) {
-                                    seller.setValue(sellerUser);
+                                    seller.postValue(sellerUser);
                                 }
 
                                 @Override
@@ -142,30 +148,30 @@ public class ListingDetailViewModel extends ViewModel {
                                 @Override
                                 public void onSuccess(List<String> savedIds) {
                                     if (savedIds != null && savedIds.contains(result.getId())) {
-                                        saved.setValue(true);
+                                        saved.postValue(true);
                                     } else {
-                                        saved.setValue(false);
+                                        saved.postValue(false);
                                     }
                                 }
 
                                 @Override
                                 public void onError(String errorMessage) {
-                                    saved.setValue(false);
+                                    saved.postValue(false);
                                 }
                             });
                         }
                     } else {
-                        seller.setValue(null);
-                        saved.setValue(false);
+                        seller.postValue(null);
+                        saved.postValue(false);
                     }
                 }
             }
 
             @Override
             public void onError(String errorMessage) {
-                loading.setValue(false);
-                listing.setValue(null);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                listing.postValue(null);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -195,7 +201,7 @@ public class ListingDetailViewModel extends ViewModel {
                                 result.add(loaded[j]);
                             }
                         }
-                        images.setValue(result);
+                        images.postValue(result);
                     }
                 }
 
@@ -209,7 +215,7 @@ public class ListingDetailViewModel extends ViewModel {
                                 result.add(loaded[j]);
                             }
                         }
-                        images.setValue(result);
+                        images.postValue(result);
                     }
                 }
             });
@@ -237,26 +243,26 @@ public class ListingDetailViewModel extends ViewModel {
             userRepository.saveListing(uid, current.getId(), new DataCallback<Void>() {
                 @Override
                 public void onSuccess(Void result) {
-                    done.setValue(true);
+                    done.postValue(true);
                 }
 
                 @Override
                 public void onError(String errorMessage) {
-                    saved.setValue(currentSaved);
-                    error.setValue(errorMessage);
+                    saved.postValue(currentSaved);
+                    error.postValue(errorMessage);
                 }
             });
         } else {
             userRepository.unsaveListing(uid, current.getId(), new DataCallback<Void>() {
                 @Override
                 public void onSuccess(Void result) {
-                    done.setValue(true);
+                    done.postValue(true);
                 }
 
                 @Override
                 public void onError(String errorMessage) {
-                    saved.setValue(currentSaved);
-                    error.setValue(errorMessage);
+                    saved.postValue(currentSaved);
+                    error.postValue(errorMessage);
                 }
             });
         }

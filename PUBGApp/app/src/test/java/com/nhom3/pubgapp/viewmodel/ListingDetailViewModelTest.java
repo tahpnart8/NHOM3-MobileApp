@@ -57,14 +57,16 @@ public class ListingDetailViewModelTest {
     public void testCanStartChat() {
         Listing available = createListingWithStatus(ListingStatus.AVAILABLE, "seller-1");
         assertFalse(ListingDetailViewModel.canStartChat(null, "buyer-1"));
-        assertFalse(ListingDetailViewModel.canStartChat(available, null));
+        assertTrue(ListingDetailViewModel.canStartChat(available, null));
         assertFalse(ListingDetailViewModel.canStartChat(available, "seller-1"));
         assertTrue(ListingDetailViewModel.canStartChat(available, "buyer-1"));
 
         Listing reserved = createListingWithStatus(ListingStatus.RESERVED, "seller-1");
+        assertTrue(ListingDetailViewModel.canStartChat(reserved, null));
         assertTrue(ListingDetailViewModel.canStartChat(reserved, "buyer-1"));
 
         Listing sold = createListingWithStatus(ListingStatus.SOLD, "seller-1");
+        assertFalse(ListingDetailViewModel.canStartChat(sold, null));
         assertFalse(ListingDetailViewModel.canStartChat(sold, "buyer-1"));
 
         Listing hidden = createListingWithStatus(ListingStatus.HIDDEN, "seller-1");
@@ -75,14 +77,16 @@ public class ListingDetailViewModelTest {
     public void testCanSendOffer() {
         Listing available = createListingWithStatus(ListingStatus.AVAILABLE, "seller-1");
         assertFalse(ListingDetailViewModel.canSendOffer(null, "buyer-1"));
-        assertFalse(ListingDetailViewModel.canSendOffer(available, null));
+        assertTrue(ListingDetailViewModel.canSendOffer(available, null));
         assertFalse(ListingDetailViewModel.canSendOffer(available, "seller-1"));
         assertTrue(ListingDetailViewModel.canSendOffer(available, "buyer-1"));
 
         Listing reserved = createListingWithStatus(ListingStatus.RESERVED, "seller-1");
+        assertFalse(ListingDetailViewModel.canSendOffer(reserved, null));
         assertFalse(ListingDetailViewModel.canSendOffer(reserved, "buyer-1"));
 
         Listing sold = createListingWithStatus(ListingStatus.SOLD, "seller-1");
+        assertFalse(ListingDetailViewModel.canSendOffer(sold, null));
         assertFalse(ListingDetailViewModel.canSendOffer(sold, "buyer-1"));
     }
 }
