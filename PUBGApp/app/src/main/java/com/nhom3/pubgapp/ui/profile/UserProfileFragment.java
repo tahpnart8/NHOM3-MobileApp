@@ -13,21 +13,26 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentUserProfileBinding;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.ProfileStats;
+import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
 import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.ui.common.StatusChips;
+import com.nhom3.pubgapp.ui.trust.ReviewAdapter;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.ProfileViewModel;
+import com.nhom3.pubgapp.viewmodel.TrustViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -41,6 +46,7 @@ public class UserProfileFragment extends Fragment {
     private static final String ARG_TARGET_ID = "targetId";
     private static final String STATE_TAB = "selectedTab";
     private static final String STATE_LISTINGS_FAILED = "listingsFailed";
+    private static final String STATE_SHOWING_RECEIVED = "showingReceived";
     private static final String JOINED_PATTERN = "MM/yyyy";
     private static final int GRID_COLUMNS = 2;
     private static final int TAB_SELLING = 0;
@@ -50,12 +56,15 @@ public class UserProfileFragment extends Fragment {
 
     private FragmentUserProfileBinding binding;
     private ProfileViewModel profileViewModel;
+    private TrustViewModel trustViewModel;
     private ProfileListingAdapter listingAdapter;
+    private ReviewAdapter reviewAdapter;
     private String userId;
     private boolean ownPage;
     // Tab and the listing failure flag survive rotation through onSaveInstanceState.
     private int selectedTab = TAB_SELLING;
     private boolean listingsFailed;
+    private boolean showingReceived = true;
     private boolean leaving;
 
     @Override
@@ -64,6 +73,7 @@ public class UserProfileFragment extends Fragment {
         if (savedInstanceState != null) {
             selectedTab = savedInstanceState.getInt(STATE_TAB, TAB_SELLING);
             listingsFailed = savedInstanceState.getBoolean(STATE_LISTINGS_FAILED);
+            showingReceived = savedInstanceState.getBoolean(STATE_SHOWING_RECEIVED, true);
         }
     }
 
@@ -72,6 +82,7 @@ public class UserProfileFragment extends Fragment {
         super.onSaveInstanceState(outState);
         outState.putInt(STATE_TAB, selectedTab);
         outState.putBoolean(STATE_LISTINGS_FAILED, listingsFailed);
+        outState.putBoolean(STATE_SHOWING_RECEIVED, showingReceived);
     }
 
     @Nullable
@@ -94,11 +105,14 @@ public class UserProfileFragment extends Fragment {
         ownPage = userId != null && userId.equals(currentUid);
         // Fragment scope: D01 keeps its own profile in the Activity-scoped ViewModel.
         profileViewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+        trustViewModel = new ViewModelProvider(this).get(TrustViewModel.class);
         setUpToolbar();
         setUpListings();
+        setUpReviews();
         setUpTabs();
         setUpButtons();
         observeProfile();
+        observeReviews();
         profileViewModel.loadProfile(userId);
         profileViewModel.loadUserListings(userId);
     }
@@ -149,6 +163,93 @@ public class UserProfileFragment extends Fragment {
                 showTabContent();
             }
         });
+    }
+
+    // The given list is only on the own page; someone else's page shows only the received reviews.
+    private void setUpReviews() {
+        if (!ownPage) {
+            showingReceived = true;
+        }
+        reviewAdapter = new ReviewAdapter();
+        binding.recyclerReviews.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerReviews.setAdapter(reviewAdapter);
+        binding.toggleReviewList.setVisibility(ownPage ? View.VISIBLE : View.GONE);
+        int checkedId = showingReceived ? R.id.buttonReviewsReceived : R.id.buttonReviewsGiven;
+        binding.toggleReviewList.check(checkedId);
+        binding.toggleReviewList.addOnButtonCheckedListener(new MaterialButtonToggleGroup.OnButtonCheckedListener() {
+            @Override
+            public void onButtonChecked(MaterialButtonToggleGroup group, int buttonId, boolean isChecked) {
+                if (!isChecked) {
+                    return;
+                }
+                showingReceived = buttonId == R.id.buttonReviewsReceived;
+                trustViewModel.loadReviews(userId, showingReceived);
+            }
+        });
+        binding.includeReviewsEmpty.buttonEmptyAction.setText(R.string.common_retry);
+        binding.includeReviewsEmpty.buttonEmptyAction.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View clicked) {
+                trustViewModel.loadReviews(userId, showingReceived);
+            }
+        });
+    }
+
+    private void observeReviews() {
+        trustViewModel.getReviews().observe(getViewLifecycleOwner(), new Observer<List<Review>>() {
+            @Override
+            public void onChanged(List<Review> reviews) {
+                showReviews();
+            }
+        });
+        trustViewModel.getLoading().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean loading) {
+                showReviews();
+            }
+        });
+        trustViewModel.getError().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String message) {
+                if (message == null || message.isEmpty()) {
+                    return;
+                }
+                Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_LONG).show();
+                trustViewModel.clearError();
+            }
+        });
+    }
+
+    private void showReviews() {
+        if (selectedTab != TAB_REVIEWS) {
+            return;
+        }
+        List<Review> reviews = trustViewModel.getReviews().getValue();
+        boolean loading = Boolean.TRUE.equals(trustViewModel.getLoading().getValue());
+        binding.progressReviews.setVisibility(loading ? View.VISIBLE : View.GONE);
+        reviewAdapter.submitList(reviews);
+        boolean empty = reviews == null || reviews.isEmpty();
+        binding.recyclerReviews.setVisibility(empty ? View.GONE : View.VISIBLE);
+        if (loading || !empty) {
+            binding.includeReviewsEmpty.getRoot().setVisibility(View.GONE);
+            return;
+        }
+        showReviewsEmpty(reviews == null);
+    }
+
+    // Nothing loading and no list means the read failed, so the empty view offers Retry.
+    private void showReviewsEmpty(boolean failed) {
+        binding.includeReviewsEmpty.buttonEmptyAction.setVisibility(failed ? View.VISIBLE : View.GONE);
+        if (failed) {
+            binding.includeReviewsEmpty.textEmptyTitle.setText(R.string.profile_user_profile_reviews_failed_title);
+            binding.includeReviewsEmpty.textEmptyMessage.setText(R.string.common_error_generic);
+        } else {
+            int messageId = showingReceived ? R.string.profile_user_profile_reviews_empty_received
+                    : R.string.profile_user_profile_reviews_empty_given;
+            binding.includeReviewsEmpty.textEmptyTitle.setText(R.string.profile_user_profile_reviews_empty_title);
+            binding.includeReviewsEmpty.textEmptyMessage.setText(messageId);
+        }
+        binding.includeReviewsEmpty.getRoot().setVisibility(View.VISIBLE);
     }
 
     private void setUpTabs() {
@@ -473,6 +574,9 @@ public class UserProfileFragment extends Fragment {
             binding.recyclerListings.setVisibility(View.GONE);
             binding.progressListings.setVisibility(View.GONE);
             binding.includeEmptyState.getRoot().setVisibility(View.GONE);
+            // Returns at once when this list is already loaded, so a rotation does not read it again.
+            trustViewModel.loadReviews(userId, showingReceived);
+            showReviews();
             return;
         }
         showListingTab();
