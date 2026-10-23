@@ -62,4 +62,51 @@ public class ChatRepositoryTest {
         assertFalse(ChatRepository.isListingStatusAllowed(ListingStatus.HIDDEN));
         assertFalse(ChatRepository.isListingStatusAllowed(ListingStatus.REMOVED));
     }
+
+    @Test
+    public void validateMessageText_rejectsEmptyOrWhitespace() {
+        assertNotNull(ChatRepository.validateMessageText(null));
+        assertNotNull(ChatRepository.validateMessageText(""));
+        assertNotNull(ChatRepository.validateMessageText("   "));
+        assertFalse(ChatRepository.isValidMessageText(""));
+        assertFalse(ChatRepository.isValidMessageText("   "));
+    }
+
+    @Test
+    public void validateMessageText_rejectsOver2000Characters() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 2001; i++) {
+            sb.append("a");
+        }
+        String tooLong = sb.toString();
+        assertNotNull(ChatRepository.validateMessageText(tooLong));
+        assertFalse(ChatRepository.isValidMessageText(tooLong));
+    }
+
+    @Test
+    public void validateMessageText_acceptsValidRange() {
+        assertNull(ChatRepository.validateMessageText("A"));
+        assertTrue(ChatRepository.isValidMessageText("A"));
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 2000; i++) {
+            sb.append("x");
+        }
+        String maxLength = sb.toString();
+        assertNull(ChatRepository.validateMessageText(maxLength));
+        assertTrue(ChatRepository.isValidMessageText(maxLength));
+    }
+
+    @Test
+    public void isSenderAllowed_verifiesParticipant() {
+        com.nhom3.pubgapp.model.Conversation conv = new com.nhom3.pubgapp.model.Conversation();
+        conv.setBuyerId("buyer1");
+        conv.setSellerId("seller1");
+
+        assertTrue(ChatRepository.isSenderAllowed(conv, "buyer1"));
+        assertTrue(ChatRepository.isSenderAllowed(conv, "seller1"));
+        assertFalse(ChatRepository.isSenderAllowed(conv, "stranger"));
+        assertFalse(ChatRepository.isSenderAllowed(conv, null));
+        assertFalse(ChatRepository.isSenderAllowed(null, "buyer1"));
+    }
 }
