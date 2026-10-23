@@ -15,33 +15,51 @@ import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.MediaRepository;
 import com.nhom3.pubgapp.databinding.ItemTradeMessageImageBinding;
+import com.nhom3.pubgapp.databinding.ItemTradeMessageOfferBinding;
 import com.nhom3.pubgapp.databinding.ItemTradeMessageTextBinding;
 import com.nhom3.pubgapp.model.ChatMessage;
+import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.enums.MessageType;
+import com.nhom3.pubgapp.model.enums.OfferStatus;
+import com.nhom3.pubgapp.model.enums.OfferType;
 import com.nhom3.pubgapp.util.FormatUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-// Adapter for chat messages displaying text and image bubbles.
+// Adapter for chat messages displaying text, image, and offer bubbles.
 public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public interface OnMessageLongClickListener {
         void onMessageLongClick(ChatMessage message);
     }
 
+    public interface OnOfferActionListener {
+        void onOfferAccept(Offer offer);
+        void onOfferReject(Offer offer);
+    }
+
     private static final int VIEW_TYPE_TEXT = 1;
     private static final int VIEW_TYPE_IMAGE = 2;
+    private static final int VIEW_TYPE_OFFER = 3;
 
     private final List<ChatMessage> messages = new ArrayList<ChatMessage>();
+    private final Map<String, Offer> offerMap = new HashMap<String, Offer>();
     private final FormatUtils formatUtils = new FormatUtils();
     private final MediaRepository mediaRepository = new MediaRepository();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private String currentUserId = "";
     private final OnMessageLongClickListener longClickListener;
+    private OnOfferActionListener offerActionListener;
 
     public MessageAdapter(OnMessageLongClickListener longClickListener) {
         this.longClickListener = longClickListener;
+    }
+
+    public void setOfferActionListener(OnOfferActionListener listener) {
+        this.offerActionListener = listener;
     }
 
     public void setCurrentUserId(String currentUserId) {
@@ -57,9 +75,25 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         notifyDataSetChanged();
     }
 
+    public void setOffers(List<Offer> items) {
+        offerMap.clear();
+        if (items != null) {
+            for (int i = 0; i < items.size(); i++) {
+                Offer offer = items.get(i);
+                if (offer != null && offer.getId() != null) {
+                    offerMap.put(offer.getId(), offer);
+                }
+            }
+        }
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getItemViewType(int position) {
         ChatMessage msg = messages.get(position);
+        if (msg.getType() == MessageType.OFFER) {
+            return VIEW_TYPE_OFFER;
+        }
         if (msg.getType() == MessageType.IMAGE) {
             return VIEW_TYPE_IMAGE;
         }
@@ -70,11 +104,18 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        if (viewType == VIEW_TYPE_OFFER) {
+            ItemTradeMessageOfferBinding binding =
+                    ItemTradeMessageOfferBinding.inflate(inflater, parent, false);
+            return new OfferMessageViewHolder(binding);
+        }
         if (viewType == VIEW_TYPE_IMAGE) {
-            ItemTradeMessageImageBinding binding = ItemTradeMessageImageBinding.inflate(inflater, parent, false);
+            ItemTradeMessageImageBinding binding =
+                    ItemTradeMessageImageBinding.inflate(inflater, parent, false);
             return new ImageMessageViewHolder(binding);
         }
-        ItemTradeMessageTextBinding binding = ItemTradeMessageTextBinding.inflate(inflater, parent, false);
+        ItemTradeMessageTextBinding binding =
+                ItemTradeMessageTextBinding.inflate(inflater, parent, false);
         return new TextMessageViewHolder(binding);
     }
 
@@ -85,6 +126,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ((TextMessageViewHolder) holder).bind(msg);
         } else if (holder instanceof ImageMessageViewHolder) {
             ((ImageMessageViewHolder) holder).bind(msg);
+        } else if (holder instanceof OfferMessageViewHolder) {
+            ((OfferMessageViewHolder) holder).bind(msg);
         }
     }
 
@@ -204,6 +247,108 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     imageView.setImageDrawable(null);
                 }
             });
+        }
+    }
+
+    class OfferMessageViewHolder extends RecyclerView.ViewHolder {
+
+        private final ItemTradeMessageOfferBinding binding;
+
+        OfferMessageViewHolder(@NonNull ItemTradeMessageOfferBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+        }
+
+        void bind(final ChatMessage message) {
+            String time = formatUtils.formatTime(message.getCreatedAt());
+            binding.textOfferTime.setText(time);
+
+            final Offer offer = message.getOfferId() != null ? offerMap.get(message.getOfferId()) : null;
+            if (offer != null) {
+                bindOfferDetails(offer);
+            } else {
+                binding.textOfferTitle.setText(R.string.trade_chat_offer_title);
+                binding.textOfferType.setText(message.getText());
+                binding.textOfferAmount.setVisibility(View.GONE);
+                binding.textOfferExchangeItem.setVisibility(View.GONE);
+                binding.textOfferWaitingBuyer.setVisibility(View.GONE);
+                binding.layoutSellerActions.setVisibility(View.GONE);
+                binding.textOfferStatus.setText(R.string.trade_chat_offer_status_pending);
+            }
+        }
+
+        private void bindOfferDetails(final Offer offer) {
+            binding.textOfferTitle.setText(R.string.trade_chat_offer_title);
+
+            OfferType type = offer.getOfferType();
+            if (type == OfferType.MONEY) {
+                binding.textOfferType.setText(R.string.trade_chat_offer_type_money);
+            } else if (type == OfferType.ITEM) {
+                binding.textOfferType.setText(R.string.trade_chat_offer_type_item);
+            } else if (type == OfferType.MONEY_AND_ITEM) {
+                binding.textOfferType.setText(R.string.trade_chat_offer_type_both);
+            } else {
+                binding.textOfferType.setText("");
+            }
+
+            if (offer.getAmount() > 0) {
+                binding.textOfferAmount.setVisibility(View.VISIBLE);
+                binding.textOfferAmount.setText(FormatUtils.formatPrice(offer.getAmount()));
+            } else {
+                binding.textOfferAmount.setVisibility(View.GONE);
+            }
+
+            if (offer.getExchangeItem() != null && !offer.getExchangeItem().trim().isEmpty()) {
+                binding.textOfferExchangeItem.setVisibility(View.VISIBLE);
+                String itemText = String.format(
+                        itemView.getContext().getString(R.string.trade_chat_offer_item_label),
+                        offer.getExchangeItem().trim());
+                binding.textOfferExchangeItem.setText(itemText);
+            } else {
+                binding.textOfferExchangeItem.setVisibility(View.GONE);
+            }
+
+            OfferStatus status = offer.getStatus();
+            if (status == OfferStatus.ACCEPTED) {
+                binding.textOfferStatus.setText(R.string.trade_chat_offer_status_accepted);
+            } else if (status == OfferStatus.REJECTED) {
+                binding.textOfferStatus.setText(R.string.trade_chat_offer_status_rejected);
+            } else {
+                binding.textOfferStatus.setText(R.string.trade_chat_offer_status_pending);
+            }
+
+            boolean isSeller = currentUserId != null && currentUserId.equals(offer.getSellerId());
+            if (isSeller) {
+                binding.textOfferWaitingBuyer.setVisibility(View.GONE);
+                if (status == OfferStatus.PENDING) {
+                    binding.layoutSellerActions.setVisibility(View.VISIBLE);
+                    binding.buttonOfferAccept.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (offerActionListener != null) {
+                                offerActionListener.onOfferAccept(offer);
+                            }
+                        }
+                    });
+                    binding.buttonOfferReject.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (offerActionListener != null) {
+                                offerActionListener.onOfferReject(offer);
+                            }
+                        }
+                    });
+                } else {
+                    binding.layoutSellerActions.setVisibility(View.GONE);
+                }
+            } else {
+                binding.layoutSellerActions.setVisibility(View.GONE);
+                if (status == OfferStatus.PENDING) {
+                    binding.textOfferWaitingBuyer.setVisibility(View.VISIBLE);
+                } else {
+                    binding.textOfferWaitingBuyer.setVisibility(View.GONE);
+                }
+            }
         }
     }
 }

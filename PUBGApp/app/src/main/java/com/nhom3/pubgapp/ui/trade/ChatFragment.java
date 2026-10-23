@@ -105,6 +105,21 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         String myUid = FirebaseAuth.getInstance().getCurrentUser() != null
                 ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
         adapter.setCurrentUserId(myUid);
+        adapter.setOfferActionListener(new MessageAdapter.OnOfferActionListener() {
+            @Override
+            public void onOfferAccept(com.nhom3.pubgapp.model.Offer offer) {
+                if (offer != null && offer.getId() != null) {
+                    viewModel.respondToOffer(offer.getId(), true);
+                }
+            }
+
+            @Override
+            public void onOfferReject(com.nhom3.pubgapp.model.Offer offer) {
+                if (offer != null && offer.getId() != null) {
+                    viewModel.respondToOffer(offer.getId(), false);
+                }
+            }
+        });
 
         final LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
         layoutManager.setStackFromEnd(true);
@@ -335,21 +350,67 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
             }
         });
 
+        viewModel.getOffers().observe(getViewLifecycleOwner(), new Observer<List<com.nhom3.pubgapp.model.Offer>>() {
+            @Override
+            public void onChanged(List<com.nhom3.pubgapp.model.Offer> offers) {
+                if (adapter != null) {
+                    adapter.setOffers(offers);
+                }
+            }
+        });
+
+        viewModel.getDone().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean isDone) {
+                if (Boolean.TRUE.equals(isDone)) {
+                    viewModel.clearDone();
+                    Listing currentListing = viewModel.getListing().getValue();
+                    if (currentListing != null && currentListing.getReservedDealId() != null
+                            && !currentListing.getReservedDealId().isEmpty()) {
+                        Bundle args = new Bundle();
+                        args.putString("dealId", currentListing.getReservedDealId());
+                        try {
+                            Navigation.findNavController(requireView()).navigate(
+                                    R.id.action_global_deal_detail, args);
+                        } catch (Exception ignored) {
+                        }
+                    }
+                }
+            }
+        });
+
         viewModel.getError().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String err) {
                 if (err != null && !err.isEmpty()) {
-                    binding.includeErrorState.layoutErrorState.setVisibility(View.VISIBLE);
-                    binding.includeErrorState.textErrorMessage.setText(err);
-                    binding.includeErrorState.buttonRetry.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            binding.includeErrorState.layoutErrorState.setVisibility(View.GONE);
-                            if (currentConversationId != null && !currentConversationId.isEmpty()) {
-                                viewModel.openConversationById(currentConversationId);
+                    if (err.contains("xác thực")) {
+                        com.google.android.material.snackbar.Snackbar.make(
+                                binding.getRoot(), err,
+                                com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                                .setAction(R.string.trade_chat_offer_register_verification,
+                                        new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                try {
+                                                    Navigation.findNavController(requireView()).navigate(
+                                                            R.id.action_global_my_profile);
+                                                } catch (Exception ignored) {
+                                                }
+                                            }
+                                        }).show();
+                    } else {
+                        binding.includeErrorState.layoutErrorState.setVisibility(View.VISIBLE);
+                        binding.includeErrorState.textErrorMessage.setText(err);
+                        binding.includeErrorState.buttonRetry.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                binding.includeErrorState.layoutErrorState.setVisibility(View.GONE);
+                                if (currentConversationId != null && !currentConversationId.isEmpty()) {
+                                    viewModel.openConversationById(currentConversationId);
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                     viewModel.clearError();
                 }
             }
