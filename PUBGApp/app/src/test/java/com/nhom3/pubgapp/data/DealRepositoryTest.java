@@ -237,6 +237,90 @@ public class DealRepositoryTest {
         assertFalse(DealRepository.shouldReleaseListing(null, "deal123"));
     }
 
+    @Test
+    public void validatePayment_rejectsNonBuyer() {
+        Deal deal = createSampleConfirmedDeal(500000);
+        String error = DealRepository.validatePayment(deal, null, "seller1",
+                com.nhom3.pubgapp.model.enums.PaymentMethod.CARD);
+        assertNotNull(error);
+        assertEquals("Chỉ người mua mới được thực hiện thanh toán.", error);
+    }
+
+    @Test
+    public void validatePayment_rejectsWhenNotConfirmed() {
+        Deal deal = createSamplePendingDeal();
+        deal.setAgreedPrice(500000);
+        String error = DealRepository.validatePayment(deal, null, "buyer1",
+                com.nhom3.pubgapp.model.enums.PaymentMethod.CARD);
+        assertNotNull(error);
+        assertEquals("Giao dịch chưa ở trạng thái đã xác nhận để thanh toán.", error);
+    }
+
+    @Test
+    public void validatePayment_rejectsWhenAgreedPriceZero() {
+        Deal deal = createSampleConfirmedDeal(0);
+        String error = DealRepository.validatePayment(deal, null, "buyer1",
+                com.nhom3.pubgapp.model.enums.PaymentMethod.CARD);
+        assertNotNull(error);
+        assertEquals("Giao dịch không yêu cầu thanh toán.", error);
+    }
+
+    @Test
+    public void validatePayment_rejectsWhenAlreadyPaid() {
+        Deal deal = createSampleConfirmedDeal(500000);
+        Payment existing = new Payment();
+        existing.setStatus(PaymentStatus.HELD);
+
+        String error = DealRepository.validatePayment(deal, existing, "buyer1",
+                com.nhom3.pubgapp.model.enums.PaymentMethod.CARD);
+        assertNotNull(error);
+        assertEquals("Giao dịch đã được thanh toán.", error);
+    }
+
+    @Test
+    public void validatePayment_rejectsMissingMethod() {
+        Deal deal = createSampleConfirmedDeal(500000);
+        String error = DealRepository.validatePayment(deal, null, "buyer1", null);
+        assertNotNull(error);
+        assertEquals("Chưa chọn phương thức thanh toán.", error);
+    }
+
+    @Test
+    public void validatePayment_acceptsValidPayment() {
+        Deal deal = createSampleConfirmedDeal(500000);
+        String error = DealRepository.validatePayment(deal, null, "buyer1",
+                com.nhom3.pubgapp.model.enums.PaymentMethod.CARD);
+        assertNull(error);
+    }
+
+    @Test
+    public void createHeldPayment_setsHeldStatusAndAmountEqualsAgreedPrice() {
+        Deal deal = createSampleConfirmedDeal(750000);
+        Payment payment = DealRepository.createHeldPayment(deal,
+                com.nhom3.pubgapp.model.enums.PaymentMethod.E_WALLET);
+
+        assertNotNull(payment);
+        assertEquals("deal1", payment.getDealId());
+        assertEquals("buyer1", payment.getPayerId());
+        assertEquals("seller1", payment.getPayeeId());
+        assertEquals(750000, payment.getAmount());
+        assertEquals(PaymentStatus.HELD, payment.getStatus());
+        assertEquals(com.nhom3.pubgapp.model.enums.PaymentMethod.E_WALLET, payment.getMethod());
+        assertNotNull(payment.getHeldAt());
+    }
+
+    private Deal createSampleConfirmedDeal(long price) {
+        Deal deal = new Deal();
+        deal.setId("deal1");
+        deal.setBuyerId("buyer1");
+        deal.setSellerId("seller1");
+        deal.setStatus(DealStatus.CONFIRMED);
+        deal.setAgreedPrice(price);
+        deal.setDeliveryMethod(DeliveryMethod.MEET_UP);
+        deal.setStatusHistory(new ArrayList<>());
+        return deal;
+    }
+
     private Deal createSamplePendingDeal() {
         Deal deal = new Deal();
         deal.setId("deal1");
