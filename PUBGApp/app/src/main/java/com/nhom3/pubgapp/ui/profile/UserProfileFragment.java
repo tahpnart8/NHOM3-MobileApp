@@ -319,6 +319,15 @@ public class UserProfileFragment extends Fragment {
         binding.buttonEditProfile.setVisibility(ownPage ? View.VISIBLE : View.GONE);
         binding.buttonFollow.setVisibility(ownPage ? View.GONE : View.VISIBLE);
         binding.buttonReportUser.setVisibility(ownPage ? View.GONE : View.VISIBLE);
+        showOwnStatsOnly();
+    }
+
+    // Deal counts are readable only on the own page (Rules on deals), so another user's page hides them.
+    private void showOwnStatsOnly() {
+        int visibility = ownPage ? View.VISIBLE : View.GONE;
+        binding.layoutSoldStat.setVisibility(visibility);
+        binding.layoutCompletionStat.setVisibility(visibility);
+        binding.layoutFollowerStat.setVisibility(visibility);
     }
 
     private void toggleFollow() {
@@ -403,7 +412,7 @@ public class UserProfileFragment extends Fragment {
         // Nothing loaded and nothing loading means the last read failed, also after a rotation.
         boolean failed = !hasProfile && !loading;
         binding.includeErrorState.getRoot().setVisibility(failed ? View.VISIBLE : View.GONE);
-        boolean statsFailed = hasProfile && !loading && profileViewModel.getStats().getValue() == null;
+        boolean statsFailed = ownPage && hasProfile && !loading && profileViewModel.getStats().getValue() == null;
         binding.buttonRetryStats.setVisibility(statsFailed ? View.VISIBLE : View.GONE);
         if (statsFailed) {
             binding.textSoldCount.setText(R.string.profile_user_profile_stat_unknown);
@@ -547,12 +556,14 @@ public class UserProfileFragment extends Fragment {
         if (ownPage) {
             return;
         }
-        boolean following = Boolean.TRUE.equals(profileViewModel.getFollowing().getValue());
+        Boolean followingValue = profileViewModel.getFollowing().getValue();
+        boolean following = Boolean.TRUE.equals(followingValue);
         boolean loading = Boolean.TRUE.equals(profileViewModel.getLoading().getValue());
         boolean online = NetworkMonitor.getInstance().isOnline();
         binding.buttonFollow.setText(following ? R.string.profile_user_profile_following
                 : R.string.profile_user_profile_follow);
-        binding.buttonFollow.setEnabled(online && !loading);
+        // Until the state is known a tap could write follows again, which the Rules refuse.
+        binding.buttonFollow.setEnabled(online && !loading && followingValue != null);
     }
 
     private void updateTabCounts(List<Listing> listings) {

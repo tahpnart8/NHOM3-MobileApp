@@ -71,6 +71,47 @@
     <string name="listing_post_failed">Đăng tin thất bại, vui lòng thử lại</string>
     <string name="listing_post_image_preview_desc">Ảnh tin đăng</string>
 
+    <!-- B03 Listing Detail -->
+    <string name="listing_detail_image_desc">Ảnh chi tiết sản phẩm</string>
+    <string name="listing_detail_image_count_format">%1$d/%2$d</string>
+    <string name="listing_detail_price_free">Miễn phí</string>
+    <string name="listing_detail_trade_sell">BÁN</string>
+    <string name="listing_detail_trade_exchange">TRAO ĐỔI</string>
+    <string name="listing_detail_trade_giveaway">CHO TẶNG</string>
+    <string name="listing_detail_status_available">Đang bán</string>
+    <string name="listing_detail_status_reserved">ĐANG GIỮ CHỖ</string>
+    <string name="listing_detail_status_sold">ĐÃ BÁN</string>
+    <string name="listing_detail_status_hidden">Đã ẩn</string>
+    <string name="listing_detail_status_removed">Đã gỡ</string>
+    <string name="listing_detail_status_draft">Bản nháp</string>
+    <string name="listing_detail_seller_verified">Tài khoản đã xác thực</string>
+    <string name="listing_detail_guest_prompt">Đăng nhập để xem thông tin người bán, gửi tin nhắn và đề nghị giá</string>
+    <string name="listing_detail_guest_dialog_title">Yêu cầu đăng nhập</string>
+    <string name="listing_detail_guest_dialog_msg">Vui lòng đăng nhập để trao đổi và thương lượng giá với người bán</string>
+    <string name="listing_detail_guest_dialog_btn_login">Đăng nhập</string>
+    <string name="listing_detail_guest_dialog_btn_cancel">Hủy</string>
+    <string name="listing_detail_btn_sign_in">Đăng nhập</string>
+    <string name="listing_detail_condition_details_label">Tình trạng chi tiết</string>
+    <string name="listing_detail_desc_label">Mô tả</string>
+    <string name="listing_detail_province_label">Khu vực</string>
+    <string name="listing_detail_btn_chat">Nhắn tin</string>
+    <string name="listing_detail_btn_offer">Đề nghị giá</string>
+    <string name="listing_detail_btn_edit">Chỉnh sửa</string>
+    <string name="listing_detail_btn_mark_sold">Đã bán</string>
+    <string name="listing_detail_btn_follow">Theo dõi</string>
+    <string name="listing_detail_btn_following">Đang theo dõi</string>
+    <string name="listing_detail_btn_seller_reviews">Xem đánh giá</string>
+    <string name="listing_detail_report_icon_desc">Báo cáo tin đăng</string>
+    <string name="listing_detail_save_success">Đã lưu tin vào danh sách yêu thích</string>
+    <string name="listing_detail_unsave_success">Đã bỏ lưu tin đăng</string>
+    <string name="listing_detail_offline_save_warning">Không có kết nối mạng. Vui lòng thử lại khi có mạng</string>
+    <string name="listing_detail_empty_title">Tin không còn</string>
+    <string name="listing_detail_empty_message">Tin đăng này không tồn tại hoặc đã bị ẩn</string>
+    <string name="listing_detail_save_icon_desc">Lưu tin đăng</string>
+    <string name="listing_detail_seller_title">Người bán</string>
+    <string name="listing_detail_separator"> • </string>
+    <string name="listing_detail_invalid_id">Mã tin không hợp lệ</string>
+    <string name="listing_detail_login_required">Vui lòng đăng nhập để thực hiện thao tác này</string>
     <string-array name="listing_provinces">
         <item>TP.HCM</item>
         <item>Hà Nội</item>

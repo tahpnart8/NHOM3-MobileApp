@@ -137,9 +137,13 @@ public class ProfileViewModel extends ViewModel {
             return;
         }
         // A failed count leaves stats empty, so opening the screen or Retry reads it again.
-        if (stats.getValue() == null) {
+        if (stats.getValue() == null && isOwnPage(uid)) {
             loading.setValue(true);
             fetchStats(uid);
+        }
+        // A failed read of the follow state keeps the button locked, so opening the screen again retries it.
+        if (following.getValue() == null && !isOwnPage(uid)) {
+            fetchFollowing(uid);
         }
     }
 
@@ -209,7 +213,7 @@ public class ProfileViewModel extends ViewModel {
             return;
         }
         loading.setValue(true);
-        userRepository.follow(me, uid, new FollowCallback(uid, true));
+        userRepository.follow(me, uid, new FollowCallback(true));
     }
 
     public void unfollow(String uid) {
@@ -218,7 +222,7 @@ public class ProfileViewModel extends ViewModel {
             return;
         }
         loading.setValue(true);
-        userRepository.unfollow(me, uid, new FollowCallback(uid, false));
+        userRepository.unfollow(me, uid, new FollowCallback(false));
     }
 
     public void loadSaved() {
@@ -385,7 +389,11 @@ public class ProfileViewModel extends ViewModel {
                 loadedUid = uid;
                 profile.postValue(result);
                 fetchFollowing(uid);
-                fetchStats(uid);
+                if (isOwnPage(uid)) {
+                    fetchStats(uid);
+                } else {
+                    loading.postValue(false);
+                }
             }
 
             @Override
@@ -414,6 +422,12 @@ public class ProfileViewModel extends ViewModel {
                 error.postValue(message);
             }
         });
+    }
+
+    // The Rules let a user read only deals they are part of, so the counts exist only on the own page.
+    private boolean isOwnPage(String uid) {
+        String me = SessionManager.getInstance().getCurrentUserId();
+        return me != null && !me.isEmpty() && me.equals(uid);
     }
 
     // Reads every saved listing at once and joins the answers in the saved order.
@@ -521,7 +535,7 @@ public class ProfileViewModel extends ViewModel {
     // Only someone else's page has a Follow button, so the own profile skips this read.
     private void fetchFollowing(String uid) {
         String me = SessionManager.getInstance().getCurrentUserId();
-        if (me == null || me.equals(uid)) {
+        if (me == null || me.isEmpty() || me.equals(uid)) {
             return;
         }
         userRepository.getFollowingIds(me, new DataCallback<List<String>>() {
@@ -546,7 +560,7 @@ public class ProfileViewModel extends ViewModel {
             return null;
         }
         String me = SessionManager.getInstance().getCurrentUserId();
-        if (me == null) {
+        if (me == null || me.isEmpty()) {
             error.setValue(MESSAGE_NOT_SIGNED_IN);
             return null;
         }
@@ -561,21 +575,19 @@ public class ProfileViewModel extends ViewModel {
         return me;
     }
 
-    // On success the flag flips and the follower count is read again; on failure the flag stays as it was.
+    // On success the flag flips; the follower count is not read again because it is only shown on the own page.
     private final class FollowCallback implements DataCallback<Void> {
-        private final String uid;
         private final boolean nowFollowing;
 
-        FollowCallback(String uid, boolean nowFollowing) {
-            this.uid = uid;
+        FollowCallback(boolean nowFollowing) {
             this.nowFollowing = nowFollowing;
         }
 
         @Override
         public void onSuccess(Void result) {
             following.postValue(nowFollowing);
+            loading.postValue(false);
             done.postValue(true);
-            fetchStats(uid);
         }
 
         @Override

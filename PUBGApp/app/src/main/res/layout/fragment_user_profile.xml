@@ -163,6 +163,7 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/layoutSoldStat"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -185,6 +186,7 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/layoutCompletionStat"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -207,6 +209,7 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/layoutFollowerStat"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
