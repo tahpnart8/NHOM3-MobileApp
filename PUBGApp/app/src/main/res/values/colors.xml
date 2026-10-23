@@ -2,4 +2,23 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Theme tokens, giao-dien.md section 1. Layouts use the ?attr/ form, not these names. -->
+    <color name="primary">#1F6F54</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="on_surface">#1E1E1C</color>
+    <color name="on_surface_variant">#6E6B62</color>
+    <color name="background">#FAF8F4</color>
+    <color name="outline">#E7E2D6</color>
+    <color name="error">#B2412F</color>
+
+    <!-- Not in the Material set. success equals primary on purpose (one green in the mockups). -->
+    <color name="warning">#9E5223</color>
+    <color name="success">#1F6F54</color>
+    <color name="info">#27628C</color>
+
+    <!-- Status chip backgrounds. An error chip is filled with error, so it has no pale background. -->
+    <color name="chip_background_green">#E4F0EA</color>
+    <color name="chip_background_beige">#F5E4D8</color>
 </resources>

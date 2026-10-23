@@ -188,51 +188,111 @@ public class Listing extends BaseDocument {
 
     @Exclude
     public boolean isAvailable() {
-        throw new UnsupportedOperationException("NOT_READY");
+        return status == ListingStatus.AVAILABLE;
     }
 
     @Exclude
     public boolean isDraft() {
-        throw new UnsupportedOperationException("NOT_READY");
+        return status == ListingStatus.DRAFT;
     }
 
     public void publish() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status != null && status != ListingStatus.DRAFT) {
+            throw new IllegalStateException("Only draft listings can be published");
+        }
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalStateException("Title cannot be empty");
+        }
+        if (categoryId == null || categoryId.trim().isEmpty()) {
+            throw new IllegalStateException("Category cannot be empty");
+        }
+        if (imageIds == null || imageIds.isEmpty()) {
+            throw new IllegalStateException("At least one image is required");
+        }
+        if (tradeTypes == null || tradeTypes.isEmpty()) {
+            throw new IllegalStateException("At least one trade type is required");
+        }
+        status = ListingStatus.AVAILABLE;
+        touch();
     }
 
     public boolean acceptsTradeType(TradeType tradeType) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (tradeTypes == null || tradeType == null) {
+            return false;
+        }
+        return tradeTypes.contains(tradeType);
     }
 
     public boolean acceptsOffer(Offer offer) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (offer == null || !isAvailable()) {
+            return false;
+        }
+        if (acceptedOfferTypes == null || !acceptedOfferTypes.contains(offer.getOfferType())) {
+            return false;
+        }
+        if (offer.getAmount() < minOfferPrice) {
+            return false;
+        }
+        return true;
     }
 
     public void markSold() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status != ListingStatus.AVAILABLE && status != ListingStatus.RESERVED) {
+            throw new IllegalStateException("Only available or reserved listings can be marked sold");
+        }
+        status = ListingStatus.SOLD;
+        touch();
     }
 
     public void hide(String reason) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status != ListingStatus.AVAILABLE) {
+            throw new IllegalStateException("Only available listings can be hidden");
+        }
+        status = ListingStatus.HIDDEN;
+        statusReason = reason;
+        touch();
     }
 
     public void restore() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status != ListingStatus.HIDDEN) {
+            throw new IllegalStateException("Only hidden listings can be restored");
+        }
+        status = ListingStatus.AVAILABLE;
+        statusReason = null;
+        touch();
     }
 
     public void remove(String reason) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status != ListingStatus.DRAFT && status != ListingStatus.AVAILABLE
+                && status != ListingStatus.HIDDEN) {
+            throw new IllegalStateException("Cannot remove a listing with status " + status);
+        }
+        status = ListingStatus.REMOVED;
+        statusReason = reason;
+        touch();
     }
 
     public void reserve(String dealId) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status != ListingStatus.AVAILABLE) {
+            throw new IllegalStateException("Only available listings can be reserved");
+        }
+        status = ListingStatus.RESERVED;
+        reservedDealId = dealId;
+        touch();
     }
 
     public void release() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status != ListingStatus.RESERVED) {
+            throw new IllegalStateException("Only reserved listings can be released");
+        }
+        status = ListingStatus.AVAILABLE;
+        reservedDealId = null;
+        touch();
     }
 
     public void buildSearchKeywords() {
-        throw new UnsupportedOperationException("NOT_READY");
+        String combined = (title != null ? title : "") + " " + (description != null ? description : "");
+        com.nhom3.pubgapp.util.FormatUtils utils = new com.nhom3.pubgapp.util.FormatUtils();
+        searchKeywords = utils.toKeywords(combined);
     }
 }

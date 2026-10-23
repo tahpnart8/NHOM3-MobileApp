@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Offline strip. Hidden by default; the screen sets it visible when the network is gone
+    and the list comes from the Room cache. No outer margin.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layoutOfflineBanner"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:accessibilityLiveRegion="polite"
+    android:background="@color/info"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="@dimen/space_md"
+    android:paddingVertical="@dimen/space_sm"
+    android:visibility="gone">
+
+    <ImageView
+        android:id="@+id/imageOffline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_cloud_off" />
+
+    <TextView
+        android:id="@+id/textOffline"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_sm"
+        android:layout_weight="1"
+        android:text="@string/common_offline_banner"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorOnPrimary" />
+</LinearLayout>

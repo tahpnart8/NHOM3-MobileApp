@@ -1,9 +1,47 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.PUBGApp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <!-- Parent is the Light variant: the app has no dark palette, so it stays light when the device is dark. -->
+    <style name="Base.Theme.PUBGApp" parent="Theme.Material3.Light.NoActionBar" />
+
+    <style name="Theme.PUBGApp" parent="Base.Theme.PUBGApp">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="android:colorBackground">@color/background</item>
+        <item name="colorOutline">@color/outline</item>
+        <item name="colorError">@color/error</item>
+
+        <!-- Keeps text on the screen background the same dark colour as text on cards. -->
+        <item name="colorOnBackground">@color/on_surface</item>
+
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.PUBGApp.HeadlineSmall</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.PUBGApp.TitleMedium</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.PUBGApp.BodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.PUBGApp.BodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.PUBGApp.LabelLarge</item>
     </style>
 
-    <style name="Theme.PUBGApp" parent="Base.Theme.PUBGApp" />
+    <!-- Type scale, giao-dien.md section 3. -->
+    <style name="TextAppearance.PUBGApp.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:textSize">24sp</item>
+    </style>
+
+    <style name="TextAppearance.PUBGApp.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.PUBGApp.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TextAppearance.PUBGApp.BodySmall" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="TextAppearance.PUBGApp.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 </resources>

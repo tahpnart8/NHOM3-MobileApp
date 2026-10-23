@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Each item id equals the id of its destination in nav_main.xml; NavigationUI relies on that. -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@drawable/ic_tab_home"
+        android:title="@string/common_tab_home" />
+    <item
+        android:id="@+id/searchFragment"
+        android:icon="@drawable/ic_tab_search"
+        android:title="@string/common_tab_search" />
+    <item
+        android:id="@+id/postListingFragment"
+        android:icon="@drawable/ic_tab_post"
+        android:title="@string/common_tab_post" />
+    <item
+        android:id="@+id/conversationListFragment"
+        android:icon="@drawable/ic_tab_chat"
+        android:title="@string/common_tab_chat" />
+    <item
+        android:id="@+id/myProfileFragment"
+        android:icon="@drawable/ic_tab_profile"
+        android:title="@string/common_tab_profile" />
+</menu>

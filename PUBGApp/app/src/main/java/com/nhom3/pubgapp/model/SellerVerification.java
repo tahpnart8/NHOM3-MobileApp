@@ -85,18 +85,42 @@ public class SellerVerification extends BaseDocument {
     }
 
     public void approve(String adminId) {
-        throw new UnsupportedOperationException("NOT_READY");
+        requirePending();
+        this.status = VerificationStatus.APPROVED;
+        this.reviewedBy = adminId;
+        this.reviewedAt = Timestamp.now();
     }
 
     public void reject(String adminId, String note) {
-        throw new UnsupportedOperationException("NOT_READY");
+        requirePending();
+        if (note == null || note.trim().isEmpty()) {
+            throw new IllegalArgumentException("A rejection needs a note");
+        }
+        this.status = VerificationStatus.REJECTED;
+        this.note = note.trim();
+        this.reviewedBy = adminId;
+        this.reviewedAt = Timestamp.now();
     }
 
     public boolean canResubmit() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (status != VerificationStatus.REJECTED) {
+            return false;
+        }
+        return resubmitCount < MAX_RESUBMIT;
     }
 
     public int remainingResubmits() {
-        throw new UnsupportedOperationException("NOT_READY");
+        int remaining = MAX_RESUBMIT - resubmitCount;
+        if (remaining < 0) {
+            return 0;
+        }
+        return remaining;
+    }
+
+    // Only a PENDING request can be reviewed (trang-thai.md section 8).
+    private void requirePending() {
+        if (status != VerificationStatus.PENDING) {
+            throw new IllegalStateException("Verification is not PENDING: " + status);
+        }
     }
 }

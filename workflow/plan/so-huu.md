@@ -93,18 +93,33 @@ Không ai sửa đồ thị điều hướng của người khác. Mọi lối �
 | `action_global_user_profile` | D02 | `userId` | B03, C02, C03 |
 | `action_global_seller_trust` | D03 | `userId` | B03, D02 |
 | `action_global_report` | D04 | `targetType`, `targetId`, `conversationId` (chỉ khi `targetType` là MESSAGE) | B03, C02, D02, D03 |
-| `action_global_create_complaint` | D05 | `dealId` | C03 |
+| ~~`action_global_create_complaint`~~ **BỎ** | D05 đã bỏ | `dealId` | C03 |
 | `action_global_my_shop` | B05 | | D01 |
 | `action_global_saved_listings` | B06 | | D01 |
-| `action_global_deal_history` | C04 | | D01 |
-| `action_global_my_reports` | D07 | | D01 |
-| `action_global_personal_info`, `action_global_edit_profile`, `action_global_address_list`, `action_global_account_settings` | A04, A05, A06 | | D01 |
+| ~~`action_global_deal_history`~~ **BỎ** | C04 đã bỏ | | D01 |
+| ~~`action_global_my_reports`~~ **BỎ** | D07 đã bỏ | | D01 |
+| `action_global_edit_profile` | A05 `EditProfileFragment` trong `ui.profile` | | D01 |
+| ~~`action_global_personal_info`~~, ~~`action_global_address_list`~~, ~~`action_global_account_settings`~~ **BỎ** | A04, A06 và cài đặt tài khoản đã bỏ | | |
 | `action_global_notifications` | C06 | | Thanh trên của `MainActivity` |
 | `action_global_sign_in` | A01 trong `AuthActivity` | | Mọi màn khi Khách bấm một thao tác cần đăng nhập (quyết định 2026-10-22) |
 | `action_global_my_profile` | D01 | | Mọi màn có nút "Đăng ký xác thực" khi tài khoản chưa được duyệt |
-| `action_global_tab` | Một trong 5 tab gốc | `tabId`: một trong `home` (B01), `search` (B02), `post` (B04), `chat` (C01), `profile` (D01) | Ô tìm kiếm của B01 sang B02, ảnh đại diện sang D01, nút "về Trang chủ" của ô trống |
+| ~~`action_global_tab`~~ **KHÔNG DỰNG ĐƯỢC** | Một trong 5 tab gốc | | Xem ghi chú dưới bảng |
 | `action_global_deal_payment` | C07 | `dealId` | C03 |
-| `action_global_admin_accounts` | E07 trong `AdminActivity` | | E01 |
+| `action_global_make_offer` | `MakeOfferFragment`, bảng trượt trong `ui.trade` | `listingId` | B03 |
+| ~~`action_global_admin_accounts`~~ **BỎ** | E07 đã bỏ | | E01 |
+
+**Bảy hành động gạch ngang không được tạo trong `nav_main.xml`** (sửa ngày 2026-10-23). Chúng trỏ tới màn đã bỏ ở [`ke-hoach-rut-gon.md`](ke-hoach-rut-gon.md) mục 4. Đích chết là lỗi hay gặp nhất khi cắt phạm vi: tạo hành động mà không có đích thì đồ thị không dựng được, còn tạo cả đích rỗng thì người dùng bấm vào màn trắng.
+
+**`action_global_tab` không tồn tại, và không phải lỗi quên làm** (sửa ngày 2026-10-23). Navigation không cho một `<action>` chọn đích theo tham số: mỗi hành động trong XML trỏ tới đúng một đích. Mô tả cũ nhận `tabId` rồi chuyển tới một trong 5 tab là thứ không dựng được.
+
+Cách thay thế, dùng luôn, đừng hỏi lại:
+
+- **Đổi tab từ một màn khác:** gọi thẳng id đích, ví dụ `navController.navigate(R.id.searchFragment)`. Năm tab đều là đích trong `nav_main.xml` nên đi thẳng được, không cần hành động trung gian.
+- **Đổi tab kèm đổi highlight trên thanh dưới:** gọi `bottomNavigation.setSelectedItemId(R.id.myProfileFragment)`. Id mục menu trùng id đích, nên `NavigationUI` tự điều hướng và tự tô đúng tab. Đây là cách ảnh đại diện trên thanh trên sang D01.
+
+Id của 5 tab: `homeFragment`, `searchFragment`, `postListingFragment`, `conversationListFragment`, `myProfileFragment`.
+
+`action_global_make_offer` là hành động mới, thêm ngày 2026-10-23. B03 thuộc Tú nhưng bảng trượt thuộc Hải Long, nên Tú chỉ gọi hành động này chứ không dựng bảng trượt.
 
 Cần thêm một hành động toàn cục thì mở issue cho Phát; không tự thêm.
 

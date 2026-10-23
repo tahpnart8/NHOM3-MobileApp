@@ -1,0 +1,215 @@
+rules_version = '2';
+
+// Bản NỀN của Security Rules (đợt 0). Bản đầy đủ theo workflow/docs/data/security-rules.md
+// làm ở issue riêng. Ở bản này: chỉ ĐỌC được mở theo ma trận, GHI bị từ chối hết,
+// trừ collection images (tạo và xóa ảnh có giới hạn kích thước).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- Hàm dùng chung ----
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function me() {
+      return request.auth.uid;
+    }
+
+    // Quyền admin là tài liệu admins/{uid} do leader tạo tay trên Console (luật R12).
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Tài khoản đang ACTIVE; người bị khóa giữa chừng không ghi được nữa.
+    function writerActive() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'ACTIVE';
+    }
+
+    // Tin đang mở: khách chưa đăng nhập cũng đọc được (quyết định 2026-10-22).
+    function isOpenListing(data) {
+      return data.status in ['AVAILABLE', 'RESERVED', 'SOLD'];
+    }
+
+    // Mặc định: từ chối mọi đường dẫn không được nêu ở dưới.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ---- Collection khách chưa đăng nhập ĐƯỢC ĐỌC ----
+
+    // Danh mục: ai cũng đọc; ghi sẽ mở cho admin ở bản đầy đủ.
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Tin đăng: khách đọc tin đang mở; tin DRAFT, HIDDEN, REMOVED chỉ chủ tin và admin.
+    // Truy vấn của ứng dụng phải mang status in [AVAILABLE, RESERVED, SOLD].
+    match /listings/{id} {
+      allow read: if isOpenListing(resource.data)
+        || (signedIn() && resource.data.sellerId == me())
+        || isAdmin();
+      allow write: if false;
+    }
+
+    // Ảnh Base64 thay cho Cloud Storage (gói Spark, luật R21): khách đọc được để xem ảnh tin.
+    match /images/{id} {
+      allow read: if true;
+
+      // Giới hạn theo firestore-schema.md mục images: cạnh dài 1024 px,
+      // tối đa 300 KB trước Base64, chuỗi data dưới 600.000 ký tự.
+      allow create: if writerActive()
+        && request.resource.data.keys().hasOnly(
+             ['id', 'ownerId', 'purpose', 'data', 'width', 'height', 'sizeBytes', 'createdAt'])
+        && request.resource.data.keys().hasAll(
+             ['ownerId', 'purpose', 'data', 'width', 'height', 'sizeBytes', 'createdAt'])
+        && request.resource.data.ownerId == me()
+        && request.resource.data.purpose in
+             ['LISTING', 'CHAT', 'WAYBILL', 'RECEIVED', 'EVIDENCE', 'VERIFICATION']
+        && request.resource.data.data is string
+        && request.resource.data.data.size() < 600000
+        && request.resource.data.width is number
+        && request.resource.data.width <= 1024
+        && request.resource.data.height is number
+        && request.resource.data.height <= 1024
+        && request.resource.data.sizeBytes is number
+        && request.resource.data.sizeBytes <= 307200
+        && request.resource.data.createdAt == request.time;
+
+      // Ảnh bất biến: không sửa.
+      allow update: if false;
+
+      allow delete: if writerActive() && resource.data.ownerId == me();
+    }
+
+    // ---- Quyền admin: chỉ đọc từ ứng dụng ----
+
+    // Cấm mọi ghi từ ứng dụng; leader tạo tài liệu admin bằng tay trên Console (luật R12).
+    match /admins/{uid} {
+      allow read: if signedIn() && (me() == uid || isAdmin());
+      allow write: if false;
+    }
+
+    // ---- Người dùng ----
+
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow write: if false;
+
+      // Địa chỉ giao nhận: riêng tư.
+      match /addresses/{addressId} {
+        allow read: if signedIn() && me() == uid;
+        allow write: if false;
+      }
+
+      // CCCD và định danh: chỉ chủ tài khoản và admin đọc.
+      match /private/{docId} {
+        allow read: if signedIn() && (me() == uid || isAdmin());
+        allow write: if false;
+      }
+
+      // Tin đã lưu: riêng tư.
+      match /saved/{listingId} {
+        allow read: if signedIn() && me() == uid;
+        allow write: if false;
+      }
+
+      // Cảnh báo: chỉ màn quản trị đọc.
+      match /warnings/{warningId} {
+        allow read: if isAdmin();
+        allow write: if false;
+      }
+    }
+
+    match /follows/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /sellerVerifications/{userId} {
+      allow read: if signedIn() && (me() == userId || isAdmin());
+      allow write: if false;
+    }
+
+    // ---- Trò chuyện, offer, giao dịch ----
+
+    match /conversations/{id} {
+      allow read: if signedIn()
+        && (resource.data.buyerId == me() || resource.data.sellerId == me() || isAdmin());
+      allow write: if false;
+
+      match /messages/{messageId} {
+        allow read: if signedIn() && (
+          get(/databases/$(database)/documents/conversations/$(id)).data.buyerId == me()
+          || get(/databases/$(database)/documents/conversations/$(id)).data.sellerId == me()
+          || isAdmin());
+        allow write: if false;
+      }
+    }
+
+    match /offers/{id} {
+      allow read: if signedIn()
+        && (resource.data.buyerId == me() || resource.data.sellerId == me() || isAdmin());
+      allow write: if false;
+    }
+
+    match /deals/{id} {
+      allow read: if signedIn()
+        && (resource.data.buyerId == me() || resource.data.sellerId == me() || isAdmin());
+      allow write: if false;
+    }
+
+    match /payments/{dealId} {
+      allow read: if signedIn()
+        && (resource.data.payerId == me() || resource.data.payeeId == me() || isAdmin());
+      allow write: if false;
+    }
+
+    match /reviews/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // ---- Báo cáo và khiếu nại ----
+
+    match /reports/{id} {
+      allow read: if signedIn() && (resource.data.reporterId == me() || isAdmin());
+      allow write: if false;
+    }
+
+    match /complaints/{id} {
+      allow read: if signedIn() && (
+        resource.data.complainantId == me()
+        || get(/databases/$(database)/documents/deals/$(id)).data.buyerId == me()
+        || get(/databases/$(database)/documents/deals/$(id)).data.sellerId == me()
+        || isAdmin());
+      allow write: if false;
+
+      // Ghi chú nội bộ: chỉ admin, kể cả người khiếu nại cũng không đọc được.
+      match /adminNote/{noteId} {
+        allow read: if isAdmin();
+        allow write: if false;
+      }
+    }
+
+    // ---- Khác ----
+
+    match /notifications/{id} {
+      allow read: if signedIn() && resource.data.recipientId == me();
+      allow write: if false;
+    }
+
+    match /activityLogs/{id} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /bannedKeywords/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+  }
+}

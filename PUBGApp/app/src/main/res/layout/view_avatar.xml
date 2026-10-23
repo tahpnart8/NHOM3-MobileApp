@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Avatar. Shows the initial letter (textInitial); when the user has a photo, set it on
+    imageAvatar and hide textInitial. The root clips children to a circle.
+    Default size is touch_min; to change it, set layout_width and layout_height on the include.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/frameAvatar"
+    android:layout_width="@dimen/touch_min"
+    android:layout_height="@dimen/touch_min"
+    android:background="@drawable/bg_avatar"
+    android:clipToOutline="true"
+    android:importantForAccessibility="no">
+
+    <TextView
+        android:id="@+id/textInitial"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:singleLine="true"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textColor="?attr/colorOnPrimary" />
+
+    <ImageView
+        android:id="@+id/imageAvatar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+</FrameLayout>
