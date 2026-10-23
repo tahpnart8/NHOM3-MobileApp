@@ -5,6 +5,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.nhom3.pubgapp.data.ChatRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Conversation;
@@ -25,6 +27,9 @@ public class ChatViewModel extends ViewModel {
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>();
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
+
+    private final ChatRepository chatRepository = new ChatRepository();
+    private String currentConversationId;
 
     public LiveData<List<Conversation>> getConversations() {
         return conversations;
@@ -59,15 +64,67 @@ public class ChatViewModel extends ViewModel {
     }
 
     public void loadConversations() {
-        error.setValue(DataCallback.NOT_READY);
+        loading.setValue(true);
+        String uid = null;
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        }
+        if (uid == null || uid.isEmpty()) {
+            loading.setValue(false);
+            error.setValue("Vui lòng đăng nhập để xem tin nhắn.");
+            return;
+        }
+        chatRepository.getConversations(uid, new DataCallback<List<Conversation>>() {
+            @Override
+            public void onSuccess(List<Conversation> result) {
+                loading.postValue(false);
+                conversations.postValue(result);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void openConversation(String listingId) {
-        error.setValue(DataCallback.NOT_READY);
+        loading.setValue(true);
+        String uid = null;
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        }
+        if (uid == null || uid.isEmpty()) {
+            loading.setValue(false);
+            error.setValue("Vui lòng đăng nhập để nhắn tin.");
+            return;
+        }
+        chatRepository.getOrCreateConversation(listingId, uid, new DataCallback<Conversation>() {
+            @Override
+            public void onSuccess(Conversation result) {
+                loading.postValue(false);
+                if (result != null) {
+                    currentConversationId = result.getId();
+                }
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void openConversationById(String id) {
-        error.setValue(DataCallback.NOT_READY);
+        if (id == null || id.isEmpty()) {
+            error.setValue("Mã cuộc trò chuyện không hợp lệ.");
+            return;
+        }
+        currentConversationId = id;
+        done.setValue(true);
     }
 
     public void loadOlder() {
