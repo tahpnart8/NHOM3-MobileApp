@@ -1,10 +1,17 @@
 package com.nhom3.pubgapp.viewmodel;
 
+import android.os.Handler;
+import android.os.Looper;
+
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.nhom3.pubgapp.data.AdminRepository;
 import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.ListingRepository;
+import com.nhom3.pubgapp.data.ReportRepository;
 import com.nhom3.pubgapp.model.BannedKeyword;
 import com.nhom3.pubgapp.model.Category;
 import com.nhom3.pubgapp.model.ChatMessage;
@@ -12,12 +19,37 @@ import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.model.enums.ReportStatus;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
+import com.nhom3.pubgapp.util.SessionManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-// State for admin content moderation, banned keywords and categories. Action bodies report NOT_READY until the repositories are filled.
+// State for admin moderation, banned keywords and categories. Methods not yet filled report NOT_READY.
 public class AdminContentViewModel extends ViewModel {
+
+    private static final long REQUEST_TIMEOUT_MS = 15000L;
+    private static final String MESSAGE_TIMEOUT =
+            "Máy chủ chưa trả lời sau 15 giây. Hãy kiểm tra mạng rồi làm mới màn hình.";
+    private static final String MESSAGE_NOT_SIGNED_IN =
+            "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.";
+    private static final String MESSAGE_ID_REQUIRED = "Thiếu mã của đối tượng cần xử lý.";
+    private static final String MESSAGE_REASON_REQUIRED = "Hãy nhập lý do.";
+    private static final String MESSAGE_FILTER_REQUIRED = "Hãy chọn trạng thái báo cáo cần xem.";
+    private static final String MESSAGE_REPORTS_NOT_CLOSED =
+            "Đã xử lý tin nhưng chưa đóng được các báo cáo của tin. Hãy làm mới màn hình. ";
+
+    private final ReportRepository reportRepository = new ReportRepository();
+    private final ListingRepository listingRepository = new ListingRepository();
+    private final AdminRepository adminRepository = new AdminRepository();
+    private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    // One guard per kind of work, so loading a listing never cancels loading its reports.
+    private final RequestGuard reportsGuard = new RequestGuard();
+    private final RequestGuard listingGuard = new RequestGuard();
+    private final RequestGuard writeGuard = new RequestGuard();
+    private volatile ReportStatus lastStatus;
+    private volatile ReportTarget lastTargetType;
+    private volatile String lastListingId;
 
     private final MutableLiveData<List<Report>> reports = new MutableLiveData<>();
     private final MutableLiveData<List<Listing>> reportedListings = new MutableLiveData<>();
@@ -80,16 +112,68 @@ public class AdminContentViewModel extends ViewModel {
         return done;
     }
 
+    // A null targetType means every kind of target. The listings are read first so a row never shows a missing title.
     public void loadReports(ReportStatus status, ReportTarget targetType) {
-        error.setValue(DataCallback.NOT_READY);
+        if (status == null) {
+            error.postValue(MESSAGE_FILTER_REQUIRED);
+            return;
+        }
+        lastStatus = status;
+        lastTargetType = targetType;
+        final int token = reportsGuard.begin();
+        refreshLoading();
+        reportRepository.getByStatus(status, targetType, new DataCallback<List<Report>>() {
+            @Override
+            public void onSuccess(List<Report> result) {
+                publishWithListings(result, token, true);
+            }
+
+            @Override
+            public void onError(String message) {
+                failRequest(reportsGuard, token, message);
+            }
+        });
     }
 
     public void loadReportedListings() {
-        error.setValue(DataCallback.NOT_READY);
+        final int token = reportsGuard.begin();
+        refreshLoading();
+        reportRepository.getByStatus(ReportStatus.OPEN, ReportTarget.LISTING, new DataCallback<List<Report>>() {
+            @Override
+            public void onSuccess(List<Report> result) {
+                publishWithListings(result, token, false);
+            }
+
+            @Override
+            public void onError(String message) {
+                failRequest(reportsGuard, token, message);
+            }
+        });
     }
 
     public void loadListing(String listingId) {
-        error.setValue(DataCallback.NOT_READY);
+        if (isBlank(listingId)) {
+            error.postValue(MESSAGE_ID_REQUIRED);
+            return;
+        }
+        lastListingId = listingId;
+        final int token = listingGuard.begin();
+        refreshLoading();
+        listingRepository.getById(listingId, new DataCallback<Listing>() {
+            @Override
+            public void onSuccess(Listing result) {
+                if (!listingGuard.finish(token)) {
+                    return;
+                }
+                selectedListing.postValue(result);
+                refreshLoading();
+            }
+
+            @Override
+            public void onError(String message) {
+                failRequest(listingGuard, token, message);
+            }
+        });
     }
 
     public void loadReportEvidence(Report report) {
@@ -100,20 +184,63 @@ public class AdminContentViewModel extends ViewModel {
         error.setValue(DataCallback.NOT_READY);
     }
 
+    // The parameter is named listingId in the specification; a user or message report passes its own targetId.
     public void closeReports(String listingId, boolean dismissed) {
-        error.setValue(DataCallback.NOT_READY);
+        String adminId = SessionManager.getInstance().getCurrentUserId();
+        if (isBlank(listingId) || adminId.isEmpty()) {
+            error.postValue(isBlank(listingId) ? MESSAGE_ID_REQUIRED : MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        final int token = writeGuard.begin();
+        refreshLoading();
+        reportRepository.closeByTarget(listingId, dismissed, adminId, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                finishWrite(token);
+            }
+
+            @Override
+            public void onError(String message) {
+                failRequest(writeGuard, token, message);
+            }
+        });
     }
 
-    public void hide(String listingId, String reason) {
-        error.setValue(DataCallback.NOT_READY);
+    public void hide(final String listingId, String reason) {
+        if (!canStartListingWrite(listingId, reason, true)) {
+            return;
+        }
+        final int token = writeGuard.begin();
+        refreshLoading();
+        adminRepository.hideListing(listingId, reason, closeReportsAfter(listingId, token));
     }
 
     public void restore(String listingId) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!canStartListingWrite(listingId, null, false)) {
+            return;
+        }
+        final int token = writeGuard.begin();
+        refreshLoading();
+        adminRepository.restoreListing(listingId, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                finishWrite(token);
+            }
+
+            @Override
+            public void onError(String message) {
+                failRequest(writeGuard, token, message);
+            }
+        });
     }
 
     public void remove(String listingId, String reason) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!canStartListingWrite(listingId, reason, true)) {
+            return;
+        }
+        final int token = writeGuard.begin();
+        refreshLoading();
+        adminRepository.removeListing(listingId, reason, closeReportsAfter(listingId, token));
     }
 
     public void removeAllOf(String userId) {
@@ -166,5 +293,211 @@ public class AdminContentViewModel extends ViewModel {
 
     public void clearDone() {
         done.setValue(false);
+    }
+
+    private boolean isBlank(@Nullable String text) {
+        return text == null || text.trim().isEmpty();
+    }
+
+    // A listing write that closes reports also needs a reason and the signed-in admin id.
+    private boolean canStartListingWrite(String listingId, String reason, boolean closesReports) {
+        if (isBlank(listingId)) {
+            error.postValue(MESSAGE_ID_REQUIRED);
+            return false;
+        }
+        if (closesReports && isBlank(reason)) {
+            error.postValue(MESSAGE_REASON_REQUIRED);
+            return false;
+        }
+        if (closesReports && SessionManager.getInstance().getCurrentUserId().isEmpty()) {
+            error.postValue(MESSAGE_NOT_SIGNED_IN);
+            return false;
+        }
+        return true;
+    }
+
+    // After the listing changed, the reports of that listing are closed as handled (UC37).
+    private DataCallback<Void> closeReportsAfter(final String listingId, final int token) {
+        return new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                String adminId = SessionManager.getInstance().getCurrentUserId();
+                reportRepository.closeByTarget(listingId, false, adminId, new DataCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void closed) {
+                        finishWrite(token);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        if (writeGuard.isCurrent(token)) {
+                            error.postValue(MESSAGE_REPORTS_NOT_CLOSED + message);
+                        }
+                        finishWrite(token);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                failRequest(writeGuard, token, message);
+            }
+        };
+    }
+
+    private void finishWrite(int token) {
+        if (!writeGuard.finish(token)) {
+            return;
+        }
+        done.postValue(true);
+        refreshLoading();
+        reloadAfterWrite();
+    }
+
+    private void reloadAfterWrite() {
+        ReportStatus status = lastStatus;
+        if (status != null) {
+            loadReports(status, lastTargetType);
+        }
+        String listingId = lastListingId;
+        if (listingId != null) {
+            loadListing(listingId);
+        }
+    }
+
+    private void failRequest(RequestGuard guard, int token, String message) {
+        if (!guard.finish(token)) {
+            return;
+        }
+        error.postValue(message);
+        refreshLoading();
+    }
+
+    private void refreshLoading() {
+        boolean busy = reportsGuard.isActive() || listingGuard.isActive() || writeGuard.isActive();
+        loading.postValue(busy);
+    }
+
+    private List<String> listingIdsOf(List<Report> source) {
+        List<String> ids = new ArrayList<String>();
+        for (Report report : source) {
+            String id = report.getTargetId();
+            boolean isListing = report.getTargetType() == ReportTarget.LISTING;
+            if (isListing && !isBlank(id) && !ids.contains(id)) {
+                ids.add(id);
+            }
+        }
+        return ids;
+    }
+
+    // Reads every reported listing so the rows have a title and thumbnail; a listing that cannot be read is left out.
+    private void publishWithListings(List<Report> source, int token, boolean publishReports) {
+        if (!reportsGuard.isCurrent(token)) {
+            return;
+        }
+        List<String> ids = listingIdsOf(source);
+        if (ids.isEmpty()) {
+            completeListingRead(new ArrayList<Listing>(), source, token, publishReports);
+            return;
+        }
+        final ListingBatch batch = new ListingBatch(ids.size(), source, token, publishReports);
+        for (String id : ids) {
+            listingRepository.getById(id, new DataCallback<Listing>() {
+                @Override
+                public void onSuccess(Listing result) {
+                    arrive(batch, result);
+                }
+
+                @Override
+                public void onError(String message) {
+                    arrive(batch, null);
+                }
+            });
+        }
+    }
+
+    private void arrive(ListingBatch batch, @Nullable Listing listing) {
+        if (batch.arrive(listing)) {
+            completeListingRead(batch.copyFound(), batch.source, batch.token, batch.publishReports);
+        }
+    }
+
+    // Listings go out before the reports: the screen redraws on the reports and must already see the titles.
+    private void completeListingRead(List<Listing> listings, List<Report> source, int token,
+            boolean publishReports) {
+        if (!reportsGuard.finish(token)) {
+            return;
+        }
+        reportedListings.postValue(listings);
+        if (publishReports) {
+            reports.postValue(source);
+        }
+        refreshLoading();
+    }
+
+    // Collects the answers of the parallel listing reads; the last one to arrive publishes.
+    private static final class ListingBatch {
+        private final List<Report> source;
+        private final int token;
+        private final boolean publishReports;
+        private final List<Listing> found = new ArrayList<Listing>();
+        private int pending;
+
+        ListingBatch(int pending, List<Report> source, int token, boolean publishReports) {
+            this.pending = pending;
+            this.source = source;
+            this.token = token;
+            this.publishReports = publishReports;
+        }
+
+        synchronized boolean arrive(@Nullable Listing listing) {
+            if (listing != null) {
+                found.add(listing);
+            }
+            pending--;
+            return pending == 0;
+        }
+
+        synchronized List<Listing> copyFound() {
+            return new ArrayList<Listing>(found);
+        }
+    }
+
+    // Lets a newer request replace an older one and gives up on a request after 15 seconds.
+    private final class RequestGuard {
+        private int token;
+        private boolean active;
+
+        synchronized int begin() {
+            token++;
+            active = true;
+            final int issued = token;
+            timeoutHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (finish(issued)) {
+                        error.setValue(MESSAGE_TIMEOUT);
+                        refreshLoading();
+                    }
+                }
+            }, REQUEST_TIMEOUT_MS);
+            return issued;
+        }
+
+        synchronized boolean finish(int issued) {
+            if (!active || issued != token) {
+                return false;
+            }
+            active = false;
+            return true;
+        }
+
+        synchronized boolean isCurrent(int issued) {
+            return active && issued == token;
+        }
+
+        synchronized boolean isActive() {
+            return active;
+        }
     }
 }
