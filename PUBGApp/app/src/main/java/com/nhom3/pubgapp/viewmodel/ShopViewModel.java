@@ -17,8 +17,11 @@ import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.SortOrder;
 import com.nhom3.pubgapp.model.enums.TradeType;
 import com.nhom3.pubgapp.util.KeywordFilter;
+import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 // State for the seller shelf and the listing form. Action bodies report NOT_READY until the repositories are filled.
@@ -31,11 +34,29 @@ public class ShopViewModel extends ViewModel {
     public static final String FIELD_TRADE_TYPE = "tradeTypes";
     public static final String FIELD_PRICE = "price";
 
+    public static final int TAB_ACTIVE = 0;
+    public static final int TAB_SOLD = 1;
+    public static final int TAB_HIDDEN = 2;
+    public static final int TAB_DRAFT = 3;
+
+    public static final String ACTION_EDIT = "ACTION_EDIT";
+    public static final String ACTION_HIDE = "ACTION_HIDE";
+    public static final String ACTION_SHOW = "ACTION_SHOW";
+    public static final String ACTION_MARK_SOLD = "ACTION_MARK_SOLD";
+    public static final String ACTION_REOPEN = "ACTION_REOPEN";
+    public static final String ACTION_PUBLISH = "ACTION_PUBLISH";
+    public static final String ACTION_DELETE = "ACTION_DELETE";
+    public static final String ACTION_VIEW_REASON = "ACTION_VIEW_REASON";
+
     private final ListingRepository listingRepository = new ListingRepository();
     private final CategoryRepository categoryRepository = new CategoryRepository();
     private final MediaRepository mediaRepository = new MediaRepository();
     private final KeywordFilter keywordFilter = new KeywordFilter();
 
+    private List<Listing> rawListings;
+    private String cachedUid;
+    private SortOrder currentSortOrder = SortOrder.NEWEST;
+    private String currentCategoryId = "";
     private final MutableLiveData<List<Listing>> myListings = new MutableLiveData<>();
     private final MutableLiveData<Boolean> keywordFlag = new MutableLiveData<>();
     private final MutableLiveData<List<Category>> categories = new MutableLiveData<>();
@@ -72,8 +93,39 @@ public class ShopViewModel extends ViewModel {
         return done;
     }
 
-    public void loadMyListings(SortOrder order, String categoryId) {
-        error.setValue(DataCallback.NOT_READY);
+    public void loadMyListings(final SortOrder order, final String categoryId) {
+        final String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null || uid.isEmpty()) {
+            error.setValue("Chưa đăng nhập");
+            return;
+        }
+
+        currentSortOrder = order != null ? order : SortOrder.NEWEST;
+        currentCategoryId = categoryId != null ? categoryId : "";
+
+        if (rawListings != null && uid.equals(cachedUid)) {
+            List<Listing> filtered = sortAndFilter(rawListings, currentSortOrder, currentCategoryId);
+            myListings.setValue(filtered);
+            return;
+        }
+
+        loading.setValue(true);
+        listingRepository.getBySeller(uid, new DataCallback<List<Listing>>() {
+            @Override
+            public void onSuccess(List<Listing> data) {
+                cachedUid = uid;
+                rawListings = data;
+                List<Listing> filtered = sortAndFilter(rawListings, currentSortOrder, currentCategoryId);
+                myListings.postValue(filtered);
+                loading.postValue(false);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                loading.postValue(false);
+                error.postValue(errorMessage);
+            }
+        });
     }
 
     public void loadCategories() {
@@ -97,11 +149,11 @@ public class ShopViewModel extends ViewModel {
         int imageCount = imageUris != null ? imageUris.size() : 0;
         List<String> missing = findMissingFields(listing, imageCount);
         if (!missing.isEmpty()) {
-            error.postValue("Vui lòng điền đủ các trường bắt buộc và chọn từ 1 đến 5 ảnh");
+            error.setValue("Vui lòng điền đủ các trường bắt buộc và chọn từ 1 đến 5 ảnh");
             return;
         }
 
-        loading.postValue(true);
+        loading.setValue(true);
         clearError();
 
         // Check banned keywords before creating
@@ -196,6 +248,7 @@ public class ShopViewModel extends ViewModel {
         listingRepository.create(listing, new DataCallback<String>() {
             @Override
             public void onSuccess(String id) {
+                rawListings = null;
                 createdListingId.postValue(id);
                 loading.postValue(false);
                 done.postValue(true);
@@ -228,25 +281,39 @@ public class ShopViewModel extends ViewModel {
     public void saveDraft(final Listing listing, final List<Uri> imageUris) {
         int imageCount = imageUris != null ? imageUris.size() : 0;
         if (!canSaveDraft(listing, imageCount)) {
-            error.postValue("Hãy nhập tiêu đề, mô tả hoặc chọn ít nhất 1 ảnh để lưu nháp");
+            error.setValue("Hãy nhập tiêu đề, mô tả hoặc chọn ít nhất 1 ảnh để lưu nháp");
+            return;
+        }
+        loading.setValue(true);
+        clearError();
+
+        if (imageUris == null || imageUris.isEmpty()) {
+            listingRepository.saveDraft(listing, new DataCallback<String>() {
+                @Override
+                public void onSuccess(String id) {
+                    rawListings = null;
+                    createdListingId.postValue(id);
+                    loading.postValue(false);
+                    done.postValue(true);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    loading.postValue(false);
+                    error.postValue(errorMessage);
+                }
+            });
             return;
         }
 
-        loading.postValue(true);
-        clearError();
-
-        if (imageCount > 0) {
-            final List<String> savedIds = new ArrayList<>();
-            saveNextDraftImage(0, imageUris, savedIds, listing);
-        } else {
-            submitDraft(listing, new ArrayList<String>());
-        }
+        final List<String> savedIds = new ArrayList<String>();
+        saveNextDraftImage(0, imageUris, savedIds, listing);
     }
 
     private void saveNextDraftImage(final int index, final List<Uri> imageUris,
                                     final List<String> savedIds, final Listing listing) {
         if (index >= imageUris.size()) {
-            makeThumbAndSubmitDraft(listing, imageUris, savedIds);
+            finishSaveDraft(listing, imageUris, savedIds);
             return;
         }
 
@@ -267,15 +334,15 @@ public class ShopViewModel extends ViewModel {
         });
     }
 
-    private void makeThumbAndSubmitDraft(final Listing listing, final List<Uri> imageUris,
-                                         final List<String> savedIds) {
+    private void finishSaveDraft(final Listing listing, final List<Uri> imageUris,
+                                 final List<String> savedIds) {
+        listing.setImageIds(savedIds);
         Uri firstUri = imageUris.get(0);
         mediaRepository.makeThumb(firstUri, new DataCallback<String>() {
             @Override
             public void onSuccess(String thumbBase64) {
-                listing.setImageIds(savedIds);
                 listing.setCoverThumb(thumbBase64);
-                submitDraft(listing, savedIds);
+                submitSaveDraft(listing, savedIds);
             }
 
             @Override
@@ -287,10 +354,11 @@ public class ShopViewModel extends ViewModel {
         });
     }
 
-    private void submitDraft(Listing listing, final List<String> savedIds) {
+    private void submitSaveDraft(final Listing listing, final List<String> savedIds) {
         listingRepository.saveDraft(listing, new DataCallback<String>() {
             @Override
             public void onSuccess(String id) {
+                rawListings = null;
                 createdListingId.postValue(id);
                 loading.postValue(false);
                 done.postValue(true);
@@ -305,24 +373,258 @@ public class ShopViewModel extends ViewModel {
         });
     }
 
-    public void publishDraft(String id) {
-        error.setValue(DataCallback.NOT_READY);
+    public void publishDraft(final String id) {
+        Listing target = null;
+        if (rawListings != null) {
+            for (Listing item : rawListings) {
+                if (item != null && id != null && id.equals(item.getId())) {
+                    target = item;
+                    break;
+                }
+            }
+        }
+        if (target == null) {
+            error.setValue("Không tìm thấy bản nháp");
+            return;
+        }
+
+        loading.setValue(true);
+        clearError();
+        listingRepository.publish(target, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String resultId) {
+                loading.postValue(false);
+                done.postValue(true);
+                rawListings = null;
+                loadMyListings(currentSortOrder, currentCategoryId);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                loading.postValue(false);
+                error.postValue(errorMessage);
+            }
+        });
     }
 
-    public void updateListing(Listing listing, List<Uri> imageUris) {
-        error.setValue(DataCallback.NOT_READY);
+    public void updateListing(final Listing listing, final List<Uri> imageUris) {
+        if (listing == null || listing.getId() == null || listing.getId().isEmpty()) {
+            error.setValue("Mã tin đăng không được để trống");
+            return;
+        }
+        loading.setValue(true);
+        clearError();
+
+        Listing target = null;
+        if (rawListings != null) {
+            for (Listing item : rawListings) {
+                if (item != null && listing.getId().equals(item.getId())) {
+                    target = item;
+                    break;
+                }
+            }
+        }
+        final List<String> removedImageIds = new ArrayList<String>();
+        if (target != null && target.getImageIds() != null) {
+            List<String> keptIds = listing.getImageIds();
+            for (String oldId : target.getImageIds()) {
+                if (keptIds == null || !keptIds.contains(oldId)) {
+                    removedImageIds.add(oldId);
+                }
+            }
+        }
+
+        if (imageUris == null || imageUris.isEmpty()) {
+            listingRepository.update(listing, new DataCallback<Void>() {
+                @Override
+                public void onSuccess(Void unused) {
+                    deleteRemovedImages(removedImageIds);
+                    loading.postValue(false);
+                    done.postValue(true);
+                    rawListings = null;
+                    loadMyListings(currentSortOrder, currentCategoryId);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    loading.postValue(false);
+                    error.postValue(errorMessage);
+                }
+            });
+            return;
+        }
+
+        final List<String> newSavedIds = new ArrayList<String>();
+        saveNextUpdateImage(0, imageUris, newSavedIds, listing, removedImageIds);
     }
 
-    public void changeStatus(String id, ListingStatus status) {
-        error.setValue(DataCallback.NOT_READY);
+    private void saveNextUpdateImage(final int index, final List<Uri> imageUris,
+                                     final List<String> newSavedIds, final Listing listing,
+                                     final List<String> removedImageIds) {
+        if (index >= imageUris.size()) {
+            finishUpdateListing(listing, imageUris, newSavedIds, removedImageIds);
+            return;
+        }
+
+        Uri uri = imageUris.get(index);
+        mediaRepository.saveImage(uri, ImagePurpose.LISTING, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String imageId) {
+                newSavedIds.add(imageId);
+                saveNextUpdateImage(index + 1, imageUris, newSavedIds, listing, removedImageIds);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                rollbackImages(newSavedIds);
+                loading.postValue(false);
+                error.postValue(errorMessage);
+            }
+        });
     }
 
-    public void setHidden(String id, boolean hidden) {
-        error.setValue(DataCallback.NOT_READY);
+    private void finishUpdateListing(final Listing listing, final List<Uri> imageUris,
+                                     final List<String> newSavedIds,
+                                     final List<String> removedImageIds) {
+        List<String> currentIds = listing.getImageIds();
+        if (currentIds == null) {
+            currentIds = new ArrayList<String>();
+        }
+        boolean wasEmpty = currentIds.isEmpty();
+        currentIds.addAll(newSavedIds);
+        listing.setImageIds(currentIds);
+
+        if (wasEmpty && imageUris != null && !imageUris.isEmpty()) {
+            mediaRepository.makeThumb(imageUris.get(0), new DataCallback<String>() {
+                @Override
+                public void onSuccess(String thumbBase64) {
+                    listing.setCoverThumb(thumbBase64);
+                    submitUpdateListing(listing, newSavedIds, removedImageIds);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    rollbackImages(newSavedIds);
+                    loading.postValue(false);
+                    error.postValue(errorMessage);
+                }
+            });
+            return;
+        }
+        submitUpdateListing(listing, newSavedIds, removedImageIds);
     }
 
-    public void deleteListing(String id) {
-        error.setValue(DataCallback.NOT_READY);
+    private void submitUpdateListing(final Listing listing, final List<String> newSavedIds,
+                                     final List<String> removedImageIds) {
+        listingRepository.update(listing, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                deleteRemovedImages(removedImageIds);
+                loading.postValue(false);
+                done.postValue(true);
+                rawListings = null;
+                loadMyListings(currentSortOrder, currentCategoryId);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                rollbackImages(newSavedIds);
+                loading.postValue(false);
+                error.postValue(errorMessage);
+            }
+        });
+    }
+
+    private void deleteRemovedImages(List<String> removedImageIds) {
+        if (removedImageIds == null) {
+            return;
+        }
+        DataCallback<Void> noop = new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+            }
+        };
+        for (String id : removedImageIds) {
+            mediaRepository.delete(id, noop);
+        }
+    }
+
+    public void changeStatus(final String id, final ListingStatus status) {
+        Listing target = null;
+        if (rawListings != null) {
+            for (Listing item : rawListings) {
+                if (item != null && id != null && id.equals(item.getId())) {
+                    target = item;
+                    break;
+                }
+            }
+        }
+        if (target == null) {
+            error.setValue("Không tìm thấy tin đăng");
+            return;
+        }
+        ListingStatus from = target.getStatus();
+        loading.setValue(true);
+        clearError();
+        listingRepository.setStatus(id, from, status, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                loading.postValue(false);
+                done.postValue(true);
+                rawListings = null;
+                loadMyListings(currentSortOrder, currentCategoryId);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                loading.postValue(false);
+                error.postValue(errorMessage);
+            }
+        });
+    }
+
+    public void setHidden(final String id, final boolean hidden) {
+        loading.setValue(true);
+        clearError();
+        listingRepository.setHidden(id, hidden, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                loading.postValue(false);
+                done.postValue(true);
+                rawListings = null;
+                loadMyListings(currentSortOrder, currentCategoryId);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                loading.postValue(false);
+                error.postValue(errorMessage);
+            }
+        });
+    }
+
+    public void deleteListing(final String id) {
+        loading.setValue(true);
+        clearError();
+        listingRepository.delete(id, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                loading.postValue(false);
+                done.postValue(true);
+                rawListings = null;
+                loadMyListings(currentSortOrder, currentCategoryId);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                loading.postValue(false);
+                error.postValue(errorMessage);
+            }
+        });
     }
 
     public void clearError() {
@@ -367,6 +669,120 @@ public class ShopViewModel extends ViewModel {
             return 0L;
         }
         return typedPrice;
+    }
+
+    // Filters listings for one of the four tabs on the seller shelf screen.
+    static List<Listing> filterByTab(List<Listing> listings, int tab) {
+        List<Listing> result = new ArrayList<Listing>();
+        if (listings == null) {
+            return result;
+        }
+        for (Listing listing : listings) {
+            if (listing == null || listing.getStatus() == null) {
+                continue;
+            }
+            ListingStatus status = listing.getStatus();
+            if (tab == TAB_ACTIVE) {
+                if (status == ListingStatus.AVAILABLE || status == ListingStatus.RESERVED) {
+                    result.add(listing);
+                }
+            } else if (tab == TAB_SOLD) {
+                if (status == ListingStatus.SOLD) {
+                    result.add(listing);
+                }
+            } else if (tab == TAB_HIDDEN) {
+                if (status == ListingStatus.HIDDEN || status == ListingStatus.REMOVED) {
+                    result.add(listing);
+                }
+            } else if (tab == TAB_DRAFT) {
+                if (status == ListingStatus.DRAFT) {
+                    result.add(listing);
+                }
+            }
+        }
+        return result;
+    }
+
+    // Filters listings by category and sorts them by date descending for NEWEST.
+    static List<Listing> sortAndFilter(List<Listing> listings, SortOrder order, String categoryId) {
+        List<Listing> result = new ArrayList<Listing>();
+        if (listings == null) {
+            return result;
+        }
+        boolean hasCategory = categoryId != null && !categoryId.trim().isEmpty();
+        for (Listing listing : listings) {
+            if (listing == null) {
+                continue;
+            }
+            if (hasCategory) {
+                if (listing.getCategoryId() != null && listing.getCategoryId().equals(categoryId.trim())) {
+                    result.add(listing);
+                }
+            } else {
+                result.add(listing);
+            }
+        }
+
+        Collections.sort(result, new Comparator<Listing>() {
+            @Override
+            public int compare(Listing o1, Listing o2) {
+                if (o1 == null && o2 == null) {
+                    return 0;
+                }
+                if (o1 == null || o1.getCreatedAt() == null) {
+                    return 1;
+                }
+                if (o2 == null || o2.getCreatedAt() == null) {
+                    return -1;
+                }
+                return o2.getCreatedAt().compareTo(o1.getCreatedAt());
+            }
+        });
+        return result;
+    }
+
+    // Returns action codes permitted on the card menu for a listing in its current state.
+    static List<String> allowedActions(Listing listing) {
+        List<String> actions = new ArrayList<String>();
+        if (listing == null || listing.getStatus() == null) {
+            return actions;
+        }
+        ListingStatus status = listing.getStatus();
+        if (status == ListingStatus.AVAILABLE) {
+            actions.add(ACTION_EDIT);
+            actions.add(ACTION_MARK_SOLD);
+            actions.add(ACTION_HIDE);
+        } else if (status == ListingStatus.RESERVED) {
+            // Under reservation, seller cannot change state directly.
+        } else if (status == ListingStatus.HIDDEN) {
+            String reason = listing.getStatusReason();
+            if (reason == null || reason.trim().isEmpty()) {
+                actions.add(ACTION_SHOW);
+                actions.add(ACTION_EDIT);
+            } else {
+                actions.add(ACTION_VIEW_REASON);
+            }
+        } else if (status == ListingStatus.SOLD) {
+            actions.add(ACTION_REOPEN);
+        } else if (status == ListingStatus.DRAFT) {
+            actions.add(ACTION_EDIT);
+            actions.add(ACTION_PUBLISH);
+            actions.add(ACTION_DELETE);
+        } else if (status == ListingStatus.REMOVED) {
+            // Removed listing is read-only.
+        }
+        return actions;
+    }
+
+    // Checks whether transitioning between two listing statuses is permitted directly.
+    static boolean isAllowedStatusChange(ListingStatus from, ListingStatus to) {
+        if (from == ListingStatus.AVAILABLE && to == ListingStatus.SOLD) {
+            return true;
+        }
+        if (from == ListingStatus.SOLD && to == ListingStatus.AVAILABLE) {
+            return true;
+        }
+        return false;
     }
 
     // Checks whether a draft has minimum required content (title, description, or at least 1 image).

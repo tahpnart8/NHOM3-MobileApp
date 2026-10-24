@@ -442,6 +442,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | `public void loadMyComplaints()` | `ComplaintRepository.getMyComplaints`. | 65 |
 | `public void loadComplaint(String id)` | `ComplaintRepository.getDetail` cho màn theo dõi khiếu nại. |  |
 | `public void withdrawComplaint(String id)` | `ComplaintRepository.withdraw`. | 66 |
+| `public static double[] averageCriteria(List<Review> reviews)` | Điểm trung bình của ba tiêu chí (chính xác, thái độ, giữ hẹn) từ danh sách đánh giá đã nhận, trả về mảng ba phần tử theo thứ tự đó. Tĩnh và thuần tính toán nên gọi được từ test không cần vòng đời Android. |  |
 | `public void clearError()` | Đặt `error` về rỗng sau khi màn hình đã hiện câu lỗi, để xoay màn hình không hiện lại. |  |
 | `public void clearDone()` | Đặt `done` về false sau khi màn hình đã phản ứng (đóng hộp thoại, quay lại), để không chạy hai lần. |  |
 

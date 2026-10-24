@@ -5,7 +5,7 @@
     <string name="profile_edit_profile_title">Chỉnh sửa hồ sơ</string>
     <string name="profile_user_profile_title">Trang cá nhân</string>
     <string name="profile_seller_trust_title">Hồ sơ người bán</string>
-    <string name="profile_report_title">D04 Báo cáo</string>
+    <string name="profile_report_title">Báo cáo</string>
 
     <!-- D01 MyProfileFragment -->
     <string name="profile_my_profile_edit_action">Sửa hồ sơ</string>
@@ -123,4 +123,32 @@
     <string name="profile_seller_trust_reviews_empty_message">Người bán này chưa nhận được đánh giá.</string>
     <string name="profile_seller_trust_selling_empty_title">Không có món đang bán</string>
     <string name="profile_seller_trust_selling_empty_message">Người bán này hiện không còn món nào đang bán.</string>
+
+    <!-- D04 ReportFragment -->
+    <string name="profile_report_title_listing">Báo cáo tin đăng</string>
+    <string name="profile_report_title_user">Báo cáo người dùng</string>
+    <string name="profile_report_title_message">Báo cáo tin nhắn</string>
+    <string name="profile_report_target_listing">Bạn đang báo cáo một tin đăng.</string>
+    <string name="profile_report_target_user">Bạn đang báo cáo một người dùng.</string>
+    <string name="profile_report_target_message">Bạn đang báo cáo một tin nhắn.</string>
+    <string name="profile_report_question">Vì sao bạn báo cáo?</string>
+    <string name="profile_report_reason_fake_item">Nghi ngờ hàng giả</string>
+    <string name="profile_report_reason_fake_item_hint">Món đồ có dấu hiệu là hàng nhái, hàng giả.</string>
+    <string name="profile_report_reason_misleading_info">Thông tin sai lệch</string>
+    <string name="profile_report_reason_misleading_info_hint">Mô tả, ảnh hoặc giá không đúng với thực tế.</string>
+    <string name="profile_report_reason_scam">Dấu hiệu lừa đảo</string>
+    <string name="profile_report_reason_scam_hint">Đòi chuyển tiền trước, dẫn ra ngoài ứng dụng hoặc giả mạo.</string>
+    <string name="profile_report_reason_inappropriate">Nội dung không phù hợp</string>
+    <string name="profile_report_reason_inappropriate_hint">Lời lẽ thô tục, hình ảnh phản cảm hoặc hàng cấm.</string>
+    <string name="profile_report_reason_other">Khác</string>
+    <string name="profile_report_reason_other_hint">Lý do khác, hãy ghi rõ ở phần mô tả.</string>
+    <string name="profile_report_description">Mô tả thêm (không bắt buộc)</string>
+    <string name="profile_report_evidence_title">Ảnh bằng chứng (không bắt buộc, tối đa 3 ảnh)</string>
+    <string name="profile_report_evidence_add">Thêm ảnh</string>
+    <string name="profile_report_evidence_full">Đã đủ 3 ảnh. Xóa bớt một ảnh nếu muốn thay.</string>
+    <string name="profile_report_evidence_thumb">Ảnh bằng chứng đã chọn</string>
+    <string name="profile_report_evidence_remove">Xóa</string>
+    <string name="profile_report_not_image">Không dùng được tệp này, hãy chọn một ảnh.</string>
+    <string name="profile_report_submit">Gửi báo cáo</string>
+    <string name="profile_report_sent">Cảm ơn bạn đã báo cáo</string>
 </resources>

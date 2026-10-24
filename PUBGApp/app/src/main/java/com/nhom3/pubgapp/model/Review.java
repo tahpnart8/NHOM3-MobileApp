@@ -81,6 +81,9 @@ public class Review extends BaseDocument {
 
     @Exclude
     public boolean isValidRating() {
-        throw new UnsupportedOperationException("NOT_READY");
+        return rating >= 1 && rating <= 5
+                && accuracyRating >= 1 && accuracyRating <= 5
+                && attitudeRating >= 1 && attitudeRating <= 5
+                && commitmentRating >= 1 && commitmentRating <= 5;
     }
 }

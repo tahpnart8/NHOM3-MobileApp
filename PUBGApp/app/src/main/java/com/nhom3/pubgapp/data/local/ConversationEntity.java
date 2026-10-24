@@ -31,11 +31,33 @@ public class ConversationEntity {
     }
 
     public ConversationEntity fromModel(Conversation model) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (model == null) {
+            return this;
+        }
+        this.id = model.getId() != null ? model.getId() : "";
+        this.listingId = model.getListingId();
+        this.buyerId = model.getBuyerId();
+        this.sellerId = model.getSellerId();
+        this.lastMessage = model.getLastMessage();
+        if (model.getLastMessageAt() != null) {
+            this.lastMessageAt = model.getLastMessageAt().toDate().getTime();
+        }
+        this.cachedAtMillis = System.currentTimeMillis();
+        return this;
     }
 
     public Conversation toModel() {
-        throw new UnsupportedOperationException("NOT_READY");
+        Conversation conversation = new Conversation();
+        conversation.setId(this.id);
+        conversation.setListingId(this.listingId);
+        conversation.setBuyerId(this.buyerId);
+        conversation.setSellerId(this.sellerId);
+        conversation.setLastMessage(this.lastMessage);
+        if (this.lastMessageAt > 0) {
+            java.util.Date date = new java.util.Date(this.lastMessageAt);
+            conversation.setLastMessageAt(new com.google.firebase.Timestamp(date));
+        }
+        return conversation;
     }
 
     @NonNull

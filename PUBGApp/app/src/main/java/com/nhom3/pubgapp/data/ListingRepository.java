@@ -10,6 +10,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
@@ -19,12 +20,15 @@ import com.nhom3.pubgapp.data.local.ListingDao;
 import com.nhom3.pubgapp.data.local.ListingEntity;
 import com.nhom3.pubgapp.data.local.RecentSearchEntity;
 import com.nhom3.pubgapp.data.local.RecentViewEntity;
+import com.nhom3.pubgapp.model.AppNotification;
 import com.nhom3.pubgapp.model.BannedKeyword;
 import com.nhom3.pubgapp.model.Listing;
+import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.SearchFilter;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.ItemCondition;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
+import com.nhom3.pubgapp.model.enums.NotificationType;
 import com.nhom3.pubgapp.model.enums.OfferStatus;
 import com.nhom3.pubgapp.model.enums.OfferType;
 import com.nhom3.pubgapp.model.enums.SortOrder;
@@ -51,6 +55,7 @@ public class ListingRepository extends BaseRepository {
     private static final String COLLECTION_BANNED_KEYWORDS = "bannedKeywords";
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final NotificationRepository notificationRepository = new NotificationRepository();
 
     public void create(final Listing listing, final DataCallback<String> cb) {
         final String uid = currentUserId();
@@ -154,6 +159,18 @@ public class ListingRepository extends BaseRepository {
             cb.onError("Chưa đăng nhập");
             return;
         }
+        if (listing == null || listing.getStatus() != ListingStatus.DRAFT) {
+            cb.onError("Chỉ có thể công khai tin ở trạng thái bản nháp");
+            return;
+        }
+        if (listing.getTitle() == null || listing.getTitle().trim().isEmpty()
+                || listing.getCategoryId() == null || listing.getCategoryId().trim().isEmpty()
+                || listing.getImageIds() == null || listing.getImageIds().isEmpty()
+                || listing.getTradeTypes() == null || listing.getTradeTypes().isEmpty()) {
+            cb.onError("Tin đăng cần có tối thiểu tiêu đề, danh mục, 1 hình ảnh "
+                    + "và một hình thức giao dịch để có thể công khai");
+            return;
+        }
         db.collection(COLLECTION_USERS).document(uid).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
@@ -189,6 +206,7 @@ public class ListingRepository extends BaseRepository {
                                                 .addOnFailureListener(new OnFailureListener() {
                                                     @Override
                                                     public void onFailure(Exception e) {
+                                                        listing.setStatus(ListingStatus.DRAFT);
                                                         fail(cb, e);
                                                     }
                                                 });
@@ -196,6 +214,7 @@ public class ListingRepository extends BaseRepository {
 
                                     @Override
                                     public void onError(String error) {
+                                        listing.setStatus(ListingStatus.DRAFT);
                                         cb.onError(error);
                                     }
                                 });
@@ -306,6 +325,11 @@ public class ListingRepository extends BaseRepository {
     }
 
     public void setHidden(final String id, final boolean hidden, final DataCallback<Void> cb) {
+        final String uid = currentUserId();
+        if (uid.isEmpty()) {
+            cb.onError("Chưa đăng nhập");
+            return;
+        }
         final DocumentReference listingRef = db.collection(COLLECTION_LISTINGS).document(id);
         listingRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
@@ -317,6 +341,10 @@ public class ListingRepository extends BaseRepository {
                 Listing listing = doc.toObject(Listing.class);
                 if (listing == null) {
                     cb.onError("Không thể đọc thông tin tin đăng");
+                    return;
+                }
+                if (!uid.equals(listing.getSellerId())) {
+                    cb.onError("Bạn không có quyền thao tác trên tin đăng này");
                     return;
                 }
                 String statusReason = listing.getStatusReason();
@@ -332,7 +360,6 @@ public class ListingRepository extends BaseRepository {
                         return;
                     }
                     listingRef.update("status", ListingStatus.AVAILABLE.name(),
-                            "statusReason", null,
                             "updatedAt", FieldValue.serverTimestamp())
                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
@@ -355,6 +382,7 @@ public class ListingRepository extends BaseRepository {
                     }
                     db.collection(COLLECTION_OFFERS)
                             .whereEqualTo("listingId", id)
+                            .whereEqualTo("sellerId", uid)
                             .whereEqualTo("status", OfferStatus.PENDING.name())
                             .get()
                             .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
@@ -365,25 +393,29 @@ public class ListingRepository extends BaseRepository {
                                             "status", ListingStatus.HIDDEN.name(),
                                             "statusReason", "",
                                             "updatedAt", FieldValue.serverTimestamp());
+                                    List<AppNotification> notices = new ArrayList<AppNotification>();
                                     if (offerDocs != null) {
                                         for (DocumentSnapshot offerDoc : offerDocs.getDocuments()) {
-                                            batch.update(offerDoc.getReference(), "status",
-                                                    OfferStatus.REJECTED.name());
+                                            batch.update(offerDoc.getReference(),
+                                                    "status", OfferStatus.REJECTED.name(),
+                                                    "updatedAt", FieldValue.serverTimestamp());
+                                            Offer offer = offerDoc.toObject(Offer.class);
+                                            if (offer != null && offer.getBuyerId() != null) {
+                                                AppNotification notif = new AppNotification();
+                                                notif.setRecipientId(offer.getBuyerId());
+                                                notif.setType(NotificationType.OFFER_RESULT);
+                                                notif.setTitle("Đề nghị bị từ chối");
+                                                notif.setBody("Người bán đã ẩn tin đăng, "
+                                                        + "đề nghị của bạn "
+                                                        + "đã tự động bị từ chối.");
+                                                notif.setTargetId(offer.getConversationId() != null
+                                                        ? offer.getConversationId() : id);
+                                                notif.setRead(false);
+                                                notices.add(notif);
+                                            }
                                         }
                                     }
-                                    batch.commit()
-                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                @Override
-                                                public void onSuccess(Void unused) {
-                                                    cb.onSuccess(null);
-                                                }
-                                            })
-                                            .addOnFailureListener(new OnFailureListener() {
-                                                @Override
-                                                public void onFailure(Exception e) {
-                                                    fail(cb, e);
-                                                }
-                                            });
+                                    commitWithNotices(batch, notices, cb);
                                 }
                             })
                             .addOnFailureListener(new OnFailureListener() {
@@ -406,6 +438,11 @@ public class ListingRepository extends BaseRepository {
                           final ListingStatus from,
                           final ListingStatus to,
                           final DataCallback<Void> cb) {
+        final String uid = currentUserId();
+        if (uid.isEmpty()) {
+            cb.onError("Chưa đăng nhập");
+            return;
+        }
         boolean isAvailableToSold = from == ListingStatus.AVAILABLE && to == ListingStatus.SOLD;
         boolean isSoldToAvailable = from == ListingStatus.SOLD && to == ListingStatus.AVAILABLE;
         if (!isAvailableToSold && !isSoldToAvailable) {
@@ -426,6 +463,10 @@ public class ListingRepository extends BaseRepository {
                     cb.onError("Trạng thái hiện tại không khớp");
                     return;
                 }
+                if (!uid.equals(listing.getSellerId())) {
+                    cb.onError("Bạn không có quyền thao tác trên tin đăng này");
+                    return;
+                }
 
                 if (to == ListingStatus.SOLD) {
                     try {
@@ -436,6 +477,7 @@ public class ListingRepository extends BaseRepository {
                     }
                     db.collection(COLLECTION_OFFERS)
                             .whereEqualTo("listingId", id)
+                            .whereEqualTo("sellerId", uid)
                             .whereEqualTo("status", OfferStatus.PENDING.name())
                             .get()
                             .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
@@ -444,25 +486,29 @@ public class ListingRepository extends BaseRepository {
                                     WriteBatch batch = db.batch();
                                     batch.update(listingRef, "status", ListingStatus.SOLD.name(),
                                             "updatedAt", FieldValue.serverTimestamp());
+                                    List<AppNotification> notices = new ArrayList<AppNotification>();
                                     if (offerDocs != null) {
                                         for (DocumentSnapshot offerDoc : offerDocs.getDocuments()) {
-                                            batch.update(offerDoc.getReference(), "status",
-                                                    OfferStatus.REJECTED.name());
+                                            batch.update(offerDoc.getReference(),
+                                                    "status", OfferStatus.REJECTED.name(),
+                                                    "updatedAt", FieldValue.serverTimestamp());
+                                            Offer offer = offerDoc.toObject(Offer.class);
+                                            if (offer != null && offer.getBuyerId() != null) {
+                                                AppNotification notif = new AppNotification();
+                                                notif.setRecipientId(offer.getBuyerId());
+                                                notif.setType(NotificationType.OFFER_RESULT);
+                                                notif.setTitle("Đề nghị bị từ chối");
+                                                notif.setBody("Người bán đã đánh dấu đã bán, "
+                                                        + "đề nghị của bạn "
+                                                        + "đã tự động bị từ chối.");
+                                                notif.setTargetId(offer.getConversationId() != null
+                                                        ? offer.getConversationId() : id);
+                                                notif.setRead(false);
+                                                notices.add(notif);
+                                            }
                                         }
                                     }
-                                    batch.commit()
-                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                @Override
-                                                public void onSuccess(Void unused) {
-                                                    cb.onSuccess(null);
-                                                }
-                                            })
-                                            .addOnFailureListener(new OnFailureListener() {
-                                                @Override
-                                                public void onFailure(Exception e) {
-                                                    fail(cb, e);
-                                                }
-                                            });
+                                    commitWithNotices(batch, notices, cb);
                                 }
                             })
                             .addOnFailureListener(new OnFailureListener() {
@@ -474,6 +520,7 @@ public class ListingRepository extends BaseRepository {
                 } else {
                     db.collection(COLLECTION_DEALS)
                             .whereEqualTo("listingId", id)
+                            .whereEqualTo("sellerId", uid)
                             .whereEqualTo("status", "COMPLETED")
                             .get()
                             .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
@@ -515,7 +562,57 @@ public class ListingRepository extends BaseRepository {
         });
     }
 
+    private void commitWithNotices(final WriteBatch batch,
+                                   final List<AppNotification> notices,
+                                   final DataCallback<Void> cb) {
+        addNoticesRecursively(batch, notices, 0, new Runnable() {
+            @Override
+            public void run() {
+                batch.commit()
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void unused) {
+                                cb.onSuccess(null);
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(Exception e) {
+                                fail(cb, e);
+                            }
+                        });
+            }
+        });
+    }
+
+    private void addNoticesRecursively(final WriteBatch batch,
+                                       final List<AppNotification> notices,
+                                       final int index,
+                                       final Runnable onDone) {
+        if (notices == null || index >= notices.size()) {
+            onDone.run();
+            return;
+        }
+        AppNotification notice = notices.get(index);
+        notificationRepository.create(notice, batch, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                addNoticesRecursively(batch, notices, index + 1, onDone);
+            }
+
+            @Override
+            public void onError(String error) {
+                addNoticesRecursively(batch, notices, index + 1, onDone);
+            }
+        });
+    }
+
     public void delete(final String id, final DataCallback<Void> cb) {
+        final String uid = currentUserId();
+        if (uid.isEmpty()) {
+            cb.onError("Chưa đăng nhập");
+            return;
+        }
         db.collection(COLLECTION_LISTINGS).document(id).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
@@ -526,7 +623,12 @@ public class ListingRepository extends BaseRepository {
                         }
                         Listing listing = doc.toObject(Listing.class);
                         if (listing == null || listing.getStatus() != ListingStatus.DRAFT) {
-                            cb.onError("Chỉ xóa được tin ở trạng thái bản nháp");
+                            cb.onError("Chỉ tin nháp mới xóa được. Tin đã đăng chỉ có thể ẩn đi, "
+                                    + "hãy chọn Ẩn tin");
+                            return;
+                        }
+                        if (!uid.equals(listing.getSellerId())) {
+                            cb.onError("Bạn không có quyền thao tác trên tin đăng này");
                             return;
                         }
                         db.collection(COLLECTION_LISTINGS).document(id).delete()
@@ -572,6 +674,13 @@ public class ListingRepository extends BaseRepository {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
+                        if (e instanceof FirebaseFirestoreException) {
+                            FirebaseFirestoreException fe = (FirebaseFirestoreException) e;
+                            if (fe.getCode() == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                                fail(cb, e);
+                                return;
+                            }
+                        }
                         loadFromCache(id, cb);
                     }
                 });
