@@ -604,6 +604,7 @@ public class ListingRepository extends BaseRepository {
                 });
     }
 
+    // Emits cached listings first if available, then queries Firestore and emits updated results.
     public void getFeed(final SearchFilter filter, final Timestamp after,
                         final DataCallback<List<Listing>> cb) {
         boolean online = true;
