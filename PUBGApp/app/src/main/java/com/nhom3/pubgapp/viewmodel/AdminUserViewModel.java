@@ -32,6 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 // State for the admin user management screens. Action bodies report NOT_READY until the repositories are filled.
 public class AdminUserViewModel extends ViewModel {
 
+    private static final String MESSAGE_LOAD_USERS_FAILED = "Không tải được danh sách người dùng.";
+
     private final MutableLiveData<List<User>> users = new MutableLiveData<>();
     private final MutableLiveData<User> selectedUser = new MutableLiveData<>();
     private final MutableLiveData<UserIdentity> identity = new MutableLiveData<>();
@@ -49,6 +51,8 @@ public class AdminUserViewModel extends ViewModel {
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>();
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
+    // Filters change fast; an answer to an older query must not replace the newest one.
+    private int latestFilterRequest;
 
     private static final int PROFILE_READ_COUNT = 8;
     private static final int IMAGE_COUNT = 2;
@@ -146,7 +150,29 @@ public class AdminUserViewModel extends ViewModel {
     }
 
     public void filterUsers(UserStatus status, Timestamp from, Timestamp to, String province, String keyword) {
-        error.setValue(DataCallback.NOT_READY);
+        latestFilterRequest++;
+        final int requestId = latestFilterRequest;
+        loading.setValue(true);
+        error.setValue(null);
+        adminRepository.listUsers(status, from, to, province, keyword, new DataCallback<List<User>>() {
+            @Override
+            public void onSuccess(List<User> result) {
+                if (requestId != latestFilterRequest) {
+                    return;
+                }
+                users.postValue(result);
+                loading.postValue(false);
+            }
+
+            @Override
+            public void onError(String message) {
+                if (requestId != latestFilterRequest) {
+                    return;
+                }
+                error.postValue(message != null ? message : MESSAGE_LOAD_USERS_FAILED);
+                loading.postValue(false);
+            }
+        });
     }
 
     public void loadProfile(String userId) {

@@ -19,6 +19,10 @@
     <fragment
         android:id="@+id/adminUserListFragment"
         android:name="com.nhom3.pubgapp.ui.admin.AdminUserListFragment">
+        <argument
+            android:name="pendingOnly"
+            android:defaultValue="false"
+            app:argType="boolean" />
         <action
             android:id="@+id/action_admin_user_list_to_user_detail"
             app:destination="@id/adminUserDetailFragment" />
