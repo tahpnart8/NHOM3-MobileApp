@@ -61,7 +61,6 @@ public class ForgotPasswordFragment extends Fragment {
                 if (errorMsg != null && !errorMsg.isEmpty()) {
                     binding.textError.setText(errorMsg);
                     binding.textError.setVisibility(View.VISIBLE);
-                    viewModel.clearError();
                 } else {
                     binding.textError.setVisibility(View.GONE);
                 }
