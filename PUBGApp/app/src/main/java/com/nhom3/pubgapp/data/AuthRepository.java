@@ -8,6 +8,7 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserInfo;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -245,9 +246,20 @@ public class AuthRepository extends BaseRepository {
                     fail(cb, task.getException());
                     return;
                 }
-                FirebaseUser refreshed = auth.getCurrentUser();
-                boolean verified = refreshed != null && refreshed.isEmailVerified();
-                cb.onSuccess(Boolean.valueOf(verified));
+                final FirebaseUser refreshed = auth.getCurrentUser();
+                final boolean verified = refreshed != null && refreshed.isEmailVerified();
+                if (verified) {
+                    refreshed.getIdToken(true).addOnCompleteListener(
+                            new OnCompleteListener<GetTokenResult>() {
+                                @Override
+                                public void onComplete(@NonNull Task<GetTokenResult> tokenTask) {
+                                    cb.onSuccess(Boolean.valueOf(true));
+                                }
+                            }
+                    );
+                } else {
+                    cb.onSuccess(Boolean.valueOf(false));
+                }
             }
         });
     }

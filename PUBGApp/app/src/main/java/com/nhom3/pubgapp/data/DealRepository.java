@@ -595,37 +595,97 @@ public class DealRepository extends BaseRepository {
                     return;
                 }
 
-                DealStatus from = deal.getStatus();
-                deal.complete();
-
-                WriteBatch batch = db.batch();
-                Map<String, Object> updates = new HashMap<String, Object>();
-                updates.put("status", DealStatus.COMPLETED.name());
-
-                addStatusHistory(deal, from, DealStatus.COMPLETED, "system", "");
-                updates.put("statusHistory", deal.getStatusHistory());
-                updates.put("updatedAt", FieldValue.serverTimestamp());
-                batch.update(dealRef, updates);
-
-                if (deal.getListingId() != null) {
+                if (deal.getListingId() != null && !deal.getListingId().trim().isEmpty()) {
                     DocumentReference listingRef = db.collection(COLLECTION_LISTINGS)
                             .document(deal.getListingId());
-                    Map<String, Object> listUpdates = new HashMap<String, Object>();
-                    listUpdates.put("status", ListingStatus.SOLD.name());
-                    listUpdates.put("updatedAt", FieldValue.serverTimestamp());
-                    batch.update(listingRef, listUpdates);
+                    listingRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<DocumentSnapshot> listingTask) {
+                            if (!listingTask.isSuccessful()) {
+                                fail(cb, listingTask.getException());
+                                return;
+                            }
+                            DocumentSnapshot listingSnap = listingTask.getResult();
+                            Listing listing = null;
+                            if (listingSnap != null && listingSnap.exists()) {
+                                listing = listingSnap.toObject(Listing.class);
+                            }
+                            if (!shouldUpdateListingToSold(listing, dealId)) {
+                                cb.onError("Tin đăng không ở trạng thái giữ chỗ cho giao dịch này.");
+                                return;
+                            }
+                            executeCompleteDeal(deal, dealRef, listingRef, cb);
+                        }
+                    });
+                } else {
+                    executeCompleteDeal(deal, dealRef, null, cb);
                 }
-
-                sendNotification(deal.getBuyerId(), NotificationType.DEAL_UPDATE,
-                        "Giao dịch hoàn tất", "Giao dịch đã kết thúc thành công.",
-                        dealId, batch);
-                sendNotification(deal.getSellerId(), NotificationType.DEAL_UPDATE,
-                        "Giao dịch hoàn tất", "Giao dịch đã kết thúc thành công.",
-                        dealId, batch);
-
-                commitBatch(batch, cb);
             }
         });
+    }
+
+    private void executeCompleteDeal(Deal deal, DocumentReference dealRef,
+                                     DocumentReference listingRef, DataCallback<Void> cb) {
+        DealStatus from = deal.getStatus();
+        deal.complete();
+
+        WriteBatch batch = db.batch();
+        Map<String, Object> updates = new HashMap<String, Object>();
+        updates.put("status", DealStatus.COMPLETED.name());
+
+        addStatusHistory(deal, from, DealStatus.COMPLETED, "system", "");
+        updates.put("statusHistory", deal.getStatusHistory());
+        updates.put("updatedAt", FieldValue.serverTimestamp());
+        batch.update(dealRef, updates);
+
+        if (listingRef != null) {
+            Map<String, Object> listUpdates = new HashMap<String, Object>();
+            listUpdates.put("status", ListingStatus.SOLD.name());
+            listUpdates.put("updatedAt", FieldValue.serverTimestamp());
+            batch.update(listingRef, listUpdates);
+        }
+
+        String currentUid = currentUserId();
+        String partnerId = getOtherPartyId(deal, currentUid);
+        if (!partnerId.isEmpty() && !partnerId.equals(currentUid)) {
+            sendNotification(partnerId, NotificationType.DEAL_UPDATE,
+                    "Giao dịch hoàn tất", "Giao dịch đã kết thúc thành công.",
+                    deal.getId(), batch);
+        } else {
+            if (deal.getBuyerId() != null && !deal.getBuyerId().equals(currentUid)) {
+                sendNotification(deal.getBuyerId(), NotificationType.DEAL_UPDATE,
+                        "Giao dịch hoàn tất", "Giao dịch đã kết thúc thành công.",
+                        deal.getId(), batch);
+            }
+            if (deal.getSellerId() != null && !deal.getSellerId().equals(currentUid)) {
+                sendNotification(deal.getSellerId(), NotificationType.DEAL_UPDATE,
+                        "Giao dịch hoàn tất", "Giao dịch đã kết thúc thành công.",
+                        deal.getId(), batch);
+            }
+        }
+
+        commitBatch(batch, cb);
+    }
+
+    static String getOtherPartyId(Deal deal, String currentUid) {
+        if (deal == null || currentUid == null) {
+            return "";
+        }
+        if (currentUid.equals(deal.getBuyerId())) {
+            return deal.getSellerId() != null ? deal.getSellerId() : "";
+        }
+        if (currentUid.equals(deal.getSellerId())) {
+            return deal.getBuyerId() != null ? deal.getBuyerId() : "";
+        }
+        return "";
+    }
+
+    static boolean shouldUpdateListingToSold(Listing listing, String dealId) {
+        if (listing == null || dealId == null || dealId.trim().isEmpty()) {
+            return false;
+        }
+        return listing.getStatus() == ListingStatus.RESERVED
+                && dealId.equals(listing.getReservedDealId());
     }
 
     public void releaseDueDeals(DataCallback<Integer> cb) {

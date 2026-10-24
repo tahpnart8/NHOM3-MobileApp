@@ -1,6 +1,7 @@
 package com.nhom3.pubgapp.model;
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.ServerTimestamp;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.TradeType;
@@ -200,6 +201,7 @@ public class Deal extends BaseDocument {
         this.trackingImageId = trackingImageId != null ? trackingImageId : "";
     }
 
+    @ServerTimestamp
     public Timestamp getShippedAt() {
         return shippedAt;
     }
@@ -216,6 +218,7 @@ public class Deal extends BaseDocument {
         this.autoReleaseAt = autoReleaseAt;
     }
 
+    @ServerTimestamp
     public Timestamp getReceivedAt() {
         return receivedAt;
     }
@@ -298,10 +301,11 @@ public class Deal extends BaseDocument {
         this.trackingImageId = imageId != null ? imageId : "";
         if (hasShippingProof()) {
             this.status = DealStatus.SHIPPED;
-            this.shippedAt = Timestamp.now();
-            long sevenDaysInMillis = (long) AUTO_RELEASE_DAYS * 24 * 60 * 60 * 1000;
-            long releaseTime = this.shippedAt.toDate().getTime() + sevenDaysInMillis;
+            this.shippedAt = null;
+            Timestamp now = Timestamp.now();
+            long releaseTime = now.toDate().getTime() + (long) AUTO_RELEASE_DAYS * 24 * 60 * 60 * 1000;
             this.autoReleaseAt = new Timestamp(new java.util.Date(releaseTime));
+            touch();
         }
     }
 
@@ -320,7 +324,8 @@ public class Deal extends BaseDocument {
         }
         this.receivedImageId = imageId;
         this.status = DealStatus.RECEIVED;
-        this.receivedAt = Timestamp.now();
+        this.receivedAt = null;
+        touch();
     }
 
     public boolean isAutoReleaseDue(Timestamp now) {
@@ -333,8 +338,9 @@ public class Deal extends BaseDocument {
     public void autoReceive() {
         if (status == DealStatus.SHIPPED && canMoveTo(DealStatus.RECEIVED)) {
             this.status = DealStatus.RECEIVED;
-            this.receivedAt = Timestamp.now();
+            this.receivedAt = null;
             this.receivedImageId = "";
+            touch();
         }
     }
 
