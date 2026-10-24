@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scrollFilterPanel"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/space_md"
+        android:paddingVertical="@dimen/space_sm">
+
+        <!-- Header: Title and Close button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textFilterTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/listing_search_filter_title"
+                android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonCloseFilter"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/touch_min"
+                android:text="@string/listing_search_filter_close"
+                android:textColor="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <!-- Category Section -->
+        <TextView
+            android:id="@+id/textLabelCategory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
+            android:text="@string/listing_search_category_label"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerCategory"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/touch_min"
+            android:layout_marginTop="@dimen/space_xs"
+            android:background="?attr/colorSurface"
+            android:paddingHorizontal="@dimen/space_sm" />
+
+        <!-- Price Range Section -->
+        <TextView
+            android:id="@+id/textLabelPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:text="@string/listing_search_price_range_label"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
+
+        <!-- Quick Price Chips -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupQuickPrice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPriceUnder100k"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_quick_price_under_100k" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPrice100kTo500k"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_quick_price_100k_500k" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPrice500kTo2m"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_quick_price_500k_2m" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPriceOver2m"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_quick_price_over_2m" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Custom Price Inputs -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/space_xs"
+                android:layout_weight="1"
+                android:hint="@string/listing_search_price_from_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editMinPrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_xs"
+                android:layout_weight="1"
+                android:hint="@string/listing_search_price_to_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editMaxPrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textPriceError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:text="@string/listing_search_price_error"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="@color/error"
+            android:visibility="gone" />
+
+        <!-- Condition Section -->
+        <TextView
+            android:id="@+id/textLabelCondition"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:text="@string/listing_search_condition_label"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupCondition"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipConditionNew"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_condition_new" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipConditionLikeNew"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_condition_like_new" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipConditionUsed"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_condition_used" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipConditionRepaired"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_condition_repaired" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipConditionDefective"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_condition_defective" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Trade Type Section -->
+        <TextView
+            android:id="@+id/textLabelTradeType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:text="@string/listing_search_trade_type_label"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupTradeType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTradeSell"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_trade_sell" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTradeExchange"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_trade_exchange" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTradeGiveaway"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_trade_giveaway" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Province Section -->
+        <TextView
+            android:id="@+id/textLabelProvince"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:text="@string/listing_search_province_label"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerProvince"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/touch_min"
+            android:layout_marginTop="@dimen/space_xs"
+            android:background="?attr/colorSurface"
+            android:paddingHorizontal="@dimen/space_sm" />
+
+        <!-- Sort Order Section -->
+        <TextView
+            android:id="@+id/textLabelSort"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:text="@string/listing_search_sort_label"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupSort"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipSortNewest"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="@string/listing_search_sort_newest" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipSortPriceAsc"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_sort_price_asc" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipSortPriceDesc"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_sort_price_desc" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Action Buttons: Reset and Apply -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_lg"
+            android:layout_marginBottom="@dimen/space_md"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonResetFilter"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/touch_min"
+                android:layout_marginEnd="@dimen/space_xs"
+                android:layout_weight="1"
+                android:text="@string/listing_search_filter_reset" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonApplyFilter"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/touch_min"
+                android:layout_marginStart="@dimen/space_xs"
+                android:layout_weight="1"
+                android:text="@string/listing_search_filter_apply" />
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
