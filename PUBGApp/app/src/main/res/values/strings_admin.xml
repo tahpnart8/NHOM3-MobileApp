@@ -1,8 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Admin area gate, shown by AdminActivity -->
+    <string name="admin_no_permission">Bạn không có quyền vào khu vực quản trị</string>
+
+    <!-- E01 dashboard -->
+    <string name="admin_dashboard_title">Bảng điều khiển</string>
+    <string name="admin_dashboard_greeting">Xin chào, Admin</string>
+    <string name="admin_dashboard_tasks_heading">Cần xử lý</string>
+    <string name="admin_dashboard_tasks_empty_title">Đã xử lý hết</string>
+    <string name="admin_dashboard_tasks_empty_message">Hiện không có việc nào đang chờ bạn.</string>
+    <string name="admin_dashboard_shortcuts_heading">Lối tắt quản lý</string>
+    <string name="admin_dashboard_shortcut_users">Người dùng</string>
+    <string name="admin_dashboard_shortcut_reports">Tin bị báo cáo</string>
+    <string name="admin_dashboard_back_to_app">Về ứng dụng</string>
+    <string name="admin_dashboard_label_new">Mới</string>
+    <string name="admin_dashboard_label_waiting">Chờ</string>
+    <string name="admin_dashboard_task_report_listing">Tin đăng bị báo cáo</string>
+    <string name="admin_dashboard_task_report_user">Người dùng bị báo cáo</string>
+    <string name="admin_dashboard_task_report_message">Tin nhắn bị báo cáo</string>
+    <string name="admin_dashboard_task_report_count">%d lượt báo cáo đang chờ xử lý</string>
+    <string name="admin_dashboard_task_verification">Yêu cầu xác thực tài khoản</string>
+    <string name="admin_dashboard_task_verification_new">Đang chờ bạn duyệt</string>
+    <string name="admin_dashboard_task_verification_resubmit">Đã gửi lại %d lần, đang chờ bạn duyệt</string>
+
+    <!-- E02 user list -->
+    <string name="admin_user_list_title">Người dùng</string>
+    <string name="admin_user_list_search_hint">Tìm theo tên hoặc email</string>
+    <string name="admin_user_list_status_all">Tất cả</string>
+    <string name="admin_user_list_from_date">Từ ngày</string>
+    <string name="admin_user_list_to_date">Đến ngày</string>
+    <string name="admin_user_list_clear_dates">Xóa ngày</string>
+    <string name="admin_user_list_province_hint">Tỉnh hoặc thành phố</string>
+    <string name="admin_user_list_pending_only">Chờ xác thực</string>
+    <string name="admin_user_list_warned_chip">Cảnh báo</string>
+    <string name="admin_user_list_joined">Tham gia %s</string>
+    <string name="admin_user_list_empty_title">Không có người dùng nào khớp</string>
+    <string name="admin_user_list_empty_message">Thử đổi từ khóa hoặc bỏ bớt bộ lọc.</string>
+    <string name="admin_user_list_no_name">Chưa có tên</string>
     <!-- Screen names for the empty shells, replaced when each screen is built -->
-    <string name="admin_dashboard_title">E01 Bảng điều khiển</string>
-    <string name="admin_user_list_title">E02 Danh sách người dùng</string>
     <string name="admin_user_detail_title">E03 Chi tiết người dùng</string>
     <string name="admin_moderation_title">E04 Kiểm duyệt nội dung</string>
     <string name="admin_listing_detail_title">E04 Chi tiết tin cho admin</string>
