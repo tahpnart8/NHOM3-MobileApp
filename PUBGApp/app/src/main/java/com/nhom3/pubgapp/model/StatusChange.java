@@ -54,6 +54,32 @@ public class StatusChange {
     }
 
     public String describe() {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (toStatus == null) {
+            return "";
+        }
+        switch (toStatus) {
+            case PENDING_CONFIRM:
+                return "Tạo giao dịch, chờ hai bên xác nhận";
+            case CONFIRMED:
+                return "Hai bên đã xác nhận điều khoản giao dịch";
+            case SHIPPED:
+                return "Người bán đã giao hàng";
+            case RECEIVED:
+                return "Đã nhận hàng";
+            case COMPLETED:
+                return "Giao dịch đã hoàn tất";
+            case CANCELLED:
+                if (reason != null && !reason.trim().isEmpty()) {
+                    return "Giao dịch đã hủy: " + reason;
+                }
+                return "Giao dịch đã hủy";
+            case DISPUTED:
+                if (reason != null && !reason.trim().isEmpty()) {
+                    return "Đang khiếu nại: " + reason;
+                }
+                return "Đang khiếu nại";
+            default:
+                return toStatus.name();
+        }
     }
 }

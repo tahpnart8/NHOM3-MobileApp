@@ -800,3 +800,31 @@ Nothing had been reviewed before this pass, and the same five mistakes appeared 
 
 ### Owner
 tahpnart8
+
+## 2026-10-23 - Rules and indexes actually deployed, and five calls the second review round forced
+
+### Decision
+- **The rules and the 40 composite indexes are live.** `firebase.json` and `.firebaserc` were missing, so nobody had a way to run `firebase deploy` and nothing had ever been uploaded; the two files are now in the repository and both deploys have run. The 79 KB ruleset compiled server side, which closes the worry that it might exceed the per-ruleset size limit, and it also proves the two constructs nothing had verified are at least syntactically valid: the list slice in `historyAppended()` and `let` inside a function body. Their semantics are still untested.
+- **`TrustViewModel.averageCriteria` stays public and static, and joins the specification.** The earlier call was to push it down into `ui.trust` as private, on the grounds that averaging three criteria is screen arithmetic rather than ViewModel work. That reasoning still holds, but `TrustViewModel` belongs to one person under the trimmed plan, so a public constant there endangers nobody, and the move would have cost a relocated method, a relocated test package and another review round. With two days left it bought tidiness and nothing else.
+- **`NEW_MESSAGE`, `NEW_OFFER` and `OFFER_RESULT` all navigate to C02.** They were returning an unknown-action sentinel, so tapping the three most common notifications did nothing at all. Offers live inside the conversation thread and have no screen of their own, so the chat screen is the right destination for all three.
+- **`Payment.getHeldAt()` gains `@ServerTimestamp`.** The rules require `serverStamp('heldAt')`, and unlike `createdAt` the field had no annotation, so leaving it null wrote null and deleting the device-time assignment was not enough on its own. Writing the whole payment document as a map would have worked too; the annotation is one line and matches what the field means, a moment the server stamps once.
+- **A shared class needs an entry point for every source its callers hold.** `ImageLoader` took only a Base64 string, while `MediaRepository.getImage` returns `byte[]` and a freshly picked image is a `Uri`. Two screens therefore hand-rolled a decode and both got it wrong, which is the fifth and sixth time that bug has appeared. The class now has three overloads and `workflow/memory/code/ui.md` says which to call for which source. The lesson generalises: when the same mistake keeps arriving from different people, the shared class is missing a door, not the people missing the rule.
+
+### Context
+Twelve pull requests merged in one day. Six of them had to be reviewed twice, because the first round found the same five mistakes spread across six branches of one chain.
+
+Two review errors of my own are worth recording. I told three pull requests that the rules were already enforcing their writes, which was false and unverified; the fixes were right but the urgency I attached to them was invented, and that may have misordered someone's work. And in the review of the pull request that introduced `UserRepository.createProfile`, I noticed it trusted the client's email and filed that under "worth fixing too" rather than as a blocker. It was a blocker: the rules demand the email equal `request.auth.token.email`, the method wrote an empty string, so nobody could finish registering and the whole team was locked out of testing against real Firebase for most of the day.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Paste the rules into the Console by hand | It works for rules and not at all for 40 composite indexes, and it leaves deployment tied to one person's machine |
+| Hold the D02 pull request until `averageCriteria` moved packages | Two days left, and the move protects nobody because the file has a single owner |
+| Patch `createProfile` myself once it proved to be the team's blocker | It is Ngân's file, she had three pull requests already touching it, and a silent edit would have collided with every one |
+| Leave the three notification types returning the unknown sentinel until QA15 was answered | They are the three most frequent notifications; silence on tap is worse than an imperfect destination |
+
+### Impact
+`firebase.json` and `.firebaserc` (new), the live Firestore project. `model.py`, `erd_model.py`, `tech_text_v3.py`, `tech_text.py` and `build_tech_docs.py` in the generator, hence the regenerated `dac-ta-lop/viewmodel.md`. The module C and module D UI READMEs record three deviations each. `ImageLoader` gained two overloads and `workflow/memory/code/ui.md` is the first note for the UI area.
+
+### Owner
+tahpnart8

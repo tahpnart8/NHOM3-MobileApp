@@ -9,6 +9,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.AggregateQuerySnapshot;
 import com.google.firebase.firestore.AggregateSource;
 import com.google.firebase.firestore.DocumentReference;
@@ -53,6 +54,16 @@ public class UserRepository extends BaseRepository {
         if (uid == null || uid.isEmpty()) {
             uid = currentUserId();
         }
+        FirebaseUser fu = auth.getCurrentUser();
+        if (fu == null) {
+            cb.onError("Người dùng chưa đăng nhập.");
+            return;
+        }
+        String email = fu.getEmail();
+        if (email == null || email.isEmpty()) {
+            cb.onError("Không tìm thấy email của tài khoản.");
+            return;
+        }
         user.setStatus(UserStatus.ACTIVE);
         user.setVerificationStatus(VerificationStatus.NONE);
         user.setRatingSum(0);
@@ -60,12 +71,6 @@ public class UserRepository extends BaseRepository {
         user.setWarningCount(0);
         user.setLockedUntil(null);
         user.setLockReason("");
-        if (user.getTermsAcceptedAt() == null) {
-            user.setTermsAcceptedAt(Timestamp.now());
-        }
-        if (user.getLastActiveAt() == null) {
-            user.setLastActiveAt(Timestamp.now());
-        }
         if (user.getInterestedCategoryIds() == null) {
             user.setInterestedCategoryIds(new ArrayList<String>());
         }
@@ -75,7 +80,7 @@ public class UserRepository extends BaseRepository {
         user.buildSearchKeywords();
 
         Map<String, Object> userMap = new HashMap<String, Object>();
-        userMap.put("email", user.getEmail() != null ? user.getEmail() : "");
+        userMap.put("email", email);
         userMap.put("displayName", user.getDisplayName() != null ? user.getDisplayName() : "");
         userMap.put("phone", user.getPhone() != null ? user.getPhone() : "");
         userMap.put("avatarBase64", user.getAvatarBase64() != null ? user.getAvatarBase64() : "");
@@ -83,9 +88,9 @@ public class UserRepository extends BaseRepository {
         userMap.put("province", user.getProvince() != null ? user.getProvince() : "");
         userMap.put("district", user.getDistrict() != null ? user.getDistrict() : "");
         userMap.put("interestedCategoryIds", user.getInterestedCategoryIds());
-        userMap.put("termsAcceptedAt", user.getTermsAcceptedAt());
+        userMap.put("termsAcceptedAt", FieldValue.serverTimestamp());
         userMap.put("notificationPrefs", user.getNotificationPrefs());
-        userMap.put("lastActiveAt", user.getLastActiveAt());
+        userMap.put("lastActiveAt", FieldValue.serverTimestamp());
         userMap.put("lockedUntil", null);
         userMap.put("lockReason", "");
         userMap.put("status", UserStatus.ACTIVE.name());
@@ -94,6 +99,7 @@ public class UserRepository extends BaseRepository {
         userMap.put("ratingCount", 0);
         userMap.put("warningCount", 0);
         userMap.put("searchKeywords", user.getSearchKeywords());
+        userMap.put("lastReviewId", "");
         userMap.put("createdAt", FieldValue.serverTimestamp());
         userMap.put("updatedAt", FieldValue.serverTimestamp());
 
@@ -777,7 +783,10 @@ public class UserRepository extends BaseRepository {
     }
 
     public void touchLastActive(String uid) {
-        db.collection(COLLECTION_USERS).document(uid).update("lastActiveAt", FieldValue.serverTimestamp())
+        Map<String, Object> updates = new HashMap<String, Object>();
+        updates.put("lastActiveAt", FieldValue.serverTimestamp());
+        updates.put("updatedAt", FieldValue.serverTimestamp());
+        db.collection(COLLECTION_USERS).document(uid).update(updates)
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
