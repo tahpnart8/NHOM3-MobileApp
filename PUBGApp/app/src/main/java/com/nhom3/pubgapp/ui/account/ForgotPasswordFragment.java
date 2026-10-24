@@ -75,7 +75,8 @@ public class ForgotPasswordFragment extends Fragment {
                     Toast.makeText(requireContext(), R.string.account_forgot_password_success,
                             Toast.LENGTH_LONG).show();
                     viewModel.clearDone();
-                    NavHostFragment.findNavController(ForgotPasswordFragment.this).navigateUp();
+                    NavHostFragment.findNavController(ForgotPasswordFragment.this)
+                            .navigate(R.id.action_forgot_password_to_login);
                 }
             }
         });
@@ -96,7 +97,8 @@ public class ForgotPasswordFragment extends Fragment {
             public void onClick(View v) {
                 viewModel.clearError();
                 viewModel.clearDone();
-                NavHostFragment.findNavController(ForgotPasswordFragment.this).navigateUp();
+                NavHostFragment.findNavController(ForgotPasswordFragment.this)
+                        .navigate(R.id.action_forgot_password_to_login);
             }
         });
 

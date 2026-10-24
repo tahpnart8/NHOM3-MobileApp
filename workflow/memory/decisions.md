@@ -828,3 +828,23 @@ Two review errors of my own are worth recording. I told three pull requests that
 
 ### Owner
 tahpnart8
+
+## 2026-10-23 - Unified input validation in AuthViewModel
+
+### Decision
+`AuthViewModel` is the single source of truth for account input validations (`isPasswordValid`, `isPasswordConfirmationMatching`, `isPhoneValid`). `RegisterFragment` and other UI components reuse these package-private methods instead of maintaining duplicate private validation implementations.
+
+### Context
+Review of PR #153 pointed out that `isPasswordValid`, `isPhoneValid`, and `isPasswordConfirmationMatching` had duplicated implementations in `AuthViewModel` and `RegisterFragment`, causing unit tests to test the ViewModel copy while the fragment executed its own private copy.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep duplicate private methods in Fragments | Disagrees with unit tests and causes divergence when validation rules change |
+| Move validation to a new utility class | AGENTS.md R16 forbids inventing new public classes without an issue or specification update |
+
+### Impact
+`AuthViewModel.java`, `RegisterFragment.java`.
+
+### Owner
+loopy-tnw
