@@ -65,7 +65,7 @@ public class DealRepository extends BaseRepository {
         return null;
     }
 
-    public Deal buildFromOffer(Offer offer, Listing listing) {
+    public static Deal buildFromOffer(Offer offer, Listing listing) {
         Deal deal = new Deal();
         deal.setListingId(offer.getListingId());
         deal.setOfferId(offer.getId());

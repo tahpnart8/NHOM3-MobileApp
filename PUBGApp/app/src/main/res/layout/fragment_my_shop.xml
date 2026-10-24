@@ -1,21 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
-    android:padding="@dimen/space_md">
+    android:background="?android:attr/colorBackground">
 
-    <TextView
-        android:id="@+id/textScreenName"
-        android:layout_width="wrap_content"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/listing_my_shop_title"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall"
-        android:textColor="?attr/colorOnSurface"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:background="?attr/colorSurface">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <include
+                android:id="@+id/layoutToolbar"
+                layout="@layout/view_detail_toolbar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:id="@+id/buttonOverflowMenu"
+                android:layout_width="@dimen/touch_min"
+                android:layout_height="@dimen/touch_min"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/listing_shop_menu_desc"
+                android:src="@android:drawable/ic_menu_more" />
+        </LinearLayout>
+
+        <include
+            android:id="@+id/layoutOfflineBanner"
+            layout="@layout/view_offline_banner" />
+
+        <LinearLayout
+            android:id="@+id/layoutUnverifiedBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/chip_background_beige"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="@dimen/space_md"
+            android:paddingVertical="@dimen/space_sm"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/textUnverifiedMessage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/listing_post_unverified_banner"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="@color/warning" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonVerify"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_post_btn_verify"
+                android:textColor="@color/warning" />
+        </LinearLayout>
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayoutStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:tabIndicatorColor="?attr/colorPrimary"
+            app:tabMode="fixed"
+            app:tabSelectedTextColor="?attr/colorPrimary"
+            app:tabTextColor="?attr/colorOnSurfaceVariant" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerListings"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingVertical="@dimen/space_xs" />
+
+        <include
+            android:id="@+id/layoutEmptyState"
+            layout="@layout/view_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <include
+            android:id="@+id/layoutErrorState"
+            layout="@layout/view_error_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

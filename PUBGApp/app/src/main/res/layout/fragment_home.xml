@@ -3,19 +3,207 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
-    android:padding="@dimen/space_md">
+    android:background="?android:attr/colorBackground">
 
-    <TextView
-        android:id="@+id/textScreenName"
-        android:layout_width="wrap_content"
+    <!-- Offline banner across top -->
+    <include
+        android:id="@+id/includeOfflineBanner"
+        layout="@layout/view_offline_banner"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/listing_home_title"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall"
-        android:textColor="?attr/colorOnSurface"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Top Header: Brand Name + (Guest SignIn Button / Logged-in Avatar Button) -->
+    <LinearLayout
+        android:id="@+id/layoutTopHeader"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/space_md"
+        android:paddingTop="@dimen/space_sm"
+        android:paddingBottom="@dimen/space_xs"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/includeOfflineBanner">
+
+        <TextView
+            android:id="@+id/textBrand"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/listing_home_brand"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textColor="?attr/colorPrimary"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonSignIn"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/touch_min"
+            android:text="@string/listing_home_guest_sign_in"
+            android:textColor="?attr/colorPrimary"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/imageAvatar"
+            android:layout_width="@dimen/touch_min"
+            android:layout_height="@dimen/touch_min"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/listing_home_avatar_desc"
+            android:padding="@dimen/space_sm"
+            android:src="@drawable/ic_tab_profile" />
+    </LinearLayout>
+
+    <!-- Search bar and refresh button row -->
+    <LinearLayout
+        android:id="@+id/layoutSearchRow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/space_md"
+        android:paddingVertical="@dimen/space_xs"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layoutTopHeader">
+
+        <!-- Clickable search bar leading to B02 SearchFragment -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardSearch"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/touch_min"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="@string/listing_home_search_bar_desc"
+            android:focusable="true"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="@dimen/radius_lg"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/space_md">
+
+                <ImageView
+                    android:id="@+id/imageSearchIcon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_tab_search"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+
+                <TextView
+                    android:id="@+id/textSearchHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:text="@string/listing_home_search_hint"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonRefresh"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="@dimen/touch_min"
+            android:layout_height="@dimen/touch_min"
+            android:layout_marginStart="@dimen/space_xs"
+            android:contentDescription="@string/listing_home_refresh"
+            app:icon="@drawable/ic_inbox"
+            app:iconTint="?attr/colorPrimary" />
+    </LinearLayout>
+
+    <!-- Channel selector (Kênh chung / Đang theo dõi) -->
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/toggleChannels"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/space_md"
+        android:layout_marginTop="@dimen/space_xs"
+        android:layout_marginBottom="@dimen/space_xs"
+        app:checkedButton="@id/buttonChannelGeneral"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layoutSearchRow"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonChannelGeneral"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/touch_min"
+            android:layout_weight="1"
+            android:text="@string/listing_home_channel_general"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonChannelFollowing"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/touch_min"
+            android:layout_weight="1"
+            android:text="@string/listing_home_channel_following"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <!-- 2-column listing grid -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerListings"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/space_xs"
+        android:clipToPadding="false"
+        android:paddingHorizontal="@dimen/space_xs"
+        android:paddingBottom="@dimen/space_lg"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toggleChannels" />
+
+    <!-- Loading indicator -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toggleChannels" />
+
+    <!-- Empty state -->
+    <include
+        android:id="@+id/includeEmptyState"
+        layout="@layout/view_empty_state"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toggleChannels" />
+
+    <!-- Error state -->
+    <include
+        android:id="@+id/includeErrorState"
+        layout="@layout/view_error_state"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toggleChannels" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

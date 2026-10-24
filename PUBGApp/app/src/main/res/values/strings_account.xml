@@ -93,4 +93,18 @@
     <string name="account_login_google_init_error">Không thể khởi động đăng nhập Google.</string>
 
     <string name="account_notification_title">Thông báo</string>
+    <string name="notification_list_empty">Bạn chưa có thông báo mới</string>
+    <string name="notification_list_error">Không có kết nối. Vui lòng thử lại.</string>
+    <string name="notification_list_account_inactive">Tài khoản của bạn hiện không thể thực hiện thao tác này.</string>
+
+    <string name="notification_type_new_message">Tin nhắn mới</string>
+    <string name="notification_type_new_offer">Đề nghị giá mới</string>
+    <string name="notification_type_offer_result">Kết quả đề nghị giá</string>
+    <string name="notification_type_deal_update">Cập nhật đơn hàng</string>
+    <string name="notification_type_payment_update">Cập nhật thanh toán</string>
+    <string name="notification_type_new_review">Đánh giá mới</string>
+    <string name="notification_type_complaint_result">Kết quả khiếu nại</string>
+    <string name="notification_type_warning">Cảnh báo từ quản trị viên</string>
+    <string name="notification_type_listing_moderated">Kết quả duyệt tin đăng</string>
+    <string name="notification_type_verification_result">Kết quả xác thực tài khoản</string>
 </resources>

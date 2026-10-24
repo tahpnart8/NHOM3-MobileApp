@@ -15,6 +15,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.Filter;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
@@ -36,6 +37,7 @@ import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.MessageType;
 import com.nhom3.pubgapp.model.enums.NotificationType;
 import com.nhom3.pubgapp.model.enums.OfferStatus;
+import com.nhom3.pubgapp.model.enums.OfferType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -98,6 +100,27 @@ public class ChatRepository extends BaseRepository {
             return "Tin đăng không còn hoạt động.";
         }
         return null;
+    }
+
+    static String validateMessageText(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return "Nội dung tin nhắn không được để trống.";
+        }
+        if (text.length() > 2000) {
+            return "Tin nhắn không được vượt quá 2000 ký tự.";
+        }
+        return null;
+    }
+
+    static boolean isValidMessageText(String text) {
+        return text != null && !text.trim().isEmpty() && text.length() <= 2000;
+    }
+
+    static boolean isSenderAllowed(Conversation conv, String senderId) {
+        if (conv == null || senderId == null) {
+            return false;
+        }
+        return conv.isParticipant(senderId);
     }
 
     public void getOrCreateConversation(String listingId, String buyerId, DataCallback<Conversation> cb) {
@@ -176,6 +199,33 @@ public class ChatRepository extends BaseRepository {
                                 }
                             }
                         });
+                    }
+                });
+    }
+
+    public void getConversation(String id, DataCallback<Conversation> cb) {
+        if (id == null || id.isEmpty()) {
+            cb.onError("Mã cuộc trò chuyện không hợp lệ.");
+            return;
+        }
+        db.collection(COLLECTION_CONVERSATIONS).document(id).get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (!task.isSuccessful()) {
+                            fail(cb, task.getException());
+                            return;
+                        }
+                        DocumentSnapshot doc = task.getResult();
+                        if (doc == null || !doc.exists()) {
+                            cb.onError("Không tìm thấy cuộc trò chuyện.");
+                            return;
+                        }
+                        Conversation conv = doc.toObject(Conversation.class);
+                        if (conv != null) {
+                            conv.setId(doc.getId());
+                        }
+                        cb.onSuccess(conv);
                     }
                 });
     }
@@ -395,43 +445,56 @@ public class ChatRepository extends BaseRepository {
     }
 
     public void sendText(String id, String text, DataCallback<Void> cb) {
+        String validationError = validateMessageText(text);
+        if (validationError != null) {
+            cb.onError(validationError);
+            return;
+        }
+
         String senderId = currentUserId();
         if (senderId.isEmpty()) {
             cb.onError("Chưa đăng nhập.");
             return;
         }
 
-        ChatMessage msg = new ChatMessage();
-        msg.setConversationId(id);
-        msg.setSenderId(senderId);
-        msg.setType(MessageType.TEXT);
-        msg.setText(text != null ? text.trim() : "");
-        msg.setImageId("");
-        msg.setOfferId("");
-
-        WriteBatch batch = db.batch();
-        DocumentReference msgRef = db.collection(COLLECTION_CONVERSATIONS).document(id)
-                .collection(COLLECTION_MESSAGES).document();
-        msg.setId(msgRef.getId());
-        batch.set(msgRef, msg);
-
         DocumentReference convRef = db.collection(COLLECTION_CONVERSATIONS).document(id);
-        Map<String, Object> convUpdates = new HashMap<String, Object>();
-        convUpdates.put("lastMessage", msg.getText());
-        convUpdates.put("lastMessageAt", FieldValue.serverTimestamp());
-        convUpdates.put("updatedAt", FieldValue.serverTimestamp());
-        batch.update(convRef, convUpdates);
-
         convRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
-                    Conversation conv = task.getResult().toObject(Conversation.class);
-                    String recipientId = conv != null ? conv.otherParty(senderId) : null;
-                    if (recipientId != null) {
-                        sendNotification(recipientId, NotificationType.NEW_MESSAGE,
-                                "Tin nhắn mới", msg.getText(), id, batch);
-                    }
+                if (!task.isSuccessful() || task.getResult() == null || !task.getResult().exists()) {
+                    cb.onError("Cuộc trò chuyện không tồn tại.");
+                    return;
+                }
+                Conversation conv = task.getResult().toObject(Conversation.class);
+                if (!isSenderAllowed(conv, senderId)) {
+                    cb.onError("Bạn không thuộc cuộc trò chuyện này.");
+                    return;
+                }
+
+                ChatMessage msg = new ChatMessage();
+                msg.setConversationId(id);
+                msg.setSenderId(senderId);
+                msg.setType(MessageType.TEXT);
+                msg.setText(text != null ? text.trim() : "");
+                msg.setImageId("");
+                msg.setOfferId("");
+
+                WriteBatch batch = db.batch();
+                DocumentReference msgRef = db.collection(COLLECTION_CONVERSATIONS).document(id)
+                        .collection(COLLECTION_MESSAGES).document();
+                msg.setId(msgRef.getId());
+                batch.set(msgRef, msg);
+
+                Map<String, Object> convUpdates = new HashMap<String, Object>();
+                convUpdates.put("lastMessage", msg.getText());
+                convUpdates.put("lastMessageAt", FieldValue.serverTimestamp());
+                convUpdates.put("updatedAt", FieldValue.serverTimestamp());
+                batch.update(convRef, convUpdates);
+
+                String recipientId = conv != null ? conv.otherParty(senderId) : null;
+                if (recipientId != null) {
+                    sendNotification(recipientId, NotificationType.NEW_MESSAGE,
+                            "Tin nhắn mới", msg.getText(), id, batch);
                 }
                 commitBatch(batch, cb);
             }
@@ -439,27 +502,44 @@ public class ChatRepository extends BaseRepository {
     }
 
     public void sendImage(String id, Uri uri, DataCallback<Void> cb) {
-        MediaRepository mediaRepo = new MediaRepository();
-        mediaRepo.saveImage(uri, ImagePurpose.CHAT, new DataCallback<String>() {
-            @Override
-            public void onSuccess(String imageId) {
-                sendImageMessage(id, imageId, cb);
-            }
-
-            @Override
-            public void onError(String message) {
-                cb.onError(message);
-            }
-        });
-    }
-
-    private void sendImageMessage(String id, String imageId, DataCallback<Void> cb) {
         String senderId = currentUserId();
         if (senderId.isEmpty()) {
             cb.onError("Chưa đăng nhập.");
             return;
         }
 
+        DocumentReference convRef = db.collection(COLLECTION_CONVERSATIONS).document(id);
+        convRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (!task.isSuccessful() || task.getResult() == null || !task.getResult().exists()) {
+                    cb.onError("Cuộc trò chuyện không tồn tại.");
+                    return;
+                }
+                Conversation conv = task.getResult().toObject(Conversation.class);
+                if (!isSenderAllowed(conv, senderId)) {
+                    cb.onError("Bạn không thuộc cuộc trò chuyện này.");
+                    return;
+                }
+
+                MediaRepository mediaRepo = new MediaRepository();
+                mediaRepo.saveImage(uri, ImagePurpose.CHAT, new DataCallback<String>() {
+                    @Override
+                    public void onSuccess(String imageId) {
+                        sendImageMessage(id, imageId, senderId, conv, cb);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        cb.onError(message);
+                    }
+                });
+            }
+        });
+    }
+
+    private void sendImageMessage(String id, String imageId, String senderId, Conversation conv,
+                                  DataCallback<Void> cb) {
         ChatMessage msg = new ChatMessage();
         msg.setConversationId(id);
         msg.setSenderId(senderId);
@@ -481,32 +561,45 @@ public class ChatRepository extends BaseRepository {
         convUpdates.put("updatedAt", FieldValue.serverTimestamp());
         batch.update(convRef, convUpdates);
 
-        convRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+        String recipientId = conv != null ? conv.otherParty(senderId) : null;
+        if (recipientId != null) {
+            sendNotification(recipientId, NotificationType.NEW_MESSAGE,
+                    "Tin nhắn hình ảnh mới", "[Hình ảnh]", id, batch);
+        }
+
+        batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
-                    Conversation conv = task.getResult().toObject(Conversation.class);
-                    String recipientId = conv != null ? conv.otherParty(senderId) : null;
-                    if (recipientId != null) {
-                        sendNotification(recipientId, NotificationType.NEW_MESSAGE,
-                                "Tin nhắn hình ảnh mới", "[Hình ảnh]", id, batch);
-                    }
+            public void onComplete(@NonNull Task<Void> commitTask) {
+                if (commitTask.isSuccessful()) {
+                    cb.onSuccess(null);
+                } else {
+                    new MediaRepository().delete(imageId, new DataCallback<Void>() {
+                        @Override
+                        public void onSuccess(Void result) {
+                        }
+
+                        @Override
+                        public void onError(String msg) {
+                        }
+                    });
+                    fail(cb, commitTask.getException());
                 }
-                commitBatch(batch, cb);
             }
         });
     }
 
-    public void sendOffer(Offer offer, DataCallback<String> cb) {
-        String currentUid = currentUserId();
+    public void sendOffer(final Offer offer, final DataCallback<String> cb) {
+        final String currentUid = currentUserId();
         if (currentUid.isEmpty()) {
             cb.onError("Chưa đăng nhập.");
             return;
         }
-        if (!currentUid.equals(offer.getBuyerId())) {
-            cb.onError("Chỉ người mua mới được tạo đề nghị.");
+        if (offer == null || offer.getListingId() == null || offer.getListingId().trim().isEmpty()) {
+            cb.onError("Thông tin đề nghị không hợp lệ.");
             return;
         }
+
+        offer.setBuyerId(currentUid);
 
         db.collection(COLLECTION_LISTINGS).document(offer.getListingId()).get()
                 .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -517,46 +610,116 @@ public class ChatRepository extends BaseRepository {
                             return;
                         }
                         Listing listing = task.getResult().toObject(Listing.class);
-                        if (listing == null || !listing.acceptsOffer(offer)) {
-                            cb.onError("Tin đăng không chấp nhận đề nghị này.");
+                        if (listing == null) {
+                            cb.onError("Dữ liệu tin đăng không hợp lệ.");
                             return;
                         }
-                        saveOfferAndMessage(offer, cb);
+                        listing.setId(task.getResult().getId());
+                        offer.setSellerId(listing.getSellerId());
+
+                        String validationError = validateOffer(offer, listing, currentUid);
+                        if (validationError != null) {
+                            cb.onError(validationError);
+                            return;
+                        }
+
+                        checkPendingOfferAndProceed(offer, listing, currentUid, cb);
                     }
                 });
     }
 
-    private void saveOfferAndMessage(Offer offer, DataCallback<String> cb) {
+    private void checkPendingOfferAndProceed(final Offer offer, final Listing listing,
+                                             final String senderId, final DataCallback<String> cb) {
+        db.collection(COLLECTION_OFFERS)
+                .whereEqualTo("buyerId", senderId)
+                .whereEqualTo("listingId", offer.getListingId())
+                .whereEqualTo("status", OfferStatus.PENDING.name())
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (!task.isSuccessful()) {
+                            fail(cb, task.getException());
+                            return;
+                        }
+                        if (task.getResult() != null && !task.getResult().isEmpty()) {
+                            cb.onError("Bạn đã có đề nghị đang chờ cho tin đăng này.");
+                            return;
+                        }
+                        ensureConversationAndSaveOffer(offer, listing, senderId, cb);
+                    }
+                });
+    }
+
+    private void ensureConversationAndSaveOffer(final Offer offer, final Listing listing,
+                                                final String senderId, final DataCallback<String> cb) {
+        String convId = offer.getConversationId();
+        if (convId == null || convId.trim().isEmpty()) {
+            convId = buildConversationId(listing.getId(), senderId);
+            offer.setConversationId(convId);
+        }
+
+        final String finalConvId = convId;
+        final DocumentReference convRef = db.collection(COLLECTION_CONVERSATIONS).document(finalConvId);
+
+        convRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                boolean convExists = task.isSuccessful() && task.getResult() != null && task.getResult().exists();
+                executeSendOfferBatch(offer, listing, senderId, finalConvId, convRef, convExists, cb);
+            }
+        });
+    }
+
+    private void executeSendOfferBatch(final Offer offer, final Listing listing, final String senderId,
+                                       final String convId, final DocumentReference convRef,
+                                       final boolean convExists, final DataCallback<String> cb) {
         offer.setStatus(OfferStatus.PENDING);
+        offer.setCreatedAt(null);
+        offer.setUpdatedAt(null);
 
         WriteBatch batch = db.batch();
         DocumentReference offerRef = db.collection(COLLECTION_OFFERS).document();
-        String offerId = offerRef.getId();
+        final String offerId = offerRef.getId();
         offer.setId(offerId);
         batch.set(offerRef, offer);
 
-        DocumentReference msgRef = db.collection(COLLECTION_CONVERSATIONS).document(offer.getConversationId())
-                .collection(COLLECTION_MESSAGES).document();
+        String summary = formatOfferSummary(offer);
         ChatMessage msg = new ChatMessage();
+        DocumentReference msgRef = db.collection(COLLECTION_CONVERSATIONS).document(convId)
+                .collection(COLLECTION_MESSAGES).document();
         msg.setId(msgRef.getId());
-        msg.setConversationId(offer.getConversationId());
-        msg.setSenderId(offer.getBuyerId());
+        msg.setConversationId(convId);
+        msg.setSenderId(senderId);
         msg.setType(MessageType.OFFER);
         msg.setOfferId(offerId);
         msg.setImageId("");
-        msg.setText("Đã gửi một đề nghị giá.");
+        msg.setText(summary);
+        msg.setCreatedAt(null);
         batch.set(msgRef, msg);
 
-        DocumentReference convRef = db.collection(COLLECTION_CONVERSATIONS).document(offer.getConversationId());
-        Map<String, Object> convUpdates = new HashMap<String, Object>();
-        convUpdates.put("lastMessage", "Đề nghị giá mới");
-        convUpdates.put("lastMessageAt", FieldValue.serverTimestamp());
-        convUpdates.put("updatedAt", FieldValue.serverTimestamp());
-        batch.update(convRef, convUpdates);
+        if (!convExists) {
+            Conversation conv = new Conversation();
+            conv.setId(convId);
+            conv.setListingId(listing.getId());
+            conv.setBuyerId(senderId);
+            conv.setSellerId(listing.getSellerId());
+            conv.setLastMessage(summary);
+            conv.setLastMessageAt(null);
+            conv.setCreatedAt(null);
+            conv.setUpdatedAt(null);
+            batch.set(convRef, conv);
+        } else {
+            Map<String, Object> convUpdates = new HashMap<String, Object>();
+            convUpdates.put("lastMessage", summary);
+            convUpdates.put("lastMessageAt", FieldValue.serverTimestamp());
+            convUpdates.put("updatedAt", FieldValue.serverTimestamp());
+            batch.update(convRef, convUpdates);
+        }
 
-        sendNotification(offer.getSellerId(), NotificationType.NEW_OFFER,
-                "Đề nghị giá mới", "Có người gửi đề nghị cho tin đăng của bạn.",
-                offer.getConversationId(), batch);
+        sendNotification(listing.getSellerId(), NotificationType.NEW_OFFER,
+                "Đề nghị giá mới", "Có người gửi đề nghị cho tin: " + listing.getTitle(),
+                convId, batch);
 
         batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
@@ -570,14 +733,14 @@ public class ChatRepository extends BaseRepository {
         });
     }
 
-    public void respondToOffer(String offerId, boolean accept, DataCallback<String> cb) {
-        String currentUid = currentUserId();
+    public void respondToOffer(final String offerId, final boolean accept, final DataCallback<String> cb) {
+        final String currentUid = currentUserId();
         if (currentUid.isEmpty()) {
             cb.onError("Chưa đăng nhập.");
             return;
         }
 
-        DocumentReference offerRef = db.collection(COLLECTION_OFFERS).document(offerId);
+        final DocumentReference offerRef = db.collection(COLLECTION_OFFERS).document(offerId);
         offerRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -593,7 +756,7 @@ public class ChatRepository extends BaseRepository {
                 offer.setId(offerId);
 
                 if (!currentUid.equals(offer.getSellerId())) {
-                    cb.onError("Chỉ người bán mới được phản hồi đề nghị.");
+                    cb.onError("Chỉ người bán mới có quyền trả lời đề nghị.");
                     return;
                 }
                 if (offer.getStatus() != OfferStatus.PENDING) {
@@ -610,7 +773,7 @@ public class ChatRepository extends BaseRepository {
         });
     }
 
-    private void rejectOffer(DocumentReference offerRef, Offer offer, DataCallback<String> cb) {
+    private void rejectOffer(DocumentReference offerRef, Offer offer, final DataCallback<String> cb) {
         offer.reject();
 
         WriteBatch batch = db.batch();
@@ -620,7 +783,7 @@ public class ChatRepository extends BaseRepository {
         batch.update(offerRef, offerUpdates);
 
         sendNotification(offer.getBuyerId(), NotificationType.OFFER_RESULT,
-                "Đề nghị đã bị từ chối", "Người bán đã từ chối đề nghị của bạn.",
+                "Đề nghị bị từ chối", "Người bán đã từ chối đề nghị của bạn.",
                 offer.getConversationId(), batch);
 
         batch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -635,8 +798,8 @@ public class ChatRepository extends BaseRepository {
         });
     }
 
-    private void acceptOffer(DocumentReference offerRef, Offer offer, DataCallback<String> cb) {
-        DocumentReference listingRef = db.collection(COLLECTION_LISTINGS).document(offer.getListingId());
+    private void acceptOffer(final DocumentReference offerRef, final Offer offer, final DataCallback<String> cb) {
+        final DocumentReference listingRef = db.collection(COLLECTION_LISTINGS).document(offer.getListingId());
         listingRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -647,11 +810,21 @@ public class ChatRepository extends BaseRepository {
                 Listing listing = task.getResult().toObject(Listing.class);
                 if (listing == null || listing.getStatus() != ListingStatus.AVAILABLE) {
                     offer.reject();
+                    WriteBatch rejectBatch = db.batch();
                     Map<String, Object> offerUpdates = new HashMap<String, Object>();
                     offerUpdates.put("status", offer.getStatus().name());
                     offerUpdates.put("updatedAt", FieldValue.serverTimestamp());
-                    offerRef.update(offerUpdates);
-                    cb.onError("Tin không còn khả dụng.");
+                    rejectBatch.update(offerRef, offerUpdates);
+                    sendNotification(offer.getBuyerId(), NotificationType.OFFER_RESULT,
+                            "Đề nghị bị từ chối",
+                            "Tin không còn ở trạng thái khả dụng để chấp nhận.",
+                            offer.getConversationId(), rejectBatch);
+                    rejectBatch.commit().addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> t) {
+                            cb.onError("Tin không còn khả dụng để chấp nhận đề nghị.");
+                        }
+                    });
                     return;
                 }
                 listing.setId(task.getResult().getId());
@@ -660,16 +833,22 @@ public class ChatRepository extends BaseRepository {
         });
     }
 
-    private void executeAcceptOfferBatch(DocumentReference offerRef, Offer offer,
-                                         DocumentReference listingRef, Listing listing,
-                                         DataCallback<String> cb) {
+    private void executeAcceptOfferBatch(final DocumentReference offerRef, final Offer offer,
+                                         final DocumentReference listingRef, final Listing listing,
+                                         final DataCallback<String> cb) {
+        String currentUid = currentUserId();
         db.collection(COLLECTION_OFFERS)
+                .whereEqualTo("sellerId", currentUid)
                 .whereEqualTo("listingId", offer.getListingId())
                 .whereEqualTo("status", OfferStatus.PENDING.name())
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> queryTask) {
+                        if (!queryTask.isSuccessful()) {
+                            fail(cb, queryTask.getException());
+                            return;
+                        }
                         WriteBatch batch = db.batch();
 
                         offer.accept();
@@ -678,10 +857,9 @@ public class ChatRepository extends BaseRepository {
                         offerUpdates.put("updatedAt", FieldValue.serverTimestamp());
                         batch.update(offerRef, offerUpdates);
 
-                        DealRepository dealRepo = new DealRepository();
-                        Deal deal = dealRepo.buildFromOffer(offer, listing);
+                        Deal deal = DealRepository.buildFromOffer(offer, listing);
                         DocumentReference dealRef = db.collection(COLLECTION_DEALS).document();
-                        String dealId = dealRef.getId();
+                        final String dealId = dealRef.getId();
                         deal.setId(dealId);
                         batch.set(dealRef, deal);
 
@@ -692,7 +870,7 @@ public class ChatRepository extends BaseRepository {
                         listingUpdates.put("updatedAt", FieldValue.serverTimestamp());
                         batch.update(listingRef, listingUpdates);
 
-                        if (queryTask.isSuccessful() && queryTask.getResult() != null) {
+                        if (queryTask.getResult() != null) {
                             for (DocumentSnapshot doc : queryTask.getResult().getDocuments()) {
                                 if (!doc.getId().equals(offer.getId())) {
                                     Map<String, Object> rejUpdates = new HashMap<String, Object>();
@@ -731,8 +909,13 @@ public class ChatRepository extends BaseRepository {
                 });
     }
 
-    public ListenerRegistration observeOffers(String conversationId, DataCallback<Void> cb) {
-        Query query = db.collection(COLLECTION_OFFERS).whereEqualTo("conversationId", conversationId);
+    public ListenerRegistration observeOffers(String conversationId, final DataCallback<List<Offer>> cb) {
+        String currentUid = currentUserId();
+        Query query = db.collection(COLLECTION_OFFERS)
+                .where(Filter.and(
+                        Filter.equalTo("conversationId", conversationId),
+                        Filter.or(Filter.equalTo("buyerId", currentUid), Filter.equalTo("sellerId", currentUid))
+                ));
         return query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot value,
@@ -741,9 +924,104 @@ public class ChatRepository extends BaseRepository {
                     fail(cb, error);
                     return;
                 }
-                cb.onSuccess(null);
+                List<Offer> list = new ArrayList<Offer>();
+                if (value != null) {
+                    for (DocumentSnapshot doc : value.getDocuments()) {
+                        Offer offer = doc.toObject(Offer.class);
+                        if (offer != null) {
+                            offer.setId(doc.getId());
+                            list.add(offer);
+                        }
+                    }
+                }
+                cb.onSuccess(list);
             }
         });
+    }
+
+    public ListenerRegistration observeOffers(String conversationId, final DataCallback<Void> cb, boolean dummy) {
+        return observeOffers(conversationId, new DataCallback<List<Offer>>() {
+            @Override
+            public void onSuccess(List<Offer> result) {
+                cb.onSuccess(null);
+            }
+
+            @Override
+            public void onError(String message) {
+                cb.onError(message);
+            }
+        });
+    }
+
+    static String validateOffer(Offer offer, Listing listing, String senderId) {
+        if (offer == null) {
+            return "Thông tin đề nghị không hợp lệ.";
+        }
+        if (listing == null) {
+            return "Không tìm thấy tin đăng.";
+        }
+        if (listing.getStatus() != ListingStatus.AVAILABLE) {
+            return "Tin đăng không còn ở trạng thái khả dụng để gửi đề nghị.";
+        }
+        if (senderId != null && senderId.equals(listing.getSellerId())) {
+            return "Không thể gửi đề nghị cho tin đăng của chính mình.";
+        }
+        List<OfferType> accepted = listing.getAcceptedOfferTypes();
+        if (accepted == null || !accepted.contains(offer.getOfferType())) {
+            return "Người bán không chấp nhận hình thức đề nghị này.";
+        }
+        if (offer.getOfferType() == OfferType.MONEY) {
+            if (offer.getAmount() < listing.getMinOfferPrice()) {
+                return "Giá đề nghị chưa phù hợp, hãy thử mức khác.";
+            }
+        } else if (offer.getOfferType() == OfferType.ITEM) {
+            if (offer.getAmount() != 0) {
+                return "Đề nghị chỉ có vật không được có số tiền.";
+            }
+            if (offer.getExchangeItem() == null || offer.getExchangeItem().trim().isEmpty()) {
+                return "Vui lòng nhập thông tin món đồ trao đổi.";
+            }
+        } else if (offer.getOfferType() == OfferType.MONEY_AND_ITEM) {
+            if (offer.getAmount() < listing.getMinOfferPrice()) {
+                return "Giá đề nghị chưa phù hợp, hãy thử mức khác.";
+            }
+            if (offer.getExchangeItem() == null || offer.getExchangeItem().trim().isEmpty()) {
+                return "Vui lòng nhập thông tin món đồ trao đổi.";
+            }
+        }
+        return null;
+    }
+
+    static String formatOfferSummary(Offer offer) {
+        com.nhom3.pubgapp.util.FormatUtils formatUtils = new com.nhom3.pubgapp.util.FormatUtils();
+        if (offer == null) {
+            return "Đề nghị giá mới";
+        }
+        if (offer.getOfferType() == OfferType.MONEY) {
+            return "Đề nghị: " + formatUtils.formatPrice(offer.getAmount());
+        }
+        if (offer.getOfferType() == OfferType.ITEM) {
+            return "Đề nghị đổi: " + (offer.getExchangeItem() != null ? offer.getExchangeItem().trim() : "");
+        }
+        if (offer.getOfferType() == OfferType.MONEY_AND_ITEM) {
+            return "Đề nghị: " + formatUtils.formatPrice(offer.getAmount()) + " + "
+                    + (offer.getExchangeItem() != null ? offer.getExchangeItem().trim() : "");
+        }
+        return "Đề nghị giá mới";
+    }
+
+    static List<Offer> filterOtherPendingOffers(List<Offer> offers, String currentOfferId) {
+        List<Offer> result = new ArrayList<Offer>();
+        if (offers == null) {
+            return result;
+        }
+        for (int i = 0; i < offers.size(); i++) {
+            Offer o = offers.get(i);
+            if (o != null && o.getId() != null && !o.getId().equals(currentOfferId)) {
+                result.add(o);
+            }
+        }
+        return result;
     }
 
     private void sendNotification(String recipientId, NotificationType type,

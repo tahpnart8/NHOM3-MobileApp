@@ -50,7 +50,9 @@ The body, when there is one, says why. It never contains a `Co-authored-by` line
 - The body follows a template and contains `Closes #N` (repeat the keyword before every number: `Closes #1, closes #2`), or `Closes: none`. A pull request that changes anything under `PUBGApp/` uses `.github/PULL_REQUEST_TEMPLATE.md`. One that changes only documents uses the short `.github/PULL_REQUEST_TEMPLATE/tai-lieu.md`: four headings, no build result, no feature code checklist.
 - A pull request that deletes code under `PUBGApp/app/src/main` also contains `Removal-Issue: #N`.
 - These keywords stay English because tools read them: `Closes`, `Refs`, `Removal-Issue`, `Deviation`. Code names, file paths, commands and error messages are quoted as they are.
-- A pull request GitHub generates itself (`Revert ...`, `Merge ...`) is exempt.
+- A pull request GitHub generates itself (`Revert ...`, `Merge ...`) is exempt. So is any commit whose
+  first word is `merge` or `revert`, in any case and with or without a colon: a merge commit written by
+  hand is still a merge commit, and squash merge keeps intermediate subjects off `main` either way.
 
 ## Issues
 

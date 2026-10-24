@@ -216,7 +216,6 @@ public class AuthViewModel extends ViewModel {
         }
         return true;
     }
-
     enum LoginDecision {
         ALLOW,
         CLEAR_EXPIRED_LOCK,

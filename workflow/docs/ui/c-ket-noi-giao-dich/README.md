@@ -231,13 +231,17 @@
 | DEAL_UPDATE (giao dịch đổi trạng thái) | C03 |
 | PAYMENT_UPDATE (tiền được giữ, giải ngân, hoàn) | C03 |
 | NEW_REVIEW (có đánh giá mới) | D03 của người được đánh giá (chính mình, chế độ chỉ xem) |
-| COMPLAINT_RESULT (kết quả khiếu nại) | D07, thẻ "Khiếu nại của tôi" |
+| COMPLAINT_RESULT (kết quả khiếu nại) | D01 (xem Khác với ảnh) |
 | WARNING (bị cảnh báo hoặc khóa) | D01 |
 | LISTING_MODERATED (tin bị admin ẩn, gỡ hoặc khôi phục) | B05 |
 | VERIFICATION_RESULT (kết quả xác thực tài khoản) | D01 |
 
 - Cuộn dọc danh sách: xem thêm các thông báo cũ hơn
 - Bấm nút quay lại: về màn đã gọi
+
+**Khác với ảnh:**
+- `COMPLAINT_RESULT` đi về **D01**, không về D07. D07 đã bị cắt khỏi phạm vi đợt này (xem `ke-hoach-rut-gon.md`), nên `action_global_my_reports` đã bị gạch khỏi `so-huu.md` mục 4. Hành động hợp lệ còn lại là `action_global_my_profile`.
+- `C02` **không có bố cục ngang riêng**. Màn chat là một `RecyclerView` dọc, xoay ngang nó tự giãn và vẫn đọc được. Chỉ B03 bắt buộc có `layout-land` vì có băng chuyền ảnh lớn.
 
 **Chức năng liên quan:** STT 67 (xem thông báo, đánh dấu đã đọc), STT 10 (loại thông báo đã tắt thì không hiện).
 
