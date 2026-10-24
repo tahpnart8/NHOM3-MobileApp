@@ -263,8 +263,7 @@ Hệ quả từng quyết định: REFUND, RETURN_ITEM, CANCEL_DEAL làm giao d�
 
 1. Admin chọn tài khoản, nhập lý do, và với bậc 2 chọn hạn khóa tạm, bấm Cảnh báo: `AdminUserViewModel.warn(userId, reason, until)` gọi `AdminRepository.warnUser(id, warning, until)`.
 2. Repository, trong một lô ghi, tăng `User.warningCount`, ghi `users/{uid}/warnings/{id}` với `level` mới, áp `Warning.resultingStatus()`: bậc 1 giữ ACTIVE, bậc 2 TEMP_LOCKED kèm hạn `until`, bậc 3 trở lên PERM_LOCKED; ghi `lockReason`; ghi thông báo WARNING cho người bị cảnh báo. Hệ thống **không** tự gỡ tin của tài khoản bị khóa: admin bấm "Gỡ toàn bộ tin" ở màn E03 khi thấy cần (quyết định 2026-10-22).
-3. Bậc 3 trở lên thì ViewModel gọi tiếp `AdminRepository.removeAllListingsOf` để gỡ mọi tin của tài khoản.
-4. Lần đăng nhập kế tiếp của họ bị chặn nếu đang khóa; nếu họ đang dùng ứng dụng, lần ghi kế tiếp bị Rules từ chối vì tài khoản không còn ACTIVE.
+3. Lần đăng nhập kế tiếp của họ bị chặn nếu đang khóa; nếu họ đang dùng ứng dụng, lần ghi kế tiếp bị Rules từ chối vì tài khoản không còn ACTIVE.
 
 ## 8. Vô hiệu hóa tài khoản (STT 12)
 

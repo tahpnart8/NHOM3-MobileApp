@@ -1,5 +1,8 @@
 package com.nhom3.pubgapp.viewmodel;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -23,6 +26,7 @@ import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.UserIdentity;
 import com.nhom3.pubgapp.model.Warning;
 import com.nhom3.pubgapp.model.enums.UserStatus;
+import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +67,14 @@ public class AdminUserViewModel extends ViewModel {
     private static final String MESSAGE_MISSING_IMAGES = "Yêu cầu xác thực thiếu ảnh giấy tờ.";
     private static final String MESSAGE_IMAGE_FAILED =
             "Không tải được ảnh giấy tờ. Hãy kiểm tra mạng rồi thử lại.";
+    // Lock, unlock and warn.
+    private static final long ACTION_TIMEOUT_MS = 15000L;
+    private static final String MESSAGE_ACTION_SELF =
+            "Bạn không thể cảnh báo hoặc khóa chính tài khoản của mình.";
+    private static final String MESSAGE_ACTION_REASON_REQUIRED = "Hãy nhập lý do.";
+    private static final String MESSAGE_ACTION_TIMEOUT =
+            "Máy chủ chưa trả lời sau 15 giây. Thao tác có thể vẫn được ghi,"
+                    + " hãy làm mới màn hình để kiểm tra.";
 
     private final AdminRepository adminRepository = new AdminRepository();
     private final UserRepository userRepository = new UserRepository();
@@ -75,6 +87,8 @@ public class AdminUserViewModel extends ViewModel {
     // Reads still running; loading stays true until this is back to zero. Callbacks run on other threads.
     private final AtomicInteger pendingReads = new AtomicInteger(0);
     private final AtomicBoolean reviewing = new AtomicBoolean(false);
+    private final AtomicBoolean acting = new AtomicBoolean(false);
+    private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
     // What was already asked for, so a rotation does not read again. Cleared when a read fails, so Retry works.
     private volatile String loadedProfileUserId;
     private volatile String loadedLogUserId;
@@ -187,15 +201,26 @@ public class AdminUserViewModel extends ViewModel {
     }
 
     public void lock(String userId, Timestamp until, String reason) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!canStartAction(userId, reason, true)) {
+            return;
+        }
+        adminRepository.lockUser(userId, until, reason.trim(), beginAction(userId));
     }
 
     public void unlock(String userId) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!canStartAction(userId, null, false)) {
+            return;
+        }
+        adminRepository.unlockUser(userId, beginAction(userId));
     }
 
     public void warn(String userId, String reason, Timestamp until) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!canStartAction(userId, reason, true)) {
+            return;
+        }
+        Warning warning = new Warning();
+        warning.setReason(reason.trim());
+        adminRepository.warnUser(userId, warning, until, beginAction(userId));
     }
 
     public void loadVerificationRequests() {
@@ -296,6 +321,28 @@ public class AdminUserViewModel extends ViewModel {
 
     public void clearDone() {
         done.setValue(false);
+    }
+
+    private boolean canStartAction(String userId, String reason, boolean needsReason) {
+        if (userId == null || userId.isEmpty()) {
+            error.setValue(MESSAGE_USER_REQUIRED);
+            return false;
+        }
+        if (userId.equals(SessionManager.getInstance().getCurrentUserId())) {
+            error.setValue(MESSAGE_ACTION_SELF);
+            return false;
+        }
+        if (needsReason && (reason == null || reason.trim().isEmpty())) {
+            error.setValue(MESSAGE_ACTION_REASON_REQUIRED);
+            return false;
+        }
+        return !acting.get();
+    }
+
+    private ActionCallback beginAction(String userId) {
+        acting.set(true);
+        beginReads(1);
+        return new ActionCallback(userId);
     }
 
     private void beginReads(int count) {
@@ -424,6 +471,51 @@ public class AdminUserViewModel extends ViewModel {
             if (finished.compareAndSet(false, true)) {
                 endRead();
             }
+        }
+    }
+
+    // One lock, unlock or warn write: reloads the profile on success and gives up after 15 seconds.
+    private final class ActionCallback implements DataCallback<Void> {
+
+        private final String userId;
+        private final AtomicBoolean finished = new AtomicBoolean(false);
+        private final Runnable timeout = new Runnable() {
+            @Override
+            public void run() {
+                if (finished.compareAndSet(false, true)) {
+                    acting.set(false);
+                    error.postValue(MESSAGE_ACTION_TIMEOUT);
+                    endRead();
+                }
+            }
+        };
+
+        ActionCallback(String userId) {
+            this.userId = userId;
+            timeoutHandler.postDelayed(timeout, ACTION_TIMEOUT_MS);
+        }
+
+        @Override
+        public void onSuccess(Void result) {
+            if (!finished.compareAndSet(false, true)) {
+                return;
+            }
+            timeoutHandler.removeCallbacks(timeout);
+            acting.set(false);
+            done.postValue(true);
+            startProfileLoad(userId);
+            endRead();
+        }
+
+        @Override
+        public void onError(String message) {
+            if (!finished.compareAndSet(false, true)) {
+                return;
+            }
+            timeoutHandler.removeCallbacks(timeout);
+            acting.set(false);
+            error.postValue(message);
+            endRead();
         }
     }
 }
