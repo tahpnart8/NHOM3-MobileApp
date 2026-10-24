@@ -24,6 +24,8 @@
     <string name="common_tab_chat">Tin nhắn</string>
     <string name="common_tab_profile">Cá nhân</string>
     <string name="common_top_bar_notifications">Thông báo</string>
+    <string name="common_top_bar_notifications_unread">Thông báo, %1$d chưa đọc</string>
+    <string name="common_top_bar_badge_overflow">%1$d+</string>
     <string name="common_top_bar_profile">Trang cá nhân của tôi</string>
 
     <!-- Status chip labels, giao-dien.md section 4. Key is common_status_<object>_<state>; the object keeps equal state names apart. -->

@@ -27,13 +27,37 @@
             android:textAppearance="?attr/textAppearanceHeadlineSmall"
             android:textColor="?attr/colorPrimary" />
 
-        <ImageButton
-            android:id="@+id/buttonNotifications"
+        <FrameLayout
+            android:id="@+id/frameNotifications"
             android:layout_width="@dimen/touch_min"
-            android:layout_height="@dimen/touch_min"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/common_top_bar_notifications"
-            android:src="@drawable/ic_bell" />
+            android:layout_height="@dimen/touch_min">
+
+            <ImageButton
+                android:id="@+id/buttonNotifications"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/common_top_bar_notifications"
+                android:src="@drawable/ic_bell" />
+
+            <!-- The unread count; the button's content description already says it, so this is hidden from TalkBack. -->
+            <TextView
+                android:id="@+id/textNotificationBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="@dimen/space_xs"
+                android:layout_marginEnd="@dimen/space_xs"
+                android:background="@drawable/bg_badge_count"
+                android:gravity="center"
+                android:importantForAccessibility="no"
+                android:minWidth="@dimen/space_md"
+                android:minHeight="@dimen/space_md"
+                android:paddingHorizontal="@dimen/space_xs"
+                android:textAppearance="?attr/textAppearanceLabelSmall"
+                android:textColor="?attr/colorOnError"
+                android:visibility="gone" />
+        </FrameLayout>
 
         <FrameLayout
             android:id="@+id/frameTopBarAvatar"
