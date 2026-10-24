@@ -233,4 +233,7 @@
     <string name="admin_moderation_keyword_remove_message">Xóa từ khóa “%s”? Tin đã đăng không bị rà lại, từ này chỉ thôi gắn cờ các tin đăng hoặc sửa từ nay.</string>
     <string name="admin_moderation_keyword_done_added">Đã thêm từ khóa cấm.</string>
     <string name="admin_moderation_keyword_done_removed">Đã xóa từ khóa cấm.</string>
+
+    <!-- E03: an admin does not act on their own account -->
+    <string name="admin_user_action_self">Đây là tài khoản của bạn nên không thể cảnh báo hoặc khóa.</string>
 </resources>

@@ -26,6 +26,7 @@ import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.UserIdentity;
 import com.nhom3.pubgapp.model.Warning;
 import com.nhom3.pubgapp.model.enums.UserStatus;
+import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +69,8 @@ public class AdminUserViewModel extends ViewModel {
             "Không tải được ảnh giấy tờ. Hãy kiểm tra mạng rồi thử lại.";
     // Lock, unlock and warn.
     private static final long ACTION_TIMEOUT_MS = 15000L;
+    private static final String MESSAGE_ACTION_SELF =
+            "Bạn không thể cảnh báo hoặc khóa chính tài khoản của mình.";
     private static final String MESSAGE_ACTION_REASON_REQUIRED = "Hãy nhập lý do.";
     private static final String MESSAGE_ACTION_TIMEOUT =
             "Máy chủ chưa trả lời sau 15 giây. Thao tác có thể vẫn được ghi,"
@@ -323,6 +326,10 @@ public class AdminUserViewModel extends ViewModel {
     private boolean canStartAction(String userId, String reason, boolean needsReason) {
         if (userId == null || userId.isEmpty()) {
             error.setValue(MESSAGE_USER_REQUIRED);
+            return false;
+        }
+        if (userId.equals(SessionManager.getInstance().getCurrentUserId())) {
+            error.setValue(MESSAGE_ACTION_SELF);
             return false;
         }
         if (needsReason && (reason == null || reason.trim().isEmpty())) {

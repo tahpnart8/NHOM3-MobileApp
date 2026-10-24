@@ -38,6 +38,8 @@ public class AdminContentViewModel extends ViewModel {
             "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.";
     private static final String MESSAGE_ID_REQUIRED = "Thiếu mã của đối tượng cần xử lý.";
     private static final String MESSAGE_REASON_REQUIRED = "Hãy nhập lý do.";
+    private static final String MESSAGE_ACTION_SELF =
+            "Bạn không thể cảnh báo hoặc khóa chính tài khoản của mình.";
     private static final String MESSAGE_KEYWORD_REQUIRED = "Hãy nhập từ khóa.";
     private static final String MESSAGE_FILTER_REQUIRED = "Hãy chọn trạng thái báo cáo cần xem.";
     private static final String MESSAGE_REPORTS_NOT_CLOSED =
@@ -255,6 +257,10 @@ public class AdminContentViewModel extends ViewModel {
     public void removeAllOf(String userId) {
         if (isBlank(userId)) {
             error.postValue(MESSAGE_ID_REQUIRED);
+            return;
+        }
+        if (userId.equals(SessionManager.getInstance().getCurrentUserId())) {
+            error.postValue(MESSAGE_ACTION_SELF);
             return;
         }
         final int token = writeGuard.begin();

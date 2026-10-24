@@ -43,6 +43,24 @@ public class AdminUserActionRulesTest {
     }
 
     @Test
+    public void ownAccountIsSelf() {
+        assertTrue(AdminUserActionRules.isSelf("admin-1", "admin-1"));
+    }
+
+    @Test
+    public void otherAccountIsNotSelf() {
+        assertFalse(AdminUserActionRules.isSelf("user-2", "admin-1"));
+    }
+
+    @Test
+    public void missingIdsAreNeverSelf() {
+        assertFalse(AdminUserActionRules.isSelf(null, null));
+        assertFalse(AdminUserActionRules.isSelf("", ""));
+        assertFalse(AdminUserActionRules.isSelf("admin-1", null));
+        assertFalse(AdminUserActionRules.isSelf(null, "admin-1"));
+    }
+
+    @Test
     public void nullStatusHasNoAction() {
         assertFalse(AdminUserActionRules.canWarn(null));
         assertFalse(AdminUserActionRules.canLock(null));

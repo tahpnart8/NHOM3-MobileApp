@@ -16,6 +16,11 @@ public final class AdminUserActionRules {
     private AdminUserActionRules() {
     }
 
+    // An admin never acts on their own account: a locked admin loses write access and cannot undo it.
+    public static boolean isSelf(@Nullable String viewedUserId, @Nullable String signedInUserId) {
+        return viewedUserId != null && !viewedUserId.isEmpty() && viewedUserId.equals(signedInUserId);
+    }
+
     public static boolean canWarn(@Nullable UserStatus status) {
         return status == UserStatus.ACTIVE;
     }

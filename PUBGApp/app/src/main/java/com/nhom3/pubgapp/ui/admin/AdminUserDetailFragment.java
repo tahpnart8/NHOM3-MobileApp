@@ -38,6 +38,7 @@ import com.nhom3.pubgapp.model.enums.VerificationStatus;
 import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.ui.common.StatusChips;
 import com.nhom3.pubgapp.util.NetworkMonitor;
+import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.AdminContentViewModel;
 import com.nhom3.pubgapp.viewmodel.AdminUserViewModel;
 
@@ -332,11 +333,12 @@ public class AdminUserDetailFragment extends Fragment {
     // Shows only what the account status allows (the Rules check again on every write).
     private void renderActionBlock(User user) {
         UserStatus status = user.getStatus();
-        boolean canWarn = AdminUserActionRules.canWarn(status);
-        boolean canLock = AdminUserActionRules.canLock(status);
-        boolean canUnlock = AdminUserActionRules.canUnlock(status);
-        boolean canRemove = AdminUserActionRules.canRemoveAllListings(status);
-        binding.layoutActionBlock.setVisibility(canWarn || canLock || canUnlock || canRemove
+        boolean self = AdminUserActionRules.isSelf(userId, SessionManager.getInstance().getCurrentUserId());
+        boolean canWarn = !self && AdminUserActionRules.canWarn(status);
+        boolean canLock = !self && AdminUserActionRules.canLock(status);
+        boolean canUnlock = !self && AdminUserActionRules.canUnlock(status);
+        boolean canRemove = !self && AdminUserActionRules.canRemoveAllListings(status);
+        binding.layoutActionBlock.setVisibility(self || canWarn || canLock || canUnlock || canRemove
                 ? View.VISIBLE : View.GONE);
         binding.layoutWarnLockButtons.setVisibility(canWarn || canLock ? View.VISIBLE : View.GONE);
         binding.buttonWarn.setVisibility(canWarn ? View.VISIBLE : View.GONE);
@@ -346,9 +348,11 @@ public class AdminUserDetailFragment extends Fragment {
         binding.inputActionReason.setVisibility(canWarn ? View.VISIBLE : View.GONE);
         binding.textReasonNote.setVisibility(canWarn ? View.VISIBLE : View.GONE);
         binding.layoutLockDuration.setVisibility(canLock ? View.VISIBLE : View.GONE);
-        binding.textActionNotice.setVisibility(canWarn ? View.VISIBLE : View.GONE);
+        binding.textActionNotice.setVisibility(self || canWarn ? View.VISIBLE : View.GONE);
         binding.textLockInfo.setVisibility(canUnlock ? View.VISIBLE : View.GONE);
-        if (canWarn) {
+        if (self) {
+            binding.textActionNotice.setText(R.string.admin_user_action_self);
+        } else if (canWarn) {
             binding.textActionNotice.setText(noticeOf(user.getWarningCount()));
         }
         if (canUnlock) {
