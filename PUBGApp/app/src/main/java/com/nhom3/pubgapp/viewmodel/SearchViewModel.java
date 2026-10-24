@@ -4,15 +4,22 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.firebase.Timestamp;
+import com.nhom3.pubgapp.data.CategoryRepository;
 import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.ListingRepository;
 import com.nhom3.pubgapp.model.Category;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.SearchFilter;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.model.enums.SortOrder;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
-// State for keyword search, filters and user search. Action bodies report NOT_READY until the repositories are filled.
+// State for keyword search, filters and search results.
 public class SearchViewModel extends ViewModel {
 
     private final MutableLiveData<List<Listing>> results = new MutableLiveData<>();
@@ -23,8 +30,60 @@ public class SearchViewModel extends ViewModel {
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
 
+    private final ListingRepository listingRepo = new ListingRepository();
+    private final CategoryRepository categoryRepo = new CategoryRepository();
+
     // Plain field, not LiveData: the ViewModel itself survives rotation.
-    private SearchFilter filter;
+    private SearchFilter filter = new SearchFilter();
+    private Timestamp lastCreatedAt = null;
+    private boolean hasMore = true;
+    private boolean isLoadingNext = false;
+
+    static boolean isPriceRangeValid(long minPrice, long maxPrice) {
+        if (minPrice <= 0 || maxPrice <= 0) {
+            return true;
+        }
+        return maxPrice >= minPrice;
+    }
+
+    static List<Listing> sortResults(List<Listing> list, SortOrder order) {
+        if (list == null) {
+            return new ArrayList<Listing>();
+        }
+        List<Listing> sorted = new ArrayList<Listing>(list);
+        if (order == SortOrder.PRICE_ASC) {
+            Collections.sort(sorted, new Comparator<Listing>() {
+                @Override
+                public int compare(Listing o1, Listing o2) {
+                    return Long.compare(o1.getPrice(), o2.getPrice());
+                }
+            });
+        } else if (order == SortOrder.PRICE_DESC) {
+            Collections.sort(sorted, new Comparator<Listing>() {
+                @Override
+                public int compare(Listing o1, Listing o2) {
+                    return Long.compare(o2.getPrice(), o1.getPrice());
+                }
+            });
+        } else {
+            Collections.sort(sorted, new Comparator<Listing>() {
+                @Override
+                public int compare(Listing o1, Listing o2) {
+                    if (o1.getCreatedAt() == null && o2.getCreatedAt() == null) {
+                        return 0;
+                    }
+                    if (o1.getCreatedAt() == null) {
+                        return 1;
+                    }
+                    if (o2.getCreatedAt() == null) {
+                        return -1;
+                    }
+                    return o2.getCreatedAt().compareTo(o1.getCreatedAt());
+                }
+            });
+        }
+        return sorted;
+    }
 
     public LiveData<List<Listing>> getResults() {
         return results;
@@ -54,20 +113,102 @@ public class SearchViewModel extends ViewModel {
         return done;
     }
 
-    public void setKeyword(String text) {
-        error.setValue(DataCallback.NOT_READY);
+    public SearchFilter getFilter() {
+        if (filter == null) {
+            filter = new SearchFilter();
+        }
+        return filter;
     }
 
-    public void applyFilter(SearchFilter filter) {
-        error.setValue(DataCallback.NOT_READY);
+    public void setKeyword(String text) {
+        if (filter == null) {
+            filter = new SearchFilter();
+        }
+        filter.setKeyword(text);
+    }
+
+    public void applyFilter(SearchFilter newFilter) {
+        this.filter = newFilter != null ? newFilter : new SearchFilter();
+        search();
     }
 
     public void search() {
-        error.setValue(DataCallback.NOT_READY);
+        lastCreatedAt = null;
+        hasMore = true;
+        isLoadingNext = false;
+        loading.setValue(true);
+
+        if (filter == null) {
+            filter = new SearchFilter();
+        }
+
+        final String keyword = filter.getKeyword();
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            listingRepo.recordSearch(keyword.trim());
+            loadRecentSearches();
+        }
+
+        listingRepo.search(filter, null, new DataCallback<List<Listing>>() {
+            @Override
+            public void onSuccess(List<Listing> list) {
+                loading.postValue(false);
+                if (list == null || list.size() < 20) {
+                    hasMore = false;
+                } else {
+                    hasMore = true;
+                }
+                if (list != null && !list.isEmpty()) {
+                    lastCreatedAt = list.get(list.size() - 1).getCreatedAt();
+                }
+                List<Listing> sorted = sortResults(list, filter.getSortOrder());
+                results.postValue(sorted);
+            }
+
+            @Override
+            public void onError(String err) {
+                loading.postValue(false);
+                error.postValue(err);
+            }
+        });
     }
 
     public void loadNext() {
-        error.setValue(DataCallback.NOT_READY);
+        if (isLoadingNext || !hasMore || Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        if (lastCreatedAt == null) {
+            return;
+        }
+        isLoadingNext = true;
+
+        listingRepo.search(filter, lastCreatedAt, new DataCallback<List<Listing>>() {
+            @Override
+            public void onSuccess(List<Listing> page) {
+                isLoadingNext = false;
+                if (page == null || page.isEmpty()) {
+                    hasMore = false;
+                    return;
+                }
+                if (page.size() < 20) {
+                    hasMore = false;
+                }
+                lastCreatedAt = page.get(page.size() - 1).getCreatedAt();
+                List<Listing> current = results.getValue();
+                List<Listing> merged = new ArrayList<Listing>();
+                if (current != null) {
+                    merged.addAll(current);
+                }
+                merged.addAll(page);
+                List<Listing> sorted = sortResults(merged, filter.getSortOrder());
+                results.postValue(sorted);
+            }
+
+            @Override
+            public void onError(String err) {
+                isLoadingNext = false;
+                error.postValue(err);
+            }
+        });
     }
 
     public void searchUsers(String keyword) {
@@ -75,11 +216,31 @@ public class SearchViewModel extends ViewModel {
     }
 
     public void loadCategories() {
-        error.setValue(DataCallback.NOT_READY);
+        categoryRepo.getAll(new DataCallback<List<Category>>() {
+            @Override
+            public void onSuccess(List<Category> list) {
+                categories.postValue(list != null ? list : new ArrayList<Category>());
+            }
+
+            @Override
+            public void onError(String err) {
+                // Category load is optional for search filter panel
+            }
+        });
     }
 
     public void loadRecentSearches() {
-        error.setValue(DataCallback.NOT_READY);
+        listingRepo.getRecentSearches(20, new DataCallback<List<String>>() {
+            @Override
+            public void onSuccess(List<String> list) {
+                recentSearches.postValue(list != null ? list : new ArrayList<String>());
+            }
+
+            @Override
+            public void onError(String err) {
+                recentSearches.postValue(new ArrayList<String>());
+            }
+        });
     }
 
     public void clearError() {

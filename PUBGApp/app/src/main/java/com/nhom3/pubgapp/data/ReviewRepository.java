@@ -19,7 +19,9 @@ import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.NotificationType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ReviewRepository extends BaseRepository {
 
@@ -41,6 +43,10 @@ public class ReviewRepository extends BaseRepository {
         }
         if (!review.isValidRating()) {
             cb.onError("Điểm đánh giá phải từ 1 đến 5 sao.");
+            return;
+        }
+        if (!isValidComment(review.getComment())) {
+            cb.onError("Nội dung đánh giá không được vượt quá 500 ký tự.");
             return;
         }
 
@@ -100,9 +106,12 @@ public class ReviewRepository extends BaseRepository {
                                 batch.set(reviewRef, review);
 
                                 DocumentReference userRef = db.collection(COLLECTION_USERS).document(revieweeId);
-                                batch.update(userRef,
-                                        "ratingSum", FieldValue.increment(review.getRating()),
-                                        "ratingCount", FieldValue.increment(1));
+                                Map<String, Object> userUpdates = new HashMap<String, Object>();
+                                userUpdates.put("ratingSum", FieldValue.increment(review.getRating()));
+                                userUpdates.put("ratingCount", FieldValue.increment(1));
+                                userUpdates.put("lastReviewId", reviewId);
+                                userUpdates.put("updatedAt", FieldValue.serverTimestamp());
+                                batch.update(userRef, userUpdates);
 
                                 sendNotification(revieweeId, NotificationType.NEW_REVIEW,
                                         "Bạn có đánh giá mới",
@@ -132,8 +141,11 @@ public class ReviewRepository extends BaseRepository {
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful() && task.getResult() != null
-                                && task.getResult().size() >= 2) {
+                        if (!task.isSuccessful()) {
+                            fail(cb, task.getException());
+                            return;
+                        }
+                        if (task.getResult() != null && task.getResult().size() >= 2) {
                             DealRepository dealRepo = new DealRepository();
                             dealRepo.completeDeal(dealId, new DataCallback<Void>() {
                                 @Override
@@ -143,7 +155,7 @@ public class ReviewRepository extends BaseRepository {
 
                                 @Override
                                 public void onError(String message) {
-                                    cb.onSuccess(null);
+                                    cb.onError(message);
                                 }
                             });
                         } else {
@@ -151,6 +163,10 @@ public class ReviewRepository extends BaseRepository {
                         }
                     }
                 });
+    }
+
+    static boolean isValidComment(String comment) {
+        return comment == null || comment.length() <= 500;
     }
 
     public void getByDeal(String dealId, DataCallback<List<Review>> cb) {

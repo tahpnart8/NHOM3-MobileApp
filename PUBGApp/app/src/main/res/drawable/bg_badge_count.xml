@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pill behind the unread count on the bell; it stretches to fit one to three characters. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorError" />
+    <corners android:radius="@dimen/radius_lg" />
+</shape>

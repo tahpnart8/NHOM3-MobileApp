@@ -9,6 +9,7 @@ import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.enums.DealStatus;
+import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.OfferType;
 import com.nhom3.pubgapp.model.enums.TradeType;
 
@@ -70,5 +71,38 @@ public class DealRepositoryTest {
         assertEquals(TradeType.EXCHANGE, deal.getTradeType());
         assertEquals(0, deal.getAgreedPrice());
         assertEquals("Loa bluetooth", deal.getExchangeItem());
+    }
+
+    @Test
+    public void getOtherPartyId_returnsCorrectPartner() {
+        Deal deal = new Deal();
+        deal.setBuyerId("buyer123");
+        deal.setSellerId("seller456");
+
+        assertEquals("seller456", DealRepository.getOtherPartyId(deal, "buyer123"));
+        assertEquals("buyer123", DealRepository.getOtherPartyId(deal, "seller456"));
+        assertEquals("", DealRepository.getOtherPartyId(deal, "stranger789"));
+        assertEquals("", DealRepository.getOtherPartyId(deal, null));
+        assertEquals("", DealRepository.getOtherPartyId(null, "buyer123"));
+    }
+
+    @Test
+    public void shouldUpdateListingToSold_requiresReservedAndMatchingDealId() {
+        Listing listing = new Listing();
+        listing.setStatus(ListingStatus.RESERVED);
+        listing.setReservedDealId("deal_abc");
+
+        assertTrue(DealRepository.shouldUpdateListingToSold(listing, "deal_abc"));
+        assertFalse(DealRepository.shouldUpdateListingToSold(listing, "other_deal"));
+
+        listing.setStatus(ListingStatus.AVAILABLE);
+        assertFalse(DealRepository.shouldUpdateListingToSold(listing, "deal_abc"));
+
+        listing.setStatus(ListingStatus.SOLD);
+        assertFalse(DealRepository.shouldUpdateListingToSold(listing, "deal_abc"));
+
+        assertFalse(DealRepository.shouldUpdateListingToSold(null, "deal_abc"));
+        assertFalse(DealRepository.shouldUpdateListingToSold(listing, null));
+        assertFalse(DealRepository.shouldUpdateListingToSold(listing, ""));
     }
 }

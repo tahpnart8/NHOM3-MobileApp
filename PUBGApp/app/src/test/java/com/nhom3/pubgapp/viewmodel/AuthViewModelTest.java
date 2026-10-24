@@ -64,4 +64,82 @@ public class AuthViewModelTest {
         AuthViewModel.LoginDecision decision = AuthViewModel.evaluateUserStatus(user);
         assertEquals(AuthViewModel.LoginDecision.CLEAR_EXPIRED_LOCK, decision);
     }
+
+    @Test
+    public void isPasswordValid_validPassword_returnsTrue() {
+        assertEquals(true, AuthViewModel.isPasswordValid("Pass1234"));
+    }
+
+    @Test
+    public void isPasswordValid_exactly8CharsWithLetterAndDigit_returnsTrue() {
+        assertEquals(true, AuthViewModel.isPasswordValid("a1b2c3d4"));
+    }
+
+    @Test
+    public void isPasswordValid_lessThan8Chars_returnsFalse() {
+        assertEquals(false, AuthViewModel.isPasswordValid("Pass123"));
+    }
+
+    @Test
+    public void isPasswordValid_onlyLetters_returnsFalse() {
+        assertEquals(false, AuthViewModel.isPasswordValid("PasswordOnly"));
+    }
+
+    @Test
+    public void isPasswordValid_onlyDigits_returnsFalse() {
+        assertEquals(false, AuthViewModel.isPasswordValid("12345678"));
+    }
+
+    @Test
+    public void isPasswordValid_emptyOrNull_returnsFalse() {
+        assertEquals(false, AuthViewModel.isPasswordValid(""));
+        assertEquals(false, AuthViewModel.isPasswordValid(null));
+    }
+
+    @Test
+    public void isPasswordConfirmationMatching_matching_returnsTrue() {
+        assertEquals(true, AuthViewModel.isPasswordConfirmationMatching("Pass1234", "Pass1234"));
+    }
+
+    @Test
+    public void isPasswordConfirmationMatching_mismatch_returnsFalse() {
+        assertEquals(false, AuthViewModel.isPasswordConfirmationMatching("Pass1234", "Pass9999"));
+    }
+
+    @Test
+    public void isPasswordConfirmationMatching_null_returnsFalse() {
+        assertEquals(false, AuthViewModel.isPasswordConfirmationMatching(null, "Pass1234"));
+        assertEquals(false, AuthViewModel.isPasswordConfirmationMatching("Pass1234", null));
+    }
+
+    @Test
+    public void isPhoneValid_valid10Digits_returnsTrue() {
+        assertEquals(true, AuthViewModel.isPhoneValid("0901234567"));
+    }
+
+    @Test
+    public void isPhoneValid_missingDigit_returnsFalse() {
+        assertEquals(false, AuthViewModel.isPhoneValid("090123456"));
+    }
+
+    @Test
+    public void isPhoneValid_extraDigit_returnsFalse() {
+        assertEquals(false, AuthViewModel.isPhoneValid("09012345678"));
+    }
+
+    @Test
+    public void isPhoneValid_notStartingWithZero_returnsFalse() {
+        assertEquals(false, AuthViewModel.isPhoneValid("1901234567"));
+    }
+
+    @Test
+    public void isPhoneValid_containsNonDigit_returnsFalse() {
+        assertEquals(false, AuthViewModel.isPhoneValid("090123456a"));
+    }
+
+    @Test
+    public void isPhoneValid_emptyOrNull_returnsFalse() {
+        assertEquals(false, AuthViewModel.isPhoneValid(""));
+        assertEquals(false, AuthViewModel.isPhoneValid(null));
+    }
 }

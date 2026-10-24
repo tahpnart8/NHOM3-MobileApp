@@ -1,9 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Admin area gate, shown by AdminActivity -->
+    <string name="admin_no_permission">Bạn không có quyền vào khu vực quản trị</string>
+
+    <!-- E01 dashboard -->
+    <string name="admin_dashboard_title">Bảng điều khiển</string>
+    <string name="admin_dashboard_greeting">Xin chào, Admin</string>
+    <string name="admin_dashboard_tasks_heading">Cần xử lý</string>
+    <string name="admin_dashboard_tasks_empty_title">Đã xử lý hết</string>
+    <string name="admin_dashboard_tasks_empty_message">Hiện không có việc nào đang chờ bạn.</string>
+    <string name="admin_dashboard_shortcuts_heading">Lối tắt quản lý</string>
+    <string name="admin_dashboard_shortcut_users">Người dùng</string>
+    <string name="admin_dashboard_shortcut_reports">Tin bị báo cáo</string>
+    <string name="admin_dashboard_back_to_app">Về ứng dụng</string>
+    <string name="admin_dashboard_label_new">Mới</string>
+    <string name="admin_dashboard_label_waiting">Chờ</string>
+    <string name="admin_dashboard_task_report_listing">Tin đăng bị báo cáo</string>
+    <string name="admin_dashboard_task_report_user">Người dùng bị báo cáo</string>
+    <string name="admin_dashboard_task_report_message">Tin nhắn bị báo cáo</string>
+    <string name="admin_dashboard_task_report_count">%d lượt báo cáo đang chờ xử lý</string>
+    <string name="admin_dashboard_task_verification">Yêu cầu xác thực tài khoản</string>
+    <string name="admin_dashboard_task_verification_new">Đang chờ bạn duyệt</string>
+    <string name="admin_dashboard_task_verification_resubmit">Đã gửi lại %d lần, đang chờ bạn duyệt</string>
+
+    <!-- E02 user list -->
+    <string name="admin_user_list_title">Người dùng</string>
+    <string name="admin_user_list_search_hint">Tìm theo tên hoặc email</string>
+    <string name="admin_user_list_status_all">Tất cả</string>
+    <string name="admin_user_list_from_date">Từ ngày</string>
+    <string name="admin_user_list_to_date">Đến ngày</string>
+    <string name="admin_user_list_clear_dates">Xóa ngày</string>
+    <string name="admin_user_list_province_hint">Tỉnh hoặc thành phố</string>
+    <string name="admin_user_list_pending_only">Chờ xác thực</string>
+    <string name="admin_user_list_warned_chip">Cảnh báo</string>
+    <string name="admin_user_list_joined">Tham gia %s</string>
+    <string name="admin_user_list_empty_title">Không có người dùng nào khớp</string>
+    <string name="admin_user_list_empty_message">Thử đổi từ khóa hoặc bỏ bớt bộ lọc.</string>
+    <string name="admin_user_list_no_name">Chưa có tên</string>
     <!-- Screen names for the empty shells, replaced when each screen is built -->
-    <string name="admin_dashboard_title">E01 Bảng điều khiển</string>
-    <string name="admin_user_list_title">E02 Danh sách người dùng</string>
-    <string name="admin_user_detail_title">E03 Chi tiết người dùng</string>
     <string name="admin_moderation_title">Kiểm duyệt nội dung</string>
     <string name="admin_listing_detail_title">Chi tiết tin</string>
 
@@ -77,4 +111,66 @@
     <string name="admin_listing_detail_done_hidden">Đã ẩn tin và đóng các báo cáo.</string>
     <string name="admin_listing_detail_done_removed">Đã gỡ tin và đóng các báo cáo.</string>
     <string name="admin_listing_detail_done_restored">Đã khôi phục tin.</string>
+
+    <!-- E03 user detail: header and numbers -->
+    <string name="admin_user_detail_title">Chi tiết người dùng</string>
+    <string name="admin_user_detail_phone_joined">%1$s · Tham gia %2$s</string>
+    <string name="admin_user_detail_no_phone">Chưa có số điện thoại</string>
+    <string name="admin_user_detail_stat_deals">Giao dịch</string>
+    <string name="admin_user_detail_stat_rating">Đánh giá</string>
+    <string name="admin_user_detail_stat_reports">Báo cáo chờ xử lý</string>
+    <string name="admin_user_detail_rating_count">(%1$d)</string>
+
+    <!-- E03 identity block, no national id here -->
+    <string name="admin_user_detail_identity_title">Thông tin định danh</string>
+    <string name="admin_user_detail_identity_birth">Ngày sinh</string>
+    <string name="admin_user_detail_identity_gender">Giới tính</string>
+    <string name="admin_user_detail_identity_address">Địa chỉ thường trú</string>
+    <string name="admin_user_detail_identity_empty">Người dùng chưa khai thông tin định danh.</string>
+    <string name="admin_user_detail_label_value">%1$s: %2$s</string>
+    <string name="admin_user_detail_not_provided">Chưa có</string>
+    <string name="admin_user_detail_gender_male">Nam</string>
+    <string name="admin_user_detail_gender_female">Nữ</string>
+    <string name="admin_user_detail_gender_other">Khác</string>
+
+    <!-- E03 history tabs -->
+    <string name="admin_user_detail_tab_listings">Tin đăng</string>
+    <string name="admin_user_detail_tab_deals">Giao dịch</string>
+    <string name="admin_user_detail_tab_reviews">Đánh giá</string>
+    <string name="admin_user_detail_tab_warnings">Lịch sử vi phạm</string>
+    <string name="admin_user_detail_tab_logs">Nhật ký hoạt động</string>
+    <string name="admin_user_detail_empty_listings_title">Chưa có tin đăng</string>
+    <string name="admin_user_detail_empty_listings_message">Tài khoản này chưa có tin nào để hiển thị.</string>
+    <string name="admin_user_detail_empty_deals_title">Chưa có giao dịch</string>
+    <string name="admin_user_detail_empty_deals_message">Tài khoản này chưa tham gia giao dịch nào.</string>
+    <string name="admin_user_detail_empty_reviews_title">Chưa có đánh giá</string>
+    <string name="admin_user_detail_empty_reviews_message">Tài khoản này chưa nhận đánh giá nào.</string>
+    <string name="admin_user_detail_empty_warnings_title">Chưa có vi phạm</string>
+    <string name="admin_user_detail_empty_warnings_message">Tài khoản này chưa bị cảnh báo lần nào.</string>
+    <string name="admin_user_detail_empty_logs_title">Chưa có nhật ký</string>
+    <string name="admin_user_detail_empty_logs_message">Chưa ghi nhận hoạt động nào của tài khoản này.</string>
+
+    <!-- E03 history rows -->
+    <string name="admin_user_detail_warning_level">Cảnh báo bậc %1$d</string>
+    <string name="admin_user_detail_review_stars">%1$d sao</string>
+    <string name="admin_user_detail_review_no_comment">Không có nhận xét</string>
+    <string name="admin_user_detail_log_target">Đối tượng: %1$s %2$s</string>
+
+
+    <!-- E03 verification request block (STT 73): every word says account verification -->
+    <string name="admin_verification_title">Yêu cầu xác thực tài khoản</string>
+    <string name="admin_verification_national_id_label">Số CCCD người gửi khai</string>
+    <string name="admin_verification_image_document">Ảnh giấy tờ</string>
+    <string name="admin_verification_image_portrait">Ảnh chân dung cầm giấy tờ</string>
+    <string name="admin_verification_resubmit">Đã gửi lại %1$d lần (tối đa %2$d lần)</string>
+    <string name="admin_verification_approve">Duyệt</string>
+    <string name="admin_verification_reject">Từ chối</string>
+    <string name="admin_verification_consequence">Duyệt là mở quyền đăng tin, gửi đề nghị và tạo giao dịch cho tài khoản này. Từ chối thì tài khoản vẫn xem, tìm kiếm, nhắn tin và theo dõi được nhưng chưa mua bán được.</string>
+    <string name="admin_verification_blocked_locked">Tài khoản đang bị khóa hoặc đã xóa nên không thể duyệt yêu cầu xác thực này.</string>
+    <string name="admin_verification_blocked_offline">Đang không có mạng nên chưa thể duyệt hoặc từ chối.</string>
+    <string name="admin_verification_done">Đã ghi kết quả xác thực tài khoản.</string>
+    <string name="admin_verification_reject_title">Từ chối yêu cầu xác thực</string>
+    <string name="admin_verification_reject_hint">Lý do từ chối</string>
+    <string name="admin_verification_reject_note">Người dùng sẽ thấy lý do này trong thông báo.</string>
+    <string name="admin_verification_reject_required">Hãy nhập lý do từ chối.</string>
 </resources>

@@ -4,7 +4,10 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Base64;
@@ -15,6 +18,9 @@ import android.widget.DatePicker;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -27,6 +33,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.MediaRepository;
 import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.databinding.FragmentDealDetailBinding;
 import com.nhom3.pubgapp.model.Deal;
@@ -35,12 +42,14 @@ import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.DeliveryMethod;
+import com.nhom3.pubgapp.model.enums.ReportTarget;
 import com.nhom3.pubgapp.model.enums.TradeType;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
 import com.nhom3.pubgapp.util.FormatUtils;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.viewmodel.DealViewModel;
 
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -52,12 +61,54 @@ public class DealDetailFragment extends Fragment {
     private static final String KEY_EDIT_TERMS_OPEN = "key_edit_terms_open";
     private static final String KEY_CANCEL_OPEN = "key_cancel_open";
     private static final String KEY_SCHEDULE_MILLIS = "key_schedule_millis";
+    private static final String KEY_WAYBILL_URI = "key_waybill_uri";
+    private static final String KEY_RECEIVED_URI = "key_received_uri";
+    private static final String KEY_SHIPPING_FORM_OPEN = "key_shipping_form_open";
+    private static final String KEY_RECEIVING_FORM_OPEN = "key_receiving_form_open";
 
     private FragmentDealDetailBinding binding;
     private DealViewModel viewModel;
     private String dealId;
     private boolean isUserVerified;
     private Timestamp selectedScheduleTimestamp;
+    private Uri selectedWaybillUri;
+    private Uri selectedReceivedUri;
+    private Deal currentDeal;
+
+    private final Handler countdownHandler = new Handler(Looper.getMainLooper());
+    private final Runnable countdownRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateCountdown();
+            countdownHandler.postDelayed(this, 10000);
+        }
+    };
+
+    private final ActivityResultLauncher<String> pickWaybillPhotoLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(),
+                    new ActivityResultCallback<Uri>() {
+                        @Override
+                        public void onActivityResult(Uri uri) {
+                            if (uri != null) {
+                                selectedWaybillUri = uri;
+                                displayWaybillPreview(uri);
+                                validateShippingForm();
+                            }
+                        }
+                    });
+
+    private final ActivityResultLauncher<String> pickReceivedPhotoLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(),
+                    new ActivityResultCallback<Uri>() {
+                        @Override
+                        public void onActivityResult(Uri uri) {
+                            if (uri != null) {
+                                selectedReceivedUri = uri;
+                                displayReceivedPreview(uri);
+                                validateReceivingForm();
+                            }
+                        }
+                    });
 
     @Nullable
     @Override
@@ -81,6 +132,7 @@ public class DealDetailFragment extends Fragment {
         setupErrorAndEmptyStates();
         setupEditTermsControls();
         setupCancelControls();
+        setupShippingAndReceivingControls();
         setupWriteReviewButton();
         observeViewModel();
         checkAccountVerification();
@@ -157,8 +209,10 @@ public class DealDetailFragment extends Fragment {
             return;
         }
 
-        if (!isUserVerified && (deal.getStatus() == DealStatus.PENDING_CONFIRM
-                || (deal.getStatus() == DealStatus.CONFIRMED && deal.needsPayment()))) {
+        boolean needsVerification = !isUserVerified && (deal.getStatus() == DealStatus.PENDING_CONFIRM
+                || deal.getStatus() == DealStatus.CONFIRMED
+                || deal.getStatus() == DealStatus.SHIPPED);
+        if (needsVerification) {
             binding.cardVerificationNotice.setVisibility(View.VISIBLE);
             binding.buttonRegisterVerification.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -170,8 +224,14 @@ public class DealDetailFragment extends Fragment {
             binding.buttonEditTerms.setEnabled(false);
             binding.buttonConfirm.setEnabled(false);
             binding.buttonPay.setEnabled(false);
+            binding.buttonShipDeal.setEnabled(false);
+            binding.buttonReceiveDeal.setEnabled(false);
+            binding.buttonConfirmShipped.setEnabled(false);
+            binding.buttonConfirmReceived.setEnabled(false);
         } else {
             binding.cardVerificationNotice.setVisibility(View.GONE);
+            validateShippingForm();
+            validateReceivingForm();
         }
     }
 
@@ -436,6 +496,14 @@ public class DealDetailFragment extends Fragment {
                 if (isDone != null && isDone) {
                     binding.cardEditTerms.setVisibility(View.GONE);
                     binding.cardCancelDeal.setVisibility(View.GONE);
+                    binding.cardShippingForm.setVisibility(View.GONE);
+                    binding.cardReceivingForm.setVisibility(View.GONE);
+                    selectedWaybillUri = null;
+                    selectedReceivedUri = null;
+                    if (binding != null) {
+                        binding.imageWaybillPreview.setVisibility(View.GONE);
+                        binding.imageReceivedPreview.setVisibility(View.GONE);
+                    }
                     viewModel.clearDone();
                 }
             }
@@ -512,6 +580,7 @@ public class DealDetailFragment extends Fragment {
             return;
         }
 
+        currentDeal = deal;
         binding.includeErrorState.layoutErrorState.setVisibility(View.GONE);
         binding.includeEmptyState.layoutEmptyState.setVisibility(View.GONE);
         binding.scrollContent.setVisibility(View.VISIBLE);
@@ -522,6 +591,8 @@ public class DealDetailFragment extends Fragment {
         renderStatusAndProgress(deal);
         renderProductCard(deal);
         renderDealInfo(deal, currentUid);
+        bindWaybillAndReceivedInfo(deal);
+        updateCountdown();
         renderActionButtons(deal, currentUid);
         renderWriteReviewButton(deal);
         updateVerificationUI();
@@ -664,16 +735,323 @@ public class DealDetailFragment extends Fragment {
         }
     }
 
-    private void renderActionButtons(Deal deal, String currentUid) {
-        boolean online = NetworkMonitor.getInstance().isOnline();
+    private void bindWaybillAndReceivedInfo(Deal deal) {
+        if (binding == null) {
+            return;
+        }
+        if (deal.getCarrierName() != null && deal.getTrackingCode() != null) {
+            binding.cardWaybillInfo.setVisibility(View.VISIBLE);
+            binding.textCarrierName.setText(getString(R.string.trade_deal_detail_carrier_label,
+                    deal.getCarrierName()));
+            binding.textTrackingCode.setText(getString(R.string.trade_deal_detail_tracking_code_label,
+                    deal.getTrackingCode()));
+            if (deal.getShippedAt() != null) {
+                binding.textShippedAt.setText(getString(R.string.trade_deal_detail_shipped_at_label,
+                        new FormatUtils().formatTime(deal.getShippedAt())));
+            } else {
+                binding.textShippedAt.setText("");
+            }
+            loadWaybillImage(deal.getTrackingImageId());
+        } else {
+            binding.cardWaybillInfo.setVisibility(View.GONE);
+        }
+
+        if (deal.getReceivedImageId() != null && !deal.getReceivedImageId().trim().isEmpty()) {
+            binding.cardReceivedInfo.setVisibility(View.VISIBLE);
+            if (deal.getReceivedAt() != null) {
+                binding.textReceivedAt.setText(getString(R.string.trade_deal_detail_received_at_label,
+                        new FormatUtils().formatTime(deal.getReceivedAt())));
+            } else {
+                binding.textReceivedAt.setText("");
+            }
+            loadReceivedImage(deal.getReceivedImageId());
+        } else {
+            binding.cardReceivedInfo.setVisibility(View.GONE);
+        }
+    }
+
+    private void loadWaybillImage(String imageId) {
+        if (binding == null) {
+            return;
+        }
+        if (imageId == null || imageId.trim().isEmpty()) {
+            binding.imageWaybillPhoto.setVisibility(View.GONE);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            return;
+        }
+        new MediaRepository().getImage(imageId, new DataCallback<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                if (binding != null && bytes != null && bytes.length > 0) {
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    if (bitmap != null) {
+                        binding.imageWaybillPhoto.setImageBitmap(bitmap);
+                        binding.imageWaybillPhoto.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+            }
+        });
+    }
+
+    private void loadReceivedImage(String imageId) {
+        if (binding == null) {
+            return;
+        }
+        if (imageId == null || imageId.trim().isEmpty()) {
+            binding.cardReceivedInfo.setVisibility(View.GONE);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            return;
+        }
+        new MediaRepository().getImage(imageId, new DataCallback<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                if (binding != null && bytes != null && bytes.length > 0) {
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    if (bitmap != null) {
+                        binding.imageReceivedPhoto.setImageBitmap(bitmap);
+                        binding.imageReceivedPhoto.setVisibility(View.VISIBLE);
+                        binding.cardReceivedInfo.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+            }
+        });
+    }
+
+    private void startCountdown() {
+        countdownHandler.removeCallbacks(countdownRunnable);
+        countdownHandler.post(countdownRunnable);
+    }
+
+    private void stopCountdown() {
+        countdownHandler.removeCallbacks(countdownRunnable);
+    }
+
+    private void updateCountdown() {
+        if (binding == null || currentDeal == null
+                || currentDeal.getStatus() != DealStatus.SHIPPED) {
+            if (binding != null) {
+                binding.cardCountdown.setVisibility(View.GONE);
+            }
+            return;
+        }
+        Timestamp autoReleaseAt = currentDeal.getAutoReleaseAt();
+        if (autoReleaseAt == null) {
+            binding.cardCountdown.setVisibility(View.GONE);
+            return;
+        }
+        binding.cardCountdown.setVisibility(View.VISIBLE);
+        Timestamp now = Timestamp.now();
+        String remainingText = formatRemainingTime(autoReleaseAt, now);
+        binding.textCountdown.setText(remainingText);
+
+        boolean canComplain = canComplain(currentDeal, getCurrentUserId(), now);
+        binding.buttonComplain.setVisibility(canComplain ? View.VISIBLE : View.GONE);
+    }
+
+    static String formatRemainingTime(Timestamp autoReleaseAt, Timestamp now) {
+        if (autoReleaseAt == null || now == null) {
+            return "";
+        }
+        long diffMillis = autoReleaseAt.toDate().getTime() - now.toDate().getTime();
+        if (diffMillis <= 0) {
+            return "Đã hết đếm ngược, hệ thống sẽ tự chuyển sang Đã nhận";
+        }
+        if (diffMillis < 24L * 60 * 60 * 1000) {
+            long hours = diffMillis / (60L * 60 * 1000);
+            long minutes = (diffMillis % (60L * 60 * 1000)) / (60L * 1000);
+            return "Còn " + hours + " giờ " + minutes + " phút để xác nhận";
+        }
+        long days = diffMillis / (24L * 60 * 60 * 1000);
+        return "Còn " + days + " ngày để xác nhận";
+    }
+
+    static boolean canComplain(Deal deal, String currentUid, Timestamp now) {
+        if (deal == null || currentUid == null) {
+            return false;
+        }
         boolean isBuyer = currentUid.equals(deal.getBuyerId());
+        boolean isSeller = currentUid.equals(deal.getSellerId());
+        if (!isBuyer && !isSeller) {
+            return false;
+        }
+        if (deal.getStatus() == DealStatus.SHIPPED) {
+            return deal.getAutoReleaseAt() != null && now != null
+                    && now.compareTo(deal.getAutoReleaseAt()) < 0;
+        }
+        if (deal.getStatus() == DealStatus.CONFIRMED
+                && deal.getDeliveryMethod() == DeliveryMethod.MEET_UP) {
+            return isBuyer;
+        }
+        return false;
+    }
+
+    private void setupShippingAndReceivingControls() {
+        binding.buttonShipDeal.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binding.cardShippingForm.setVisibility(View.VISIBLE);
+                binding.cardReceivingForm.setVisibility(View.GONE);
+                binding.cardCancelDeal.setVisibility(View.GONE);
+                binding.cardEditTerms.setVisibility(View.GONE);
+            }
+        });
+
+        binding.buttonCancelShippingForm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binding.cardShippingForm.setVisibility(View.GONE);
+            }
+        });
+
+        binding.buttonPickWaybillPhoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pickWaybillPhotoLauncher.launch("image/*");
+            }
+        });
+
+        TextWatcher shippingWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                validateShippingForm();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        };
+        binding.editCarrierName.addTextChangedListener(shippingWatcher);
+        binding.editTrackingCode.addTextChangedListener(shippingWatcher);
+
+        binding.buttonConfirmShipped.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String carrier = binding.editCarrierName.getText() != null
+                        ? binding.editCarrierName.getText().toString().trim() : "";
+                String tracking = binding.editTrackingCode.getText() != null
+                        ? binding.editTrackingCode.getText().toString().trim() : "";
+                viewModel.markShipped(carrier, tracking, selectedWaybillUri);
+            }
+        });
+
+        binding.buttonReceiveDeal.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binding.cardReceivingForm.setVisibility(View.VISIBLE);
+                binding.cardShippingForm.setVisibility(View.GONE);
+                binding.cardCancelDeal.setVisibility(View.GONE);
+                binding.cardEditTerms.setVisibility(View.GONE);
+            }
+        });
+
+        binding.buttonCancelReceivingForm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binding.cardReceivingForm.setVisibility(View.GONE);
+            }
+        });
+
+        binding.buttonPickReceivedPhoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pickReceivedPhotoLauncher.launch("image/*");
+            }
+        });
+
+        binding.buttonConfirmReceived.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewModel.markReceived(selectedReceivedUri);
+            }
+        });
+    }
+
+    private void displayWaybillPreview(Uri uri) {
+        if (binding == null || uri == null) {
+            return;
+        }
+        try (InputStream is = requireContext().getContentResolver().openInputStream(uri)) {
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            if (bitmap != null) {
+                binding.imageWaybillPreview.setImageBitmap(bitmap);
+                binding.imageWaybillPreview.setVisibility(View.VISIBLE);
+            }
+        } catch (Exception e) {
+            binding.imageWaybillPreview.setVisibility(View.GONE);
+        }
+    }
+
+    private void displayReceivedPreview(Uri uri) {
+        if (binding == null || uri == null) {
+            return;
+        }
+        try (InputStream is = requireContext().getContentResolver().openInputStream(uri)) {
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            if (bitmap != null) {
+                binding.imageReceivedPreview.setImageBitmap(bitmap);
+                binding.imageReceivedPreview.setVisibility(View.VISIBLE);
+            }
+        } catch (Exception e) {
+            binding.imageReceivedPreview.setVisibility(View.GONE);
+        }
+    }
+
+    private void validateShippingForm() {
+        if (binding == null) {
+            return;
+        }
+        String carrier = binding.editCarrierName.getText() != null
+                ? binding.editCarrierName.getText().toString().trim() : "";
+        String tracking = binding.editTrackingCode.getText() != null
+                ? binding.editTrackingCode.getText().toString().trim() : "";
+        boolean valid = !carrier.isEmpty() && !tracking.isEmpty() && selectedWaybillUri != null;
+        boolean online = NetworkMonitor.getInstance().isOnline();
+        binding.buttonConfirmShipped.setEnabled(valid && online && isUserVerified);
+    }
+
+    private void validateReceivingForm() {
+        if (binding == null) {
+            return;
+        }
+        boolean valid = selectedReceivedUri != null;
+        boolean online = NetworkMonitor.getInstance().isOnline();
+        binding.buttonConfirmReceived.setEnabled(valid && online && isUserVerified);
+    }
+
+    private void renderActionButtons(final Deal deal, final String currentUid) {
+        boolean online = NetworkMonitor.getInstance().isOnline();
+        final boolean isBuyer = currentUid.equals(deal.getBuyerId());
+        final boolean isSeller = currentUid.equals(deal.getSellerId());
         DealStatus status = deal.getStatus();
+
+        binding.textWaitingStatus.setVisibility(View.GONE);
+        binding.buttonShipDeal.setVisibility(View.GONE);
+        binding.buttonReceiveDeal.setVisibility(View.GONE);
+        binding.buttonComplain.setVisibility(View.GONE);
+        binding.buttonViewComplaint.setVisibility(View.GONE);
 
         if (status == DealStatus.PENDING_CONFIRM) {
             binding.layoutActions.setVisibility(View.VISIBLE);
             binding.buttonEditTerms.setVisibility(View.VISIBLE);
             binding.buttonConfirm.setVisibility(View.VISIBLE);
             binding.buttonCancelDeal.setVisibility(View.VISIBLE);
+            binding.buttonPay.setVisibility(View.GONE);
 
             boolean myConfirmed = isBuyer ? deal.isBuyerConfirmed() : deal.isSellerConfirmed();
             if (myConfirmed) {
@@ -698,31 +1076,130 @@ public class DealDetailFragment extends Fragment {
             binding.buttonCancelDeal.setEnabled(online);
 
             Payment payment = viewModel.getPayment().getValue();
-            boolean canShowPay = isBuyer && deal.needsPayment() && (payment == null || !payment.isHeld());
-            if (canShowPay) {
-                binding.buttonPay.setVisibility(View.VISIBLE);
-                binding.buttonPay.setEnabled(online && isUserVerified);
-                binding.buttonPay.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Bundle args = new Bundle();
-                        args.putString("dealId", deal.getId());
-                        NavController navController = NavHostFragment.findNavController(DealDetailFragment.this);
-                        navController.navigate(R.id.action_global_deal_payment, args);
+            boolean isPaidOrFree = !deal.needsPayment() || (payment != null && payment.isHeld());
+
+            if (deal.getDeliveryMethod() == DeliveryMethod.SHIPPING) {
+                if (isSeller) {
+                    if (!isPaidOrFree) {
+                        binding.textWaitingStatus.setVisibility(View.VISIBLE);
+                        binding.textWaitingStatus.setText(R.string.trade_deal_detail_waiting_buyer_pay);
+                    } else {
+                        binding.buttonShipDeal.setVisibility(View.VISIBLE);
+                        binding.buttonShipDeal.setEnabled(online && isUserVerified);
                     }
-                });
-            } else {
-                binding.buttonPay.setVisibility(View.GONE);
+                } else if (isBuyer) {
+                    if (!isPaidOrFree) {
+                        binding.buttonPay.setVisibility(View.VISIBLE);
+                        binding.buttonPay.setEnabled(online && isUserVerified);
+                        binding.buttonPay.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Bundle args = new Bundle();
+                                args.putString("dealId", deal.getId());
+                                NavController navController =
+                                        NavHostFragment.findNavController(DealDetailFragment.this);
+                                navController.navigate(R.id.action_global_deal_payment, args);
+                            }
+                        });
+                    } else {
+                        binding.buttonPay.setVisibility(View.GONE);
+                        binding.textWaitingStatus.setVisibility(View.VISIBLE);
+                        binding.textWaitingStatus.setText(R.string.trade_deal_detail_waiting_seller_ship);
+                    }
+                }
+            } else if (deal.getDeliveryMethod() == DeliveryMethod.MEET_UP) {
+                if (isBuyer) {
+                    if (!isPaidOrFree) {
+                        binding.buttonPay.setVisibility(View.VISIBLE);
+                        binding.buttonPay.setEnabled(online && isUserVerified);
+                        binding.buttonPay.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Bundle args = new Bundle();
+                                args.putString("dealId", deal.getId());
+                                NavController navController =
+                                        NavHostFragment.findNavController(DealDetailFragment.this);
+                                navController.navigate(R.id.action_global_deal_payment, args);
+                            }
+                        });
+                        binding.textWaitingStatus.setVisibility(View.VISIBLE);
+                        binding.textWaitingStatus.setText(R.string.trade_deal_detail_please_pay_first);
+                    } else {
+                        binding.buttonPay.setVisibility(View.GONE);
+                        binding.buttonReceiveDeal.setVisibility(View.VISIBLE);
+                        binding.buttonReceiveDeal.setEnabled(online && isUserVerified);
+                        binding.buttonComplain.setVisibility(View.VISIBLE);
+                        binding.buttonComplain.setEnabled(online);
+                    }
+                } else if (isSeller) {
+                    binding.buttonPay.setVisibility(View.GONE);
+                    binding.textWaitingStatus.setVisibility(View.VISIBLE);
+                    binding.textWaitingStatus.setText(R.string.trade_deal_detail_waiting_buyer_receive);
+                }
             }
+        } else if (status == DealStatus.SHIPPED) {
+            binding.layoutActions.setVisibility(View.VISIBLE);
+            binding.buttonEditTerms.setVisibility(View.GONE);
+            binding.buttonConfirm.setVisibility(View.GONE);
+            binding.buttonPay.setVisibility(View.GONE);
+            binding.buttonCancelDeal.setVisibility(View.GONE);
+            binding.textConfirmationStatus.setVisibility(View.GONE);
+
+            if (isBuyer) {
+                binding.buttonReceiveDeal.setVisibility(View.VISIBLE);
+                binding.buttonReceiveDeal.setEnabled(online && isUserVerified);
+            }
+
+            boolean canComplain = canComplain(deal, currentUid, Timestamp.now());
+            if (canComplain) {
+                binding.buttonComplain.setVisibility(View.VISIBLE);
+                binding.buttonComplain.setEnabled(online);
+            }
+        } else if (status == DealStatus.DISPUTED) {
+            binding.layoutActions.setVisibility(View.VISIBLE);
+            binding.buttonEditTerms.setVisibility(View.GONE);
+            binding.buttonConfirm.setVisibility(View.GONE);
+            binding.buttonPay.setVisibility(View.GONE);
+            binding.buttonCancelDeal.setVisibility(View.GONE);
+            binding.textConfirmationStatus.setVisibility(View.GONE);
+            binding.buttonViewComplaint.setVisibility(View.VISIBLE);
+            binding.buttonViewComplaint.setEnabled(online);
         } else {
             binding.layoutActions.setVisibility(View.GONE);
         }
+
+        final String partnerId = isBuyer ? deal.getSellerId() : deal.getBuyerId();
+        binding.buttonComplain.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle args = new Bundle();
+                args.putString("targetType", ReportTarget.USER.name());
+                args.putString("targetId", partnerId);
+                NavController navController = NavHostFragment.findNavController(DealDetailFragment.this);
+                navController.navigate(R.id.action_global_report, args);
+            }
+        });
+
+        binding.buttonViewComplaint.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(requireContext(), R.string.trade_deal_detail_complaint_not_supported,
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void setFormActionsEnabled(boolean enabled) {
         binding.buttonSaveTerms.setEnabled(enabled);
         binding.buttonConfirmCancel.setEnabled(enabled && binding.editCancelReason.getText() != null
                 && !binding.editCancelReason.getText().toString().trim().isEmpty());
+        if (!enabled) {
+            binding.buttonConfirmShipped.setEnabled(false);
+            binding.buttonConfirmReceived.setEnabled(false);
+        } else {
+            validateShippingForm();
+            validateReceivingForm();
+        }
     }
 
     private String getCurrentUserId() {
@@ -733,37 +1210,82 @@ public class DealDetailFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        startCountdown();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        stopCountdown();
+    }
+
+    @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         if (binding != null) {
-            outState.putBoolean(KEY_EDIT_TERMS_OPEN, binding.cardEditTerms.getVisibility() == View.VISIBLE);
-            outState.putBoolean(KEY_CANCEL_OPEN, binding.cardCancelDeal.getVisibility() == View.VISIBLE);
+            outState.putBoolean(KEY_EDIT_TERMS_OPEN,
+                    binding.cardEditTerms.getVisibility() == View.VISIBLE);
+            outState.putBoolean(KEY_CANCEL_OPEN,
+                    binding.cardCancelDeal.getVisibility() == View.VISIBLE);
+            outState.putBoolean(KEY_SHIPPING_FORM_OPEN,
+                    binding.cardShippingForm.getVisibility() == View.VISIBLE);
+            outState.putBoolean(KEY_RECEIVING_FORM_OPEN,
+                    binding.cardReceivingForm.getVisibility() == View.VISIBLE);
         }
         if (selectedScheduleTimestamp != null) {
             outState.putLong(KEY_SCHEDULE_MILLIS, selectedScheduleTimestamp.toDate().getTime());
+        }
+        if (selectedWaybillUri != null) {
+            outState.putString(KEY_WAYBILL_URI, selectedWaybillUri.toString());
+        }
+        if (selectedReceivedUri != null) {
+            outState.putString(KEY_RECEIVED_URI, selectedReceivedUri.toString());
         }
     }
 
     private void restoreInstanceState(@NonNull Bundle savedInstanceState) {
         boolean editOpen = savedInstanceState.getBoolean(KEY_EDIT_TERMS_OPEN, false);
         boolean cancelOpen = savedInstanceState.getBoolean(KEY_CANCEL_OPEN, false);
+        boolean shippingOpen = savedInstanceState.getBoolean(KEY_SHIPPING_FORM_OPEN, false);
+        boolean receivingOpen = savedInstanceState.getBoolean(KEY_RECEIVING_FORM_OPEN, false);
         long scheduleMillis = savedInstanceState.getLong(KEY_SCHEDULE_MILLIS, 0);
 
-        if (editOpen) {
+        if (editOpen && binding != null) {
             binding.cardEditTerms.setVisibility(View.VISIBLE);
         }
-        if (cancelOpen) {
+        if (cancelOpen && binding != null) {
             binding.cardCancelDeal.setVisibility(View.VISIBLE);
+        }
+        if (shippingOpen && binding != null) {
+            binding.cardShippingForm.setVisibility(View.VISIBLE);
+        }
+        if (receivingOpen && binding != null) {
+            binding.cardReceivingForm.setVisibility(View.VISIBLE);
         }
         if (scheduleMillis > 0) {
             selectedScheduleTimestamp = new Timestamp(new Date(scheduleMillis));
             updateSelectedScheduleText();
         }
+        String waybillStr = savedInstanceState.getString(KEY_WAYBILL_URI);
+        if (waybillStr != null) {
+            selectedWaybillUri = Uri.parse(waybillStr);
+            displayWaybillPreview(selectedWaybillUri);
+        }
+        String receivedStr = savedInstanceState.getString(KEY_RECEIVED_URI);
+        if (receivedStr != null) {
+            selectedReceivedUri = Uri.parse(receivedStr);
+            displayReceivedPreview(selectedReceivedUri);
+        }
+        validateShippingForm();
+        validateReceivingForm();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        stopCountdown();
         binding = null;
     }
 }
