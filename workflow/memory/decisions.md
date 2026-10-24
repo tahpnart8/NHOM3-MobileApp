@@ -808,7 +808,7 @@ tahpnart8
 - **`TrustViewModel.averageCriteria` stays public and static, and joins the specification.** The earlier call was to push it down into `ui.trust` as private, on the grounds that averaging three criteria is screen arithmetic rather than ViewModel work. That reasoning still holds, but `TrustViewModel` belongs to one person under the trimmed plan, so a public constant there endangers nobody, and the move would have cost a relocated method, a relocated test package and another review round. With two days left it bought tidiness and nothing else.
 - **`NEW_MESSAGE`, `NEW_OFFER` and `OFFER_RESULT` all navigate to C02.** They were returning an unknown-action sentinel, so tapping the three most common notifications did nothing at all. Offers live inside the conversation thread and have no screen of their own, so the chat screen is the right destination for all three.
 - **`Payment.getHeldAt()` gains `@ServerTimestamp`.** The rules require `serverStamp('heldAt')`, and unlike `createdAt` the field had no annotation, so leaving it null wrote null and deleting the device-time assignment was not enough on its own. Writing the whole payment document as a map would have worked too; the annotation is one line and matches what the field means, a moment the server stamps once.
-- **A shared class needs an entry point for every source its callers hold.** `ImageLoader` took only a Base4 string, while `MediaRepository.getImage` returns `byte[]` and a freshly picked image is a `Uri`. Two screens therefore hand-rolled a decode and both got it wrong, which is the fifth and sixth time that bug has appeared. The class now has three overloads and `workflow/memory/code/ui.md` says which to call for which source. The lesson generalises: when the same mistake keeps arriving from different people, the shared class is missing a door, not the people missing the rule.
+- **A shared class needs an entry point for every source its callers hold.** `ImageLoader` took only a Base64 string, while `MediaRepository.getImage` returns `byte[]` and a freshly picked image is a `Uri`. Two screens therefore hand-rolled a decode and both got it wrong, which is the fifth and sixth time that bug has appeared. The class now has three overloads and `workflow/memory/code/ui.md` says which to call for which source. The lesson generalises: when the same mistake keeps arriving from different people, the shared class is missing a door, not the people missing the rule.
 
 ### Context
 Twelve pull requests merged in one day. Six of them had to be reviewed twice, because the first round found the same five mistakes spread across six branches of one chain.
@@ -847,4 +847,4 @@ Review of PR #153 pointed out that `isPasswordValid`, `isPhoneValid`, and `isPas
 `AuthViewModel.java`, `RegisterFragment.java`.
 
 ### Owner
-tahpnart8
+loopy-tnw
