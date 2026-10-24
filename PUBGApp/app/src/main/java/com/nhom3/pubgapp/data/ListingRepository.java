@@ -836,24 +836,106 @@ public class ListingRepository extends BaseRepository {
                 });
     }
 
-    public void search(final SearchFilter filter, final Timestamp after,
-                       final DataCallback<List<Listing>> cb) {
-        String longestWord = "";
-        if (filter != null && filter.getKeyword() != null) {
-            FormatUtils fu = new FormatUtils();
-            List<String> words = fu.toKeywords(filter.getKeyword());
+    static String pickQueryWord(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return "";
+        }
+        FormatUtils fu = new FormatUtils();
+        String unaccented = fu.removeAccents(keyword);
+        List<String> words = fu.toKeywords(unaccented);
+        String longest = "";
+        if (words != null) {
             for (int i = 0; i < words.size(); i++) {
-                String w = words.get(i);
-                if (w.length() > longestWord.length()) {
-                    longestWord = w;
+                String word = words.get(i);
+                if (word.length() > longest.length()) {
+                    longest = word;
                 }
             }
         }
+        return longest;
+    }
+
+    static boolean matchesLocalFilter(Listing listing, SearchFilter filter) {
+        if (listing == null || filter == null) {
+            return true;
+        }
+        if (filter.getKeyword() != null && !filter.getKeyword().trim().isEmpty()) {
+            FormatUtils fu = new FormatUtils();
+            String unaccented = fu.removeAccents(filter.getKeyword());
+            List<String> words = fu.toKeywords(unaccented);
+            List<String> listingKeywords = listing.getSearchKeywords();
+            if (words != null && !words.isEmpty()) {
+                if (listingKeywords == null || listingKeywords.isEmpty()) {
+                    return false;
+                }
+                for (int i = 0; i < words.size(); i++) {
+                    String reqWord = words.get(i);
+                    boolean found = false;
+                    for (int j = 0; j < listingKeywords.size(); j++) {
+                        if (reqWord.equalsIgnoreCase(listingKeywords.get(j))) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        return false;
+                    }
+                }
+            }
+        }
+        if (filter.getCategoryId() != null && !filter.getCategoryId().isEmpty()) {
+            if (!filter.getCategoryId().equals(listing.getCategoryId())) {
+                return false;
+            }
+        }
+        if (filter.getProvince() != null && !filter.getProvince().isEmpty()) {
+            if (!filter.getProvince().equals(listing.getProvince())) {
+                return false;
+            }
+        }
+        if (filter.getMinPrice() > 0 && listing.getPrice() < filter.getMinPrice()) {
+            return false;
+        }
+        if (filter.getMaxPrice() > 0 && listing.getPrice() > filter.getMaxPrice()) {
+            return false;
+        }
+        if (filter.getConditions() != null && !filter.getConditions().isEmpty()) {
+            if (!filter.getConditions().contains(listing.getItemCondition())) {
+                return false;
+            }
+        }
+        if (filter.getTradeTypes() != null && !filter.getTradeTypes().isEmpty()) {
+            boolean matchTrade = false;
+            if (listing.getTradeTypes() != null) {
+                for (int i = 0; i < filter.getTradeTypes().size(); i++) {
+                    if (listing.getTradeTypes().contains(filter.getTradeTypes().get(i))) {
+                        matchTrade = true;
+                        break;
+                    }
+                }
+            }
+            if (!matchTrade) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void search(final SearchFilter filter, final Timestamp after,
+                       final DataCallback<List<Listing>> cb) {
+        String keyword = filter != null ? filter.getKeyword() : null;
+        String queryWord = pickQueryWord(keyword);
 
         Query query = db.collection(COLLECTION_LISTINGS).whereEqualTo("status", ListingStatus.AVAILABLE.name());
-        if (!longestWord.isEmpty()) {
-            query = query.whereArrayContains("searchKeywords", longestWord);
+        if (!queryWord.isEmpty()) {
+            query = query.whereArrayContains("searchKeywords", queryWord);
         }
+        if (filter != null && filter.getCategoryId() != null && !filter.getCategoryId().isEmpty()) {
+            query = query.whereEqualTo("categoryId", filter.getCategoryId());
+        } else if (filter != null && filter.getProvince() != null && !filter.getProvince().isEmpty()) {
+            query = query.whereEqualTo("province", filter.getProvince());
+        }
+
         query = query.orderBy("createdAt", Query.Direction.DESCENDING);
         if (after != null) {
             query = query.startAfter(after);
@@ -868,7 +950,7 @@ public class ListingRepository extends BaseRepository {
                         List<Listing> list = new ArrayList<Listing>();
                         for (int i = 0; i < rawList.size(); i++) {
                             Listing item = rawList.get(i);
-                            if (matchesMemoryFilter(item, filter)) {
+                            if (matchesLocalFilter(item, filter)) {
                                 list.add(item);
                             }
                         }
@@ -1005,45 +1087,7 @@ public class ListingRepository extends BaseRepository {
     }
 
     private boolean matchesMemoryFilter(Listing item, SearchFilter filter) {
-        if (filter == null || item == null) {
-            return true;
-        }
-        if (filter.getCategoryId() != null && !filter.getCategoryId().isEmpty()) {
-            if (!filter.getCategoryId().equals(item.getCategoryId())) {
-                return false;
-            }
-        }
-        if (filter.getProvince() != null && !filter.getProvince().isEmpty()) {
-            if (!filter.getProvince().equals(item.getProvince())) {
-                return false;
-            }
-        }
-        if (filter.getMinPrice() > 0 && item.getPrice() < filter.getMinPrice()) {
-            return false;
-        }
-        if (filter.getMaxPrice() > 0 && item.getPrice() > filter.getMaxPrice()) {
-            return false;
-        }
-        if (filter.getConditions() != null && !filter.getConditions().isEmpty()) {
-            if (!filter.getConditions().contains(item.getItemCondition())) {
-                return false;
-            }
-        }
-        if (filter.getTradeTypes() != null && !filter.getTradeTypes().isEmpty()) {
-            boolean matchTrade = false;
-            if (item.getTradeTypes() != null) {
-                for (TradeType filterType : filter.getTradeTypes()) {
-                    if (item.getTradeTypes().contains(filterType)) {
-                        matchTrade = true;
-                        break;
-                    }
-                }
-            }
-            if (!matchTrade) {
-                return false;
-            }
-        }
-        return true;
+        return matchesLocalFilter(item, filter);
     }
 
     private List<Listing> toListingList(QuerySnapshot snapshots) {
