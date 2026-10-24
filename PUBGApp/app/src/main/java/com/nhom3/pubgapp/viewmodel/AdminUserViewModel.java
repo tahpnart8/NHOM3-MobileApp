@@ -51,7 +51,6 @@ public class AdminUserViewModel extends ViewModel {
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>();
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
-    private final AdminRepository adminRepository = new AdminRepository();
     // Filters change fast; an answer to an older query must not replace the newest one.
     private int latestFilterRequest;
 
