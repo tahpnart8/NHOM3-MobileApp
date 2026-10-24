@@ -5,10 +5,13 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.data.DealRepository;
 import com.nhom3.pubgapp.data.MediaRepository;
+import com.nhom3.pubgapp.data.ReviewRepository;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.ImagePurpose;
@@ -24,6 +27,8 @@ public class DealViewModel extends ViewModel {
 
     private final DealRepository dealRepository;
     private final MediaRepository mediaRepository;
+    // Built lazily, so unit tests that pass a fake DealRepository never reach Firestore.
+    private ReviewRepository reviewRepository;
 
     private final MutableLiveData<Deal> deal = new MutableLiveData<>();
     private final MutableLiveData<List<Deal>> deals = new MutableLiveData<>();
@@ -187,7 +192,30 @@ public class DealViewModel extends ViewModel {
     }
 
     public void loadMyReview() {
-        error.setValue(DataCallback.NOT_READY);
+        Deal current = deal.getValue();
+        if (current == null || current.getId() == null || current.getId().trim().isEmpty()) {
+            return;
+        }
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            myReview.setValue(null);
+            return;
+        }
+        final String uid = user.getUid();
+        if (reviewRepository == null) {
+            reviewRepository = new ReviewRepository();
+        }
+        reviewRepository.getByDeal(current.getId(), new DataCallback<List<Review>>() {
+            @Override
+            public void onSuccess(List<Review> result) {
+                myReview.postValue(findReviewBy(result, uid));
+            }
+
+            @Override
+            public void onError(String message) {
+                error.postValue(message);
+            }
+        });
     }
 
     static String formatRemainingTime(Timestamp autoReleaseAt, Timestamp now) {
@@ -498,5 +526,17 @@ public class DealViewModel extends ViewModel {
 
     static boolean isPaymentInfoVisible(Deal deal) {
         return deal != null && deal.needsPayment();
+    }
+
+    static Review findReviewBy(List<Review> reviews, String reviewerId) {
+        if (reviews == null || reviewerId == null) {
+            return null;
+        }
+        for (Review review : reviews) {
+            if (review != null && reviewerId.equals(review.getReviewerId())) {
+                return review;
+            }
+        }
+        return null;
     }
 }

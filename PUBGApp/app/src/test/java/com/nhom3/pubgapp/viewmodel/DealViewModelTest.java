@@ -244,6 +244,7 @@ public class DealViewModelTest {
         assertFalse(DealViewModel.canComplain(shippingConfirmed, "buyer1", now));
     }
 
+
     private Deal createSampleDeal(DealStatus status) {
         Deal deal = new Deal();
         deal.setId("deal1");
