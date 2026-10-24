@@ -49,17 +49,18 @@ public class UserRepository extends BaseRepository {
     private static final String SUB_PRIVATE = "private";
     private static final String DOC_IDENTITY = "identity";
 
-    public void createProfile(User user, UserIdentity identity, final DataCallback<Void> cb) {
-        String uid = user.getId();
-        if (uid == null || uid.isEmpty()) {
-            uid = currentUserId();
+    public void createProfile(final User user, UserIdentity identity, final DataCallback<Void> cb) {
+        String rawUid = user.getId();
+        if (rawUid == null || rawUid.isEmpty()) {
+            rawUid = currentUserId();
         }
+        final String uid = rawUid;
         FirebaseUser fu = auth.getCurrentUser();
         if (fu == null) {
             cb.onError("Người dùng chưa đăng nhập.");
             return;
         }
-        String email = fu.getEmail();
+        final String email = fu.getEmail();
         if (email == null || email.isEmpty()) {
             cb.onError("Không tìm thấy email của tài khoản.");
             return;
@@ -129,6 +130,8 @@ public class UserRepository extends BaseRepository {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
+                    user.setId(uid);
+                    user.setEmail(email);
                     cb.onSuccess(null);
                 } else {
                     fail(cb, task.getException());
