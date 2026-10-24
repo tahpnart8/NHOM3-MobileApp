@@ -54,6 +54,9 @@ public class ShopViewModel extends ViewModel {
     private final KeywordFilter keywordFilter = new KeywordFilter();
 
     private List<Listing> rawListings;
+    private String cachedUid;
+    private SortOrder currentSortOrder = SortOrder.NEWEST;
+    private String currentCategoryId = "";
     private final MutableLiveData<List<Listing>> myListings = new MutableLiveData<>();
     private final MutableLiveData<Boolean> keywordFlag = new MutableLiveData<>();
     private final MutableLiveData<List<Category>> categories = new MutableLiveData<>();
@@ -91,14 +94,17 @@ public class ShopViewModel extends ViewModel {
     }
 
     public void loadMyListings(final SortOrder order, final String categoryId) {
-        String uid = SessionManager.getInstance().getCurrentUserId();
+        final String uid = SessionManager.getInstance().getCurrentUserId();
         if (uid == null || uid.isEmpty()) {
             error.setValue("Chưa đăng nhập");
             return;
         }
 
-        if (rawListings != null) {
-            List<Listing> filtered = sortAndFilter(rawListings, order, categoryId);
+        currentSortOrder = order != null ? order : SortOrder.NEWEST;
+        currentCategoryId = categoryId != null ? categoryId : "";
+
+        if (rawListings != null && uid.equals(cachedUid)) {
+            List<Listing> filtered = sortAndFilter(rawListings, currentSortOrder, currentCategoryId);
             myListings.setValue(filtered);
             return;
         }
@@ -107,16 +113,17 @@ public class ShopViewModel extends ViewModel {
         listingRepository.getBySeller(uid, new DataCallback<List<Listing>>() {
             @Override
             public void onSuccess(List<Listing> data) {
+                cachedUid = uid;
                 rawListings = data;
-                List<Listing> filtered = sortAndFilter(rawListings, order, categoryId);
-                myListings.setValue(filtered);
-                loading.setValue(false);
+                List<Listing> filtered = sortAndFilter(rawListings, currentSortOrder, currentCategoryId);
+                myListings.postValue(filtered);
+                loading.postValue(false);
             }
 
             @Override
             public void onError(String errorMessage) {
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -125,12 +132,12 @@ public class ShopViewModel extends ViewModel {
         categoryRepository.getAll(new DataCallback<List<Category>>() {
             @Override
             public void onSuccess(List<Category> data) {
-                categories.setValue(data);
+                categories.postValue(data);
             }
 
             @Override
             public void onError(String errorMessage) {
-                error.setValue(errorMessage);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -158,7 +165,7 @@ public class ShopViewModel extends ViewModel {
 
             @Override
             public void onError(String errorMessage) {
-                keywordFlag.setValue(false);
+                keywordFlag.postValue(false);
                 saveImagesAndCreate(listing, imageUris);
             }
         });
@@ -184,7 +191,7 @@ public class ShopViewModel extends ViewModel {
                 }
             }
         }
-        keywordFlag.setValue(hasBanned);
+        keywordFlag.postValue(hasBanned);
         saveImagesAndCreate(listing, imageUris);
     }
 
@@ -211,8 +218,8 @@ public class ShopViewModel extends ViewModel {
             @Override
             public void onError(String errorMessage) {
                 rollbackImages(savedIds);
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -231,8 +238,8 @@ public class ShopViewModel extends ViewModel {
             @Override
             public void onError(String errorMessage) {
                 rollbackImages(savedIds);
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -241,16 +248,17 @@ public class ShopViewModel extends ViewModel {
         listingRepository.create(listing, new DataCallback<String>() {
             @Override
             public void onSuccess(String id) {
-                createdListingId.setValue(id);
-                loading.setValue(false);
-                done.setValue(true);
+                rawListings = null;
+                createdListingId.postValue(id);
+                loading.postValue(false);
+                done.postValue(true);
             }
 
             @Override
             public void onError(String errorMessage) {
                 rollbackImages(savedIds);
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -271,8 +279,9 @@ public class ShopViewModel extends ViewModel {
     }
 
     public void saveDraft(final Listing listing, final List<Uri> imageUris) {
-        if (listing == null) {
-            error.setValue("Thông tin tin đăng không hợp lệ");
+        int imageCount = imageUris != null ? imageUris.size() : 0;
+        if (!canSaveDraft(listing, imageCount)) {
+            error.setValue("Hãy nhập tiêu đề, mô tả hoặc chọn ít nhất 1 ảnh để lưu nháp");
             return;
         }
         loading.setValue(true);
@@ -282,16 +291,16 @@ public class ShopViewModel extends ViewModel {
             listingRepository.saveDraft(listing, new DataCallback<String>() {
                 @Override
                 public void onSuccess(String id) {
-                    createdListingId.setValue(id);
-                    loading.setValue(false);
-                    done.setValue(true);
                     rawListings = null;
+                    createdListingId.postValue(id);
+                    loading.postValue(false);
+                    done.postValue(true);
                 }
 
                 @Override
                 public void onError(String errorMessage) {
-                    loading.setValue(false);
-                    error.setValue(errorMessage);
+                    loading.postValue(false);
+                    error.postValue(errorMessage);
                 }
             });
             return;
@@ -319,8 +328,8 @@ public class ShopViewModel extends ViewModel {
             @Override
             public void onError(String errorMessage) {
                 rollbackImages(savedIds);
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -339,8 +348,8 @@ public class ShopViewModel extends ViewModel {
             @Override
             public void onError(String errorMessage) {
                 rollbackImages(savedIds);
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -349,17 +358,17 @@ public class ShopViewModel extends ViewModel {
         listingRepository.saveDraft(listing, new DataCallback<String>() {
             @Override
             public void onSuccess(String id) {
-                createdListingId.setValue(id);
-                loading.setValue(false);
-                done.setValue(true);
                 rawListings = null;
+                createdListingId.postValue(id);
+                loading.postValue(false);
+                done.postValue(true);
             }
 
             @Override
             public void onError(String errorMessage) {
                 rollbackImages(savedIds);
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -384,16 +393,16 @@ public class ShopViewModel extends ViewModel {
         listingRepository.publish(target, new DataCallback<String>() {
             @Override
             public void onSuccess(String resultId) {
-                loading.setValue(false);
-                done.setValue(true);
+                loading.postValue(false);
+                done.postValue(true);
                 rawListings = null;
-                loadMyListings(SortOrder.NEWEST, "");
+                loadMyListings(currentSortOrder, currentCategoryId);
             }
 
             @Override
             public void onError(String errorMessage) {
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -406,32 +415,54 @@ public class ShopViewModel extends ViewModel {
         loading.setValue(true);
         clearError();
 
+        Listing target = null;
+        if (rawListings != null) {
+            for (Listing item : rawListings) {
+                if (item != null && listing.getId().equals(item.getId())) {
+                    target = item;
+                    break;
+                }
+            }
+        }
+        final List<String> removedImageIds = new ArrayList<String>();
+        if (target != null && target.getImageIds() != null) {
+            List<String> keptIds = listing.getImageIds();
+            for (String oldId : target.getImageIds()) {
+                if (keptIds == null || !keptIds.contains(oldId)) {
+                    removedImageIds.add(oldId);
+                }
+            }
+        }
+
         if (imageUris == null || imageUris.isEmpty()) {
             listingRepository.update(listing, new DataCallback<Void>() {
                 @Override
                 public void onSuccess(Void unused) {
-                    loading.setValue(false);
-                    done.setValue(true);
+                    deleteRemovedImages(removedImageIds);
+                    loading.postValue(false);
+                    done.postValue(true);
                     rawListings = null;
+                    loadMyListings(currentSortOrder, currentCategoryId);
                 }
 
                 @Override
                 public void onError(String errorMessage) {
-                    loading.setValue(false);
-                    error.setValue(errorMessage);
+                    loading.postValue(false);
+                    error.postValue(errorMessage);
                 }
             });
             return;
         }
 
         final List<String> newSavedIds = new ArrayList<String>();
-        saveNextUpdateImage(0, imageUris, newSavedIds, listing);
+        saveNextUpdateImage(0, imageUris, newSavedIds, listing, removedImageIds);
     }
 
     private void saveNextUpdateImage(final int index, final List<Uri> imageUris,
-                                     final List<String> newSavedIds, final Listing listing) {
+                                     final List<String> newSavedIds, final Listing listing,
+                                     final List<String> removedImageIds) {
         if (index >= imageUris.size()) {
-            finishUpdateListing(listing, imageUris, newSavedIds);
+            finishUpdateListing(listing, imageUris, newSavedIds, removedImageIds);
             return;
         }
 
@@ -440,42 +471,86 @@ public class ShopViewModel extends ViewModel {
             @Override
             public void onSuccess(String imageId) {
                 newSavedIds.add(imageId);
-                saveNextUpdateImage(index + 1, imageUris, newSavedIds, listing);
+                saveNextUpdateImage(index + 1, imageUris, newSavedIds, listing, removedImageIds);
             }
 
             @Override
             public void onError(String errorMessage) {
                 rollbackImages(newSavedIds);
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
 
     private void finishUpdateListing(final Listing listing, final List<Uri> imageUris,
-                                     final List<String> newSavedIds) {
+                                     final List<String> newSavedIds,
+                                     final List<String> removedImageIds) {
         List<String> currentIds = listing.getImageIds();
         if (currentIds == null) {
             currentIds = new ArrayList<String>();
         }
+        boolean wasEmpty = currentIds.isEmpty();
         currentIds.addAll(newSavedIds);
         listing.setImageIds(currentIds);
 
+        if (wasEmpty && imageUris != null && !imageUris.isEmpty()) {
+            mediaRepository.makeThumb(imageUris.get(0), new DataCallback<String>() {
+                @Override
+                public void onSuccess(String thumbBase64) {
+                    listing.setCoverThumb(thumbBase64);
+                    submitUpdateListing(listing, newSavedIds, removedImageIds);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    rollbackImages(newSavedIds);
+                    loading.postValue(false);
+                    error.postValue(errorMessage);
+                }
+            });
+            return;
+        }
+        submitUpdateListing(listing, newSavedIds, removedImageIds);
+    }
+
+    private void submitUpdateListing(final Listing listing, final List<String> newSavedIds,
+                                     final List<String> removedImageIds) {
         listingRepository.update(listing, new DataCallback<Void>() {
             @Override
             public void onSuccess(Void unused) {
-                loading.setValue(false);
-                done.setValue(true);
+                deleteRemovedImages(removedImageIds);
+                loading.postValue(false);
+                done.postValue(true);
                 rawListings = null;
+                loadMyListings(currentSortOrder, currentCategoryId);
             }
 
             @Override
             public void onError(String errorMessage) {
                 rollbackImages(newSavedIds);
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
+    }
+
+    private void deleteRemovedImages(List<String> removedImageIds) {
+        if (removedImageIds == null) {
+            return;
+        }
+        DataCallback<Void> noop = new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+            }
+        };
+        for (String id : removedImageIds) {
+            mediaRepository.delete(id, noop);
+        }
     }
 
     public void changeStatus(final String id, final ListingStatus status) {
@@ -498,16 +573,16 @@ public class ShopViewModel extends ViewModel {
         listingRepository.setStatus(id, from, status, new DataCallback<Void>() {
             @Override
             public void onSuccess(Void unused) {
-                loading.setValue(false);
-                done.setValue(true);
+                loading.postValue(false);
+                done.postValue(true);
                 rawListings = null;
-                loadMyListings(SortOrder.NEWEST, "");
+                loadMyListings(currentSortOrder, currentCategoryId);
             }
 
             @Override
             public void onError(String errorMessage) {
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -518,16 +593,16 @@ public class ShopViewModel extends ViewModel {
         listingRepository.setHidden(id, hidden, new DataCallback<Void>() {
             @Override
             public void onSuccess(Void unused) {
-                loading.setValue(false);
-                done.setValue(true);
+                loading.postValue(false);
+                done.postValue(true);
                 rawListings = null;
-                loadMyListings(SortOrder.NEWEST, "");
+                loadMyListings(currentSortOrder, currentCategoryId);
             }
 
             @Override
             public void onError(String errorMessage) {
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -538,16 +613,16 @@ public class ShopViewModel extends ViewModel {
         listingRepository.delete(id, new DataCallback<Void>() {
             @Override
             public void onSuccess(Void unused) {
-                loading.setValue(false);
-                done.setValue(true);
+                loading.postValue(false);
+                done.postValue(true);
                 rawListings = null;
-                loadMyListings(SortOrder.NEWEST, "");
+                loadMyListings(currentSortOrder, currentCategoryId);
             }
 
             @Override
             public void onError(String errorMessage) {
-                loading.setValue(false);
-                error.setValue(errorMessage);
+                loading.postValue(false);
+                error.postValue(errorMessage);
             }
         });
     }
@@ -558,6 +633,7 @@ public class ShopViewModel extends ViewModel {
 
     public void clearDone() {
         done.setValue(false);
+        createdListingId.setValue(null);
     }
 
     // Validates form fields and returns missing field names in order.
@@ -596,7 +672,7 @@ public class ShopViewModel extends ViewModel {
     }
 
     // Filters listings for one of the four tabs on the seller shelf screen.
-    public static List<Listing> filterByTab(List<Listing> listings, int tab) {
+    static List<Listing> filterByTab(List<Listing> listings, int tab) {
         List<Listing> result = new ArrayList<Listing>();
         if (listings == null) {
             return result;
@@ -628,7 +704,7 @@ public class ShopViewModel extends ViewModel {
     }
 
     // Filters listings by category and sorts them by date descending for NEWEST.
-    public static List<Listing> sortAndFilter(List<Listing> listings, SortOrder order, String categoryId) {
+    static List<Listing> sortAndFilter(List<Listing> listings, SortOrder order, String categoryId) {
         List<Listing> result = new ArrayList<Listing>();
         if (listings == null) {
             return result;
@@ -666,7 +742,7 @@ public class ShopViewModel extends ViewModel {
     }
 
     // Returns action codes permitted on the card menu for a listing in its current state.
-    public static List<String> allowedActions(Listing listing) {
+    static List<String> allowedActions(Listing listing) {
         List<String> actions = new ArrayList<String>();
         if (listing == null || listing.getStatus() == null) {
             return actions;
@@ -699,7 +775,7 @@ public class ShopViewModel extends ViewModel {
     }
 
     // Checks whether transitioning between two listing statuses is permitted directly.
-    public static boolean isAllowedStatusChange(ListingStatus from, ListingStatus to) {
+    static boolean isAllowedStatusChange(ListingStatus from, ListingStatus to) {
         if (from == ListingStatus.AVAILABLE && to == ListingStatus.SOLD) {
             return true;
         }
@@ -707,5 +783,16 @@ public class ShopViewModel extends ViewModel {
             return true;
         }
         return false;
+    }
+
+    // Checks whether a draft has minimum required content (title, description, or at least 1 image).
+    static boolean canSaveDraft(Listing listing, int imageCount) {
+        if (listing == null) {
+            return false;
+        }
+        boolean hasTitle = listing.getTitle() != null && !listing.getTitle().trim().isEmpty();
+        boolean hasDesc = listing.getDescription() != null && !listing.getDescription().trim().isEmpty();
+        boolean hasImages = imageCount > 0;
+        return hasTitle || hasDesc || hasImages;
     }
 }

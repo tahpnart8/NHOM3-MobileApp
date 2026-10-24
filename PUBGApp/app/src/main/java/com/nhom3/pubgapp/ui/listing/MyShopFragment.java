@@ -52,6 +52,7 @@ public class MyShopFragment extends Fragment {
     private String selectedCategoryId = "";
     private VerificationStatus userVerification = VerificationStatus.NONE;
     private List<Listing> currentFullList = new ArrayList<Listing>();
+    private int lastActionSuccessMsgRes = R.string.listing_shop_publish_success;
 
     @Nullable
     @Override
@@ -121,6 +122,7 @@ public class MyShopFragment extends Fragment {
         binding.layoutErrorState.buttonRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                viewModel.clearError();
                 viewModel.loadMyListings(currentSortOrder, selectedCategoryId);
             }
         });
@@ -200,11 +202,15 @@ public class MyShopFragment extends Fragment {
             @Override
             public void onChanged(String errorMsg) {
                 if (errorMsg != null && !errorMsg.isEmpty()) {
-                    binding.layoutErrorState.getRoot().setVisibility(View.VISIBLE);
-                    binding.layoutErrorState.textErrorMessage.setText(errorMsg);
-                    binding.recyclerListings.setVisibility(View.GONE);
-                    binding.layoutEmptyState.getRoot().setVisibility(View.GONE);
-                    viewModel.clearError();
+                    if (currentFullList.isEmpty()) {
+                        binding.layoutErrorState.getRoot().setVisibility(View.VISIBLE);
+                        binding.layoutErrorState.textErrorMessage.setText(errorMsg);
+                        binding.recyclerListings.setVisibility(View.GONE);
+                        binding.layoutEmptyState.getRoot().setVisibility(View.GONE);
+                    } else {
+                        Snackbar.make(binding.getRoot(), errorMsg, Snackbar.LENGTH_LONG).show();
+                        viewModel.clearError();
+                    }
                 } else {
                     binding.layoutErrorState.getRoot().setVisibility(View.GONE);
                 }
@@ -215,7 +221,7 @@ public class MyShopFragment extends Fragment {
             @Override
             public void onChanged(Boolean isDone) {
                 if (isDone != null && isDone) {
-                    Snackbar.make(binding.getRoot(), R.string.listing_shop_publish_success,
+                    Snackbar.make(binding.getRoot(), lastActionSuccessMsgRes,
                             Snackbar.LENGTH_SHORT).show();
                     viewModel.clearDone();
                 }
@@ -251,7 +257,7 @@ public class MyShopFragment extends Fragment {
     }
 
     private void updateDraftCountTab() {
-        List<Listing> drafts = ShopViewModel.filterByTab(currentFullList, ShopViewModel.TAB_DRAFT);
+        List<Listing> drafts = filterByTab(currentFullList, ShopViewModel.TAB_DRAFT);
         int draftCount = drafts != null ? drafts.size() : 0;
         TabLayout.Tab draftTab = binding.tabLayoutStatus.getTabAt(ShopViewModel.TAB_DRAFT);
         if (draftTab != null) {
@@ -260,7 +266,7 @@ public class MyShopFragment extends Fragment {
     }
 
     private void updateDisplayedList() {
-        List<Listing> filtered = ShopViewModel.filterByTab(currentFullList, selectedTab);
+        List<Listing> filtered = filterByTab(currentFullList, selectedTab);
         adapter.setListings(filtered);
 
         if (filtered == null || filtered.isEmpty()) {
@@ -341,7 +347,7 @@ public class MyShopFragment extends Fragment {
     private void showCardActionMenu(View anchor, final Listing listing) {
         PopupMenu popup = new PopupMenu(requireContext(), anchor);
         popup.inflate(R.menu.menu_listing_shop_item);
-        List<String> allowed = ShopViewModel.allowedActions(listing);
+        List<String> allowed = allowedActions(listing);
 
         popup.getMenu().findItem(R.id.action_edit)
                 .setVisible(allowed.contains(ShopViewModel.ACTION_EDIT));
@@ -388,12 +394,14 @@ public class MyShopFragment extends Fragment {
             confirmHideListing(listing);
             return true;
         } else if (itemId == R.id.action_show) {
+            lastActionSuccessMsgRes = R.string.listing_shop_show_success;
             viewModel.setHidden(listing.getId(), false);
             return true;
         } else if (itemId == R.id.action_mark_sold) {
             confirmMarkSold(listing);
             return true;
         } else if (itemId == R.id.action_reopen) {
+            lastActionSuccessMsgRes = R.string.listing_shop_reopen_success;
             viewModel.changeStatus(listing.getId(), ListingStatus.AVAILABLE);
             return true;
         } else if (itemId == R.id.action_publish) {
@@ -432,6 +440,7 @@ public class MyShopFragment extends Fragment {
         builder.setPositiveButton(R.string.listing_shop_action_hide, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                lastActionSuccessMsgRes = R.string.listing_shop_hide_success;
                 viewModel.setHidden(listing.getId(), true);
             }
         });
@@ -446,6 +455,7 @@ public class MyShopFragment extends Fragment {
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        lastActionSuccessMsgRes = R.string.listing_shop_mark_sold_success;
                         viewModel.changeStatus(listing.getId(), ListingStatus.SOLD);
                     }
                 });
@@ -460,6 +470,7 @@ public class MyShopFragment extends Fragment {
         builder.setPositiveButton(R.string.listing_shop_action_delete, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                lastActionSuccessMsgRes = R.string.listing_shop_delete_success;
                 viewModel.deleteListing(listing.getId());
             }
         });
@@ -481,7 +492,7 @@ public class MyShopFragment extends Fragment {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 NavHostFragment.findNavController(MyShopFragment.this)
-                                        .navigate(R.id.action_global_my_profile);
+                                         .navigate(R.id.action_global_my_profile);
                             }
                         });
                 builder.setNegativeButton(R.string.listing_post_btn_close, null);
@@ -490,7 +501,69 @@ public class MyShopFragment extends Fragment {
             return;
         }
 
+        lastActionSuccessMsgRes = R.string.listing_shop_publish_success;
         viewModel.publishDraft(listing.getId());
+    }
+
+    private List<Listing> filterByTab(List<Listing> listings, int tab) {
+        List<Listing> result = new ArrayList<Listing>();
+        if (listings == null) {
+            return result;
+        }
+        for (Listing listing : listings) {
+            if (listing == null || listing.getStatus() == null) {
+                continue;
+            }
+            ListingStatus status = listing.getStatus();
+            if (tab == ShopViewModel.TAB_ACTIVE) {
+                if (status == ListingStatus.AVAILABLE || status == ListingStatus.RESERVED) {
+                    result.add(listing);
+                }
+            } else if (tab == ShopViewModel.TAB_SOLD) {
+                if (status == ListingStatus.SOLD) {
+                    result.add(listing);
+                }
+            } else if (tab == ShopViewModel.TAB_HIDDEN) {
+                if (status == ListingStatus.HIDDEN || status == ListingStatus.REMOVED) {
+                    result.add(listing);
+                }
+            } else if (tab == ShopViewModel.TAB_DRAFT) {
+                if (status == ListingStatus.DRAFT) {
+                    result.add(listing);
+                }
+            }
+        }
+        return result;
+    }
+
+    private List<String> allowedActions(Listing listing) {
+        List<String> actions = new ArrayList<String>();
+        if (listing == null || listing.getStatus() == null) {
+            return actions;
+        }
+        ListingStatus status = listing.getStatus();
+        if (status == ListingStatus.AVAILABLE) {
+            actions.add(ShopViewModel.ACTION_EDIT);
+            actions.add(ShopViewModel.ACTION_MARK_SOLD);
+            actions.add(ShopViewModel.ACTION_HIDE);
+        } else if (status == ListingStatus.RESERVED) {
+            // Under reservation, seller cannot change state directly.
+        } else if (status == ListingStatus.HIDDEN) {
+            String reason = listing.getStatusReason();
+            if (reason == null || reason.trim().isEmpty()) {
+                actions.add(ShopViewModel.ACTION_SHOW);
+                actions.add(ShopViewModel.ACTION_EDIT);
+            } else {
+                actions.add(ShopViewModel.ACTION_VIEW_REASON);
+            }
+        } else if (status == ListingStatus.SOLD) {
+            actions.add(ShopViewModel.ACTION_REOPEN);
+        } else if (status == ListingStatus.DRAFT) {
+            actions.add(ShopViewModel.ACTION_EDIT);
+            actions.add(ShopViewModel.ACTION_PUBLISH);
+            actions.add(ShopViewModel.ACTION_DELETE);
+        }
+        return actions;
     }
 
     private void showAdminReasonDialog(Listing listing) {

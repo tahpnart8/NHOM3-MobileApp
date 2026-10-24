@@ -114,6 +114,38 @@ public class ShopViewModelTest {
     }
 
     @Test
+    public void testCanSaveDraft_withTitle() {
+        Listing listing = new Listing();
+        listing.setTitle("Tiêu đề món đồ");
+        assertTrue(ShopViewModel.canSaveDraft(listing, 0));
+    }
+
+    @Test
+    public void testCanSaveDraft_withDescription() {
+        Listing listing = new Listing();
+        listing.setDescription("Mô tả chi tiết món đồ");
+        assertTrue(ShopViewModel.canSaveDraft(listing, 0));
+    }
+
+    @Test
+    public void testCanSaveDraft_withImages() {
+        Listing listing = new Listing();
+        assertTrue(ShopViewModel.canSaveDraft(listing, 1));
+    }
+
+    @Test
+    public void testCanSaveDraft_emptyAll() {
+        Listing listing = new Listing();
+        assertFalse(ShopViewModel.canSaveDraft(listing, 0));
+    }
+
+    @Test
+    public void testCanSaveDraft_nullListing() {
+        assertFalse(ShopViewModel.canSaveDraft(null, 0));
+        assertFalse(ShopViewModel.canSaveDraft(null, 2));
+    }
+
+    @Test
     public void testFilterByTab() {
         List<Listing> listings = new ArrayList<Listing>();
 

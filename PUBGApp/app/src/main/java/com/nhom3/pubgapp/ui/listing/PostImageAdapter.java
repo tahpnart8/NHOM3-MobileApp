@@ -1,7 +1,5 @@
 package com.nhom3.pubgapp.ui.listing;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,9 +8,11 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.MediaRepository;
 import com.nhom3.pubgapp.databinding.ItemListingPostImageBinding;
+import com.nhom3.pubgapp.ui.common.ImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -137,24 +137,25 @@ public class PostImageAdapter extends RecyclerView.Adapter<PostImageAdapter.Imag
 
     @Override
     public void onBindViewHolder(@NonNull final ImageViewHolder holder, int position) {
-        ImageEntry entry = items.get(position);
+        final ImageEntry entry = items.get(position);
         if (entry.isExisting()) {
-            mediaRepository.getImage(entry.getImageId(), new DataCallback<byte[]>() {
+            final String imageId = entry.getImageId();
+            mediaRepository.getImage(imageId, new DataCallback<byte[]>() {
                 @Override
                 public void onSuccess(byte[] bytes) {
-                    if (bytes != null && bytes.length > 0) {
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                        holder.binding.imageThumbnail.setImageBitmap(bitmap);
-                    }
+                    ImageLoader.load(bytes, imageId, holder.binding.imageThumbnail,
+                            R.drawable.ic_inbox, R.drawable.ic_error);
                 }
 
                 @Override
                 public void onError(String errorMessage) {
-                    holder.binding.imageThumbnail.setImageDrawable(null);
+                    ImageLoader.load((byte[]) null, null, holder.binding.imageThumbnail,
+                            R.drawable.ic_inbox, R.drawable.ic_error);
                 }
             });
         } else {
-            holder.binding.imageThumbnail.setImageURI(entry.getUri());
+            ImageLoader.load(entry.getUri(), holder.binding.imageThumbnail,
+                    R.drawable.ic_inbox, R.drawable.ic_error);
         }
 
         holder.binding.buttonRemoveImage.setOnClickListener(new View.OnClickListener() {

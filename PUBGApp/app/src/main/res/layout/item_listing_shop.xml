@@ -45,9 +45,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_md"
+            android:layout_marginEnd="@dimen/space_xs"
             android:layout_marginTop="@dimen/space_xs"
             android:textAppearance="?attr/textAppearanceTitleSmall"
             android:textColor="?attr/colorPrimary"
+            app:layout_constraintEnd_toStartOf="@+id/buttonItemMenu"
             app:layout_constraintStart_toEndOf="@+id/imageThumb"
             app:layout_constraintTop_toBottomOf="@+id/textTitle" />
 

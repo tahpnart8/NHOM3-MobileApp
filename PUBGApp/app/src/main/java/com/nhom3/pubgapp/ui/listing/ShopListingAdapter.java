@@ -1,21 +1,18 @@
 package com.nhom3.pubgapp.ui.listing;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.ItemListingShopBinding;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
+import com.nhom3.pubgapp.ui.common.ImageLoader;
+import com.nhom3.pubgapp.ui.common.StatusChips;
 import com.nhom3.pubgapp.util.FormatUtils;
 
 import java.util.ArrayList;
@@ -62,26 +59,14 @@ public class ShopListingAdapter extends RecyclerView.Adapter<ShopListingAdapter.
     @Override
     public void onBindViewHolder(@NonNull ShopListingViewHolder holder, int position) {
         final Listing listing = listings.get(position);
-        Context context = holder.itemView.getContext();
 
         holder.binding.textTitle.setText(listing.getTitle());
         holder.binding.textPrice.setText(formatUtils.formatPrice(listing.getPrice()));
 
-        // Decode cover thumbnail if present
-        String coverThumb = listing.getCoverThumb();
-        if (coverThumb != null && !coverThumb.isEmpty()) {
-            try {
-                byte[] decodedBytes = Base64.decode(coverThumb, Base64.DEFAULT);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-                holder.binding.imageThumb.setImageBitmap(bitmap);
-            } catch (Exception e) {
-                holder.binding.imageThumb.setImageDrawable(null);
-            }
-        } else {
-            holder.binding.imageThumb.setImageDrawable(null);
-        }
+        ImageLoader.load(listing.getCoverThumb(), holder.binding.imageThumb,
+                R.drawable.ic_inbox, R.drawable.ic_error);
 
-        bindStatusChip(holder, context, listing.getStatus());
+        StatusChips.bind(holder.binding.layoutStatusChip.textStatusChip, listing.getStatus());
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -100,39 +85,6 @@ public class ShopListingAdapter extends RecyclerView.Adapter<ShopListingAdapter.
                 }
             }
         });
-    }
-
-    private void bindStatusChip(ShopListingViewHolder holder, Context context, ListingStatus status) {
-        if (status == null) {
-            holder.binding.layoutStatusChip.textStatusChip.setVisibility(View.GONE);
-            return;
-        }
-        holder.binding.layoutStatusChip.textStatusChip.setVisibility(View.VISIBLE);
-        int textColorRes;
-        int textRes;
-        if (status == ListingStatus.AVAILABLE) {
-            textRes = R.string.listing_shop_status_available;
-            textColorRes = R.color.success;
-        } else if (status == ListingStatus.RESERVED) {
-            textRes = R.string.listing_shop_status_reserved;
-            textColorRes = R.color.warning;
-        } else if (status == ListingStatus.SOLD) {
-            textRes = R.string.listing_shop_status_sold;
-            textColorRes = R.color.on_surface_variant;
-        } else if (status == ListingStatus.HIDDEN) {
-            textRes = R.string.listing_shop_status_hidden;
-            textColorRes = R.color.on_surface_variant;
-        } else if (status == ListingStatus.REMOVED) {
-            textRes = R.string.listing_shop_status_removed;
-            textColorRes = R.color.error;
-        } else {
-            textRes = R.string.listing_shop_status_draft;
-            textColorRes = R.color.on_surface_variant;
-        }
-
-        holder.binding.layoutStatusChip.textStatusChip.setText(textRes);
-        int color = ContextCompat.getColor(context, textColorRes);
-        holder.binding.layoutStatusChip.textStatusChip.setTextColor(color);
     }
 
     @Override

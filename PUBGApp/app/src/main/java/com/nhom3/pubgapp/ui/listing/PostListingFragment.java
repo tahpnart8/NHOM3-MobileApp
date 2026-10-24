@@ -24,16 +24,16 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.snackbar.Snackbar;
-import android.widget.Toast;
+import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.R;
-import com.nhom3.pubgapp.data.DataCallback;
-import com.nhom3.pubgapp.data.ListingRepository;
 import com.nhom3.pubgapp.databinding.FragmentPostListingBinding;
 import com.nhom3.pubgapp.model.Category;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.ItemCondition;
+import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.OfferType;
+import com.nhom3.pubgapp.model.enums.SortOrder;
 import com.nhom3.pubgapp.model.enums.TradeType;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
 import com.nhom3.pubgapp.util.NetworkMonitor;
@@ -50,6 +50,11 @@ public class PostListingFragment extends Fragment {
     private static final String KEY_IMAGES = "key_post_images";
     private static final String KEY_EXISTING_IMAGE_IDS = "key_existing_image_ids";
     private static final String KEY_EDITING_ID = "key_editing_id";
+    private static final String KEY_EDITING_SELLER_ID = "key_editing_seller_id";
+    private static final String KEY_EDITING_STATUS = "key_editing_status";
+    private static final String KEY_EDITING_COVER_THUMB = "key_editing_cover_thumb";
+    private static final String KEY_EDITING_FLAGGED = "key_editing_flagged";
+    private static final String KEY_EDITING_CREATED_AT = "key_editing_created_at";
     private static final String ARG_LISTING_ID = "listingId";
 
     private FragmentPostListingBinding binding;
@@ -90,7 +95,7 @@ public class PostListingFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        viewModel = new ViewModelProvider(this).get(ShopViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(ShopViewModel.class);
         profileViewModel = new ViewModelProvider(requireActivity()).get(ProfileViewModel.class);
 
         setupImageRecycler();
@@ -421,7 +426,7 @@ public class PostListingFragment extends Fragment {
             return;
         }
 
-        if (currentVerification != VerificationStatus.APPROVED) {
+        if (!isEditMode() && currentVerification != VerificationStatus.APPROVED) {
             showUnverifiedDialog();
             return;
         }
@@ -435,6 +440,7 @@ public class PostListingFragment extends Fragment {
                 listing.setStatus(editingListing.getStatus());
                 listing.setCreatedAt(editingListing.getCreatedAt());
                 listing.setCoverThumb(editingListing.getCoverThumb());
+                listing.setFlagged(editingListing.isFlagged());
             }
             listing.setImageIds(imageAdapter.getExistingImageIds());
             viewModel.updateListing(listing, imageAdapter.getNewImageUris());
@@ -619,6 +625,17 @@ public class PostListingFragment extends Fragment {
         outState.putStringArrayList(KEY_EXISTING_IMAGE_IDS,
                 new ArrayList<String>(imageAdapter.getExistingImageIds()));
         outState.putString(KEY_EDITING_ID, editingListingId);
+        if (editingListing != null) {
+            outState.putString(KEY_EDITING_SELLER_ID, editingListing.getSellerId());
+            if (editingListing.getStatus() != null) {
+                outState.putString(KEY_EDITING_STATUS, editingListing.getStatus().name());
+            }
+            outState.putString(KEY_EDITING_COVER_THUMB, editingListing.getCoverThumb());
+            outState.putBoolean(KEY_EDITING_FLAGGED, editingListing.isFlagged());
+            if (editingListing.getCreatedAt() != null) {
+                outState.putLong(KEY_EDITING_CREATED_AT, editingListing.getCreatedAt().getSeconds());
+            }
+        }
     }
 
     private void restoreInstanceState(Bundle state) {
@@ -637,6 +654,26 @@ public class PostListingFragment extends Fragment {
         if (imageAdapter.getAllImageCount() >= 5) {
             binding.buttonAddImage.setVisibility(View.GONE);
         }
+        if (editingListingId != null && !editingListingId.isEmpty()) {
+            if (state.containsKey(KEY_EDITING_SELLER_ID)) {
+                editingListing = new Listing();
+                editingListing.setId(editingListingId);
+                editingListing.setSellerId(state.getString(KEY_EDITING_SELLER_ID));
+                String statusStr = state.getString(KEY_EDITING_STATUS);
+                if (statusStr != null) {
+                    try {
+                        editingListing.setStatus(ListingStatus.valueOf(statusStr));
+                    } catch (IllegalArgumentException ignored) {
+                    }
+                }
+                editingListing.setCoverThumb(state.getString(KEY_EDITING_COVER_THUMB));
+                editingListing.setFlagged(state.getBoolean(KEY_EDITING_FLAGGED, false));
+                if (state.containsKey(KEY_EDITING_CREATED_AT)) {
+                    long seconds = state.getLong(KEY_EDITING_CREATED_AT);
+                    editingListing.setCreatedAt(new Timestamp(seconds, 0));
+                }
+            }
+        }
     }
 
     private boolean isEditMode() {
@@ -644,24 +681,36 @@ public class PostListingFragment extends Fragment {
     }
 
     private void loadEditingListing() {
-        new ListingRepository().getById(editingListingId, new DataCallback<Listing>() {
+        if (editingListingId == null || editingListingId.isEmpty()) {
+            return;
+        }
+        viewModel.getMyListings().observe(getViewLifecycleOwner(), new Observer<List<Listing>>() {
             @Override
-            public void onSuccess(Listing listing) {
-                if (binding == null) {
+            public void onChanged(List<Listing> listings) {
+                if (listings == null || listings.isEmpty() || editingListing != null) {
                     return;
                 }
-                editingListing = listing;
-                populateForm(listing);
-            }
-
-            @Override
-            public void onError(String errorMessage) {
-                if (binding != null) {
-                    binding.layoutErrorState.getRoot().setVisibility(View.VISIBLE);
-                    binding.layoutErrorState.textErrorMessage.setText(errorMessage);
+                for (Listing item : listings) {
+                    if (item != null && editingListingId.equals(item.getId())) {
+                        editingListing = item;
+                        populateForm(item);
+                        break;
+                    }
                 }
             }
         });
+        List<Listing> current = viewModel.getMyListings().getValue();
+        if (current == null || current.isEmpty()) {
+            viewModel.loadMyListings(SortOrder.NEWEST, "");
+        } else {
+            for (Listing item : current) {
+                if (item != null && editingListingId.equals(item.getId())) {
+                    editingListing = item;
+                    populateForm(item);
+                    break;
+                }
+            }
+        }
     }
 
     private void populateForm(Listing listing) {
