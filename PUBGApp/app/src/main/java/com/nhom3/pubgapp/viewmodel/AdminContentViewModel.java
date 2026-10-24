@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.data.AdminRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.ListingRepository;
@@ -22,6 +23,8 @@ import com.nhom3.pubgapp.model.enums.ReportTarget;
 import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +38,7 @@ public class AdminContentViewModel extends ViewModel {
             "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.";
     private static final String MESSAGE_ID_REQUIRED = "Thiếu mã của đối tượng cần xử lý.";
     private static final String MESSAGE_REASON_REQUIRED = "Hãy nhập lý do.";
+    private static final String MESSAGE_KEYWORD_REQUIRED = "Hãy nhập từ khóa.";
     private static final String MESSAGE_FILTER_REQUIRED = "Hãy chọn trạng thái báo cáo cần xem.";
     private static final String MESSAGE_REPORTS_NOT_CLOSED =
             "Đã xử lý tin nhưng chưa đóng được các báo cáo của tin. Hãy làm mới màn hình. ";
@@ -47,6 +51,11 @@ public class AdminContentViewModel extends ViewModel {
     private final RequestGuard reportsGuard = new RequestGuard();
     private final RequestGuard listingGuard = new RequestGuard();
     private final RequestGuard writeGuard = new RequestGuard();
+    private final RequestGuard flaggedGuard = new RequestGuard();
+    private final RequestGuard keywordsGuard = new RequestGuard();
+    // Set once a tab asked for its list, so a write refreshes only the lists the admin has opened.
+    private volatile boolean flaggedAsked;
+    private volatile boolean keywordsAsked;
     private volatile ReportStatus lastStatus;
     private volatile ReportTarget lastTargetType;
     private volatile String lastListingId;
@@ -244,27 +253,87 @@ public class AdminContentViewModel extends ViewModel {
     }
 
     public void removeAllOf(String userId) {
-        error.setValue(DataCallback.NOT_READY);
+        if (isBlank(userId)) {
+            error.postValue(MESSAGE_ID_REQUIRED);
+            return;
+        }
+        final int token = writeGuard.begin();
+        refreshLoading();
+        adminRepository.removeAllListingsOf(userId, plainWrite(token));
     }
 
     public void loadFlagged() {
-        error.setValue(DataCallback.NOT_READY);
+        flaggedAsked = true;
+        final int token = flaggedGuard.begin();
+        refreshLoading();
+        adminRepository.getFlaggedListings(new DataCallback<List<Listing>>() {
+            @Override
+            public void onSuccess(List<Listing> result) {
+                if (!flaggedGuard.finish(token)) {
+                    return;
+                }
+                flagged.postValue(result);
+                refreshLoading();
+            }
+
+            @Override
+            public void onError(String message) {
+                failRequest(flaggedGuard, token, message);
+            }
+        });
     }
 
     public void clearFlag(String listingId) {
-        error.setValue(DataCallback.NOT_READY);
+        if (isBlank(listingId)) {
+            error.postValue(MESSAGE_ID_REQUIRED);
+            return;
+        }
+        final int token = writeGuard.begin();
+        refreshLoading();
+        adminRepository.clearFlag(listingId, plainWrite(token));
     }
 
     public void loadKeywords() {
-        error.setValue(DataCallback.NOT_READY);
+        keywordsAsked = true;
+        final int token = keywordsGuard.begin();
+        refreshLoading();
+        adminRepository.getKeywords(new DataCallback<List<BannedKeyword>>() {
+            @Override
+            public void onSuccess(List<BannedKeyword> result) {
+                if (!keywordsGuard.finish(token)) {
+                    return;
+                }
+                List<BannedKeyword> sorted = new ArrayList<BannedKeyword>(result);
+                sortNewestFirst(sorted);
+                keywords.postValue(sorted);
+                refreshLoading();
+            }
+
+            @Override
+            public void onError(String message) {
+                failRequest(keywordsGuard, token, message);
+            }
+        });
     }
 
     public void addKeyword(String word) {
-        error.setValue(DataCallback.NOT_READY);
+        if (isBlank(word)) {
+            error.postValue(MESSAGE_KEYWORD_REQUIRED);
+            return;
+        }
+        final int token = writeGuard.begin();
+        refreshLoading();
+        adminRepository.addKeyword(word, plainWrite(token));
     }
 
     public void removeKeyword(String id) {
-        error.setValue(DataCallback.NOT_READY);
+        if (isBlank(id)) {
+            error.postValue(MESSAGE_ID_REQUIRED);
+            return;
+        }
+        final int token = writeGuard.begin();
+        refreshLoading();
+        adminRepository.removeKeyword(id, plainWrite(token));
     }
 
     public void loadCategories() {
@@ -345,6 +414,35 @@ public class AdminContentViewModel extends ViewModel {
         };
     }
 
+    // A write with nothing to do after it but to report and reload.
+    private DataCallback<Void> plainWrite(final int token) {
+        return new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                finishWrite(token);
+            }
+
+            @Override
+            public void onError(String message) {
+                failRequest(writeGuard, token, message);
+            }
+        };
+    }
+
+    private void sortNewestFirst(List<BannedKeyword> list) {
+        Collections.sort(list, new Comparator<BannedKeyword>() {
+            @Override
+            public int compare(BannedKeyword first, BannedKeyword second) {
+                Timestamp firstTime = first.getCreatedAt();
+                Timestamp secondTime = second.getCreatedAt();
+                if (firstTime == null || secondTime == null) {
+                    return firstTime == null ? (secondTime == null ? 0 : -1) : 1;
+                }
+                return secondTime.compareTo(firstTime);
+            }
+        });
+    }
+
     private void finishWrite(int token) {
         if (!writeGuard.finish(token)) {
             return;
@@ -363,6 +461,12 @@ public class AdminContentViewModel extends ViewModel {
         if (listingId != null) {
             loadListing(listingId);
         }
+        if (flaggedAsked) {
+            loadFlagged();
+        }
+        if (keywordsAsked) {
+            loadKeywords();
+        }
     }
 
     private void failRequest(RequestGuard guard, int token, String message) {
@@ -374,7 +478,8 @@ public class AdminContentViewModel extends ViewModel {
     }
 
     private void refreshLoading() {
-        boolean busy = reportsGuard.isActive() || listingGuard.isActive() || writeGuard.isActive();
+        boolean busy = reportsGuard.isActive() || listingGuard.isActive() || writeGuard.isActive()
+                || flaggedGuard.isActive() || keywordsGuard.isActive();
         loading.postValue(busy);
     }
 
