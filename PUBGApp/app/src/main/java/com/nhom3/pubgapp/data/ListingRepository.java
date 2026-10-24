@@ -608,6 +608,7 @@ public class ListingRepository extends BaseRepository {
                         final DataCallback<List<Listing>> cb) {
         boolean online = true;
         try {
+            // Temporary fallback until NetworkMonitor is fully initialized across all components
             online = NetworkMonitor.getInstance().isOnline();
         } catch (UnsupportedOperationException e) {
             online = true;
@@ -653,6 +654,7 @@ public class ListingRepository extends BaseRepository {
                         return;
                     }
                     List<String> top30 = followingIds;
+                    // Firestore whereIn supports a maximum of 30 items
                     if (top30.size() > 30) {
                         top30 = top30.subList(0, 30);
                     }

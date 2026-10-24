@@ -59,6 +59,7 @@ public class FeedViewModel extends ViewModel {
         return done;
     }
 
+    // Note: getFeed may call cb.onSuccess twice (cached items first, then fresh items).
     public void loadFeed(boolean followingOnly, SortOrder order) {
         currentFollowingOnly = followingOnly;
         currentSortOrder = order != null ? order : SortOrder.NEWEST;
@@ -74,7 +75,7 @@ public class FeedViewModel extends ViewModel {
         listingRepo.getFeed(filter, null, new DataCallback<List<Listing>>() {
             @Override
             public void onSuccess(List<Listing> list) {
-                loading.setValue(false);
+                loading.postValue(false);
                 if (list == null || list.size() < 20) {
                     hasMore = false;
                 } else {
@@ -83,13 +84,17 @@ public class FeedViewModel extends ViewModel {
                 if (list != null && !list.isEmpty()) {
                     lastCreatedAt = list.get(list.size() - 1).getCreatedAt();
                 }
-                feed.setValue(list != null ? list : new ArrayList<Listing>());
+                feed.postValue(list != null ? list : new ArrayList<Listing>());
             }
 
             @Override
             public void onError(String err) {
-                loading.setValue(false);
-                error.setValue(err);
+                loading.postValue(false);
+                // Keep showing cached data if network request fails after cache load
+                List<Listing> current = feed.getValue();
+                if (current == null || current.isEmpty()) {
+                    error.postValue(err);
+                }
             }
         });
     }
@@ -98,7 +103,7 @@ public class FeedViewModel extends ViewModel {
         categoryRepo.getAll(new DataCallback<List<Category>>() {
             @Override
             public void onSuccess(List<Category> list) {
-                categories.setValue(list != null ? list : new ArrayList<Category>());
+                categories.postValue(list != null ? list : new ArrayList<Category>());
             }
 
             @Override
@@ -139,13 +144,13 @@ public class FeedViewModel extends ViewModel {
                     updated.addAll(current);
                 }
                 updated.addAll(page);
-                feed.setValue(updated);
+                feed.postValue(updated);
             }
 
             @Override
             public void onError(String err) {
                 isLoadingNext = false;
-                error.setValue(err);
+                error.postValue(err);
             }
         });
     }
