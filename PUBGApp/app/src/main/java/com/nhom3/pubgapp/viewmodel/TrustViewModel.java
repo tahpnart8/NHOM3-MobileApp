@@ -94,6 +94,9 @@ public class TrustViewModel extends ViewModel {
             + "hoặc đã xác nhận với hình thức gặp trực tiếp.";
     private static final String MESSAGE_COMPLAINT_COUNTDOWN_OVER =
             "Đã hết thời gian đếm ngược, giao dịch không còn khiếu nại được.";
+    private static final String MESSAGE_MY_COMPLAINTS_NOT_SIGNED_IN =
+            "Bạn cần đăng nhập để xem khiếu nại của mình.";
+    private static final String MESSAGE_COMPLAINT_NOT_FOUND = "Không tìm thấy khiếu nại này.";
 
     private final ReviewRepository reviewRepository = new ReviewRepository();
     private final ReportRepository reportRepository = new ReportRepository();
@@ -106,6 +109,8 @@ public class TrustViewModel extends ViewModel {
     private String loadedReviewsKey;
     // The uid whose sent reports are in reports, so a rotation does not query again.
     private String loadedReportsUid;
+    // The uid whose sent complaints are in complaints, for the same reason.
+    private String loadedComplaintsUid;
 
     public LiveData<List<Review>> getReviews() {
         return reviews;
@@ -346,11 +351,25 @@ public class TrustViewModel extends ViewModel {
     }
 
     public void loadMyComplaints() {
-        error.setValue(DataCallback.NOT_READY);
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null || uid.isEmpty()) {
+            error.setValue(MESSAGE_MY_COMPLAINTS_NOT_SIGNED_IN);
+            return;
+        }
+        if (uid.equals(loadedComplaintsUid)) {
+            return;
+        }
+        fetchMyComplaints(uid);
     }
 
+    // getDetail also reads the admin-only note the Rules refuse to users, so the row already read is shown.
     public void loadComplaint(String id) {
-        error.setValue(DataCallback.NOT_READY);
+        Complaint complaint = findComplaint(id);
+        if (complaint == null) {
+            error.setValue(MESSAGE_COMPLAINT_NOT_FOUND);
+            return;
+        }
+        selectedComplaint.setValue(complaint);
     }
 
     public void withdrawComplaint(String id) {
@@ -408,6 +427,57 @@ public class TrustViewModel extends ViewModel {
                 error.postValue(message);
             }
         });
+    }
+
+    private Complaint findComplaint(String id) {
+        List<Complaint> current = complaints.getValue();
+        if (current == null || id == null) {
+            return null;
+        }
+        for (Complaint complaint : current) {
+            if (id.equals(complaint.getId())) {
+                return complaint;
+            }
+        }
+        return null;
+    }
+
+    private void fetchMyComplaints(final String uid) {
+        loadedComplaintsUid = uid;
+        loading.setValue(true);
+        complaintRepository.getMyComplaints(uid, new DataCallback<List<Complaint>>() {
+            @Override
+            public void onSuccess(List<Complaint> result) {
+                if (!uid.equals(loadedComplaintsUid)) {
+                    return;
+                }
+                List<Complaint> list = result != null ? result : new ArrayList<Complaint>();
+                complaints.postValue(list);
+                refreshSelectedComplaint(list);
+                loading.postValue(false);
+            }
+
+            @Override
+            public void onError(String message) {
+                loadedComplaintsUid = null;
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
+    }
+
+    // An open detail follows the list, so it shows the status the server holds after a reload.
+    private void refreshSelectedComplaint(List<Complaint> list) {
+        Complaint shown = selectedComplaint.getValue();
+        if (shown == null || shown.getId() == null) {
+            return;
+        }
+        for (Complaint complaint : list) {
+            if (shown.getId().equals(complaint.getId())) {
+                selectedComplaint.postValue(complaint);
+                return;
+            }
+        }
     }
 
     // The deal is read first, so no image is uploaded for a complaint the deal would refuse.
