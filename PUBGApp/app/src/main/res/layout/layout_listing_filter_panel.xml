@@ -269,6 +269,53 @@
             android:background="?attr/colorSurface"
             android:paddingHorizontal="@dimen/space_sm" />
 
+        <!-- Radius & Distance Section (STT 27) -->
+        <TextView
+            android:id="@+id/textLabelRadius"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:text="@string/listing_search_radius_label"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupRadius"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipRadiusNearMe"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_radius_near_me" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipRadius1km"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_radius_1km" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipRadius3km"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_radius_3km" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipRadius5km"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_radius_5km" />
+        </com.google.android.material.chip.ChipGroup>
+
         <!-- Sort Order Section -->
         <TextView
             android:id="@+id/textLabelSort"
