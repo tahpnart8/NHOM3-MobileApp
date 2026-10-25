@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.data.AdminRepository;
+import com.nhom3.pubgapp.data.ChatRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.ListingRepository;
 import com.nhom3.pubgapp.data.MediaRepository;
@@ -50,6 +51,7 @@ public class AdminContentViewModel extends ViewModel {
     private final ListingRepository listingRepository = new ListingRepository();
     private final AdminRepository adminRepository = new AdminRepository();
     private final MediaRepository mediaRepository = new MediaRepository();
+    private final ChatRepository chatRepository = new ChatRepository();
     private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
     // One guard per kind of work, so loading a listing never cancels loading its reports.
     private final RequestGuard reportsGuard = new RequestGuard();
@@ -59,6 +61,7 @@ public class AdminContentViewModel extends ViewModel {
     private final RequestGuard keywordsGuard = new RequestGuard();
     // The evidence dialog has its own guards and stays out of refreshLoading, so the list keeps its spinner state.
     private final RequestGuard evidenceGuard = new RequestGuard();
+    private final RequestGuard conversationGuard = new RequestGuard();
     // Set once a tab asked for its list, so a write refreshes only the lists the admin has opened.
     private volatile boolean flaggedAsked;
     private volatile boolean keywordsAsked;
@@ -208,8 +211,33 @@ public class AdminContentViewModel extends ViewModel {
         readEvidenceFrom(ids, new ArrayList<byte[]>(), token);
     }
 
+    // Null while reading; an empty list when the report is not about a message.
     public void loadReportedConversation(String conversationId) {
-        error.setValue(DataCallback.NOT_READY);
+        reportedMessages.setValue(null);
+        final int token = conversationGuard.begin();
+        if (isBlank(conversationId)) {
+            conversationGuard.finish(token);
+            reportedMessages.setValue(new ArrayList<ChatMessage>());
+            return;
+        }
+        chatRepository.getMessagesOnce(conversationId, new DataCallback<List<ChatMessage>>() {
+            @Override
+            public void onSuccess(List<ChatMessage> result) {
+                if (!conversationGuard.finish(token)) {
+                    return;
+                }
+                reportedMessages.postValue(result != null ? result : new ArrayList<ChatMessage>());
+            }
+
+            @Override
+            public void onError(String message) {
+                if (!conversationGuard.finish(token)) {
+                    return;
+                }
+                reportedMessages.postValue(new ArrayList<ChatMessage>());
+                error.postValue(message);
+            }
+        });
     }
 
     // The parameter is named listingId in the specification; a user or message report passes its own targetId.
