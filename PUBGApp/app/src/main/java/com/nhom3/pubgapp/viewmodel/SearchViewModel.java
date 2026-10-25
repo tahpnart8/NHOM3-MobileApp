@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 // State for keyword search, filters and search results.
 public class SearchViewModel extends ViewModel {
@@ -81,7 +82,26 @@ public class SearchViewModel extends ViewModel {
         return copy;
     }
 
+    static double calculateSellerRating(User user) {
+        if (user == null) {
+            return 0.0;
+        }
+        return calculateSellerRating(user.getRatingSum(), user.getRatingCount());
+    }
+
+    static double calculateSellerRating(int ratingSum, int ratingCount) {
+        if (ratingCount <= 0) {
+            return 0.0;
+        }
+        return (double) ratingSum / (double) ratingCount;
+    }
+
     static List<Listing> sortResults(List<Listing> list, SortOrder order) {
+        return sortResults(list, order, null);
+    }
+
+    static List<Listing> sortResults(List<Listing> list, SortOrder order,
+                                     final Map<String, Double> sellerRatings) {
         if (list == null) {
             return new ArrayList<Listing>();
         }
@@ -98,6 +118,42 @@ public class SearchViewModel extends ViewModel {
                 @Override
                 public int compare(Listing o1, Listing o2) {
                     return Long.compare(o2.getPrice(), o1.getPrice());
+                }
+            });
+        } else if (order == SortOrder.TOP_RATED) {
+            Collections.sort(sorted, new Comparator<Listing>() {
+                @Override
+                public int compare(Listing o1, Listing o2) {
+                    double r1 = 0.0;
+                    double r2 = 0.0;
+                    if (sellerRatings != null) {
+                        if (o1.getSellerId() != null && sellerRatings.containsKey(o1.getSellerId())) {
+                            Double val1 = sellerRatings.get(o1.getSellerId());
+                            if (val1 != null) {
+                                r1 = val1.doubleValue();
+                            }
+                        }
+                        if (o2.getSellerId() != null && sellerRatings.containsKey(o2.getSellerId())) {
+                            Double val2 = sellerRatings.get(o2.getSellerId());
+                            if (val2 != null) {
+                                r2 = val2.doubleValue();
+                            }
+                        }
+                    }
+                    int ratingCompare = Double.compare(r2, r1);
+                    if (ratingCompare != 0) {
+                        return ratingCompare;
+                    }
+                    if (o1.getCreatedAt() == null && o2.getCreatedAt() == null) {
+                        return 0;
+                    }
+                    if (o1.getCreatedAt() == null) {
+                        return 1;
+                    }
+                    if (o2.getCreatedAt() == null) {
+                        return -1;
+                    }
+                    return o2.getCreatedAt().compareTo(o1.getCreatedAt());
                 }
             });
         } else {
