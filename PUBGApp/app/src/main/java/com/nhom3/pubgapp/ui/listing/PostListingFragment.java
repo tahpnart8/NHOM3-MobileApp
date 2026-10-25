@@ -50,6 +50,7 @@ public class PostListingFragment extends Fragment {
 
     private static final String KEY_IMAGES = "key_post_images";
     private static final String KEY_EXISTING_IMAGE_IDS = "key_existing_image_ids";
+    private static final String KEY_SELECTED_CATEGORY_ID = "key_selected_category_id";
     private static final String KEY_EDITING_ID = "key_editing_id";
     private static final String KEY_EDITING_SELLER_ID = "key_editing_seller_id";
     private static final String KEY_EDITING_STATUS = "key_editing_status";
@@ -648,6 +649,7 @@ public class PostListingFragment extends Fragment {
         outState.putStringArrayList(KEY_EXISTING_IMAGE_IDS,
                 new ArrayList<String>(imageAdapter.getExistingImageIds()));
         outState.putString(KEY_EDITING_ID, editingListingId);
+        outState.putString(KEY_SELECTED_CATEGORY_ID, selectedCategoryId);
         if (editingListing != null) {
             outState.putString(KEY_EDITING_SELLER_ID, editingListing.getSellerId());
             if (editingListing.getStatus() != null) {
@@ -663,6 +665,12 @@ public class PostListingFragment extends Fragment {
 
     private void restoreInstanceState(Bundle state) {
         editingListingId = state.getString(KEY_EDITING_ID);
+        if (state.containsKey(KEY_SELECTED_CATEGORY_ID)) {
+            selectedCategoryId = state.getString(KEY_SELECTED_CATEGORY_ID);
+            if (selectedCategoryId != null && !loadedCategories.isEmpty()) {
+                selectCategory(selectedCategoryId);
+            }
+        }
         ArrayList<String> existingIds = state.getStringArrayList(KEY_EXISTING_IMAGE_IDS);
         ArrayList<Parcelable> parcelables = state.getParcelableArrayList(KEY_IMAGES);
         List<Uri> restoredUris = new ArrayList<Uri>();
