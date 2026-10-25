@@ -8,10 +8,14 @@ import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.data.CategoryRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.ListingRepository;
+import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.model.Category;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.SearchFilter;
+import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.SortOrder;
+import com.nhom3.pubgapp.util.RecommendationEngine;
+import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +32,8 @@ public class FeedViewModel extends ViewModel {
 
     private final ListingRepository listingRepo = new ListingRepository();
     private final CategoryRepository categoryRepo = new CategoryRepository();
+    private final UserRepository userRepo = new UserRepository();
+    private final RecommendationEngine recommendationEngine = new RecommendationEngine();
 
     private boolean currentFollowingOnly = false;
     private SortOrder currentSortOrder = SortOrder.NEWEST;
@@ -156,7 +162,99 @@ public class FeedViewModel extends ViewModel {
     }
 
     public void loadForYou() {
-        error.setValue(DataCallback.NOT_READY);
+        listingRepo.getRecentViews(20, new DataCallback<List<String>>() {
+            @Override
+            public void onSuccess(final List<String> viewedCategoryIds) {
+                listingRepo.getRecentSearches(10, new DataCallback<List<String>>() {
+                    @Override
+                    public void onSuccess(final List<String> recentKeywords) {
+                        checkUserAndRecommend(viewedCategoryIds, recentKeywords);
+                    }
+
+                    @Override
+                    public void onError(String err) {
+                        checkUserAndRecommend(viewedCategoryIds, new ArrayList<String>());
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String err) {
+                listingRepo.getRecentSearches(10, new DataCallback<List<String>>() {
+                    @Override
+                    public void onSuccess(final List<String> recentKeywords) {
+                        checkUserAndRecommend(new ArrayList<String>(), recentKeywords);
+                    }
+
+                    @Override
+                    public void onError(String searchErr) {
+                        checkUserAndRecommend(new ArrayList<String>(), new ArrayList<String>());
+                    }
+                });
+            }
+        });
+    }
+
+    private void checkUserAndRecommend(final List<String> viewedCategoryIds,
+                                       final List<String> recentKeywords) {
+        if (!SessionManager.getInstance().isLoggedIn()) {
+            evaluateAndFetch(viewedCategoryIds, recentKeywords, null, null);
+            return;
+        }
+
+        final User currentUser = SessionManager.getInstance().getCurrentUser();
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null || uid.isEmpty()) {
+            evaluateAndFetch(viewedCategoryIds, recentKeywords, null, currentUser);
+            return;
+        }
+
+        userRepo.getSavedIds(uid, new DataCallback<List<String>>() {
+            @Override
+            public void onSuccess(List<String> savedIds) {
+                evaluateAndFetch(viewedCategoryIds, recentKeywords, savedIds, currentUser);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                evaluateAndFetch(viewedCategoryIds, recentKeywords, null, currentUser);
+            }
+        });
+    }
+
+    private void evaluateAndFetch(final List<String> viewedCategoryIds,
+                                  final List<String> recentKeywords,
+                                  final List<String> savedCategoryIds,
+                                  final User currentUser) {
+        boolean hasViews = viewedCategoryIds != null && !viewedCategoryIds.isEmpty();
+        boolean hasSearches = recentKeywords != null && !recentKeywords.isEmpty();
+        boolean hasSaved = savedCategoryIds != null && !savedCategoryIds.isEmpty();
+        boolean hasInterested = currentUser != null && currentUser.getInterestedCategoryIds() != null
+                && !currentUser.getInterestedCategoryIds().isEmpty();
+
+        if (!hasViews && !hasSearches && !hasSaved && !hasInterested) {
+            forYou.postValue(new ArrayList<Listing>());
+            return;
+        }
+
+        SearchFilter filter = new SearchFilter();
+        listingRepo.getFeed(filter, null, new DataCallback<List<Listing>>() {
+            @Override
+            public void onSuccess(List<Listing> candidates) {
+                if (candidates == null || candidates.isEmpty()) {
+                    forYou.postValue(new ArrayList<Listing>());
+                    return;
+                }
+                List<Listing> scored = recommendationEngine.forYou(candidates, viewedCategoryIds,
+                        recentKeywords, savedCategoryIds, currentUser);
+                forYou.postValue(scored);
+            }
+
+            @Override
+            public void onError(String err) {
+                forYou.postValue(new ArrayList<Listing>());
+            }
+        });
     }
 
     public void refresh() {
