@@ -147,7 +147,59 @@ public class RecommendationEngine {
 
     public List<Listing> forYou(List<Listing> candidates, List<String> viewedCategoryIds,
             List<String> searchedKeywords, List<String> savedCategoryIds, User user) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (candidates == null || candidates.isEmpty()) {
+            return new ArrayList<Listing>();
+        }
+
+        String currentUserId = user != null ? user.getId() : null;
+        List<ScoredListing> scoredList = new ArrayList<ScoredListing>();
+        for (int i = 0; i < candidates.size(); i++) {
+            Listing c = candidates.get(i);
+            if (c == null) {
+                continue;
+            }
+            if (c.getStatus() != ListingStatus.AVAILABLE) {
+                continue;
+            }
+            if (currentUserId != null && currentUserId.equals(c.getSellerId())) {
+                continue;
+            }
+            double itemScore = score(c, viewedCategoryIds, searchedKeywords, savedCategoryIds, user);
+            scoredList.add(new ScoredListing(c, itemScore));
+        }
+
+        if (scoredList.isEmpty()) {
+            return new ArrayList<Listing>();
+        }
+
+        Collections.sort(scoredList, new Comparator<ScoredListing>() {
+            @Override
+            public int compare(ScoredListing a, ScoredListing b) {
+                int cmp = Double.compare(b.score, a.score);
+                if (cmp != 0) {
+                    return cmp;
+                }
+                Timestamp timeA = a.listing.getCreatedAt();
+                Timestamp timeB = b.listing.getCreatedAt();
+                if (timeA != null && timeB != null) {
+                    return timeB.compareTo(timeA);
+                }
+                if (timeA != null) {
+                    return -1;
+                }
+                if (timeB != null) {
+                    return 1;
+                }
+                return 0;
+            }
+        });
+
+        int limit = Math.min(20, scoredList.size());
+        List<Listing> result = new ArrayList<Listing>();
+        for (int i = 0; i < limit; i++) {
+            result.add(scoredList.get(i).listing);
+        }
+        return result;
     }
 
     public long[] priceRange(Listing listing, List<Listing> candidates) {
@@ -220,7 +272,94 @@ public class RecommendationEngine {
         return ((val + 5000L) / 10000L) * 10000L;
     }
 
+    // Chấm điểm tin đăng cho người dùng mặc định khi không truyền ngữ cảnh
     private double score(Listing listing) {
-        throw new UnsupportedOperationException("NOT_READY");
+        return score(listing, null, null, null, null);
+    }
+
+    double score(Listing listing, List<String> viewedCategoryIds,
+            List<String> searchedKeywords, List<String> savedCategoryIds, User user) {
+        if (listing == null) {
+            return 0.0;
+        }
+
+        double categoryViewRatio = 0.0;
+        if (viewedCategoryIds != null && !viewedCategoryIds.isEmpty()) {
+            int matchCount = 0;
+            String catId = listing.getCategoryId();
+            for (int i = 0; i < viewedCategoryIds.size(); i++) {
+                String v = viewedCategoryIds.get(i);
+                if (v != null && v.equals(catId)) {
+                    matchCount++;
+                }
+            }
+            categoryViewRatio = (double) matchCount / viewedCategoryIds.size();
+        }
+
+        double keywordScore = 0.0;
+        if (searchedKeywords != null && !searchedKeywords.isEmpty()
+                && listing.getSearchKeywords() != null && !listing.getSearchKeywords().isEmpty()) {
+            FormatUtils formatUtils = new FormatUtils();
+            List<String> listingKeywords = listing.getSearchKeywords();
+            boolean match = false;
+            int limit = Math.min(10, searchedKeywords.size());
+            for (int i = 0; i < limit; i++) {
+                String rawKw = searchedKeywords.get(i);
+                if (rawKw == null || rawKw.trim().isEmpty()) {
+                    continue;
+                }
+                String unaccented = formatUtils.removeAccents(rawKw).trim();
+                List<String> tokens = formatUtils.toKeywords(rawKw);
+                for (int j = 0; j < listingKeywords.size(); j++) {
+                    String lk = listingKeywords.get(j);
+                    if (lk == null) {
+                        continue;
+                    }
+                    if (lk.equalsIgnoreCase(unaccented)) {
+                        match = true;
+                        break;
+                    }
+                    if (tokens != null) {
+                        for (int k = 0; k < tokens.size(); k++) {
+                            if (lk.equalsIgnoreCase(tokens.get(k))) {
+                                match = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (match) {
+                        break;
+                    }
+                }
+                if (match) {
+                    keywordScore = 2.0;
+                    break;
+                }
+            }
+        }
+
+        double interestedScore = 0.0;
+        if (user != null && user.getInterestedCategoryIds() != null
+                && listing.getCategoryId() != null
+                && user.getInterestedCategoryIds().contains(listing.getCategoryId())) {
+            interestedScore = 1.0;
+        }
+
+        double savedScore = 0.0;
+        if (savedCategoryIds != null && listing.getCategoryId() != null
+                && savedCategoryIds.contains(listing.getCategoryId())) {
+            savedScore = 0.5;
+        }
+
+        double recencyScore = 1.0;
+        if (listing.getCreatedAt() != null) {
+            long now = System.currentTimeMillis();
+            long created = listing.getCreatedAt().toDate().getTime();
+            long diffMs = Math.max(0L, now - created);
+            double days = (double) diffMs / (1000.0 * 60.0 * 60.0 * 24.0);
+            recencyScore = 1.0 / (1.0 + days / 7.0);
+        }
+
+        return (3.0 * categoryViewRatio) + keywordScore + interestedScore + savedScore + recencyScore;
     }
 }
