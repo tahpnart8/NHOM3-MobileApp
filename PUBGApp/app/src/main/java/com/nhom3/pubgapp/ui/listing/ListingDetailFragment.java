@@ -365,6 +365,13 @@ public class ListingDetailFragment extends Fragment {
                 }
             }
         });
+
+        viewModel.getPriceRange().observe(getViewLifecycleOwner(), new Observer<long[]>() {
+            @Override
+            public void onChanged(long[] range) {
+                displayPriceRange(range);
+            }
+        });
     }
 
     private void displayListingDetails(final Listing listing, String currentUid) {
@@ -443,7 +450,24 @@ public class ListingDetailFragment extends Fragment {
 
         binding.textDescription.setText(listing.getDescription());
 
+        viewModel.loadPriceRange();
+
         setupActionButtons(listing, currentUid);
+    }
+
+    private void displayPriceRange(long[] range) {
+        if (range == null || range.length < 2) {
+            binding.textPriceRange.setVisibility(View.GONE);
+            return;
+        }
+        FormatUtils formatUtils = new FormatUtils();
+        String lowStr = formatUtils.formatPrice(range[0]);
+        if (lowStr.endsWith(" đ")) {
+            lowStr = lowStr.substring(0, lowStr.length() - 2);
+        }
+        String highStr = formatUtils.formatPrice(range[1]);
+        binding.textPriceRange.setText(getString(R.string.listing_detail_price_range_format, lowStr, highStr));
+        binding.textPriceRange.setVisibility(View.VISIBLE);
     }
 
     private String formatCondition(ItemCondition condition) {
