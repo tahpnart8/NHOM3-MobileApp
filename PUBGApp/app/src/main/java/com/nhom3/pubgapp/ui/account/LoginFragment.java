@@ -12,22 +12,11 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.credentials.Credential;
-import androidx.credentials.CredentialManager;
-import androidx.credentials.CredentialManagerCallback;
-import androidx.credentials.CustomCredential;
-import androidx.credentials.GetCredentialRequest;
-import androidx.credentials.GetCredentialResponse;
-import androidx.credentials.exceptions.GetCredentialCancellationException;
-import androidx.credentials.exceptions.GetCredentialException;
-import androidx.credentials.exceptions.NoCredentialException;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentLoginBinding;
 import com.nhom3.pubgapp.ui.main.MainActivity;
@@ -211,84 +200,8 @@ public class LoginFragment extends Fragment {
             return;
         }
         binding.viewOfflineBanner.layoutOfflineBanner.setVisibility(View.GONE);
-
-        try {
-            binding.buttonGoogleSignIn.setEnabled(false);
-            CredentialManager credentialManager = CredentialManager.create(requireContext());
-            GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(getString(R.string.default_web_client_id))
-                    .setAutoSelectEnabled(false)
-                    .build();
-
-            GetCredentialRequest request = new GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
-                    .build();
-
-            credentialManager.getCredentialAsync(
-                    requireContext(),
-                    request,
-                    null,
-                    requireActivity().getMainExecutor(),
-                    new CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
-                        @Override
-                        public void onResult(GetCredentialResponse response) {
-                            if (binding == null) {
-                                return;
-                            }
-                            binding.buttonGoogleSignIn.setEnabled(true);
-                            handleGoogleSignInResponse(response);
-                        }
-
-                        @Override
-                        public void onError(GetCredentialException e) {
-                            if (binding == null) {
-                                return;
-                            }
-                            binding.buttonGoogleSignIn.setEnabled(true);
-                            if (e instanceof GetCredentialCancellationException) {
-                                binding.textError.setText(R.string.account_login_google_cancelled);
-                                binding.textError.setVisibility(View.VISIBLE);
-                                return;
-                            }
-                            if (e instanceof NoCredentialException) {
-                                binding.textError.setText(R.string.account_login_google_no_credential);
-                                binding.textError.setVisibility(View.VISIBLE);
-                                return;
-                            }
-                            binding.textError.setText(R.string.account_login_google_failed);
-                            binding.textError.setVisibility(View.VISIBLE);
-                        }
-                    }
-            );
-        } catch (Exception e) {
-            if (binding != null) {
-                binding.buttonGoogleSignIn.setEnabled(true);
-                binding.textError.setText(R.string.account_login_google_init_error);
-                binding.textError.setVisibility(View.VISIBLE);
-            }
-        }
-    }
-
-    private void handleGoogleSignInResponse(GetCredentialResponse response) {
-        if (binding == null) {
-            return;
-        }
-        Credential credential = response.getCredential();
-        if (credential instanceof CustomCredential) {
-            CustomCredential customCredential = (CustomCredential) credential;
-            if (GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(customCredential.getType())) {
-                try {
-                    GoogleIdTokenCredential googleIdTokenCredential =
-                            GoogleIdTokenCredential.createFrom(customCredential.getData());
-                    String idToken = googleIdTokenCredential.getIdToken();
-                    viewModel.loginWithGoogle(idToken);
-                } catch (Exception e) {
-                    binding.textError.setText(R.string.account_login_google_parse_error);
-                    binding.textError.setVisibility(View.VISIBLE);
-                }
-            }
-        }
+        // Opens Google's own sign-in page in the browser; the loading state disables the button meanwhile.
+        viewModel.loginWithGoogleBrowser(requireActivity());
     }
 
     private boolean isNetworkAvailable() {

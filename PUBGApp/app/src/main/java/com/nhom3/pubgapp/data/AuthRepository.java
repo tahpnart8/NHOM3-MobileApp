@@ -1,5 +1,7 @@
 package com.nhom3.pubgapp.data;
 
+import android.app.Activity;
+
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -7,9 +9,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.EmailAuthProvider;
+import com.google.firebase.auth.FirebaseAuthWebException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.auth.OAuthProvider;
 import com.google.firebase.auth.UserInfo;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.nhom3.pubgapp.model.User;
@@ -19,6 +23,9 @@ import java.util.List;
 public class AuthRepository extends BaseRepository {
 
     private static final String COLLECTION_USERS = "users";
+    // Shown when the browser page is closed or the sign-in cannot finish there.
+    private static final String MESSAGE_GOOGLE_BROWSER_STOPPED =
+            "Đăng nhập Google chưa hoàn tất. Hãy thử lại.";
 
     public void signUp(String email, String password, final DataCallback<String> cb) {
         auth.createUserWithEmailAndPassword(email, password)
@@ -84,6 +91,33 @@ public class AuthRepository extends BaseRepository {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (!task.isSuccessful()) {
+                            fail(cb, task.getException());
+                            return;
+                        }
+                        FirebaseUser firebaseUser = auth.getCurrentUser();
+                        if (firebaseUser == null) {
+                            cb.onError("Không tìm thấy phiên đăng nhập.");
+                            return;
+                        }
+                        fetchUserProfile(firebaseUser.getUid(), cb);
+                    }
+                });
+    }
+
+    // Opens Google's own sign-in page in the browser, so the device needs no Google account of its own.
+    public void signInWithGoogleBrowser(Activity activity, final DataCallback<User> cb) {
+        OAuthProvider.Builder provider = OAuthProvider.newBuilder("google.com");
+        // Always show the account chooser, even when the browser already knows an account.
+        provider.addCustomParameter("prompt", "select_account");
+        auth.startActivityForSignInWithProvider(activity, provider.build())
+                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (!task.isSuccessful()) {
+                            if (task.getException() instanceof FirebaseAuthWebException) {
+                                cb.onError(MESSAGE_GOOGLE_BROWSER_STOPPED);
+                                return;
+                            }
                             fail(cb, task.getException());
                             return;
                         }

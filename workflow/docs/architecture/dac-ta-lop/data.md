@@ -112,6 +112,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void sendVerificationEmail(DataCallback<Void> cb)` | Gửi lại email xác thực. | 1 đến 3 |
 | `public void signIn(String email, String password, DataCallback<User> cb)` | Đăng nhập bằng email và mật khẩu, trả `User` kể cả khi tài khoản đang khóa; ViewModel quyết định cho vào hay không. | 1 đến 3 |
 | `public void signInWithGoogle(String idToken, DataCallback<User> cb)` | Đăng nhập bằng mã của Google Sign-In. Trả `User`, hoặc `null` khi chưa có tài liệu `users/{uid}` (lần đầu): khi đó ứng dụng mở bước hoàn tất hồ sơ. | 1 đến 3 |
+| `public void signInWithGoogleBrowser(Activity activity, DataCallback<User> cb)` | Mở trang đăng nhập Google trong trình duyệt qua Firebase Authentication (luôn hỏi chọn tài khoản), nên máy không cần có sẵn tài khoản Google. Kết quả giống `signInWithGoogle`: `User`, hoặc `null` khi chưa có `users/{uid}`. Đóng trang giữa chừng thì trả lỗi "Đăng nhập Google chưa hoàn tất". | 1 đến 3 |
 | `public void sendPasswordReset(String email, DataCallback<Void> cb)` | Gửi email đặt lại mật khẩu. | 1 đến 3 |
 | `public void changePassword(String current, String next, DataCallback<Void> cb)` | Xác thực lại bằng mật khẩu hiện tại rồi đổi sang mật khẩu mới. | 11 |
 | `public String getCurrentUserId()` | Mã người dùng của phiên Firebase hiện tại, hoặc rỗng khi chưa đăng nhập; `AuthViewModel.restoreSession` cần nó. |  |

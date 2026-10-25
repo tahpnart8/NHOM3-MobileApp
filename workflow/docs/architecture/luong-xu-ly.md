@@ -25,10 +25,9 @@ sequenceDiagram
     participant FA as Firebase Auth
     participant FS as Firestore
     U->>V: Chọn Đăng nhập Google
-    V->>V: Google Sign-In trả idToken
-    V->>VM: loginWithGoogle(idToken)
-    VM->>AR: signInWithGoogle(idToken, cb)
-    AR->>FA: đăng nhập bằng thông tin Google
+    V->>VM: loginWithGoogleBrowser(activity)
+    VM->>AR: signInWithGoogleBrowser(activity, cb)
+    AR->>FA: mở trang đăng nhập Google trong trình duyệt
     FA-->>AR: uid
     AR->>FS: đọc users/uid
     alt chưa có hồ sơ (lần đầu)
@@ -50,8 +49,8 @@ sequenceDiagram
     VM-->>V: loggedIn = true
 ```
 
-1. Ứng dụng nhận `idToken` từ Google Sign-In rồi đưa cho `AuthViewModel.loginWithGoogle`.
-2. `AuthRepository.signInWithGoogle` đăng nhập Firebase Authentication và đọc `users/{uid}`. Lần đầu chưa có hồ sơ thì trả `null`; ViewModel đặt `needsProfile` và màn hình mở bước hoàn tất hồ sơ (màn đăng ký A02 ở chế độ hoàn tất: điền khu vực, số điện thoại, đồng ý điều khoản, thông tin định danh, danh mục quan tâm). `AuthViewModel.completeProfile` gọi `UserRepository.createProfile`, tạo `users/{uid}` ở ACTIVE và `private/identity` trong một lô ghi. Tài khoản Google có email đã được Google xác thực.
+1. Màn hình gọi `AuthViewModel.loginWithGoogleBrowser`. Firebase mở trang đăng nhập Google trong trình duyệt và người dùng tự nhập tài khoản ngay tại đó, nên máy không cần có sẵn tài khoản Google. (Đường `loginWithGoogle(idToken)` cho trường hợp đã có mã Google vẫn giữ.)
+2. `AuthRepository.signInWithGoogleBrowser` (hoặc `signInWithGoogle` khi đã có mã) đăng nhập Firebase Authentication và đọc `users/{uid}`. Lần đầu chưa có hồ sơ thì trả `null`; ViewModel đặt `needsProfile` và màn hình mở bước hoàn tất hồ sơ (màn đăng ký A02 ở chế độ hoàn tất: điền khu vực, số điện thoại, đồng ý điều khoản, thông tin định danh, danh mục quan tâm). `AuthViewModel.completeProfile` gọi `UserRepository.createProfile`, tạo `users/{uid}` ở ACTIVE và `private/identity` trong một lô ghi. Tài khoản Google có email đã được Google xác thực.
 3. Quyết định vào ứng dụng nằm ở ViewModel, không ở repository (`signIn` và `signInWithGoogle` trả `User` kể cả khi đang khóa). Tài khoản DELETED: báo tài khoản đã xóa, đăng xuất. Tài khoản đang khóa: hiện `lockReason` và hạn khóa, đăng xuất. Khóa tạm đã hết hạn: gọi `UserRepository.clearExpiredLock` rồi đi tiếp.
 4. Đọc `admins/{uid}` để biết có hiện nút vào khu quản trị không. Cờ này chỉ để hiện giao diện; quyền thật do Security Rules kiểm tra ở mỗi lần đọc, ghi.
 5. Đăng nhập bằng email đi cùng đường, thay bước 2 bằng `AuthRepository.signIn`; email chưa xác thực thì nhắc xác thực và không cho đăng tin. Sau khi người dùng xác thực trong hộp thư, ứng dụng gọi `AuthRepository.reloadUser` để cờ `isEmailVerified` được làm mới.
