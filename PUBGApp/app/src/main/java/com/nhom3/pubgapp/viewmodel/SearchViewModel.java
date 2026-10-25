@@ -9,21 +9,30 @@ import com.google.firebase.firestore.GeoPoint;
 import com.nhom3.pubgapp.data.CategoryRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.ListingRepository;
+import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.model.Category;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.SearchFilter;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.SortOrder;
 import com.nhom3.pubgapp.util.GeoUtils;
+import com.nhom3.pubgapp.util.NetworkMonitor;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 // State for keyword search, filters and search results.
 public class SearchViewModel extends ViewModel {
+
+    private static final String MESSAGE_OFFLINE_SELLER_RATING =
+            "Không có kết nối mạng. Không thể tải đánh giá người bán";
+    private static final String MESSAGE_ERROR_SELLER_RATING =
+            "Lỗi khi tải thông tin người bán";
 
     private final MutableLiveData<List<Listing>> results = new MutableLiveData<>();
     private final MutableLiveData<List<User>> userResults = new MutableLiveData<>();
@@ -35,7 +44,11 @@ public class SearchViewModel extends ViewModel {
 
     private final ListingRepository listingRepo = new ListingRepository();
     private final CategoryRepository categoryRepo = new CategoryRepository();
+    private final UserRepository userRepo = new UserRepository();
     private final GeoUtils geoUtils = new GeoUtils();
+
+    // In-memory cache of seller average ratings to avoid redundant network reads.
+    final Map<String, Double> sellerRatingsCache = new ConcurrentHashMap<String, Double>();
 
     // Plain field, not LiveData: the ViewModel itself survives rotation.
     private SearchFilter filter = new SearchFilter();
@@ -184,11 +197,7 @@ public class SearchViewModel extends ViewModel {
         if (filter != null && filter.getRadiusKm() > 0 && filter.getCenter() != null) {
             processed = filterByRadius(processed, filter.getCenter(), filter.getRadiusKm(), geoUtils);
         }
-        List<Listing> sorted = sortResults(processed, filter != null ? filter.getSortOrder() : null);
-        if (filter != null && filter.getCenter() != null) {
-            sorted = sortByDistance(sorted, filter.getCenter(), geoUtils);
-        }
-        return sorted;
+        return processed;
     }
 
     public LiveData<List<Listing>> getResults() {
@@ -233,8 +242,173 @@ public class SearchViewModel extends ViewModel {
         filter.setKeyword(text);
     }
 
+    static boolean canReorderExistingResults(SearchFilter oldF, SearchFilter newF) {
+        if (oldF == null || newF == null) {
+            return false;
+        }
+        SortOrder oldOrder = oldF.getSortOrder() != null ? oldF.getSortOrder() : SortOrder.NEWEST;
+        SortOrder newOrder = newF.getSortOrder() != null ? newF.getSortOrder() : SortOrder.NEWEST;
+        if (oldOrder == newOrder) {
+            return false;
+        }
+        boolean oldIsCreatedAt = (oldOrder == SortOrder.NEWEST || oldOrder == SortOrder.TOP_RATED);
+        boolean newIsCreatedAt = (newOrder == SortOrder.NEWEST || newOrder == SortOrder.TOP_RATED);
+        if (!oldIsCreatedAt || !newIsCreatedAt) {
+            return false;
+        }
+        if (!equalsOrBothEmpty(oldF.getKeyword(), newF.getKeyword())) {
+            return false;
+        }
+        if (!equalsOrBothNull(oldF.getCategoryId(), newF.getCategoryId())) {
+            return false;
+        }
+        if (oldF.getMinPrice() != newF.getMinPrice() || oldF.getMaxPrice() != newF.getMaxPrice()) {
+            return false;
+        }
+        if (!equalsOrBothNull(oldF.getProvince(), newF.getProvince())) {
+            return false;
+        }
+        if (!equalsList(oldF.getConditions(), newF.getConditions())) {
+            return false;
+        }
+        if (!equalsList(oldF.getTradeTypes(), newF.getTradeTypes())) {
+            return false;
+        }
+        if (oldF.isFollowingOnly() != newF.isFollowingOnly()) {
+            return false;
+        }
+        if (oldF.getRadiusKm() != newF.getRadiusKm()) {
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean equalsOrBothEmpty(String s1, String s2) {
+        String t1 = s1 != null ? s1.trim() : "";
+        String t2 = s2 != null ? s2.trim() : "";
+        return t1.equals(t2);
+    }
+
+    private static boolean equalsOrBothNull(String s1, String s2) {
+        if (s1 == null && s2 == null) {
+            return true;
+        }
+        if (s1 == null || s2 == null) {
+            return false;
+        }
+        return s1.equals(s2);
+    }
+
+    private static <T> boolean equalsList(List<T> l1, List<T> l2) {
+        boolean empty1 = l1 == null || l1.isEmpty();
+        boolean empty2 = l2 == null || l2.isEmpty();
+        if (empty1 && empty2) {
+            return true;
+        }
+        if (empty1 || empty2) {
+            return false;
+        }
+        return l1.equals(l2);
+    }
+
+    void processAndPublishResults(final List<Listing> rawList, final SortOrder order) {
+        final List<Listing> list = processResults(rawList);
+        if (order != SortOrder.TOP_RATED) {
+            List<Listing> sorted = sortResults(list, order, sellerRatingsCache);
+            if (filter != null && filter.getCenter() != null
+                    && order != SortOrder.PRICE_ASC && order != SortOrder.PRICE_DESC) {
+                sorted = sortByDistance(sorted, filter.getCenter(), geoUtils);
+            }
+            results.postValue(sorted);
+            loading.postValue(false);
+            return;
+        }
+
+        if (list.isEmpty()) {
+            results.postValue(new ArrayList<Listing>());
+            loading.postValue(false);
+            return;
+        }
+
+        List<String> distinctSellerIds = new ArrayList<String>();
+        for (int i = 0; i < list.size(); i++) {
+            Listing item = list.get(i);
+            if (item != null) {
+                String sId = item.getSellerId();
+                if (sId != null && !sId.trim().isEmpty() && !distinctSellerIds.contains(sId)) {
+                    distinctSellerIds.add(sId);
+                    if (distinctSellerIds.size() >= 30) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        final List<String> toFetch = new ArrayList<String>();
+        for (int i = 0; i < distinctSellerIds.size(); i++) {
+            String sId = distinctSellerIds.get(i);
+            if (!sellerRatingsCache.containsKey(sId)) {
+                toFetch.add(sId);
+            }
+        }
+
+        if (toFetch.isEmpty()) {
+            List<Listing> sorted = sortResults(list, SortOrder.TOP_RATED, sellerRatingsCache);
+            results.postValue(sorted);
+            loading.postValue(false);
+            return;
+        }
+
+        boolean online = NetworkMonitor.getInstance().isOnline();
+        if (!online) {
+            error.postValue(MESSAGE_OFFLINE_SELLER_RATING);
+            loading.postValue(false);
+            List<Listing> sorted = sortResults(list, SortOrder.TOP_RATED, sellerRatingsCache);
+            results.postValue(sorted);
+            return;
+        }
+
+        loading.postValue(true);
+        final AtomicInteger remaining = new AtomicInteger(toFetch.size());
+
+        for (int i = 0; i < toFetch.size(); i++) {
+            final String sId = toFetch.get(i);
+            userRepo.getProfile(sId, new DataCallback<User>() {
+                @Override
+                public void onSuccess(User user) {
+                    double rating = calculateSellerRating(user);
+                    sellerRatingsCache.put(sId, rating);
+                    if (remaining.decrementAndGet() == 0) {
+                        loading.postValue(false);
+                        List<Listing> sorted = sortResults(list, SortOrder.TOP_RATED, sellerRatingsCache);
+                        results.postValue(sorted);
+                    }
+                }
+
+                @Override
+                public void onError(String err) {
+                    sellerRatingsCache.put(sId, 0.0);
+                    error.postValue(err != null ? err : MESSAGE_ERROR_SELLER_RATING);
+                    if (remaining.decrementAndGet() == 0) {
+                        loading.postValue(false);
+                        List<Listing> sorted = sortResults(list, SortOrder.TOP_RATED, sellerRatingsCache);
+                        results.postValue(sorted);
+                    }
+                }
+            });
+        }
+    }
+
     public void applyFilter(SearchFilter newFilter) {
+        SearchFilter prevFilter = this.filter;
         this.filter = newFilter != null ? newFilter : new SearchFilter();
+        if (canReorderExistingResults(prevFilter, this.filter)) {
+            List<Listing> current = results.getValue();
+            if (current != null && !current.isEmpty()) {
+                processAndPublishResults(current, this.filter.getSortOrder());
+                return;
+            }
+        }
         search();
     }
 
@@ -257,7 +431,6 @@ public class SearchViewModel extends ViewModel {
         listingRepo.search(filter, null, new DataCallback<List<Listing>>() {
             @Override
             public void onSuccess(List<Listing> list) {
-                loading.postValue(false);
                 if (list == null || list.size() < 20) {
                     hasMore = false;
                 } else {
@@ -266,8 +439,7 @@ public class SearchViewModel extends ViewModel {
                 if (list != null && !list.isEmpty()) {
                     lastCreatedAt = list.get(list.size() - 1).getCreatedAt();
                 }
-                List<Listing> sorted = processResults(list);
-                results.postValue(sorted);
+                processAndPublishResults(list, filter.getSortOrder());
             }
 
             @Override
@@ -305,8 +477,7 @@ public class SearchViewModel extends ViewModel {
                     merged.addAll(current);
                 }
                 merged.addAll(page);
-                List<Listing> sorted = processResults(merged);
-                results.postValue(sorted);
+                processAndPublishResults(merged, filter.getSortOrder());
             }
 
             @Override
