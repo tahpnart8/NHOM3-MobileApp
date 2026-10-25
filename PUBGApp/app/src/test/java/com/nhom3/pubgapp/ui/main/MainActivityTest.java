@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.nhom3.pubgapp.R;
+import com.nhom3.pubgapp.ui.listing.HomeFragment;
 
 import org.junit.Test;
 
@@ -113,5 +114,21 @@ public class MainActivityTest {
                 MainActivity.decideTabAction(R.id.postListingFragment, false, false));
         assertEquals(MainActivity.TabAction.BLOCK_TO_SIGN_IN,
                 MainActivity.decideTabAction(R.id.conversationListFragment, false, false));
+    }
+
+    @Test
+    public void shouldShowGuestSignIn_loggedIn_alwaysFalse() {
+        assertFalse(HomeFragment.shouldShowGuestSignIn(true, false));
+        assertFalse(HomeFragment.shouldShowGuestSignIn(true, true));
+    }
+
+    @Test
+    public void shouldShowGuestSignIn_guestRestoring_returnsFalse() {
+        assertFalse(HomeFragment.shouldShowGuestSignIn(false, true));
+    }
+
+    @Test
+    public void shouldShowGuestSignIn_guestNotRestoring_returnsTrue() {
+        assertTrue(HomeFragment.shouldShowGuestSignIn(false, false));
     }
 }

@@ -22,8 +22,10 @@ import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentHomeBinding;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.enums.SortOrder;
+import com.nhom3.pubgapp.ui.main.MainActivity;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
+import com.nhom3.pubgapp.viewmodel.AuthViewModel;
 import com.nhom3.pubgapp.viewmodel.FeedViewModel;
 
 import java.util.List;
@@ -35,9 +37,18 @@ public class HomeFragment extends Fragment {
 
     private FragmentHomeBinding binding;
     private FeedViewModel viewModel;
+    private AuthViewModel authViewModel;
     private ListingCardAdapter adapter;
     private ListingCardAdapter forYouAdapter;
     private boolean isFollowingChannel = false;
+
+    /** Only displays guest sign-in header when definitely not logged in and not restoring session. */
+    public static boolean shouldShowGuestSignIn(boolean loggedIn, boolean isRestoring) {
+        if (loggedIn) {
+            return false;
+        }
+        return !isRestoring;
+    }
 
     @Nullable
     @Override
@@ -52,6 +63,8 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(this).get(FeedViewModel.class);
+        authViewModel = new ViewModelProvider(requireActivity())
+                .get(MainActivity.RESTORE_VIEW_MODEL_KEY, AuthViewModel.class);
 
         if (savedInstanceState != null) {
             isFollowingChannel = savedInstanceState.getBoolean(KEY_FOLLOWING_CHANNEL, false);
@@ -164,10 +177,12 @@ public class HomeFragment extends Fragment {
             return;
         }
         boolean loggedIn = SessionManager.getInstance().isLoggedIn();
-        if (loggedIn) {
-            binding.layoutTopHeader.setVisibility(View.GONE);
-            binding.buttonSignIn.setVisibility(View.GONE);
-        } else {
+        boolean isRestoring = false;
+        if (authViewModel != null) {
+            Boolean loading = authViewModel.getLoading().getValue();
+            isRestoring = loading != null && loading.booleanValue();
+        }
+        if (shouldShowGuestSignIn(loggedIn, isRestoring)) {
             binding.layoutTopHeader.setVisibility(View.VISIBLE);
             binding.buttonSignIn.setVisibility(View.VISIBLE);
             binding.buttonSignIn.setOnClickListener(new View.OnClickListener() {
@@ -176,6 +191,9 @@ public class HomeFragment extends Fragment {
                     Navigation.findNavController(v).navigate(R.id.action_global_sign_in);
                 }
             });
+        } else {
+            binding.layoutTopHeader.setVisibility(View.GONE);
+            binding.buttonSignIn.setVisibility(View.GONE);
         }
     }
 
@@ -254,6 +272,20 @@ public class HomeFragment extends Fragment {
     }
 
     private void observeViewModel() {
+        if (authViewModel != null) {
+            authViewModel.getLoading().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+                @Override
+                public void onChanged(Boolean loading) {
+                    setupTopHeader();
+                }
+            });
+            authViewModel.getLoggedIn().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+                @Override
+                public void onChanged(Boolean loggedIn) {
+                    setupTopHeader();
+                }
+            });
+        }
         viewModel.getForYou().observe(getViewLifecycleOwner(), new Observer<List<Listing>>() {
             @Override
             public void onChanged(List<Listing> list) {
