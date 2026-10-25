@@ -488,8 +488,36 @@ public class SearchViewModel extends ViewModel {
         });
     }
 
+    public static boolean isUserSearchKeywordValid(String keyword) {
+        if (keyword == null) {
+            return false;
+        }
+        return keyword.trim().length() >= 2;
+    }
+
     public void searchUsers(String keyword) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!isUserSearchKeywordValid(keyword)) {
+            userResults.setValue(new ArrayList<User>());
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue("Không có kết nối mạng");
+            return;
+        }
+        loading.setValue(true);
+        userRepo.searchUsers(keyword, new DataCallback<List<User>>() {
+            @Override
+            public void onSuccess(List<User> list) {
+                loading.postValue(false);
+                userResults.postValue(list != null ? list : new ArrayList<User>());
+            }
+
+            @Override
+            public void onError(String err) {
+                loading.postValue(false);
+                error.postValue(err);
+            }
+        });
     }
 
     public void loadCategories() {
