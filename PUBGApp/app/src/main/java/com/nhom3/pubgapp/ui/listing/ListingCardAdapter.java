@@ -31,9 +31,14 @@ public class ListingCardAdapter extends RecyclerView.Adapter<ListingCardAdapter.
     private final List<Listing> listings = new ArrayList<Listing>();
     private final FormatUtils formatUtils = new FormatUtils();
     private OnListingClickListener clickListener;
+    private int itemWidth = 0;
 
     public void setOnListingClickListener(OnListingClickListener listener) {
         this.clickListener = listener;
+    }
+
+    public void setItemWidth(int itemWidth) {
+        this.itemWidth = itemWidth;
     }
 
     public void submitList(List<Listing> newListings) {
@@ -49,6 +54,13 @@ public class ListingCardAdapter extends RecyclerView.Adapter<ListingCardAdapter.
     public ListingViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         ItemListingCardBinding binding = ItemListingCardBinding.inflate(inflater, parent, false);
+        if (itemWidth > 0) {
+            ViewGroup.LayoutParams lp = binding.getRoot().getLayoutParams();
+            if (lp != null) {
+                lp.width = itemWidth;
+                binding.getRoot().setLayoutParams(lp);
+            }
+        }
         return new ListingViewHolder(binding, clickListener, formatUtils);
     }
 
