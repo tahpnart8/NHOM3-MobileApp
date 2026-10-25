@@ -264,6 +264,7 @@ public class UserRepository extends BaseRepository {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Stats query fetchSoldDeals failed", e);
                             cb.onError(e != null ? e.getMessage() : "Lỗi tải thống kê");
                         }
                     });
@@ -286,6 +287,7 @@ public class UserRepository extends BaseRepository {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Stats query fetchBuyerCompletedDeals failed", e);
                             cb.onError(e != null ? e.getMessage() : "Lỗi tải thống kê");
                         }
                     });
@@ -306,6 +308,7 @@ public class UserRepository extends BaseRepository {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Stats query fetchFollowers failed", e);
                             cb.onError(e != null ? e.getMessage() : "Lỗi tải thống kê");
                         }
                     });
@@ -327,6 +330,7 @@ public class UserRepository extends BaseRepository {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Stats query fetchSellerDeals failed", e);
                             cb.onError(e != null ? e.getMessage() : "Lỗi tải thống kê");
                         }
                     });
@@ -349,6 +353,7 @@ public class UserRepository extends BaseRepository {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Stats query fetchBuyerDeals failed", e);
                             cb.onError(e != null ? e.getMessage() : "Lỗi tải thống kê");
                         }
                     });

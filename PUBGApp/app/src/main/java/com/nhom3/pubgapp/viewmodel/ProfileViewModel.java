@@ -62,6 +62,7 @@ public class ProfileViewModel extends ViewModel {
     private static final String MESSAGE_ALREADY_APPROVED = "Tài khoản đã xác thực.";
     private static final String MESSAGE_NO_RESUBMIT_LEFT = "Đã hết số lần gửi lại, hãy liên hệ admin.";
     private static final String MESSAGE_CANNOT_FOLLOW_SELF = "Bạn không thể tự theo dõi chính mình.";
+    private static final String MESSAGE_STATS_FAILED = "Không tải được thống kê, bấm Thử lại.";
 
     private final UserRepository userRepository = new UserRepository();
     private final AuthRepository authRepository = new AuthRepository();
@@ -137,7 +138,7 @@ public class ProfileViewModel extends ViewModel {
             return;
         }
         // A failed count leaves stats empty, so opening the screen or Retry reads it again.
-        if (stats.getValue() == null && isOwnPage(uid)) {
+        if (needsStatsRead(isOwnPage(uid), stats.getValue() != null)) {
             loading.setValue(true);
             fetchStats(uid);
         }
@@ -416,10 +417,11 @@ public class ProfileViewModel extends ViewModel {
                 loading.postValue(false);
             }
 
+            // The raw Firestore text is in the log; the user gets one short sentence.
             @Override
             public void onError(String message) {
                 loading.postValue(false);
-                error.postValue(message);
+                error.postValue(MESSAGE_STATS_FAILED);
             }
         });
     }
@@ -770,6 +772,11 @@ public class ProfileViewModel extends ViewModel {
             }
         }
         return true;
+    }
+
+    // Same uid is skipped only when the counts are there or the page is not the own one.
+    static boolean needsStatsRead(boolean ownPage, boolean hasStats) {
+        return ownPage && !hasStats;
     }
 
     static boolean canSubmitVerification(VerificationStatus status, boolean emailVerified) {
