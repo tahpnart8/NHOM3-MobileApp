@@ -66,6 +66,7 @@ public class PostListingFragment extends Fragment {
     private static final String KEY_EDITING_CREATED_AT = "key_editing_created_at";
     private static final String KEY_PENDING_PHOTO_URI = "key_pending_photo_uri";
     private static final String ARG_LISTING_ID = "listingId";
+    private static final int MAX_IMAGES = 5;
 
     private FragmentPostListingBinding binding;
     private ShopViewModel viewModel;
@@ -91,7 +92,7 @@ public class PostListingFragment extends Fragment {
                     savedInstanceState, KEY_PENDING_PHOTO_URI, Uri.class);
         }
         photoPickerLauncher = registerForActivityResult(
-                new ActivityResultContracts.PickMultipleVisualMedia(5),
+                new ActivityResultContracts.PickMultipleVisualMedia(MAX_IMAGES),
                 new ActivityResultCallback<List<Uri>>() {
                     @Override
                     public void onActivityResult(List<Uri> uris) {
@@ -201,7 +202,7 @@ public class PostListingFragment extends Fragment {
         binding.buttonAddImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (imageAdapter.getAllImageCount() >= 5) {
+                if (imageAdapter.getAllImageCount() >= MAX_IMAGES) {
                     Toast.makeText(requireContext(),
                             R.string.listing_post_max_images_reached, Toast.LENGTH_SHORT).show();
                     return;
@@ -215,14 +216,14 @@ public class PostListingFragment extends Fragment {
     }
 
     private void updateImageButtonsVisibility() {
-        boolean canAddMore = imageAdapter.getAllImageCount() < 5;
+        boolean canAddMore = imageAdapter.getAllImageCount() < MAX_IMAGES;
         int visibility = canAddMore ? View.VISIBLE : View.GONE;
         binding.buttonAddImage.setVisibility(visibility);
         binding.buttonCaptureImage.setVisibility(visibility);
     }
 
     private void onCaptureImageClicked() {
-        if (imageAdapter.getAllImageCount() >= 5) {
+        if (imageAdapter.getAllImageCount() >= MAX_IMAGES) {
             Toast.makeText(requireContext(),
                     R.string.listing_post_max_images_reached, Toast.LENGTH_SHORT).show();
             return;
@@ -265,7 +266,7 @@ public class PostListingFragment extends Fragment {
 
     private void handleCameraResult(Boolean isSuccess) {
         if (Boolean.TRUE.equals(isSuccess) && currentPhotoUri != null) {
-            if (imageAdapter.getAllImageCount() < 5) {
+            if (imageAdapter.getAllImageCount() < MAX_IMAGES) {
                 imageAdapter.addImageUri(currentPhotoUri);
             } else {
                 Toast.makeText(requireContext(),
@@ -280,13 +281,13 @@ public class PostListingFragment extends Fragment {
         if (uris == null || uris.isEmpty()) {
             return;
         }
-        int availableSlots = 5 - imageAdapter.getAllImageCount();
+        int availableSlots = MAX_IMAGES - imageAdapter.getAllImageCount();
         if (uris.size() > availableSlots) {
             Toast.makeText(requireContext(),
                     R.string.listing_post_max_images_reached, Toast.LENGTH_SHORT).show();
         }
         for (Uri uri : uris) {
-            if (imageAdapter.getAllImageCount() < 5) {
+            if (imageAdapter.getAllImageCount() < MAX_IMAGES) {
                 imageAdapter.addImageUri(uri);
             }
         }
