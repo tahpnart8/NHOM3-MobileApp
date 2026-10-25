@@ -327,12 +327,66 @@ public class AdminUserViewModel extends ViewModel {
         });
     }
 
+    public static boolean isSelfAdminAction(String targetUserId, String currentUserId) {
+        if (targetUserId == null || currentUserId == null) {
+            return false;
+        }
+        return targetUserId.equals(currentUserId);
+    }
+
     public void grantAdmin(String userId) {
-        error.setValue(DataCallback.NOT_READY);
+        if (userId == null || userId.isEmpty()) {
+            error.setValue(MESSAGE_USER_REQUIRED);
+            return;
+        }
+        String currentId = SessionManager.getInstance().getCurrentUserId();
+        if (isSelfAdminAction(userId, currentId)) {
+            error.setValue("Bạn không thể tự cấp quyền cho chính mình.");
+            return;
+        }
+        beginReads(1);
+        adminRepository.grantAdmin(userId, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                done.postValue(true);
+                pendingAdmin.postValue(null);
+                endRead();
+                loadAdmins();
+            }
+
+            @Override
+            public void onError(String message) {
+                error.postValue(message);
+                endRead();
+            }
+        });
     }
 
     public void revokeAdmin(String userId) {
-        error.setValue(DataCallback.NOT_READY);
+        if (userId == null || userId.isEmpty()) {
+            error.setValue(MESSAGE_USER_REQUIRED);
+            return;
+        }
+        String currentId = SessionManager.getInstance().getCurrentUserId();
+        if (isSelfAdminAction(userId, currentId)) {
+            error.setValue("Bạn không thể tự gỡ quyền quản trị của chính mình.");
+            return;
+        }
+        beginReads(1);
+        adminRepository.revokeAdmin(userId, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                done.postValue(true);
+                endRead();
+                loadAdmins();
+            }
+
+            @Override
+            public void onError(String message) {
+                error.postValue(message);
+                endRead();
+            }
+        });
     }
 
     public void clearError() {
