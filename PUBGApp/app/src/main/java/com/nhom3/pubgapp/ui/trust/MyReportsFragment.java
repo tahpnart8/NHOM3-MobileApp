@@ -174,6 +174,11 @@ public class MyReportsFragment extends Fragment {
             public void onOpen(Complaint complaint) {
                 openComplaint(complaint);
             }
+
+            @Override
+            public void onWithdraw(Complaint complaint) {
+                confirmWithdraw(complaint);
+            }
         });
         binding.includeComplaints.recyclerComplaints.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.includeComplaints.recyclerComplaints.setAdapter(complaintAdapter);
@@ -189,6 +194,21 @@ public class MyReportsFragment extends Fragment {
                 updateComplaintsState();
             }
         });
+    }
+
+    // Withdrawing gives the deal back its earlier status and cannot be undone (D07), so the user confirms it.
+    private void confirmWithdraw(final Complaint complaint) {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.profile_my_complaints_withdraw_title)
+                .setMessage(R.string.profile_my_complaints_withdraw_message)
+                .setNegativeButton(R.string.profile_my_reports_cancel_keep, null)
+                .setPositiveButton(R.string.profile_my_complaints_withdraw, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        trustViewModel.withdrawComplaint(complaint.getId());
+                    }
+                })
+                .show();
     }
 
     private void openComplaint(Complaint complaint) {

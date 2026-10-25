@@ -214,4 +214,7 @@
     <string name="profile_my_complaints_decision_reject">Không chấp nhận khiếu nại</string>
     <string name="profile_my_complaints_close">Đóng</string>
     <string name="profile_my_complaints_view_deal">Xem giao dịch</string>
+    <string name="profile_my_complaints_withdraw">Rút khiếu nại</string>
+    <string name="profile_my_complaints_withdraw_title">Rút khiếu nại này?</string>
+    <string name="profile_my_complaints_withdraw_message">Giao dịch trở lại trạng thái trước khi khiếu nại và bạn không khiếu nại lại được giao dịch này. Không hoàn tác được.</string>
 </resources>
