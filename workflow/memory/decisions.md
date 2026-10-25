@@ -871,3 +871,25 @@ The course grades the number and spread of commits per person. With squash, a pu
 
 ### Owner
 tahpnart8
+
+## 2026-10-25 - The whole scope returns: every STT marked "Đợt này" is built, not only the shortened set
+
+### Decision
+The cut of 2026-10-22 (`ke-hoach-rut-gon.md` section 4) is lifted. All 91 STT rows whose scope is "Đợt này" and all 43 use cases are built by 2026-10-27, with the restored screens `AccountSettingsFragment`, `AddressListFragment`, `AddressEditFragment`, `DealHistoryFragment`, `CreateComplaintFragment`, `MyReportsFragment`, `AdminComplaintListFragment`, `AdminComplaintDetailFragment`, `AdminAccountFragment`, `AdminCategoryFragment`, `AdminDealMonitorFragment` and `AdminDealDetailFragment`. `PersonalInfoFragment` (A04) stays out: every item it held lives on D01 and A05.
+
+The leader laid the navigation shells first (empty Fragments, layouts, titles, destinations and actions) so each later issue only fills bodies, as R20 requires. Ownership moves to spread the work: E05 and E06 to Hải Long, E07 and user search (STT 103) to Ngân, `User.lastReviewId` to Phúc, `Converters` to Hải Long. The leader keeps review, merging and Firebase.
+
+### Context
+A full run on a device on 2026-10-25 showed the shortened scope was met at the code level but covered only 61 of 91 STT rows. The repositories for almost every cut feature already existed, so what remained was view models and screens, cheap to do in two days.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep the shortened scope | Leaves 26 STT and nine use cases unmet in a course graded on them |
+| Let each owner add their own navigation destinations | Breaks R20 (navigation graphs are leader files) and makes five people edit `nav_main.xml` at once |
+
+### Impact
+`nav_main.xml`, `nav_admin.xml`, twelve new Fragments and layouts, `so-huu.md`.
+
+### Owner
+tahpnart8

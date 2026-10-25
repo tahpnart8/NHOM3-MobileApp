@@ -12,6 +12,24 @@
 
     <!-- Global actions, so-huu.md section 4 -->
     <action
+        android:id="@+id/action_global_account_settings"
+        app:destination="@id/accountSettingsFragment" />
+    <action
+        android:id="@+id/action_global_address_list"
+        app:destination="@id/addressListFragment" />
+    <action
+        android:id="@+id/action_global_address_edit"
+        app:destination="@id/addressEditFragment" />
+    <action
+        android:id="@+id/action_global_deal_history"
+        app:destination="@id/dealHistoryFragment" />
+    <action
+        android:id="@+id/action_global_create_complaint"
+        app:destination="@id/createComplaintFragment" />
+    <action
+        android:id="@+id/action_global_my_reports"
+        app:destination="@id/myReportsFragment" />
+    <action
         android:id="@+id/action_global_listing_detail"
         app:destination="@id/listingDetailFragment" />
     <action
@@ -174,4 +192,41 @@
     <activity
         android:id="@+id/authActivity"
         android:name="com.nhom3.pubgapp.ui.account.AuthActivity" />
+
+    <fragment
+        android:id="@+id/accountSettingsFragment"
+        android:name="com.nhom3.pubgapp.ui.account.AccountSettingsFragment">
+    </fragment>
+
+    <fragment
+        android:id="@+id/addressListFragment"
+        android:name="com.nhom3.pubgapp.ui.account.AddressListFragment">
+    </fragment>
+
+    <fragment
+        android:id="@+id/addressEditFragment"
+        android:name="com.nhom3.pubgapp.ui.account.AddressEditFragment">
+        <argument
+            android:name="addressId"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/dealHistoryFragment"
+        android:name="com.nhom3.pubgapp.ui.trade.DealHistoryFragment">
+    </fragment>
+
+    <fragment
+        android:id="@+id/createComplaintFragment"
+        android:name="com.nhom3.pubgapp.ui.trust.CreateComplaintFragment">
+        <argument
+            android:name="dealId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/myReportsFragment"
+        android:name="com.nhom3.pubgapp.ui.trust.MyReportsFragment">
+    </fragment>
 </navigation>

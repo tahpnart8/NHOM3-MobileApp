@@ -67,10 +67,10 @@ Tên lớp chốt ở đây để đồ thị điều hướng và lối tắt g
 | E01 | `AdminDashboardFragment` | `AdminActivity` | Phát |
 | E02 | `AdminUserListFragment` | `AdminActivity` | Phát |
 | E03 | `AdminUserDetailFragment` | `AdminActivity` | Phát |
-| E07 | `AdminAccountFragment` | `AdminActivity` | Phát |
+| E07 | `AdminAccountFragment` | `AdminActivity` | Ngân (từ 2026-10-25) |
 | E04 | `AdminModerationFragment`, `AdminListingDetailFragment` | `AdminActivity` | Phát |
-| E05 | `AdminCategoryFragment` | `AdminActivity` | Phát |
-| E06 | `AdminDealMonitorFragment`, `AdminDealDetailFragment` | `AdminActivity` | Phát |
+| E05 | `AdminCategoryFragment` | `AdminActivity` | Hải Long (từ 2026-10-25) |
+| E06 | `AdminDealMonitorFragment`, `AdminDealDetailFragment` | `AdminActivity` | Hải Long (từ 2026-10-25) |
 
 **`MakeOfferFragment` không phải một mã màn hình riêng.** Nó là biểu mẫu dạng bảng trượt lên, mở từ thanh hành động của B03, và gửi xong thì thẻ đề nghị hiện trong C02. Lớp nằm trong `com.nhom3.pubgapp.ui.trade`, layout `fragment_make_offer.xml`, chủ là Hải Long cùng với C02. Tú chỉ làm cái nút trên B03; Tú không tạo lớp này. Tên chốt ngày 2026-10-22 vì `dac-ta-lop/` không định nghĩa lớp Fragment nào và luật R16 sẽ chặn issue 20 lại.
 
@@ -93,20 +93,23 @@ Không ai sửa đồ thị điều hướng của người khác. Mọi lối �
 | `action_global_user_profile` | D02 | `userId` | B03, C02, C03 |
 | `action_global_seller_trust` | D03 | `userId` | B03, D02 |
 | `action_global_report` | D04 | `targetType`, `targetId`, `conversationId` (chỉ khi `targetType` là MESSAGE) | B03, C02, D02, D03 |
-| ~~`action_global_create_complaint`~~ **BỎ** | D05 đã bỏ | `dealId` | C03 |
+| `action_global_create_complaint` | D05 `CreateComplaintFragment` (khôi phục 2026-10-25) | `dealId` | C03 |
 | `action_global_my_shop` | B05 | | D01 |
 | `action_global_saved_listings` | B06 | | D01 |
-| ~~`action_global_deal_history`~~ **BỎ** | C04 đã bỏ | | D01 |
-| ~~`action_global_my_reports`~~ **BỎ** | D07 đã bỏ | | D01 |
+| `action_global_deal_history` | C04 `DealHistoryFragment` (khôi phục 2026-10-25) | | D01 |
+| `action_global_my_reports` | D07 `MyReportsFragment` (khôi phục 2026-10-25) | | D01 |
 | `action_global_edit_profile` | A05 `EditProfileFragment` trong `ui.profile` | | D01 |
-| ~~`action_global_personal_info`~~, ~~`action_global_address_list`~~, ~~`action_global_account_settings`~~ **BỎ** | A04, A06 và cài đặt tài khoản đã bỏ | | |
+| `action_global_account_settings` | A05 `AccountSettingsFragment` (khôi phục 2026-10-25) | | D01 |
+| `action_global_address_list` | A06 `AddressListFragment` (khôi phục 2026-10-25) | | D01, `AccountSettingsFragment` |
+| `action_global_address_edit` | A06 `AddressEditFragment` | `addressId` (rỗng là thêm mới) | `AddressListFragment` |
+| ~~`action_global_personal_info`~~ **BỎ** | A04 `PersonalInfoFragment` không dựng: mọi mục của nó nằm ở D01 và A05 | | |
 | `action_global_notifications` | C06 | | Thanh trên của `MainActivity` |
 | `action_global_sign_in` | A01 trong `AuthActivity` | | Mọi màn khi Khách bấm một thao tác cần đăng nhập (quyết định 2026-10-22) |
 | `action_global_my_profile` | D01 | | Mọi màn có nút "Đăng ký xác thực" khi tài khoản chưa được duyệt |
 | ~~`action_global_tab`~~ **KHÔNG DỰNG ĐƯỢC** | Một trong 5 tab gốc | | Xem ghi chú dưới bảng |
 | `action_global_deal_payment` | C07 | `dealId` | C03 |
 | `action_global_make_offer` | `MakeOfferFragment`, bảng trượt trong `ui.trade` | `listingId` | B03 |
-| ~~`action_global_admin_accounts`~~ **BỎ** | E07 đã bỏ | | E01 |
+| `action_admin_dashboard_to_admin_account` (trong `nav_admin.xml`) | E07 `AdminAccountFragment` (khôi phục 2026-10-25) | | E01 |
 
 **Bảy hành động gạch ngang không được tạo trong `nav_main.xml`** (sửa ngày 2026-10-23). Chúng trỏ tới màn đã bỏ ở [`ke-hoach-rut-gon.md`](ke-hoach-rut-gon.md) mục 4. Đích chết là lỗi hay gặp nhất khi cắt phạm vi: tạo hành động mà không có đích thì đồ thị không dựng được, còn tạo cả đích rỗng thì người dùng bấm vào màn trắng.
 
@@ -162,6 +165,27 @@ Các lớp ở `model`, `model.enums`, `data`, `data.local`, `util` được Ph�
 | DAO và entity Room | `ChatDao`, `DealDao`, `ConversationEntity`, `MessageEntity`, `DealEntity` | Hải Long |
 
 Lớp mô hình miền (`model`) và enum: Phát tạo ở P1 kèm unit test cho các quy tắc; sau đó **không ai sửa** nếu không có issue riêng.
+
+## 5b. Bổ sung ngày 2026-10-25: khôi phục toàn bộ phạm vi đã cắt
+
+Leader quyết định làm đủ 100% STT "Đợt này". Khung điều hướng của 12 màn (Fragment rỗng, layout, chuỗi tiêu đề, hành động) đã được dựng ở một Pull Request riêng; **các issue sau đây chỉ điền thân, không tạo đích điều hướng mới**.
+
+Quyền sửa tệp được mở có điều kiện, chỉ cho đúng việc nêu trong issue của mình:
+
+| Việc | Tệp | Người làm |
+| --- | --- | --- |
+| Các hàm `loadCategories`, `loadCategoryCounts`, `saveCategory`, `deleteCategory`, `setConditionFields` | `AdminContentViewModel` | Hải Long (E05) |
+| `loadDeals`, `loadDetail` | `AdminDealViewModel` | Hải Long (E06) |
+| `loadAdmins`, `findAdminCandidate`, `grantAdmin`, `revokeAdmin` | `AdminUserViewModel` | Ngân (E07) |
+| `searchUsers` | `SearchViewModel` và thêm tab người dùng trong `SearchFragment` | Ngân (STT 103), Tú không sửa phần này |
+| Bốn lối tắt E05, E06, E07, D06 trên E01 | `AdminDashboardFragment`, `fragment_admin_dashboard.xml` | Hải Long (một issue, mọi người khác không sửa hai tệp này) |
+| Bốn lối vào trên D01 (cài đặt tài khoản, địa chỉ, lịch sử giao dịch, báo cáo và khiếu nại) | `MyProfileFragment`, `fragment_my_profile.xml` | Phúc (một issue) |
+| `User.lastReviewId` | `model/User.java` | Phúc |
+| `Converters` (Room) | `data/local/Converters.java` | Hải Long |
+| `AutoReleaseWorker` và lên lịch | `util/AutoReleaseWorker.java`, `PubgApplication.java` | Hải Long (sau issue thư viện WorkManager) |
+| Trạng thái `features.md` | `workflow/docs/product/features.md` | Ngân |
+
+Quy tắc chung vẫn giữ: không tự thêm hành động toàn cục, không sửa tệp ngoài danh sách của issue (R19), không đổi chữ ký.
 
 ## 6. File chung chỉ một người sửa
 

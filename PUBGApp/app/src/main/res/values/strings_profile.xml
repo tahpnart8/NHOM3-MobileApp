@@ -155,4 +155,8 @@
     <string name="profile_report_not_image">Không dùng được tệp này, hãy chọn một ảnh.</string>
     <string name="profile_report_submit">Gửi báo cáo</string>
     <string name="profile_report_sent">Cảm ơn bạn đã báo cáo</string>
+
+    <!-- Titles of the screens restored on 2026-10-25; the owning issue refines the text -->
+    <string name="profile_create_complaint_title">Tạo đơn khiếu nại</string>
+    <string name="profile_my_reports_title">Báo cáo và khiếu nại của tôi</string>
 </resources>

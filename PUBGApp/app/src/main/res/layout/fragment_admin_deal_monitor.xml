@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Empty shell of AdminDealMonitorFragment. The owning issue replaces this body; keep the root and the ids it needs. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground">
+
+    <TextView
+        android:id="@+id/textShellTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/admin_deal_monitor_title"
+        android:textAppearance="?attr/textAppearanceHeadlineSmall" />
+</FrameLayout>

@@ -107,4 +107,9 @@
     <string name="notification_type_warning">Cảnh báo từ quản trị viên</string>
     <string name="notification_type_listing_moderated">Kết quả duyệt tin đăng</string>
     <string name="notification_type_verification_result">Kết quả xác thực tài khoản</string>
+
+    <!-- Titles of the screens restored on 2026-10-25; the owning issue refines the text -->
+    <string name="account_settings_title">Cài đặt tài khoản</string>
+    <string name="account_address_list_title">Địa chỉ giao nhận</string>
+    <string name="account_address_edit_title">Thêm hoặc sửa địa chỉ</string>
 </resources>

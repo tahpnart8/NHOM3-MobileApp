@@ -236,4 +236,12 @@
 
     <!-- E03: an admin does not act on their own account -->
     <string name="admin_user_action_self">Đây là tài khoản của bạn nên không thể cảnh báo hoặc khóa.</string>
+
+    <!-- Titles of the screens restored on 2026-10-25; the owning issue refines the text -->
+    <string name="admin_complaint_list_title">Khiếu nại cần xử lý</string>
+    <string name="admin_complaint_detail_title">Hồ sơ khiếu nại</string>
+    <string name="admin_account_title">Tài khoản quản trị</string>
+    <string name="admin_category_title">Quản lý danh mục</string>
+    <string name="admin_deal_monitor_title">Giám sát giao dịch</string>
+    <string name="admin_deal_detail_title">Chi tiết giao dịch</string>
 </resources>
