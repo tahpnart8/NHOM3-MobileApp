@@ -419,6 +419,12 @@ public class UserProfileFragment extends Fragment {
             binding.textCompletionRate.setText(R.string.profile_user_profile_stat_unknown);
             binding.textFollowerCount.setText(R.string.profile_user_profile_stat_unknown);
         }
+        boolean statsLoading = ownPage && loading && profileViewModel.getStats().getValue() == null;
+        if (statsLoading) {
+            binding.textSoldCount.setText(R.string.profile_user_profile_stat_loading);
+            binding.textCompletionRate.setText(R.string.profile_user_profile_stat_loading);
+            binding.textFollowerCount.setText(R.string.profile_user_profile_stat_loading);
+        }
     }
 
     private void showError(String message) {
@@ -570,6 +576,12 @@ public class UserProfileFragment extends Fragment {
         TabLayout.Tab sellingTab = binding.tabsContent.getTabAt(TAB_SELLING);
         TabLayout.Tab soldTab = binding.tabsContent.getTabAt(TAB_SOLD);
         if (sellingTab == null || soldTab == null) {
+            return;
+        }
+        // Not loaded yet: a count of 0 would read as "sells nothing".
+        if (listings == null) {
+            sellingTab.setText(R.string.profile_user_profile_tab_selling_loading);
+            soldTab.setText(R.string.profile_user_profile_tab_sold_loading);
             return;
         }
         int sellingCount = ProfileListingAdapter.filterSelling(listings).size();
