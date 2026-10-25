@@ -98,4 +98,106 @@ public class SearchViewModelTest {
         assertEquals(2000, sorted.get(1).getCreatedAt().getSeconds());
         assertEquals(1000, sorted.get(2).getCreatedAt().getSeconds());
     }
+
+    @Test
+    public void testFilterByRadius_nullOrUnbounded() {
+        List<Listing> list = new ArrayList<Listing>();
+        Listing l1 = new Listing();
+        list.add(l1);
+
+        com.google.firebase.firestore.GeoPoint samplePoint =
+                new com.google.firebase.firestore.GeoPoint(10.0, 106.0);
+        List<Listing> nullList = SearchViewModel.filterByRadius(null, samplePoint, 3, null);
+        assertTrue(nullList.isEmpty());
+
+        List<Listing> noCenter = SearchViewModel.filterByRadius(list, null, 3, null);
+        assertEquals(1, noCenter.size());
+
+        List<Listing> noRadius = SearchViewModel.filterByRadius(list, samplePoint, 0, null);
+        assertEquals(1, noRadius.size());
+    }
+
+    @Test
+    public void testFilterByRadius_filtersCorrectly() {
+        com.google.firebase.firestore.GeoPoint center = new com.google.firebase.firestore.GeoPoint(10.7769, 106.7009);
+
+        Listing near1 = new Listing();
+        near1.setTitle("Near 0.02km");
+        near1.setLocation(new com.google.firebase.firestore.GeoPoint(10.7770, 106.7010));
+
+        Listing near2 = new Listing();
+        near2.setTitle("Near 1.5km");
+        near2.setLocation(new com.google.firebase.firestore.GeoPoint(10.7900, 106.7000));
+
+        Listing near4km = new Listing();
+        near4km.setTitle("Near 4.8km");
+        near4km.setLocation(new com.google.firebase.firestore.GeoPoint(10.8200, 106.7000));
+
+        Listing far14km = new Listing();
+        far14km.setTitle("Far 13.7km");
+        far14km.setLocation(new com.google.firebase.firestore.GeoPoint(10.9000, 106.7000));
+
+        Listing noLoc = new Listing();
+        noLoc.setTitle("No Location");
+        noLoc.setLocation(null);
+
+        List<Listing> list = new ArrayList<Listing>();
+        list.add(near1);
+        list.add(near2);
+        list.add(near4km);
+        list.add(far14km);
+        list.add(noLoc);
+
+        // 1 km filter: only near1
+        List<Listing> within1km = SearchViewModel.filterByRadius(list, center, 1, null);
+        assertEquals(1, within1km.size());
+        assertEquals("Near 0.02km", within1km.get(0).getTitle());
+
+        // 3 km filter: near1 and near2
+        List<Listing> within3km = SearchViewModel.filterByRadius(list, center, 3, null);
+        assertEquals(2, within3km.size());
+        assertEquals("Near 0.02km", within3km.get(0).getTitle());
+        assertEquals("Near 1.5km", within3km.get(1).getTitle());
+
+        // 5 km filter: near1, near2, near4km
+        List<Listing> within5km = SearchViewModel.filterByRadius(list, center, 5, null);
+        assertEquals(3, within5km.size());
+        assertEquals("Near 0.02km", within5km.get(0).getTitle());
+        assertEquals("Near 1.5km", within5km.get(1).getTitle());
+        assertEquals("Near 4.8km", within5km.get(2).getTitle());
+    }
+
+    @Test
+    public void testSortByDistance_ordersNearestFirst() {
+        com.google.firebase.firestore.GeoPoint center = new com.google.firebase.firestore.GeoPoint(10.7769, 106.7009);
+
+        Listing near1 = new Listing();
+        near1.setTitle("Near 0.02km");
+        near1.setLocation(new com.google.firebase.firestore.GeoPoint(10.7770, 106.7010));
+
+        Listing near2 = new Listing();
+        near2.setTitle("Near 1.5km");
+        near2.setLocation(new com.google.firebase.firestore.GeoPoint(10.7900, 106.7000));
+
+        Listing far = new Listing();
+        far.setTitle("Far 13.7km");
+        far.setLocation(new com.google.firebase.firestore.GeoPoint(10.9000, 106.7000));
+
+        Listing noLoc = new Listing();
+        noLoc.setTitle("No Location");
+        noLoc.setLocation(null);
+
+        List<Listing> list = new ArrayList<Listing>();
+        list.add(far);
+        list.add(noLoc);
+        list.add(near2);
+        list.add(near1);
+
+        List<Listing> sorted = SearchViewModel.sortByDistance(list, center, null);
+        assertEquals(4, sorted.size());
+        assertEquals("Near 0.02km", sorted.get(0).getTitle());
+        assertEquals("Near 1.5km", sorted.get(1).getTitle());
+        assertEquals("Far 13.7km", sorted.get(2).getTitle());
+        assertEquals("No Location", sorted.get(3).getTitle());
+    }
 }
