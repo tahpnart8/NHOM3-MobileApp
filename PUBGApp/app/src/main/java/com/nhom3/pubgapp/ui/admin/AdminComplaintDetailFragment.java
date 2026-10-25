@@ -1,6 +1,7 @@
 package com.nhom3.pubgapp.ui.admin;
 
 import android.os.Bundle;
+import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +9,7 @@ import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -21,11 +23,13 @@ import com.google.android.material.snackbar.Snackbar;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.MediaRepository;
+import com.nhom3.pubgapp.databinding.DialogAdminComplaintDecisionBinding;
 import com.nhom3.pubgapp.databinding.FragmentAdminComplaintDetailBinding;
 import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Complaint;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.StatusChange;
+import com.nhom3.pubgapp.model.enums.ComplaintDecision;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.MessageType;
 import com.nhom3.pubgapp.model.enums.Priority;
@@ -42,6 +46,8 @@ import java.util.List;
 public class AdminComplaintDetailFragment extends Fragment {
 
     private static final String ARG_COMPLAINT_ID = "complaintId";
+    private static final String STATE_NOTE_FILLED = "adminNoteFilled";
+    private static final String STATE_SAVING_NOTE = "adminSavingNote";
 
     @Nullable
     private FragmentAdminComplaintDetailBinding binding;
@@ -50,6 +56,10 @@ public class AdminComplaintDetailFragment extends Fragment {
     private String complaintId;
     // True while the chips are set from the loaded complaint, so that is not taken as the admin's choice.
     private boolean showingPriority;
+    // The saved note is put in the box once; after that the box keeps what the admin types, also on rotation.
+    private boolean noteFilled;
+    // Which write the next done answers, so the right confirmation is shown.
+    private boolean savingNote;
 
     @Nullable
     @Override
@@ -65,9 +75,15 @@ public class AdminComplaintDetailFragment extends Fragment {
         Bundle arguments = getArguments();
         complaintId = arguments != null ? arguments.getString(ARG_COMPLAINT_ID) : null;
         complaintViewModel = new ViewModelProvider(this).get(AdminComplaintViewModel.class);
+        if (savedInstanceState != null) {
+            noteFilled = savedInstanceState.getBoolean(STATE_NOTE_FILLED, false);
+            savingNote = savedInstanceState.getBoolean(STATE_SAVING_NOTE, false);
+        }
         setUpToolbar();
         setUpSections();
+        setUpDecision();
         observeViewModel();
+        observeDone();
         if (complaintViewModel.getSelected().getValue() == null) {
             complaintViewModel.loadDetail(complaintId);
         }
@@ -81,6 +97,112 @@ public class AdminComplaintDetailFragment extends Fragment {
         }
         boolean online = NetworkMonitor.getInstance().isOnline();
         binding.includeOfflineBanner.getRoot().setVisibility(online ? View.GONE : View.VISIBLE);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_NOTE_FILLED, noteFilled);
+        outState.putBoolean(STATE_SAVING_NOTE, savingNote);
+    }
+
+    private void setUpDecision() {
+        decideOnClick(binding.buttonDecideRefund, ComplaintDecision.REFUND);
+        decideOnClick(binding.buttonDecideReturnItem, ComplaintDecision.RETURN_ITEM);
+        decideOnClick(binding.buttonDecideCancelDeal, ComplaintDecision.CANCEL_DEAL);
+        decideOnClick(binding.buttonDecideReject, ComplaintDecision.REJECT);
+        decideOnClick(binding.buttonRequestEvidence, ComplaintDecision.REQUEST_EVIDENCE);
+        binding.buttonSaveNote.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View clicked) {
+                savingNote = true;
+                complaintViewModel.saveNote(complaintId, readText(binding.editAdminNote.getText()));
+            }
+        });
+    }
+
+    private void decideOnClick(View button, final ComplaintDecision decision) {
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View clicked) {
+                openDecisionDialog(decision);
+            }
+        });
+    }
+
+    // A decision moves the deal and the payment and cannot be undone, so it always goes through this dialog.
+    private void openDecisionDialog(final ComplaintDecision decision) {
+        final DialogAdminComplaintDecisionBinding dialogBinding =
+                DialogAdminComplaintDecisionBinding.inflate(getLayoutInflater());
+        boolean evidence = decision == ComplaintDecision.REQUEST_EVIDENCE;
+        dialogBinding.textDecisionWarning.setText(evidence ? R.string.admin_complaint_decision_warning_evidence
+                : R.string.admin_complaint_decision_warning);
+        dialogBinding.layoutDecisionMessage.setHint(evidence ? R.string.admin_complaint_decision_request_hint
+                : R.string.admin_complaint_decision_message_hint);
+        final AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(decisionLabel(decision))
+                .setView(dialogBinding.getRoot())
+                .setNegativeButton(R.string.admin_complaint_decision_back, null)
+                .setPositiveButton(R.string.admin_complaint_decision_send, null)
+                .show();
+        // Set after show so an empty message keeps the dialog open with the error under the box.
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View clicked) {
+                String message = readText(dialogBinding.editDecisionMessage.getText());
+                if (message.isEmpty()) {
+                    dialogBinding.layoutDecisionMessage.setError(getString(R.string.admin_complaint_decision_empty));
+                    return;
+                }
+                savingNote = false;
+                complaintViewModel.decide(complaintId, decision, message);
+                dialog.dismiss();
+            }
+        });
+    }
+
+    private static int decisionLabel(ComplaintDecision decision) {
+        if (decision == ComplaintDecision.REFUND) {
+            return R.string.admin_complaint_decision_refund;
+        }
+        if (decision == ComplaintDecision.RETURN_ITEM) {
+            return R.string.admin_complaint_decision_return_item;
+        }
+        if (decision == ComplaintDecision.CANCEL_DEAL) {
+            return R.string.admin_complaint_decision_cancel_deal;
+        }
+        if (decision == ComplaintDecision.REJECT) {
+            return R.string.admin_complaint_decision_reject;
+        }
+        return R.string.admin_complaint_decision_request_evidence;
+    }
+
+    private static String readText(@Nullable Editable text) {
+        return text == null ? "" : text.toString().trim();
+    }
+
+    private void observeDone() {
+        complaintViewModel.getDone().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean finished) {
+                if (!Boolean.TRUE.equals(finished)) {
+                    return;
+                }
+                complaintViewModel.clearDone();
+                int message = savingNote ? R.string.admin_complaint_note_saved : R.string.admin_complaint_decision_sent;
+                Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    // The note is internal (STT 90): it is filled once from the admin-only sub-document, never shown to users.
+    private void fillNoteOnce(@NonNull Complaint complaint) {
+        if (noteFilled) {
+            return;
+        }
+        noteFilled = true;
+        String note = complaint.getAdminNote();
+        binding.editAdminNote.setText(note != null ? note : "");
     }
 
     private void setUpToolbar() {
@@ -207,6 +329,7 @@ public class AdminComplaintDetailFragment extends Fragment {
         boolean noEvidence = imageIds == null || imageIds.isEmpty();
         binding.textNoEvidence.setVisibility(noEvidence ? View.VISIBLE : View.GONE);
         showComplainantRole();
+        fillNoteOnce(complaint);
     }
 
     private void showPriority(@Nullable Priority priority) {

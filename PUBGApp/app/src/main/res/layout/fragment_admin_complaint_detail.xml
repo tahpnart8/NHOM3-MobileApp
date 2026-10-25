@@ -248,6 +248,125 @@
                     android:lineSpacingExtra="@dimen/space_xs"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_lg"
+                    android:text="@string/admin_complaint_decision_title"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <TextView
+                    android:id="@+id/textEvidenceRequest"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/layoutDecisionButtons"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonDecideRefund"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:minHeight="@dimen/touch_min"
+                        android:text="@string/admin_complaint_decision_refund"
+                        app:cornerRadius="@dimen/radius_md" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonDecideReturnItem"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:minHeight="@dimen/touch_min"
+                        android:text="@string/admin_complaint_decision_return_item"
+                        app:cornerRadius="@dimen/radius_md" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonDecideCancelDeal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:minHeight="@dimen/touch_min"
+                        android:text="@string/admin_complaint_decision_cancel_deal"
+                        app:cornerRadius="@dimen/radius_md" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonDecideReject"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:backgroundTint="?attr/colorError"
+                        android:minHeight="@dimen/touch_min"
+                        android:text="@string/admin_complaint_decision_reject"
+                        android:textColor="?attr/colorOnPrimary"
+                        app:cornerRadius="@dimen/radius_md" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonRequestEvidence"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:minHeight="@dimen/touch_min"
+                        android:text="@string/admin_complaint_decision_request_evidence"
+                        app:cornerRadius="@dimen/radius_md" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/textDecisionResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurface"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_lg"
+                    android:text="@string/admin_complaint_note_title"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layoutAdminNote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:hint="@string/admin_complaint_note_hint"
+                    app:counterEnabled="true"
+                    app:counterMaxLength="2000">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editAdminNote"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="top|start"
+                        android:inputType="textMultiLine|textCapSentences"
+                        android:maxLength="2000"
+                        android:minLines="3" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonSaveNote"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:minHeight="@dimen/touch_min"
+                    android:text="@string/admin_complaint_note_save"
+                    app:cornerRadius="@dimen/radius_md" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </FrameLayout>
