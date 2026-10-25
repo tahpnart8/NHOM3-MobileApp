@@ -113,9 +113,10 @@
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/space_sm"
+                    android:layout_marginEnd="@dimen/space_xs"
                     android:layout_weight="1"
                     android:minHeight="@dimen/touch_min"
+                    android:paddingHorizontal="@dimen/space_xs"
                     android:text="@string/admin_dashboard_shortcut_users"
                     app:cornerRadius="@dimen/radius_md" />
 
@@ -124,10 +125,73 @@
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_sm"
+                    android:layout_marginStart="@dimen/space_xs"
                     android:layout_weight="1"
                     android:minHeight="@dimen/touch_min"
+                    android:paddingHorizontal="@dimen/space_xs"
                     android:text="@string/admin_dashboard_shortcut_reports"
+                    app:cornerRadius="@dimen/radius_md" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonShortcutComplaints"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/space_xs"
+                    android:layout_weight="1"
+                    android:minHeight="@dimen/touch_min"
+                    android:paddingHorizontal="@dimen/space_xs"
+                    android:text="@string/admin_dashboard_shortcut_complaints"
+                    app:cornerRadius="@dimen/radius_md" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonShortcutDeals"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_xs"
+                    android:layout_weight="1"
+                    android:minHeight="@dimen/touch_min"
+                    android:paddingHorizontal="@dimen/space_xs"
+                    android:text="@string/admin_dashboard_shortcut_deals"
+                    app:cornerRadius="@dimen/radius_md" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonShortcutCategories"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/space_xs"
+                    android:layout_weight="1"
+                    android:minHeight="@dimen/touch_min"
+                    android:paddingHorizontal="@dimen/space_xs"
+                    android:text="@string/admin_dashboard_shortcut_categories"
+                    app:cornerRadius="@dimen/radius_md" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonShortcutAdminAccounts"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_xs"
+                    android:layout_weight="1"
+                    android:minHeight="@dimen/touch_min"
+                    android:paddingHorizontal="@dimen/space_xs"
+                    android:text="@string/admin_dashboard_shortcut_admin_accounts"
                     app:cornerRadius="@dimen/radius_md" />
             </LinearLayout>
 
