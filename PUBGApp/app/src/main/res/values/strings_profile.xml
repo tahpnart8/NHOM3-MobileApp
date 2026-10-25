@@ -170,4 +170,10 @@
     <string name="profile_my_reports_tab_reports">Báo cáo của tôi</string>
     <string name="profile_my_reports_tab_complaints">Khiếu nại của tôi</string>
     <string name="profile_my_reports_export">Xuất danh sách</string>
+    <string name="profile_my_reports_target_listing">Tin đăng</string>
+    <string name="profile_my_reports_target_user">Người dùng</string>
+    <string name="profile_my_reports_target_message">Tin nhắn</string>
+    <string name="profile_my_reports_sent_on">Gửi ngày %1$s</string>
+    <string name="profile_my_reports_empty_title">Chưa có báo cáo nào</string>
+    <string name="profile_my_reports_empty_message">Báo cáo bạn gửi về tin đăng, người dùng hoặc tin nhắn sẽ hiện ở đây.</string>
 </resources>

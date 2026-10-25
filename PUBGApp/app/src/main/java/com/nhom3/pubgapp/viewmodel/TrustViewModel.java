@@ -53,6 +53,7 @@ public class TrustViewModel extends ViewModel {
     private static final String MESSAGE_MISSING_CONVERSATION =
             "Thiếu cuộc trò chuyện của tin nhắn bị báo cáo.";
     private static final String MESSAGE_OFFLINE = "Không có kết nối.";
+    private static final String MESSAGE_MY_REPORTS_NOT_SIGNED_IN = "Bạn cần đăng nhập để xem báo cáo của mình.";
 
     private final ReviewRepository reviewRepository = new ReviewRepository();
     private final ReportRepository reportRepository = new ReportRepository();
@@ -60,6 +61,8 @@ public class TrustViewModel extends ViewModel {
 
     // Which list is in reviews ("uid:received"), so a rotation does not read it again.
     private String loadedReviewsKey;
+    // The uid whose sent reports are in reports, so a rotation does not query again.
+    private String loadedReportsUid;
 
     public LiveData<List<Review>> getReviews() {
         return reviews;
@@ -164,7 +167,16 @@ public class TrustViewModel extends ViewModel {
     }
 
     public void loadMyReports() {
-        error.setValue(DataCallback.NOT_READY);
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null || uid.isEmpty()) {
+            error.setValue(MESSAGE_MY_REPORTS_NOT_SIGNED_IN);
+            return;
+        }
+        boolean loadingNow = Boolean.TRUE.equals(loading.getValue());
+        if (uid.equals(loadedReportsUid) && (reports.getValue() != null || loadingNow)) {
+            return;
+        }
+        fetchMyReports(uid);
     }
 
     public void exportReports() {
@@ -189,6 +201,28 @@ public class TrustViewModel extends ViewModel {
 
     public void withdrawComplaint(String id) {
         error.setValue(DataCallback.NOT_READY);
+    }
+
+    private void fetchMyReports(final String uid) {
+        loadedReportsUid = uid;
+        loading.setValue(true);
+        reportRepository.getMyReports(uid, new DataCallback<List<Report>>() {
+            @Override
+            public void onSuccess(List<Report> result) {
+                if (!uid.equals(loadedReportsUid)) {
+                    return;
+                }
+                reports.postValue(result != null ? result : new ArrayList<Report>());
+                loading.postValue(false);
+            }
+
+            @Override
+            public void onError(String message) {
+                loadedReportsUid = null;
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     // Rules section 18 also enforce the image cap and the conversation link; the self report rule is the app's.
