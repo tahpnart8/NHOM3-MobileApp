@@ -92,6 +92,31 @@
             android:textColor="?attr/colorPrimary" />
     </LinearLayout>
 
+    <!-- Tab switcher: Listings vs Users -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayoutSearchType"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:tabGravity="fill"
+        app:tabIndicatorFullWidth="false"
+        app:tabMode="fixed"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layoutSearchRow">
+
+        <com.google.android.material.tabs.TabItem
+            android:id="@+id/tabListings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/listing_search_tab_listings" />
+
+        <com.google.android.material.tabs.TabItem
+            android:id="@+id/tabUsers"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/listing_search_tab_users" />
+    </com.google.android.material.tabs.TabLayout>
+
     <!-- Recent searches container -->
     <LinearLayout
         android:id="@+id/layoutRecentSearches"
@@ -104,7 +129,7 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutSearchRow">
+        app:layout_constraintTop_toBottomOf="@id/tabLayoutSearchType">
 
         <TextView
             android:id="@+id/textRecentTitle"
@@ -125,7 +150,7 @@
                 android:id="@+id/chipGroupRecent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:singleLine="true" />
+                android:singleLine="true" />
         </HorizontalScrollView>
     </LinearLayout>
 
@@ -143,7 +168,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layoutRecentSearches" />
 
-    <!-- 2-column search results grid -->
+    <!-- 2-column search results grid (Listings) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerSearchResults"
         android:layout_width="0dp"
@@ -156,6 +181,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textResultCount" />
 
+    <!-- Single column user search results (Users) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerUserResults"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingVertical="@dimen/space_xs"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tabLayoutSearchType" />
+
     <!-- Filter panel overlay -->
     <include
         android:id="@+id/includeFilterPanel"
@@ -166,7 +204,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutSearchRow" />
+        app:layout_constraintTop_toBottomOf="@id/tabLayoutSearchType" />
 
     <!-- Loading indicator -->
     <ProgressBar
