@@ -73,6 +73,7 @@ public class PostListingFragment extends Fragment {
     private static final String KEY_EDITING_FLAGGED = "key_editing_flagged";
     private static final String KEY_EDITING_CREATED_AT = "key_editing_created_at";
     private static final String KEY_PENDING_PHOTO_URI = "key_pending_photo_uri";
+    private static final String KEY_CONDITION_VALUES = "key_condition_values";
     private static final String ARG_LISTING_ID = "listingId";
     private static final int MAX_IMAGES = 5;
 
@@ -628,6 +629,7 @@ public class PostListingFragment extends Fragment {
         binding.checkTradeSell.setChecked(false);
         binding.checkTradeExchange.setChecked(false);
         binding.checkTradeGiveaway.setChecked(false);
+        clearCategoryConditionFields();
         imageAdapter.setInitialImages(new ArrayList<String>(), new ArrayList<Uri>());
         updateImageButtonsVisibility();
         updateTradeVisibility();
@@ -672,6 +674,12 @@ public class PostListingFragment extends Fragment {
         }
 
         listing.setItemCondition(getSelectedCondition());
+        Map<String, String> conditionValues = collectConditionValues();
+        if (!conditionValues.isEmpty()) {
+            listing.setConditionValues(conditionValues);
+        } else {
+            listing.setConditionValues(null);
+        }
 
         List<TradeType> tradeTypes = new ArrayList<TradeType>();
         if (binding.checkTradeSell.isChecked()) {
@@ -771,6 +779,14 @@ public class PostListingFragment extends Fragment {
         if (currentPhotoUri != null) {
             outState.putParcelable(KEY_PENDING_PHOTO_URI, currentPhotoUri);
         }
+        Map<String, String> condVals = collectConditionValues();
+        if (!condVals.isEmpty()) {
+            Bundle condBundle = new Bundle();
+            for (Map.Entry<String, String> e : condVals.entrySet()) {
+                condBundle.putString(e.getKey(), e.getValue());
+            }
+            outState.putBundle(KEY_CONDITION_VALUES, condBundle);
+        }
         List<Uri> newUris = imageAdapter.getNewImageUris();
         ArrayList<Parcelable> parcelables = new ArrayList<Parcelable>(newUris);
         outState.putParcelableArrayList(KEY_IMAGES, parcelables);
@@ -794,6 +810,15 @@ public class PostListingFragment extends Fragment {
     private void restoreInstanceState(Bundle state) {
         if (state.containsKey(KEY_PENDING_PHOTO_URI)) {
             currentPhotoUri = BundleCompat.getParcelable(state, KEY_PENDING_PHOTO_URI, Uri.class);
+        }
+        if (state.containsKey(KEY_CONDITION_VALUES)) {
+            Bundle condBundle = state.getBundle(KEY_CONDITION_VALUES);
+            if (condBundle != null) {
+                pendingConditionValues = new HashMap<String, String>();
+                for (String key : condBundle.keySet()) {
+                    pendingConditionValues.put(key, condBundle.getString(key));
+                }
+            }
         }
         editingListingId = state.getString(KEY_EDITING_ID);
         if (state.containsKey(KEY_SELECTED_CATEGORY_ID)) {
@@ -922,6 +947,32 @@ public class PostListingFragment extends Fragment {
 
         imageAdapter.setInitialImages(listing.getImageIds(), null);
         updateImageButtonsVisibility();
+    }
+
+    static Map<String, String> filterConditionValues(Map<String, String> raw) {
+        Map<String, String> result = new HashMap<String, String>();
+        if (raw == null) {
+            return result;
+        }
+        for (Map.Entry<String, String> entry : raw.entrySet()) {
+            if (entry.getKey() != null && !entry.getKey().trim().isEmpty()) {
+                String val = entry.getValue();
+                if (val != null && !val.trim().isEmpty()) {
+                    result.put(entry.getKey().trim(), val.trim());
+                }
+            }
+        }
+        return result;
+    }
+
+    private Map<String, String> collectConditionValues() {
+        Map<String, String> raw = new HashMap<String, String>();
+        for (Map.Entry<String, EditText> entry : conditionEditTexts.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().getText() != null) {
+                raw.put(entry.getKey(), entry.getValue().getText().toString());
+            }
+        }
+        return filterConditionValues(raw);
     }
 
     private boolean hasUserEnteredConditionValues() {
