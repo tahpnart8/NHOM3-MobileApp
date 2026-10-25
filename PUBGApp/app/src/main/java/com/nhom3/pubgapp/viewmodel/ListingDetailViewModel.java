@@ -373,7 +373,29 @@ public class ListingDetailViewModel extends ViewModel {
     }
 
     public void loadPriceRange() {
-        error.setValue(DataCallback.NOT_READY);
+        final Listing current = listing.getValue();
+        if (current == null) {
+            priceRange.setValue(new long[0]);
+            return;
+        }
+        List<Listing> candidates = similar.getValue();
+        if (candidates != null && !candidates.isEmpty()) {
+            long[] range = recommendationEngine.priceRange(current, candidates);
+            priceRange.setValue(range);
+            return;
+        }
+        listingRepository.getSimilar(current, new DataCallback<List<Listing>>() {
+            @Override
+            public void onSuccess(List<Listing> fetchedCandidates) {
+                long[] range = recommendationEngine.priceRange(current, fetchedCandidates);
+                priceRange.postValue(range);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                priceRange.postValue(new long[0]);
+            }
+        });
     }
 
     public void clearError() {
