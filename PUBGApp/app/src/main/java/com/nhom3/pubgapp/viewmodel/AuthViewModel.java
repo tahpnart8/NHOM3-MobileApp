@@ -1,5 +1,6 @@
 package com.nhom3.pubgapp.viewmodel;
 
+import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
@@ -365,7 +366,19 @@ public class AuthViewModel extends ViewModel {
     public void loginWithGoogle(String idToken) {
         loading.setValue(true);
         error.setValue(null);
-        authRepository.signInWithGoogle(idToken, new DataCallback<User>() {
+        authRepository.signInWithGoogle(idToken, googleSignInCallback());
+    }
+
+    // Opens Google's sign-in page in the browser. The Activity is only handed on, never kept.
+    public void loginWithGoogleBrowser(Activity activity) {
+        loading.setValue(true);
+        error.setValue(null);
+        authRepository.signInWithGoogleBrowser(activity, googleSignInCallback());
+    }
+
+    // Both Google paths end the same way: a profile enters the session, no profile asks for one.
+    private DataCallback<User> googleSignInCallback() {
+        return new DataCallback<User>() {
             @Override
             public void onSuccess(User user) {
                 if (user == null) {
@@ -381,7 +394,7 @@ public class AuthViewModel extends ViewModel {
                 loading.postValue(false);
                 error.postValue(message != null ? message : "Không thể đăng nhập bằng Google.");
             }
-        });
+        };
     }
 
     public void restoreSession() {

@@ -18,22 +18,12 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.credentials.Credential;
-import androidx.credentials.CredentialManager;
-import androidx.credentials.CredentialManagerCallback;
-import androidx.credentials.CustomCredential;
-import androidx.credentials.GetCredentialRequest;
-import androidx.credentials.GetCredentialResponse;
-import androidx.credentials.exceptions.GetCredentialCancellationException;
-import androidx.credentials.exceptions.GetCredentialException;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -576,69 +566,8 @@ public class RegisterFragment extends Fragment {
             showOfflineError();
             return;
         }
-
-        try {
-            CredentialManager credentialManager = CredentialManager.create(requireContext());
-            GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(getString(R.string.default_web_client_id))
-                    .setAutoSelectEnabled(false)
-                    .build();
-
-            GetCredentialRequest request = new GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
-                    .build();
-
-            credentialManager.getCredentialAsync(
-                    requireContext(),
-                    request,
-                    null,
-                    requireActivity().getMainExecutor(),
-                    new CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
-                        @Override
-                        public void onResult(GetCredentialResponse response) {
-                            handleGoogleSignInResponse(response);
-                        }
-
-                        @Override
-                        public void onError(GetCredentialException e) {
-                            if (binding == null) {
-                                return;
-                            }
-                            if (e instanceof GetCredentialCancellationException) {
-                                return;
-                            }
-                            binding.textError.setText(R.string.account_login_google_failed);
-                            binding.textError.setVisibility(View.VISIBLE);
-                        }
-                    }
-            );
-        } catch (Exception e) {
-            if (binding != null) {
-                binding.textError.setText(R.string.account_login_google_init_error);
-                binding.textError.setVisibility(View.VISIBLE);
-            }
-        }
-    }
-
-    private void handleGoogleSignInResponse(GetCredentialResponse response) {
-        Credential credential = response.getCredential();
-        if (credential instanceof CustomCredential) {
-            CustomCredential customCredential = (CustomCredential) credential;
-            if (GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(customCredential.getType())) {
-                try {
-                    GoogleIdTokenCredential googleIdTokenCredential =
-                            GoogleIdTokenCredential.createFrom(customCredential.getData());
-                    String idToken = googleIdTokenCredential.getIdToken();
-                    viewModel.loginWithGoogle(idToken);
-                } catch (Exception e) {
-                    if (binding != null) {
-                        binding.textError.setText(R.string.account_login_google_parse_error);
-                        binding.textError.setVisibility(View.VISIBLE);
-                    }
-                }
-            }
-        }
+        // Opens Google's own sign-in page in the browser; the loading state disables the button meanwhile.
+        viewModel.loginWithGoogleBrowser(requireActivity());
     }
 
     private boolean isNetworkAvailable() {
