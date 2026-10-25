@@ -12,6 +12,7 @@ import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.data.AdminRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.ListingRepository;
+import com.nhom3.pubgapp.data.MediaRepository;
 import com.nhom3.pubgapp.data.ReportRepository;
 import com.nhom3.pubgapp.model.BannedKeyword;
 import com.nhom3.pubgapp.model.Category;
@@ -48,6 +49,7 @@ public class AdminContentViewModel extends ViewModel {
     private final ReportRepository reportRepository = new ReportRepository();
     private final ListingRepository listingRepository = new ListingRepository();
     private final AdminRepository adminRepository = new AdminRepository();
+    private final MediaRepository mediaRepository = new MediaRepository();
     private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
     // One guard per kind of work, so loading a listing never cancels loading its reports.
     private final RequestGuard reportsGuard = new RequestGuard();
@@ -55,6 +57,8 @@ public class AdminContentViewModel extends ViewModel {
     private final RequestGuard writeGuard = new RequestGuard();
     private final RequestGuard flaggedGuard = new RequestGuard();
     private final RequestGuard keywordsGuard = new RequestGuard();
+    // The evidence dialog has its own guards and stays out of refreshLoading, so the list keeps its spinner state.
+    private final RequestGuard evidenceGuard = new RequestGuard();
     // Set once a tab asked for its list, so a write refreshes only the lists the admin has opened.
     private volatile boolean flaggedAsked;
     private volatile boolean keywordsAsked;
@@ -187,8 +191,21 @@ public class AdminContentViewModel extends ViewModel {
         });
     }
 
+    // Null while reading; an empty list means the report has no image. Order follows evidenceImageIds.
     public void loadReportEvidence(Report report) {
-        error.setValue(DataCallback.NOT_READY);
+        reportEvidence.setValue(null);
+        List<String> ids = new ArrayList<String>();
+        if (report != null && report.getEvidenceImageIds() != null) {
+            ids.addAll(report.getEvidenceImageIds());
+        }
+        // Beginning a request also drops the answer of any earlier one still on its way.
+        int token = evidenceGuard.begin();
+        if (ids.isEmpty()) {
+            evidenceGuard.finish(token);
+            reportEvidence.setValue(new ArrayList<byte[]>());
+            return;
+        }
+        readEvidenceFrom(ids, new ArrayList<byte[]>(), token);
     }
 
     public void loadReportedConversation(String conversationId) {
@@ -473,6 +490,32 @@ public class AdminContentViewModel extends ViewModel {
         if (keywordsAsked) {
             loadKeywords();
         }
+    }
+
+    // One image at a time keeps the order; an image that cannot be read stays as empty bytes in its place.
+    private void readEvidenceFrom(final List<String> ids, final List<byte[]> read, final int token) {
+        if (!evidenceGuard.isCurrent(token)) {
+            return;
+        }
+        if (read.size() == ids.size()) {
+            if (evidenceGuard.finish(token)) {
+                reportEvidence.postValue(read);
+            }
+            return;
+        }
+        mediaRepository.getImage(ids.get(read.size()), new DataCallback<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                read.add(bytes != null ? bytes : new byte[0]);
+                readEvidenceFrom(ids, read, token);
+            }
+
+            @Override
+            public void onError(String message) {
+                read.add(new byte[0]);
+                readEvidenceFrom(ids, read, token);
+            }
+        });
     }
 
     private void failRequest(RequestGuard guard, int token, String message) {
