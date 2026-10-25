@@ -35,6 +35,14 @@ public class AdminDealAdapter extends RecyclerView.Adapter<AdminDealAdapter.Deal
         this.listener = listener;
     }
 
+    // A shipped deal is overdue when autoReleaseAt has passed.
+    public static boolean isOverdue(@Nullable Deal deal, @Nullable Timestamp now) {
+        if (deal == null || now == null) {
+            return false;
+        }
+        return deal.isAutoReleaseDue(now);
+    }
+
     public void submitList(List<Deal> newDeals) {
         deals.clear();
         if (newDeals != null) {
@@ -68,6 +76,9 @@ public class AdminDealAdapter extends RecyclerView.Adapter<AdminDealAdapter.Deal
         binding.textPrice.setText(formatUtils.formatPrice(deal.getAgreedPrice()));
 
         StatusChips.bind(binding.layoutStatusChip.textStatusChip, deal.getStatus());
+
+        boolean overdue = isOverdue(deal, Timestamp.now());
+        binding.chipOverdue.setVisibility(overdue ? View.VISIBLE : View.GONE);
 
         String buyerId = deal.getBuyerId() != null ? deal.getBuyerId() : "";
         String sellerId = deal.getSellerId() != null ? deal.getSellerId() : "";
