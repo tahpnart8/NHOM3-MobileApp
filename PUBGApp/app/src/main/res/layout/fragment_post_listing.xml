@@ -82,26 +82,24 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Category Field -->
-        <TextView
-            android:id="@+id/textCategoryLabel"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutCategory"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_md"
-            android:text="@string/listing_post_category_label"
-            android:textAppearance="?attr/textAppearanceTitleSmall"
-            android:textColor="?attr/colorOnSurface"
+            android:hint="@string/listing_post_category_label"
+            app:placeholderText="@string/listing_post_category_prompt"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/layoutTitle" />
+            app:layout_constraintTop_toBottomOf="@id/layoutTitle">
 
-        <Spinner
-            android:id="@+id/spinnerCategory"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/touch_min"
-            android:layout_marginTop="@dimen/space_xs"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textCategoryLabel" />
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/spinnerCategory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Description Field -->
         <com.google.android.material.textfield.TextInputLayout
@@ -113,7 +111,7 @@
             app:placeholderText="@string/listing_post_desc_hint"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/spinnerCategory">
+            app:layout_constraintTop_toBottomOf="@id/layoutCategory">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editDescription"

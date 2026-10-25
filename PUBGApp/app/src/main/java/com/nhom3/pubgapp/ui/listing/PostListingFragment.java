@@ -8,6 +8,7 @@ import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.Toast;
@@ -68,6 +69,7 @@ public class PostListingFragment extends Fragment {
     private boolean isSavingDraft = false;
     private String editingListingId;
     private Listing editingListing;
+    private String selectedCategoryId;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -228,6 +230,17 @@ public class PostListingFragment extends Fragment {
             }
         });
 
+        binding.spinnerCategory.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (position >= 0 && position < loadedCategories.size()) {
+                    selectedCategoryId = loadedCategories.get(position).getId();
+                } else {
+                    selectedCategoryId = null;
+                }
+            }
+        });
+
         binding.buttonPost.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -274,14 +287,15 @@ public class PostListingFragment extends Fragment {
                         }
                     }
                 }
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                         requireContext(),
-                        android.R.layout.simple_spinner_item,
+                        android.R.layout.simple_spinner_dropdown_item,
                         names
                 );
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 binding.spinnerCategory.setAdapter(adapter);
-                if (isEditMode() && editingListing != null) {
+                if (selectedCategoryId != null) {
+                    selectCategory(selectedCategoryId);
+                } else if (isEditMode() && editingListing != null) {
                     selectCategory(editingListing.getCategoryId());
                 }
             }
@@ -387,10 +401,10 @@ public class PostListingFragment extends Fragment {
             return;
         }
 
-        if (loadedCategories.isEmpty() || binding.spinnerCategory.getSelectedItemPosition() < 0) {
+        if (loadedCategories.isEmpty() || selectedCategoryId == null || selectedCategoryId.isEmpty()) {
             Toast.makeText(requireContext(),
                     R.string.listing_post_missing_fields, Toast.LENGTH_SHORT).show();
-            binding.nestedScrollView.smoothScrollTo(0, binding.textCategoryLabel.getTop());
+            binding.nestedScrollView.smoothScrollTo(0, binding.layoutCategory.getTop());
             return;
         }
 
@@ -471,6 +485,8 @@ public class PostListingFragment extends Fragment {
         binding.editDescription.setText("");
         binding.editPrice.setText("");
         binding.editMinOfferPrice.setText("");
+        binding.spinnerCategory.setText("", false);
+        selectedCategoryId = null;
         binding.layoutTitle.setError(null);
         binding.layoutPrice.setError(null);
         binding.radioGroupCondition.clearCheck();
@@ -517,9 +533,8 @@ public class PostListingFragment extends Fragment {
         listing.setDescription(binding.editDescription.getText() != null
                 ? binding.editDescription.getText().toString().trim() : "");
 
-        int catPos = binding.spinnerCategory.getSelectedItemPosition();
-        if (catPos >= 0 && catPos < loadedCategories.size()) {
-            listing.setCategoryId(loadedCategories.get(catPos).getId());
+        if (selectedCategoryId != null && !selectedCategoryId.isEmpty()) {
+            listing.setCategoryId(selectedCategoryId);
         }
 
         listing.setItemCondition(getSelectedCondition());
@@ -767,13 +782,14 @@ public class PostListingFragment extends Fragment {
     }
 
     private void selectCategory(String categoryId) {
+        selectedCategoryId = categoryId;
         if (categoryId == null || loadedCategories.isEmpty()) {
             return;
         }
         for (int i = 0; i < loadedCategories.size(); i++) {
             Category cat = loadedCategories.get(i);
             if (cat != null && categoryId.equals(cat.getId())) {
-                binding.spinnerCategory.setSelection(i);
+                binding.spinnerCategory.setText(cat.getName(), false);
                 break;
             }
         }
