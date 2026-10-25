@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- D07 tab "Báo cáo của tôi": export button above the list and its four states. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonExportReports"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginHorizontal="@dimen/space_md"
+        android:minHeight="@dimen/touch_min"
+        android:text="@string/profile_my_reports_export"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerReports"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="@dimen/space_md"
+            android:paddingBottom="@dimen/space_md"
+            android:visibility="gone" />
+
+        <ProgressBar
+            android:id="@+id/progressReports"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:contentDescription="@string/common_loading"
+            android:visibility="gone" />
+
+        <include
+            android:id="@+id/includeReportsEmpty"
+            layout="@layout/view_empty_state"
+            android:visibility="gone" />
+
+        <include
+            android:id="@+id/includeReportsError"
+            layout="@layout/view_error_state"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>
