@@ -68,6 +68,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_md"
             android:hint="@string/listing_post_title_label"
+            app:placeholderText="@string/listing_post_title_hint"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/recyclerImages">
@@ -76,7 +77,6 @@
                 android:id="@+id/editTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/listing_post_title_hint"
                 android:inputType="textCapSentences"
                 android:maxLines="2" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -110,6 +110,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_md"
             android:hint="@string/listing_post_desc_label"
+            app:placeholderText="@string/listing_post_desc_hint"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/spinnerCategory">
@@ -119,7 +120,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="top|start"
-                android:hint="@string/listing_post_desc_hint"
                 android:inputType="textMultiLine"
                 android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -228,6 +228,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_md"
             android:hint="@string/listing_post_price_label"
+            app:placeholderText="@string/listing_post_price_hint"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -237,7 +238,6 @@
                 android:id="@+id/editPrice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/listing_post_price_hint"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -288,6 +288,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_sm"
             android:hint="@string/listing_post_min_offer_label"
+            app:placeholderText="@string/listing_post_min_offer_hint"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/radioGroupOffer">
@@ -296,7 +297,6 @@
                 android:id="@+id/editMinOfferPrice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/listing_post_min_offer_hint"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
