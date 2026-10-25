@@ -419,6 +419,12 @@ public class UserProfileFragment extends Fragment {
             binding.textCompletionRate.setText(R.string.profile_user_profile_stat_unknown);
             binding.textFollowerCount.setText(R.string.profile_user_profile_stat_unknown);
         }
+        boolean statsLoading = ownPage && loading && profileViewModel.getStats().getValue() == null;
+        if (statsLoading) {
+            binding.textSoldCount.setText(R.string.profile_user_profile_stat_loading);
+            binding.textCompletionRate.setText(R.string.profile_user_profile_stat_loading);
+            binding.textFollowerCount.setText(R.string.profile_user_profile_stat_loading);
+        }
     }
 
     private void showError(String message) {

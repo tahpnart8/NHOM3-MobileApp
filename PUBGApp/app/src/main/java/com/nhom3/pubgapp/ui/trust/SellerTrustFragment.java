@@ -299,6 +299,11 @@ public class SellerTrustFragment extends Fragment {
             binding.textCompletionRate.setText(R.string.profile_user_profile_stat_unknown);
             binding.textDealCount.setText(R.string.profile_user_profile_stat_unknown);
         }
+        boolean statsLoading = ownPage && loading && profileViewModel.getStats().getValue() == null;
+        if (statsLoading) {
+            binding.textCompletionRate.setText(R.string.profile_user_profile_stat_loading);
+            binding.textDealCount.setText(R.string.profile_user_profile_stat_loading);
+        }
     }
 
     private void showProfileError(String message) {
