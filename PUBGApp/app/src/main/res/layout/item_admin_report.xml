@@ -87,6 +87,15 @@
             android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="?attr/colorOnSurfaceVariant" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonEvidence"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:minHeight="@dimen/touch_min"
+            android:text="@string/admin_report_evidence_action" />
+
         <LinearLayout
             android:id="@+id/layoutActions"
             android:layout_width="match_parent"
