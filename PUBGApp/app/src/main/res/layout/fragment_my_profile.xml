@@ -362,6 +362,7 @@
                 android:id="@+id/textMyShopHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_sm"
                 android:text="@string/profile_my_profile_row_my_shop_hint"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant"
