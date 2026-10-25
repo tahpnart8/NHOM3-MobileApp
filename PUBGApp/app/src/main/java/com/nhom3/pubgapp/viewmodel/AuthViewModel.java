@@ -458,8 +458,41 @@ public class AuthViewModel extends ViewModel {
         });
     }
 
+    // Re-authenticates with current password then updates to next password.
     public void changePassword(String current, String next) {
-        error.setValue(DataCallback.NOT_READY);
+        if (current == null || current.isEmpty()) {
+            error.setValue("Vui lòng nhập mật khẩu hiện tại.");
+            return;
+        }
+        if (next == null || next.isEmpty()) {
+            error.setValue("Vui lòng nhập mật khẩu mới.");
+            return;
+        }
+        if (!isPasswordValid(next)) {
+            error.setValue("Mật khẩu cần ít nhất 8 ký tự, gồm chữ và số.");
+            return;
+        }
+        if (current.equals(next)) {
+            error.setValue("Mật khẩu mới không được trùng với mật khẩu hiện tại.");
+            return;
+        }
+        loading.setValue(true);
+        error.setValue(null);
+        done.setValue(false);
+        authRepository.changePassword(current, next, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                String errMsg = message != null ? message : "Không thể đổi mật khẩu.";
+                error.postValue(errMsg);
+            }
+        });
     }
 
     public boolean isGoogleAccount() {
