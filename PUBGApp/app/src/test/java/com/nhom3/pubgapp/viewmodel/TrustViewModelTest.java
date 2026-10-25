@@ -4,8 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.google.firebase.Timestamp;
+import com.nhom3.pubgapp.model.Complaint;
+import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.model.Review;
+import com.nhom3.pubgapp.model.enums.ComplaintReason;
+import com.nhom3.pubgapp.model.enums.DealStatus;
+import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.ReportReason;
 import com.nhom3.pubgapp.model.enums.ReportStatus;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
@@ -20,6 +26,8 @@ public class TrustViewModelTest {
     private static final double DELTA = 0.0001;
     private static final String ME = "user-me";
     private static final String OTHER = "user-other";
+    private static final long ONE_DAY_SECONDS = 24L * 60 * 60;
+    private static final Timestamp NOW = new Timestamp(1_800_000_000L, 0);
 
     @Test
     public void emptyListGivesZeroForAllCriteria() {
@@ -120,6 +128,71 @@ public class TrustViewModelTest {
         report.setReporterId(reporterId);
         report.setStatus(status);
         return report;
+    }
+
+    @Test
+    public void complaintNeedsReasonAndOneToFiveImages() {
+        Complaint complaint = new Complaint();
+        assertEquals(TrustViewModel.COMPLAINT_MISSING_REASON, TrustViewModel.checkComplaintForm(complaint, 1));
+        complaint.setReason(ComplaintReason.DAMAGED);
+        assertEquals(TrustViewModel.COMPLAINT_NO_IMAGE, TrustViewModel.checkComplaintForm(complaint, 0));
+        assertEquals(TrustViewModel.COMPLAINT_OK, TrustViewModel.checkComplaintForm(complaint, 1));
+        assertEquals(TrustViewModel.COMPLAINT_OK, TrustViewModel.checkComplaintForm(complaint, 5));
+        assertEquals(TrustViewModel.COMPLAINT_TOO_MANY_IMAGES, TrustViewModel.checkComplaintForm(complaint, 6));
+    }
+
+    @Test
+    public void shippedDealBeforeCountdownEndsMayBeDisputed() {
+        Deal deal = deal(DealStatus.SHIPPED, DeliveryMethod.SHIPPING, later());
+        assertEquals(TrustViewModel.COMPLAINT_OK, TrustViewModel.checkComplaintDeal(deal, ME, NOW));
+    }
+
+    @Test
+    public void shippedDealAfterCountdownMayNotBeDisputed() {
+        Deal deal = deal(DealStatus.SHIPPED, DeliveryMethod.SHIPPING, earlier());
+        assertEquals(TrustViewModel.COMPLAINT_COUNTDOWN_OVER, TrustViewModel.checkComplaintDeal(deal, ME, NOW));
+    }
+
+    @Test
+    public void confirmedDealOnlyWhenMeetingInPerson() {
+        Deal meetUp = deal(DealStatus.CONFIRMED, DeliveryMethod.MEET_UP, null);
+        Deal shipping = deal(DealStatus.CONFIRMED, DeliveryMethod.SHIPPING, null);
+        assertEquals(TrustViewModel.COMPLAINT_OK, TrustViewModel.checkComplaintDeal(meetUp, ME, NOW));
+        assertEquals(TrustViewModel.COMPLAINT_WRONG_STATUS, TrustViewModel.checkComplaintDeal(shipping, ME, NOW));
+    }
+
+    @Test
+    public void receivedOrDisputedDealMayNotBeDisputed() {
+        Deal received = deal(DealStatus.RECEIVED, DeliveryMethod.SHIPPING, later());
+        Deal disputed = deal(DealStatus.DISPUTED, DeliveryMethod.SHIPPING, later());
+        assertEquals(TrustViewModel.COMPLAINT_WRONG_STATUS, TrustViewModel.checkComplaintDeal(received, ME, NOW));
+        assertEquals(TrustViewModel.COMPLAINT_WRONG_STATUS, TrustViewModel.checkComplaintDeal(disputed, ME, NOW));
+    }
+
+    @Test
+    public void onlyAPartyMayComplain() {
+        Deal deal = deal(DealStatus.SHIPPED, DeliveryMethod.SHIPPING, later());
+        assertEquals(TrustViewModel.COMPLAINT_NOT_PARTY, TrustViewModel.checkComplaintDeal(deal, "stranger", NOW));
+        assertEquals(TrustViewModel.COMPLAINT_OK, TrustViewModel.checkComplaintDeal(deal, OTHER, NOW));
+        assertEquals(TrustViewModel.COMPLAINT_NO_DEAL, TrustViewModel.checkComplaintDeal(null, ME, NOW));
+    }
+
+    private static Deal deal(DealStatus status, DeliveryMethod method, Timestamp autoReleaseAt) {
+        Deal deal = new Deal();
+        deal.setBuyerId(ME);
+        deal.setSellerId(OTHER);
+        deal.setStatus(status);
+        deal.setDeliveryMethod(method);
+        deal.setAutoReleaseAt(autoReleaseAt);
+        return deal;
+    }
+
+    private static Timestamp later() {
+        return new Timestamp(NOW.getSeconds() + ONE_DAY_SECONDS, 0);
+    }
+
+    private static Timestamp earlier() {
+        return new Timestamp(NOW.getSeconds() - ONE_DAY_SECONDS, 0);
     }
 
     private static Report report(ReportTarget target, String targetId, ReportReason reason) {
