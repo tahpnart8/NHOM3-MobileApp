@@ -1,6 +1,8 @@
 package com.nhom3.pubgapp.ui.admin;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -9,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -21,23 +24,32 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
+import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.R;
+import com.nhom3.pubgapp.databinding.DialogAdminReportEvidenceBinding;
 import com.nhom3.pubgapp.databinding.FragmentAdminModerationBinding;
 import com.nhom3.pubgapp.model.BannedKeyword;
+import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Report;
+import com.nhom3.pubgapp.model.enums.MessageType;
 import com.nhom3.pubgapp.model.enums.ReportStatus;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
+import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.viewmodel.AdminContentViewModel;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 // Screen E04: three tabs, reports grouped by target, listings flagged by a banned keyword, and the keywords.
 public class AdminModerationFragment extends Fragment {
@@ -57,6 +69,10 @@ public class AdminModerationFragment extends Fragment {
     private static final String STATE_TYPE = "state_type";
     private static final String STATE_DIALOG_TARGET = "state_dialog_target";
     private static final String STATE_DIALOG_TEXT = "state_dialog_text";
+    private static final String STATE_EVIDENCE_TYPE = "state_evidence_type";
+    private static final String STATE_EVIDENCE_TARGET = "state_evidence_target";
+    // Chat lines kept on each side of the reported message: enough context, and no more of the private chat.
+    static final int MESSAGES_AROUND = 5;
 
     @Nullable
     private FragmentAdminModerationBinding binding;
@@ -65,6 +81,12 @@ public class AdminModerationFragment extends Fragment {
     private AdminFlaggedAdapter flaggedAdapter;
     private AdminKeywordAdapter keywordAdapter;
     private AdminReasonDialog reasonDialog;
+    private ReportEvidenceDialog evidenceDialog;
+    // The target whose evidence dialog is open, kept so a rotation shows it again.
+    @Nullable
+    private ReportTarget evidenceType;
+    @Nullable
+    private String evidenceTargetId;
     private ReportStatus selectedStatus = ReportStatus.OPEN;
     @Nullable
     private ReportTarget selectedType;
@@ -120,7 +142,11 @@ public class AdminModerationFragment extends Fragment {
             selectedTab = savedInstanceState.getInt(STATE_TAB, TAB_REPORTS);
             removeKeywordId = savedInstanceState.getString(STATE_REMOVE_ID);
             removeKeywordWord = savedInstanceState.getString(STATE_REMOVE_WORD);
+            String evidenceTypeName = savedInstanceState.getString(STATE_EVIDENCE_TYPE);
+            evidenceType = evidenceTypeName == null ? null : ReportTarget.valueOf(evidenceTypeName);
+            evidenceTargetId = savedInstanceState.getString(STATE_EVIDENCE_TARGET);
         }
+        evidenceDialog = new ReportEvidenceDialog();
         setupToolbar();
         setupFilters();
         setupList();
@@ -129,6 +155,7 @@ public class AdminModerationFragment extends Fragment {
         setupKeywordInput();
         setupTabs();
         observeViewModel();
+        observeEvidence();
         listenForListingChanges();
         if (viewModel.getReports().getValue() == null) {
             loadReports();
@@ -138,6 +165,9 @@ public class AdminModerationFragment extends Fragment {
         }
         if (removeKeywordId != null) {
             showRemoveKeywordDialog(removeKeywordId, removeKeywordWord == null ? "" : removeKeywordWord);
+        }
+        if (evidenceTargetId != null) {
+            showEvidenceDialog();
         }
     }
 
@@ -155,6 +185,8 @@ public class AdminModerationFragment extends Fragment {
         outState.putString(STATE_REMOVE_WORD, removeDialog == null ? null : removeKeywordWord);
         outState.putString(STATE_STATUS, selectedStatus.name());
         outState.putString(STATE_TYPE, selectedType == null ? null : selectedType.name());
+        outState.putString(STATE_EVIDENCE_TYPE, evidenceType == null ? null : evidenceType.name());
+        outState.putString(STATE_EVIDENCE_TARGET, evidenceTargetId);
         if (reasonDialog != null && reasonDialog.isOpen()) {
             outState.putString(STATE_DIALOG_TARGET, dialogTargetId);
             outState.putString(STATE_DIALOG_TEXT, reasonDialog.readText());
@@ -165,6 +197,7 @@ public class AdminModerationFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         reasonDialog.release();
+        evidenceDialog.release();
         if (removeDialog != null) {
             removeDialog.setOnDismissListener(null);
             removeDialog.dismiss();
@@ -662,5 +695,319 @@ public class AdminModerationFragment extends Fragment {
         }
         successMessage = R.string.admin_moderation_done_hidden;
         viewModel.hide(dialogTargetId, reason);
+    }
+
+    private void observeEvidence() {
+        viewModel.getReportEvidence().observe(getViewLifecycleOwner(), new Observer<List<byte[]>>() {
+            @Override
+            public void onChanged(List<byte[]> images) {
+                evidenceDialog.showImages(images, evidenceTargetId);
+            }
+        });
+        viewModel.getReportedMessages().observe(getViewLifecycleOwner(), new Observer<List<ChatMessage>>() {
+            @Override
+            public void onChanged(List<ChatMessage> messages) {
+                showEvidenceMessages(messages);
+            }
+        });
+    }
+
+    // Every report of the group counts: their images together, and the first conversation one of them names.
+    private void openEvidence(AdminReportGrouping.Group group) {
+        evidenceType = group.getTargetType();
+        evidenceTargetId = group.getTargetId();
+        Report combined = evidenceOf(viewModel.getReports().getValue(), evidenceType, evidenceTargetId);
+        viewModel.loadReportEvidence(combined);
+        viewModel.loadReportedConversation(combined.getConversationId());
+        showEvidenceDialog();
+    }
+
+    private void showEvidenceDialog() {
+        evidenceDialog.show(requireContext(), getLayoutInflater(), evidenceType == ReportTarget.MESSAGE,
+                new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        evidenceType = null;
+                        evidenceTargetId = null;
+                    }
+                });
+        evidenceDialog.showImages(viewModel.getReportEvidence().getValue(), evidenceTargetId);
+        showEvidenceMessages(viewModel.getReportedMessages().getValue());
+    }
+
+    private void showEvidenceMessages(@Nullable List<ChatMessage> messages) {
+        if (messages == null) {
+            evidenceDialog.showMessages(null, evidenceTargetId);
+            return;
+        }
+        evidenceDialog.showMessages(messagesAround(messages, evidenceTargetId, MESSAGES_AROUND), evidenceTargetId);
+    }
+
+    /** One report holding the evidence of every report on this target, for loadReportEvidence. */
+    @NonNull
+    static Report evidenceOf(@Nullable List<Report> reports, @Nullable ReportTarget type, @Nullable String targetId) {
+        Report combined = new Report();
+        combined.setTargetType(type);
+        combined.setTargetId(targetId);
+        List<String> imageIds = new ArrayList<String>();
+        combined.setEvidenceImageIds(imageIds);
+        if (reports == null || targetId == null) {
+            return combined;
+        }
+        for (Report report : reports) {
+            if (report.getTargetType() != type || !targetId.equals(report.getTargetId())) {
+                continue;
+            }
+            addMissing(imageIds, report.getEvidenceImageIds());
+            String conversationId = report.getConversationId();
+            boolean hasConversation = conversationId != null && !conversationId.isEmpty();
+            if (hasConversation && combined.getConversationId() == null) {
+                combined.setConversationId(conversationId);
+            }
+        }
+        return combined;
+    }
+
+    private static void addMissing(List<String> target, @Nullable List<String> source) {
+        if (source == null) {
+            return;
+        }
+        for (String id : source) {
+            if (id != null && !target.contains(id)) {
+                target.add(id);
+            }
+        }
+    }
+
+    /** The reported message with up to {@code around} messages on each side; the last ones if it is not found. */
+    @NonNull
+    static List<ChatMessage> messagesAround(@Nullable List<ChatMessage> messages, @Nullable String messageId,
+            int around) {
+        List<ChatMessage> result = new ArrayList<ChatMessage>();
+        if (messages == null || messages.isEmpty()) {
+            return result;
+        }
+        int center = messages.size() - 1;
+        for (int index = 0; index < messages.size(); index++) {
+            String id = messages.get(index).getId();
+            if (id != null && id.equals(messageId)) {
+                center = index;
+                break;
+            }
+        }
+        int from = Math.max(0, center - around);
+        int to = Math.min(messages.size() - 1, center + around);
+        for (int index = from; index <= to; index++) {
+            result.add(messages.get(index));
+        }
+        return result;
+    }
+
+    /** The E04 evidence dialog: images of the reports and, for a message report, the chat around that message. */
+    private static final class ReportEvidenceDialog {
+
+        private final EvidenceImageAdapter imageAdapter = new EvidenceImageAdapter();
+        private final ReportedMessageAdapter messageAdapter = new ReportedMessageAdapter();
+        @Nullable
+        private AlertDialog dialog;
+        @Nullable
+        private DialogAdminReportEvidenceBinding binding;
+
+        void show(Context context, LayoutInflater inflater, boolean withChat,
+                final DialogInterface.OnDismissListener onDismiss) {
+            release();
+            binding = DialogAdminReportEvidenceBinding.inflate(inflater);
+            binding.recyclerEvidenceImages.setLayoutManager(
+                    new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
+            binding.recyclerEvidenceImages.setAdapter(imageAdapter);
+            binding.recyclerMessages.setLayoutManager(new LinearLayoutManager(context));
+            binding.recyclerMessages.setAdapter(messageAdapter);
+            binding.layoutConversation.setVisibility(withChat ? View.VISIBLE : View.GONE);
+            dialog = new MaterialAlertDialogBuilder(context)
+                    .setTitle(R.string.admin_report_evidence_title)
+                    .setView(binding.getRoot())
+                    .setPositiveButton(R.string.admin_report_evidence_close, null)
+                    .create();
+            dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface closed) {
+                    dialog = null;
+                    binding = null;
+                    onDismiss.onDismiss(closed);
+                }
+            });
+            dialog.show();
+        }
+
+        // Null means still reading, so the spinner stays; an empty list says the report has no image.
+        void showImages(@Nullable List<byte[]> images, @Nullable String targetId) {
+            if (binding == null) {
+                return;
+            }
+            boolean reading = images == null;
+            boolean hasImages = !reading && !images.isEmpty();
+            binding.progressEvidenceImages.setVisibility(reading ? View.VISIBLE : View.GONE);
+            binding.recyclerEvidenceImages.setVisibility(hasImages ? View.VISIBLE : View.GONE);
+            binding.textNoEvidenceImages.setVisibility(!reading && !hasImages ? View.VISIBLE : View.GONE);
+            imageAdapter.submit(images, targetId);
+        }
+
+        void showMessages(@Nullable List<ChatMessage> messages, @Nullable String reportedId) {
+            if (binding == null) {
+                return;
+            }
+            boolean reading = messages == null;
+            boolean hasMessages = !reading && !messages.isEmpty();
+            binding.progressConversation.setVisibility(reading ? View.VISIBLE : View.GONE);
+            binding.recyclerMessages.setVisibility(hasMessages ? View.VISIBLE : View.GONE);
+            binding.textNoMessages.setVisibility(!reading && !hasMessages ? View.VISIBLE : View.GONE);
+            messageAdapter.submit(messages, reportedId);
+        }
+
+        // Closing without the listener keeps the open target, so a rotation shows the dialog again.
+        void release() {
+            if (dialog != null) {
+                dialog.setOnDismissListener(null);
+                dialog.dismiss();
+            }
+            dialog = null;
+            binding = null;
+        }
+    }
+
+    /** Decoded evidence images; an image that could not be read shows the error icon. */
+    private static final class EvidenceImageAdapter extends RecyclerView.Adapter<EvidenceImageAdapter.ImageHolder> {
+
+        private final List<byte[]> images = new ArrayList<byte[]>();
+        private String tagPrefix = "";
+
+        void submit(@Nullable List<byte[]> newImages, @Nullable String targetId) {
+            images.clear();
+            if (newImages != null) {
+                images.addAll(newImages);
+            }
+            tagPrefix = targetId == null ? "" : targetId;
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public ImageHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            ImageView image = new ImageView(parent.getContext());
+            int size = parent.getResources().getDimensionPixelSize(R.dimen.avatar_size_lg);
+            int gap = parent.getResources().getDimensionPixelSize(R.dimen.space_sm);
+            RecyclerView.LayoutParams params = new RecyclerView.LayoutParams(size, size);
+            params.setMarginEnd(gap);
+            image.setLayoutParams(params);
+            image.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            image.setContentDescription(parent.getContext().getString(R.string.admin_report_evidence_image));
+            return new ImageHolder(image);
+        }
+
+        // The loader needs a tag per image; the bytes carry no id, so the target id and position name it.
+        @Override
+        public void onBindViewHolder(@NonNull ImageHolder holder, int position) {
+            byte[] bytes = images.get(position);
+            if (bytes == null || bytes.length == 0) {
+                holder.image.setTag(null);
+                holder.image.setImageResource(R.drawable.ic_error);
+                return;
+            }
+            String tag = tagPrefix + ":" + position;
+            ImageLoader.load(bytes, tag, holder.image, R.drawable.ic_inbox, R.drawable.ic_error);
+        }
+
+        @Override
+        public int getItemCount() {
+            return images.size();
+        }
+
+        static final class ImageHolder extends RecyclerView.ViewHolder {
+            final ImageView image;
+
+            ImageHolder(ImageView image) {
+                super(image);
+                this.image = image;
+            }
+        }
+    }
+
+    /** Lines of the reported chat: time and content only, so no more about the users is shown than needed. */
+    private static final class ReportedMessageAdapter
+            extends RecyclerView.Adapter<ReportedMessageAdapter.MessageHolder> {
+
+        private static final String TIME_PATTERN = "dd/MM HH:mm";
+
+        private final List<ChatMessage> messages = new ArrayList<ChatMessage>();
+        @Nullable
+        private String reportedId;
+
+        void submit(@Nullable List<ChatMessage> newMessages, @Nullable String newReportedId) {
+            messages.clear();
+            if (newMessages != null) {
+                messages.addAll(newMessages);
+            }
+            reportedId = newReportedId;
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public MessageHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            TextView text = new TextView(parent.getContext());
+            text.setLayoutParams(new RecyclerView.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            int gap = parent.getResources().getDimensionPixelSize(R.dimen.space_xs);
+            text.setPadding(0, gap, 0, gap);
+            text.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
+            text.setTextColor(MaterialColors.getColor(parent, com.google.android.material.R.attr.colorOnSurface));
+            return new MessageHolder(text);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull MessageHolder holder, int position) {
+            ChatMessage message = messages.get(position);
+            Context context = holder.text.getContext();
+            String line = context.getString(R.string.admin_report_evidence_message_line,
+                    timeOf(message.getCreatedAt()), contentOf(context, message));
+            boolean reported = message.getId() != null && message.getId().equals(reportedId);
+            if (reported) {
+                line = context.getString(R.string.admin_report_evidence_message_reported, line);
+            }
+            holder.text.setText(line);
+            holder.text.setTypeface(null, reported ? Typeface.BOLD : Typeface.NORMAL);
+        }
+
+        @Override
+        public int getItemCount() {
+            return messages.size();
+        }
+
+        private static String timeOf(@Nullable Timestamp createdAt) {
+            if (createdAt == null) {
+                return "";
+            }
+            SimpleDateFormat format = new SimpleDateFormat(TIME_PATTERN, Locale.ROOT);
+            return format.format(createdAt.toDate());
+        }
+
+        private static String contentOf(Context context, ChatMessage message) {
+            if (message.getType() == MessageType.IMAGE) {
+                return context.getString(R.string.admin_report_evidence_message_image);
+            }
+            if (message.getType() == MessageType.OFFER) {
+                return context.getString(R.string.admin_report_evidence_message_offer);
+            }
+            return message.getText();
+        }
+
+        static final class MessageHolder extends RecyclerView.ViewHolder {
+            final TextView text;
+
+            MessageHolder(TextView text) {
+                super(text);
+                this.text = text;
+            }
+        }
     }
 }
