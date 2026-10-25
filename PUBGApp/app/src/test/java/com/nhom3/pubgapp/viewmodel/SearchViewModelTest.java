@@ -6,12 +6,16 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.model.Listing;
+import com.nhom3.pubgapp.model.SearchFilter;
+import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.SortOrder;
 
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SearchViewModelTest {
 
@@ -199,5 +203,150 @@ public class SearchViewModelTest {
         assertEquals("Near 1.5km", sorted.get(1).getTitle());
         assertEquals("Far 13.7km", sorted.get(2).getTitle());
         assertEquals("No Location", sorted.get(3).getTitle());
+    }
+
+    @Test
+    public void testCalculateSellerRating_valid() {
+        assertEquals(4.5, SearchViewModel.calculateSellerRating(18, 4), 0.001);
+    }
+
+    @Test
+    public void testCalculateSellerRating_noRatings() {
+        assertEquals(0.0, SearchViewModel.calculateSellerRating(0, 0), 0.001);
+    }
+
+    @Test
+    public void testCalculateSellerRating_user() {
+        User u = new User();
+        u.setRatingSum(10);
+        u.setRatingCount(2);
+        assertEquals(5.0, SearchViewModel.calculateSellerRating(u), 0.001);
+
+        assertEquals(0.0, SearchViewModel.calculateSellerRating((User) null), 0.001);
+    }
+
+    @Test
+    public void testSortResults_topRated_differentRatings() {
+        List<Listing> list = new ArrayList<Listing>();
+        Listing l1 = new Listing();
+        l1.setSellerId("s1");
+        Listing l2 = new Listing();
+        l2.setSellerId("s2");
+        Listing l3 = new Listing();
+        l3.setSellerId("s3");
+        list.add(l1);
+        list.add(l2);
+        list.add(l3);
+
+        Map<String, Double> ratings = new HashMap<String, Double>();
+        ratings.put("s1", 4.5);
+        ratings.put("s2", 3.0);
+        ratings.put("s3", 5.0);
+
+        List<Listing> sorted = SearchViewModel.sortResults(list, SortOrder.TOP_RATED, ratings);
+        assertEquals(3, sorted.size());
+        assertEquals("s3", sorted.get(0).getSellerId());
+        assertEquals("s1", sorted.get(1).getSellerId());
+        assertEquals("s2", sorted.get(2).getSellerId());
+    }
+
+    @Test
+    public void testSortResults_topRated_unratedStandsBehind() {
+        List<Listing> list = new ArrayList<Listing>();
+        Listing l1 = new Listing();
+        l1.setSellerId("s1");
+        Listing l2 = new Listing();
+        l2.setSellerId("s2");
+        list.add(l1);
+        list.add(l2);
+
+        Map<String, Double> ratings = new HashMap<String, Double>();
+        ratings.put("s1", 0.0);
+        ratings.put("s2", 4.0);
+
+        List<Listing> sorted = SearchViewModel.sortResults(list, SortOrder.TOP_RATED, ratings);
+        assertEquals(2, sorted.size());
+        assertEquals("s2", sorted.get(0).getSellerId());
+        assertEquals("s1", sorted.get(1).getSellerId());
+    }
+
+    @Test
+    public void testSortResults_topRated_equalRatingNewestFirst() {
+        List<Listing> list = new ArrayList<Listing>();
+        Listing l1 = new Listing();
+        l1.setSellerId("s1");
+        l1.setCreatedAt(new Timestamp(1000, 0));
+        Listing l2 = new Listing();
+        l2.setSellerId("s2");
+        l2.setCreatedAt(new Timestamp(2000, 0));
+        list.add(l1);
+        list.add(l2);
+
+        Map<String, Double> ratings = new HashMap<String, Double>();
+        ratings.put("s1", 4.0);
+        ratings.put("s2", 4.0);
+
+        List<Listing> sorted = SearchViewModel.sortResults(list, SortOrder.TOP_RATED, ratings);
+        assertEquals(2, sorted.size());
+        assertEquals("s2", sorted.get(0).getSellerId());
+        assertEquals("s1", sorted.get(1).getSellerId());
+    }
+
+    @Test
+    public void testSortResults_topRated_bothUnratedNewestFirst() {
+        List<Listing> list = new ArrayList<Listing>();
+        Listing l1 = new Listing();
+        l1.setSellerId("s1");
+        l1.setCreatedAt(new Timestamp(1000, 0));
+        Listing l2 = new Listing();
+        l2.setSellerId("s2");
+        l2.setCreatedAt(new Timestamp(3000, 0));
+        list.add(l1);
+        list.add(l2);
+
+        Map<String, Double> ratings = new HashMap<String, Double>();
+
+        List<Listing> sorted = SearchViewModel.sortResults(list, SortOrder.TOP_RATED, ratings);
+        assertEquals(2, sorted.size());
+        assertEquals("s2", sorted.get(0).getSellerId());
+        assertEquals("s1", sorted.get(1).getSellerId());
+    }
+
+    @Test
+    public void testCanReorderExistingResults_onlyAllowedBetweenNewestAndTopRated() {
+        SearchFilter fNewest = new SearchFilter();
+        fNewest.setSortOrder(SortOrder.NEWEST);
+
+        SearchFilter fTopRated = new SearchFilter();
+        fTopRated.setSortOrder(SortOrder.TOP_RATED);
+
+        SearchFilter fPriceAsc = new SearchFilter();
+        fPriceAsc.setSortOrder(SortOrder.PRICE_ASC);
+
+        SearchFilter fPriceDesc = new SearchFilter();
+        fPriceDesc.setSortOrder(SortOrder.PRICE_DESC);
+
+        // Allowed between NEWEST and TOP_RATED
+        assertTrue(SearchViewModel.canReorderExistingResults(fNewest, fTopRated));
+        assertTrue(SearchViewModel.canReorderExistingResults(fTopRated, fNewest));
+
+        // Same sort order should not reorder
+        assertFalse(SearchViewModel.canReorderExistingResults(fNewest, fNewest));
+
+        // To or from PRICE_ASC / PRICE_DESC must not reorder in memory (needs re-query)
+        assertFalse(SearchViewModel.canReorderExistingResults(fNewest, fPriceAsc));
+        assertFalse(SearchViewModel.canReorderExistingResults(fTopRated, fPriceAsc));
+        assertFalse(SearchViewModel.canReorderExistingResults(fPriceAsc, fTopRated));
+        assertFalse(SearchViewModel.canReorderExistingResults(fPriceDesc, fTopRated));
+
+        // Null filters
+        assertFalse(SearchViewModel.canReorderExistingResults(null, fTopRated));
+        assertFalse(SearchViewModel.canReorderExistingResults(fNewest, null));
+
+        // Other filters changed: must not reorder in memory
+        SearchFilter fChangedCategory = new SearchFilter();
+        fChangedCategory.setSortOrder(SortOrder.TOP_RATED);
+        fChangedCategory.setCategoryId("cat123");
+        assertFalse(SearchViewModel.canReorderExistingResults(fNewest, fChangedCategory));
     }
 }
