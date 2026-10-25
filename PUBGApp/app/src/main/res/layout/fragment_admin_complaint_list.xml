@@ -1,15 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Empty shell of AdminComplaintListFragment. The owning issue replaces this body; keep the root and the ids it needs. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- D06 AdminComplaintListFragment: status and priority chips above the list and its four states. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground">
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/textShellTitle"
-        android:layout_width="wrap_content"
+    <include
+        android:id="@+id/includeToolbar"
+        layout="@layout/view_detail_toolbar" />
+
+    <include
+        android:id="@+id/includeOfflineBanner"
+        layout="@layout/view_offline_banner"
+        android:visibility="gone" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="@string/admin_complaint_list_title"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall" />
-</FrameLayout>
+        android:paddingHorizontal="@dimen/space_md"
+        android:paddingTop="@dimen/space_sm"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:selectionRequired="true"
+            app:singleLine="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipStatusOpen"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="@string/common_status_complaint_open" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipStatusNeedsEvidence"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/common_status_complaint_needs_evidence" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipStatusResolved"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/common_status_complaint_resolved" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipStatusWithdrawn"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/common_status_complaint_withdrawn" />
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/space_md"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupPriority"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:selectionRequired="true"
+            app:singleLine="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPriorityAll"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="@string/admin_complaint_list_priority_all" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPriorityHigh"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/common_status_priority_high" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPriorityMedium"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/common_status_priority_medium" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPriorityLow"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/common_status_priority_low" />
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerComplaints"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="@dimen/space_md"
+            android:paddingBottom="@dimen/space_md"
+            android:visibility="gone" />
+
+        <ProgressBar
+            android:id="@+id/progressComplaints"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:contentDescription="@string/common_loading"
+            android:visibility="gone" />
+
+        <include
+            android:id="@+id/includeEmptyState"
+            layout="@layout/view_empty_state"
+            android:visibility="gone" />
+
+        <include
+            android:id="@+id/includeErrorState"
+            layout="@layout/view_error_state"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>
