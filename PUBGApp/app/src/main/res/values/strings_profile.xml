@@ -217,4 +217,9 @@
     <string name="profile_my_complaints_withdraw">Rút khiếu nại</string>
     <string name="profile_my_complaints_withdraw_title">Rút khiếu nại này?</string>
     <string name="profile_my_complaints_withdraw_message">Giao dịch trở lại trạng thái trước khi khiếu nại và bạn không khiếu nại lại được giao dịch này. Không hoàn tác được.</string>
+    <!-- D01 verification form, one error under each field -->
+    <string name="profile_my_profile_verify_missing_national_id">Hãy nhập số CCCD.</string>
+    <string name="profile_my_profile_verify_bad_national_id">Số CCCD phải đủ 12 chữ số.</string>
+    <string name="profile_my_profile_verify_missing_id_image">Hãy chọn ảnh giấy tờ.</string>
+    <string name="profile_my_profile_verify_missing_portrait_image">Hãy chọn ảnh chân dung cầm giấy tờ.</string>
 </resources>
