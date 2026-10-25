@@ -147,11 +147,18 @@ public class PostListingFragment extends Fragment {
             public void onRemoveImage(int position) {
                 if (position >= 0 && position < imageAdapter.getAllImageCount()) {
                     imageAdapter.removeImage(position);
-                    binding.buttonAddImage.setVisibility(View.VISIBLE);
+                    updateImageButtonsVisibility();
                 }
             }
         });
         binding.recyclerImages.setAdapter(imageAdapter);
+
+        binding.buttonCaptureImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onCaptureImageClicked();
+            }
+        });
 
         binding.buttonAddImage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -169,6 +176,21 @@ public class PostListingFragment extends Fragment {
         });
     }
 
+    private void updateImageButtonsVisibility() {
+        boolean canAddMore = imageAdapter.getAllImageCount() < 5;
+        int visibility = canAddMore ? View.VISIBLE : View.GONE;
+        binding.buttonAddImage.setVisibility(visibility);
+        binding.buttonCaptureImage.setVisibility(visibility);
+    }
+
+    private void onCaptureImageClicked() {
+        if (imageAdapter.getAllImageCount() >= 5) {
+            Toast.makeText(requireContext(),
+                    R.string.listing_post_max_images_reached, Toast.LENGTH_SHORT).show();
+            return;
+        }
+    }
+
     private void handlePickedUris(List<Uri> uris) {
         if (uris == null || uris.isEmpty()) {
             return;
@@ -183,9 +205,7 @@ public class PostListingFragment extends Fragment {
                 imageAdapter.addImageUri(uri);
             }
         }
-        if (imageAdapter.getAllImageCount() >= 5) {
-            binding.buttonAddImage.setVisibility(View.GONE);
-        }
+        updateImageButtonsVisibility();
     }
 
     private void setupProvincesSpinner() {
@@ -504,7 +524,7 @@ public class PostListingFragment extends Fragment {
         binding.checkTradeExchange.setChecked(false);
         binding.checkTradeGiveaway.setChecked(false);
         imageAdapter.setInitialImages(new ArrayList<String>(), new ArrayList<Uri>());
-        binding.buttonAddImage.setVisibility(View.VISIBLE);
+        updateImageButtonsVisibility();
         updateTradeVisibility();
     }
 
@@ -682,9 +702,7 @@ public class PostListingFragment extends Fragment {
             }
         }
         imageAdapter.setInitialImages(existingIds, restoredUris);
-        if (imageAdapter.getAllImageCount() >= 5) {
-            binding.buttonAddImage.setVisibility(View.GONE);
-        }
+        updateImageButtonsVisibility();
         if (editingListingId != null && !editingListingId.isEmpty()) {
             if (state.containsKey(KEY_EDITING_SELLER_ID)) {
                 editingListing = new Listing();
@@ -792,9 +810,7 @@ public class PostListingFragment extends Fragment {
         selectProvince(listing.getProvince());
 
         imageAdapter.setInitialImages(listing.getImageIds(), null);
-        if (imageAdapter.getAllImageCount() >= 5) {
-            binding.buttonAddImage.setVisibility(View.GONE);
-        }
+        updateImageButtonsVisibility();
     }
 
     private void selectCategory(String categoryId) {

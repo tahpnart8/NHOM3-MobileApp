@@ -47,19 +47,34 @@
             android:layout_marginTop="@dimen/space_sm"
             android:orientation="horizontal"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintEnd_toStartOf="@id/buttonAddImage"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textImagesLabel" />
 
-        <Button
-            android:id="@+id/buttonAddImage"
-            style="?attr/materialButtonOutlinedStyle"
+        <LinearLayout
+            android:id="@+id/layoutImageButtons"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/touch_min"
-            android:text="@string/listing_post_add_image"
-            app:layout_constraintBottom_toBottomOf="@id/recyclerImages"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/recyclerImages" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:orientation="horizontal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/recyclerImages">
+
+            <Button
+                android:id="@+id/buttonCaptureImage"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/touch_min"
+                android:layout_marginEnd="@dimen/space_sm"
+                android:text="@string/listing_post_capture_image" />
+
+            <Button
+                android:id="@+id/buttonAddImage"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/touch_min"
+                android:text="@string/listing_post_add_image" />
+        </LinearLayout>
 
         <!-- Title Field -->
         <com.google.android.material.textfield.TextInputLayout
@@ -71,7 +86,7 @@
             app:placeholderText="@string/listing_post_title_hint"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/recyclerImages">
+            app:layout_constraintTop_toBottomOf="@id/layoutImageButtons">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTitle"

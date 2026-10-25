@@ -74,6 +74,9 @@
     <string name="listing_post_add_image">Thêm ảnh</string>
     <string name="listing_post_max_images_reached">Chỉ được tải lên tối đa 5 hình ảnh cho mỗi tin đăng</string>
     <string name="listing_post_remove_image">Xóa ảnh</string>
+    <string name="listing_post_capture_image">Chụp ảnh</string>
+    <string name="listing_post_camera_permission_denied">Cần cấp quyền máy ảnh để chụp ảnh sản phẩm</string>
+    <string name="listing_post_camera_error">Không thể mở máy ảnh hoặc tạo tệp ảnh</string>
     <string name="listing_post_title_label">Tiêu đề</string>
     <string name="listing_post_title_hint">Nhập tên món đồ...</string>
     <string name="listing_post_category_label">Danh mục</string>
