@@ -857,6 +857,7 @@ public class PostListingFragment extends Fragment {
                     long seconds = state.getLong(KEY_EDITING_CREATED_AT);
                     editingListing.setCreatedAt(new Timestamp(seconds, 0));
                 }
+                editingListing.setConditionValues(pendingConditionValues);
             }
         }
     }
@@ -940,6 +941,10 @@ public class PostListingFragment extends Fragment {
             } else if (offers.contains(OfferType.MONEY)) {
                 binding.radioGroupOffer.check(R.id.radioOfferMoney);
             }
+        }
+
+        if (listing.getConditionValues() != null) {
+            pendingConditionValues = new HashMap<String, String>(listing.getConditionValues());
         }
 
         selectCategory(listing.getCategoryId());
