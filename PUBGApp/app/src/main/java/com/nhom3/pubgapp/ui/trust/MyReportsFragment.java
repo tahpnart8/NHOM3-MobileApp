@@ -1,5 +1,6 @@
 package com.nhom3.pubgapp.ui.trust;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.nhom3.pubgapp.R;
@@ -108,7 +110,12 @@ public class MyReportsFragment extends Fragment {
     }
 
     private void setUpReportList() {
-        reportAdapter = new MyReportAdapter();
+        reportAdapter = new MyReportAdapter(new MyReportAdapter.CancelListener() {
+            @Override
+            public void onCancel(Report report) {
+                confirmCancel(report);
+            }
+        });
         binding.includeReports.recyclerReports.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.includeReports.recyclerReports.setAdapter(reportAdapter);
         binding.includeReports.includeReportsEmpty.textEmptyTitle.setText(R.string.profile_my_reports_empty_title);
@@ -120,6 +127,21 @@ public class MyReportsFragment extends Fragment {
                 trustViewModel.loadMyReports();
             }
         });
+    }
+
+    // Cancelling cannot be undone, so the user confirms it first (D07).
+    private void confirmCancel(final Report report) {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.profile_my_reports_cancel_title)
+                .setMessage(R.string.profile_my_reports_cancel_message)
+                .setNegativeButton(R.string.profile_my_reports_cancel_keep, null)
+                .setPositiveButton(R.string.profile_my_reports_cancel_confirm, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        trustViewModel.cancelReport(report.getId());
+                    }
+                })
+                .show();
     }
 
     private void observeReports() {

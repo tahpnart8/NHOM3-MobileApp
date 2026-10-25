@@ -1,6 +1,8 @@
 package com.nhom3.pubgapp.viewmodel;
 
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -13,6 +15,7 @@ import com.nhom3.pubgapp.model.Complaint;
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.enums.ImagePurpose;
+import com.nhom3.pubgapp.model.enums.ReportStatus;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
@@ -54,6 +57,8 @@ public class TrustViewModel extends ViewModel {
             "Thiếu cuộc trò chuyện của tin nhắn bị báo cáo.";
     private static final String MESSAGE_OFFLINE = "Không có kết nối.";
     private static final String MESSAGE_MY_REPORTS_NOT_SIGNED_IN = "Bạn cần đăng nhập để xem báo cáo của mình.";
+    private static final String MESSAGE_CANNOT_CANCEL_REPORT =
+            "Chỉ hủy được báo cáo của bạn khi báo cáo còn chờ xử lý.";
 
     private final ReviewRepository reviewRepository = new ReviewRepository();
     private final ReportRepository reportRepository = new ReportRepository();
@@ -163,7 +168,33 @@ public class TrustViewModel extends ViewModel {
     }
 
     public void cancelReport(String id) {
-        error.setValue(DataCallback.NOT_READY);
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (!canCancelReport(findReport(id), uid)) {
+            error.setValue(MESSAGE_CANNOT_CANCEL_REPORT);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        final String reporterId = uid;
+        loading.setValue(true);
+        reportRepository.cancel(id, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                refreshMyReports(reporterId);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void loadMyReports() {
@@ -201,6 +232,37 @@ public class TrustViewModel extends ViewModel {
 
     public void withdrawComplaint(String id) {
         error.setValue(DataCallback.NOT_READY);
+    }
+
+    // The Rules let only the reporter cancel, and only while the report is OPEN (STT 62).
+    static boolean canCancelReport(Report report, String currentUid) {
+        if (report == null || currentUid == null || currentUid.isEmpty()) {
+            return false;
+        }
+        return report.getStatus() == ReportStatus.OPEN && currentUid.equals(report.getReporterId());
+    }
+
+    private Report findReport(String id) {
+        List<Report> current = reports.getValue();
+        if (current == null || id == null) {
+            return null;
+        }
+        for (Report report : current) {
+            if (id.equals(report.getId())) {
+                return report;
+            }
+        }
+        return null;
+    }
+
+    // Read again after a cancel so the row shows the status the server now holds.
+    private void refreshMyReports(String uid) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                fetchMyReports(uid);
+            }
+        });
     }
 
     private void fetchMyReports(final String uid) {
