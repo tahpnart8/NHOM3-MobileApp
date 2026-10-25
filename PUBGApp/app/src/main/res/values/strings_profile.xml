@@ -159,4 +159,10 @@
     <!-- Titles of the screens restored on 2026-10-25; the owning issue refines the text -->
     <string name="profile_create_complaint_title">Tạo đơn khiếu nại</string>
     <string name="profile_my_reports_title">Báo cáo và khiếu nại của tôi</string>
+
+    <!-- D01 shortcut rows to A04, A06, C04 and D07 -->
+    <string name="profile_my_profile_row_deal_history">Lịch sử giao dịch</string>
+    <string name="profile_my_profile_row_my_reports">Báo cáo và khiếu nại của tôi</string>
+    <string name="profile_my_profile_row_account_settings">Cài đặt tài khoản</string>
+    <string name="profile_my_profile_row_addresses">Địa chỉ giao nhận</string>
 </resources>

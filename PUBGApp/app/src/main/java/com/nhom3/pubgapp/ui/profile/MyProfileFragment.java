@@ -168,6 +168,7 @@ public class MyProfileFragment extends Fragment {
         binding.buttonEditProfile.setOnClickListener(openEditProfile);
         binding.textRowEditProfile.setOnClickListener(openEditProfile);
         setUpShortcutRows();
+        setUpAccountRows();
         setUpAccountButtons();
         setUpVerificationForm();
     }
@@ -329,6 +330,23 @@ public class MyProfileFragment extends Fragment {
             @Override
             public void onClick(View clicked) {
                 navigateWithOwnId(R.id.action_global_seller_trust);
+            }
+        });
+    }
+
+    // A04, A06, C04 and D07 are reached only through their global actions in nav_main.xml.
+    private void setUpAccountRows() {
+        openOnClick(binding.textRowDealHistory, R.id.action_global_deal_history);
+        openOnClick(binding.textRowMyReports, R.id.action_global_my_reports);
+        openOnClick(binding.textRowAccountSettings, R.id.action_global_account_settings);
+        openOnClick(binding.textRowAddresses, R.id.action_global_address_list);
+    }
+
+    private void openOnClick(View row, final int actionId) {
+        row.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View clicked) {
+                NavHostFragment.findNavController(MyProfileFragment.this).navigate(actionId);
             }
         });
     }

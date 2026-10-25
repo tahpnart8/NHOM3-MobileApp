@@ -379,6 +379,17 @@
                 android:textColor="?attr/colorOnSurface" />
 
             <TextView
+                android:id="@+id/textRowDealHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/touch_min"
+                android:text="@string/profile_my_profile_row_deal_history"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
                 android:id="@+id/textRowTrust"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -390,6 +401,17 @@
                 android:textColor="?attr/colorOnSurface" />
 
             <TextView
+                android:id="@+id/textRowMyReports"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/touch_min"
+                android:text="@string/profile_my_profile_row_my_reports"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
                 android:id="@+id/textRowEditProfile"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -397,6 +419,28 @@
                 android:gravity="center_vertical"
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/profile_my_profile_row_edit_profile"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:id="@+id/textRowAccountSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/touch_min"
+                android:text="@string/profile_my_profile_row_account_settings"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:id="@+id/textRowAddresses"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/touch_min"
+                android:text="@string/profile_my_profile_row_addresses"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?attr/colorOnSurface" />
 
