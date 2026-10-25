@@ -78,6 +78,7 @@
     <string name="listing_post_title_hint">Nhập tên món đồ...</string>
     <string name="listing_post_category_label">Danh mục</string>
     <string name="listing_post_category_prompt">Chọn danh mục</string>
+    <string name="listing_post_category_empty">Chưa có danh mục</string>
     <string name="listing_post_desc_label">Mô tả</string>
     <string name="listing_post_desc_hint">Mô tả chi tiết tình trạng, xuất xứ, phụ kiện kèm theo...</string>
     <string name="listing_post_condition_label">Tình trạng</string>

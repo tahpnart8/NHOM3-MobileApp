@@ -287,16 +287,24 @@ public class PostListingFragment extends Fragment {
                         }
                     }
                 }
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                        requireContext(),
-                        android.R.layout.simple_spinner_dropdown_item,
-                        names
-                );
-                binding.spinnerCategory.setAdapter(adapter);
-                if (selectedCategoryId != null) {
-                    selectCategory(selectedCategoryId);
-                } else if (isEditMode() && editingListing != null) {
-                    selectCategory(editingListing.getCategoryId());
+                if (loadedCategories.isEmpty()) {
+                    binding.layoutCategory.setHelperText(getString(R.string.listing_post_category_empty));
+                    binding.spinnerCategory.setAdapter(null);
+                    binding.spinnerCategory.setText("", false);
+                    selectedCategoryId = null;
+                } else {
+                    binding.layoutCategory.setHelperText(null);
+                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                            requireContext(),
+                            android.R.layout.simple_spinner_dropdown_item,
+                            names
+                    );
+                    binding.spinnerCategory.setAdapter(adapter);
+                    if (selectedCategoryId != null) {
+                        selectCategory(selectedCategoryId);
+                    } else if (isEditMode() && editingListing != null) {
+                        selectCategory(editingListing.getCategoryId());
+                    }
                 }
             }
         });
