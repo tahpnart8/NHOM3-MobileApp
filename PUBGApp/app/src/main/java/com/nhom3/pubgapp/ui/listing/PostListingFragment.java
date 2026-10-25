@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.os.BundleCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -63,6 +64,7 @@ public class PostListingFragment extends Fragment {
     private static final String KEY_EDITING_COVER_THUMB = "key_editing_cover_thumb";
     private static final String KEY_EDITING_FLAGGED = "key_editing_flagged";
     private static final String KEY_EDITING_CREATED_AT = "key_editing_created_at";
+    private static final String KEY_PENDING_PHOTO_URI = "key_pending_photo_uri";
     private static final String ARG_LISTING_ID = "listingId";
 
     private FragmentPostListingBinding binding;
@@ -84,6 +86,10 @@ public class PostListingFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            currentPhotoUri = BundleCompat.getParcelable(
+                    savedInstanceState, KEY_PENDING_PHOTO_URI, Uri.class);
+        }
         photoPickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.PickMultipleVisualMedia(5),
                 new ActivityResultCallback<List<Uri>>() {
@@ -258,7 +264,16 @@ public class PostListingFragment extends Fragment {
     }
 
     private void handleCameraResult(Boolean isSuccess) {
-        // Will be completed in next commit
+        if (Boolean.TRUE.equals(isSuccess) && currentPhotoUri != null) {
+            if (imageAdapter.getAllImageCount() < 5) {
+                imageAdapter.addImageUri(currentPhotoUri);
+            } else {
+                Toast.makeText(requireContext(),
+                        R.string.listing_post_max_images_reached, Toast.LENGTH_SHORT).show();
+            }
+            updateImageButtonsVisibility();
+        }
+        currentPhotoUri = null;
     }
 
     private void handlePickedUris(List<Uri> uris) {
@@ -733,6 +748,9 @@ public class PostListingFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
+        if (currentPhotoUri != null) {
+            outState.putParcelable(KEY_PENDING_PHOTO_URI, currentPhotoUri);
+        }
         List<Uri> newUris = imageAdapter.getNewImageUris();
         ArrayList<Parcelable> parcelables = new ArrayList<Parcelable>(newUris);
         outState.putParcelableArrayList(KEY_IMAGES, parcelables);
@@ -754,6 +772,9 @@ public class PostListingFragment extends Fragment {
     }
 
     private void restoreInstanceState(Bundle state) {
+        if (state.containsKey(KEY_PENDING_PHOTO_URI)) {
+            currentPhotoUri = BundleCompat.getParcelable(state, KEY_PENDING_PHOTO_URI, Uri.class);
+        }
         editingListingId = state.getString(KEY_EDITING_ID);
         if (state.containsKey(KEY_SELECTED_CATEGORY_ID)) {
             selectedCategoryId = state.getString(KEY_SELECTED_CATEGORY_ID);
