@@ -14,6 +14,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButtonToggleGroup;
@@ -35,6 +36,7 @@ public class HomeFragment extends Fragment {
     private FragmentHomeBinding binding;
     private FeedViewModel viewModel;
     private ListingCardAdapter adapter;
+    private ListingCardAdapter forYouAdapter;
     private boolean isFollowingChannel = false;
 
     @Nullable
@@ -56,6 +58,7 @@ public class HomeFragment extends Fragment {
         }
 
         setupRecyclerView();
+        setupForYouRecyclerView();
         setupTopHeader();
         setupSearchBar();
         setupChannelSelector();
@@ -63,10 +66,14 @@ public class HomeFragment extends Fragment {
         observeViewModel();
 
         updateOfflineBanner();
+        updateForYouVisibility();
 
         // Only load feed on initial creation so screen rotation preserves state
         if (viewModel.getFeed().getValue() == null) {
             viewModel.loadFeed(isFollowingChannel, SortOrder.NEWEST);
+        }
+        if (viewModel.getForYou().getValue() == null) {
+            viewModel.loadForYou();
         }
     }
 
@@ -115,6 +122,43 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    private void setupForYouRecyclerView() {
+        forYouAdapter = new ListingCardAdapter() {
+            @NonNull
+            @Override
+            public ListingViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                ListingViewHolder holder = super.onCreateViewHolder(parent, viewType);
+                ViewGroup.LayoutParams lp = holder.itemView.getLayoutParams();
+                if (lp != null) {
+                    float density = parent.getResources().getDisplayMetrics().density;
+                    lp.width = (int) (160f * density);
+                    holder.itemView.setLayoutParams(lp);
+                }
+                return holder;
+            }
+        };
+        LinearLayoutManager layoutManager = new LinearLayoutManager(
+                getContext(), LinearLayoutManager.HORIZONTAL, false);
+        binding.recyclerForYou.setLayoutManager(layoutManager);
+        binding.recyclerForYou.setAdapter(forYouAdapter);
+    }
+
+    private void updateForYouVisibility() {
+        if (binding == null) {
+            return;
+        }
+        if (isFollowingChannel) {
+            binding.layoutForYou.setVisibility(View.GONE);
+            return;
+        }
+        List<Listing> forYou = viewModel.getForYou().getValue();
+        if (forYou != null && !forYou.isEmpty()) {
+            binding.layoutForYou.setVisibility(View.VISIBLE);
+        } else {
+            binding.layoutForYou.setVisibility(View.GONE);
+        }
+    }
+
     private void setupTopHeader() {
         if (binding == null) {
             return;
@@ -148,6 +192,7 @@ public class HomeFragment extends Fragment {
             public void onClick(View v) {
                 updateOfflineBanner();
                 viewModel.refresh();
+                viewModel.loadForYou();
             }
         });
     }
@@ -175,11 +220,13 @@ public class HomeFragment extends Fragment {
                             }
                             if (!isFollowingChannel) {
                                 isFollowingChannel = true;
+                                updateForYouVisibility();
                                 viewModel.loadFeed(true, SortOrder.NEWEST);
                             }
                         } else if (checkedId == R.id.buttonChannelGeneral) {
                             if (isFollowingChannel) {
                                 isFollowingChannel = false;
+                                updateForYouVisibility();
                                 viewModel.loadFeed(false, SortOrder.NEWEST);
                             }
                         }
@@ -194,6 +241,7 @@ public class HomeFragment extends Fragment {
                 binding.includeErrorState.getRoot().setVisibility(View.GONE);
                 updateOfflineBanner();
                 viewModel.refresh();
+                viewModel.loadForYou();
             }
         });
 
@@ -206,6 +254,15 @@ public class HomeFragment extends Fragment {
     }
 
     private void observeViewModel() {
+        viewModel.getForYou().observe(getViewLifecycleOwner(), new Observer<List<Listing>>() {
+            @Override
+            public void onChanged(List<Listing> list) {
+                if (forYouAdapter != null) {
+                    forYouAdapter.submitList(list);
+                }
+                updateForYouVisibility();
+            }
+        });
         viewModel.getFeed().observe(getViewLifecycleOwner(), new Observer<List<Listing>>() {
             @Override
             public void onChanged(List<Listing> list) {

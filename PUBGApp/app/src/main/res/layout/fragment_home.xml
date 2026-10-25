@@ -139,6 +139,38 @@
             android:textAppearance="?attr/textAppearanceBodyMedium" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
+    <!-- For You horizontal section -->
+    <LinearLayout
+        android:id="@+id/layoutForYou"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toggleChannels">
+
+        <TextView
+            android:id="@+id/textForYouTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="@dimen/space_md"
+            android:paddingTop="@dimen/space_xs"
+            android:paddingBottom="@dimen/space_xs"
+            android:text="@string/listing_home_for_you_title"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerForYou"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:paddingHorizontal="@dimen/space_xs"
+            android:paddingBottom="@dimen/space_xs" />
+    </LinearLayout>
+
     <!-- 2-column listing grid -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerListings"
@@ -151,7 +183,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toggleChannels" />
+        app:layout_constraintTop_toBottomOf="@id/layoutForYou" />
 
     <!-- Loading indicator -->
     <ProgressBar
@@ -162,7 +194,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toggleChannels" />
+        app:layout_constraintTop_toBottomOf="@id/layoutForYou" />
 
     <!-- Empty state -->
     <include
@@ -174,7 +206,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toggleChannels" />
+        app:layout_constraintTop_toBottomOf="@id/layoutForYou" />
 
     <!-- Error state -->
     <include
@@ -186,6 +218,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toggleChannels" />
+        app:layout_constraintTop_toBottomOf="@id/layoutForYou" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

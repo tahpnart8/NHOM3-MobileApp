@@ -185,6 +185,7 @@
     <string name="listing_home_empty_title">Chưa có tin nào</string>
     <string name="listing_home_empty_message">Hiện chưa có tin đăng nào</string>
     <string name="listing_home_refresh">Tải lại</string>
+    <string name="listing_home_for_you_title">Dành cho bạn</string>
     <string name="listing_card_condition_new">Mới 100%</string>
     <string name="listing_card_condition_like_new">Như mới</string>
     <string name="listing_card_condition_used">Đã qua sử dụng</string>
