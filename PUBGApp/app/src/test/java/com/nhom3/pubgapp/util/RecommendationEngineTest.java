@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.model.Listing;
+import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.ItemCondition;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
 
@@ -47,6 +48,18 @@ public class RecommendationEngineTest {
     private Listing createListing(String id, String categoryId, ItemCondition condition,
                                   long price, ListingStatus status) {
         return createListing(id, categoryId, condition, "Hà Nội", price, null, status, new Date());
+    }
+
+    private Listing createListing(String id, String sellerId, String categoryId,
+                                  List<String> keywords, Timestamp createdAt) {
+        Listing listing = new Listing();
+        listing.setId(id);
+        listing.setSellerId(sellerId);
+        listing.setCategoryId(categoryId);
+        listing.setSearchKeywords(keywords);
+        listing.setStatus(ListingStatus.AVAILABLE);
+        listing.setCreatedAt(createdAt);
+        return listing;
     }
 
     @Test
@@ -272,5 +285,81 @@ public class RecommendationEngineTest {
         assertEquals(2, range.length);
         assertEquals(130000L, range[0]);
         assertEquals(350000L, range[1]);
+    }
+
+    @Test
+    public void score_calculatesViewRatioCorrectly() {
+        Listing listing = createListing("l1", "seller1", "catA", null, Timestamp.now());
+        List<String> viewed = new ArrayList<String>();
+        viewed.add("catA");
+        viewed.add("catA");
+        viewed.add("catB");
+        viewed.add("catC");
+
+        double score = engine.score(listing, viewed, null, null, null);
+        assertTrue(score >= 2.49 && score <= 2.51);
+    }
+
+    @Test
+    public void score_matchesKeywordAddsTwoPoints() {
+        List<String> listingKeywords = new ArrayList<String>();
+        listingKeywords.add("iphone");
+        listingKeywords.add("128gb");
+        Listing listing = createListing("l1", "seller1", "catA", listingKeywords, Timestamp.now());
+
+        List<String> searchKeywords = new ArrayList<String>();
+        searchKeywords.add("iPhone");
+
+        double scoreWithKw = engine.score(listing, null, searchKeywords, null, null);
+        double scoreWithoutKw = engine.score(listing, null, null, null, null);
+
+        assertEquals(2.0, scoreWithKw - scoreWithoutKw, 0.01);
+    }
+
+    @Test
+    public void score_matchesInterestedCategoryAddsOnePoint() {
+        Listing listing = createListing("l1", "seller1", "catA", null, Timestamp.now());
+        User user = new User();
+        user.setId("u1");
+        List<String> interested = new ArrayList<String>();
+        interested.add("catA");
+        user.setInterestedCategoryIds(interested);
+
+        double scoreWithUser = engine.score(listing, null, null, null, user);
+        double scoreWithoutUser = engine.score(listing, null, null, null, null);
+
+        assertEquals(1.0, scoreWithUser - scoreWithoutUser, 0.01);
+    }
+
+    @Test
+    public void score_matchesSavedCategoryAddsHalfPoint() {
+        Listing listing = createListing("l1", "seller1", "catA", null, Timestamp.now());
+        List<String> savedCategories = new ArrayList<String>();
+        savedCategories.add("catA");
+
+        double scoreWithSaved = engine.score(listing, null, null, savedCategories, null);
+        double scoreWithoutSaved = engine.score(listing, null, null, null, null);
+
+        assertEquals(0.5, scoreWithSaved - scoreWithoutSaved, 0.01);
+    }
+
+    @Test
+    public void forYou_ranksListingsByScoreAndLimitsToTwenty() {
+        List<Listing> candidates = new ArrayList<Listing>();
+        Timestamp now = Timestamp.now();
+        for (int i = 0; i < 25; i++) {
+            String cat = i < 5 ? "catPreferred" : "catOther";
+            candidates.add(createListing("l" + i, "seller" + i, cat, null, now));
+        }
+
+        List<String> viewed = new ArrayList<String>();
+        viewed.add("catPreferred");
+
+        List<Listing> result = engine.forYou(candidates, viewed, null, null, null);
+        assertNotNull(result);
+        assertEquals(20, result.size());
+        for (int i = 0; i < 5; i++) {
+            assertEquals("catPreferred", result.get(i).getCategoryId());
+        }
     }
 }
