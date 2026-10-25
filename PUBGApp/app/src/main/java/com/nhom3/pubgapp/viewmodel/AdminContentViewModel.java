@@ -3,13 +3,20 @@ package com.nhom3.pubgapp.viewmodel;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.AggregateQuerySnapshot;
+import com.google.firebase.firestore.AggregateSource;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.nhom3.pubgapp.data.AdminRepository;
+import com.nhom3.pubgapp.data.CategoryRepository;
 import com.nhom3.pubgapp.data.ChatRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.ListingRepository;
@@ -22,11 +29,13 @@ import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.model.enums.ReportStatus;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
+import com.nhom3.pubgapp.ui.admin.AdminCategoryRules;
 import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -52,6 +61,7 @@ public class AdminContentViewModel extends ViewModel {
     private final AdminRepository adminRepository = new AdminRepository();
     private final MediaRepository mediaRepository = new MediaRepository();
     private final ChatRepository chatRepository = new ChatRepository();
+    private final CategoryRepository categoryRepository = new CategoryRepository();
     private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
     // One guard per kind of work, so loading a listing never cancels loading its reports.
     private final RequestGuard reportsGuard = new RequestGuard();
@@ -59,12 +69,15 @@ public class AdminContentViewModel extends ViewModel {
     private final RequestGuard writeGuard = new RequestGuard();
     private final RequestGuard flaggedGuard = new RequestGuard();
     private final RequestGuard keywordsGuard = new RequestGuard();
+    private final RequestGuard categoriesGuard = new RequestGuard();
+    private final RequestGuard categoryCountsGuard = new RequestGuard();
     // The evidence dialog has its own guards and stays out of refreshLoading, so the list keeps its spinner state.
     private final RequestGuard evidenceGuard = new RequestGuard();
     private final RequestGuard conversationGuard = new RequestGuard();
     // Set once a tab asked for its list, so a write refreshes only the lists the admin has opened.
     private volatile boolean flaggedAsked;
     private volatile boolean keywordsAsked;
+    private volatile boolean categoriesAsked;
     private volatile ReportStatus lastStatus;
     private volatile ReportTarget lastTargetType;
     private volatile String lastListingId;
@@ -388,19 +401,127 @@ public class AdminContentViewModel extends ViewModel {
     }
 
     public void loadCategories() {
-        error.setValue(DataCallback.NOT_READY);
+        categoriesAsked = true;
+        final int token = categoriesGuard.begin();
+        refreshLoading();
+        categoryRepository.getAllForAdmin(new DataCallback<List<Category>>() {
+            @Override
+            public void onSuccess(List<Category> result) {
+                if (!categoriesGuard.finish(token)) {
+                    return;
+                }
+                categories.postValue(result);
+                refreshLoading();
+                loadCategoryCounts();
+            }
+
+            @Override
+            public void onError(String message) {
+                failRequest(categoriesGuard, token, message);
+            }
+        });
     }
 
     public void loadCategoryCounts() {
-        error.setValue(DataCallback.NOT_READY);
+        final List<Category> list = categories.getValue();
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+        final int token = categoryCountsGuard.begin();
+        refreshLoading();
+        final Map<String, Integer> counts = new HashMap<String, Integer>();
+        final int total = list.size();
+        final int[] completed = new int[]{0};
+
+        for (Category cat : list) {
+            final String catId = cat.getId();
+            FirebaseFirestore.getInstance().collection("listings")
+                    .whereEqualTo("categoryId", catId)
+                    .count()
+                    .get(AggregateSource.SERVER)
+                    .addOnCompleteListener(new OnCompleteListener<AggregateQuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AggregateQuerySnapshot> task) {
+                            completed[0]++;
+                            if (task.isSuccessful() && task.getResult() != null) {
+                                counts.put(catId, (int) task.getResult().getCount());
+                            } else {
+                                counts.put(catId, 0);
+                            }
+                            if (completed[0] == total) {
+                                if (categoryCountsGuard.finish(token)) {
+                                    categoryCounts.postValue(counts);
+                                }
+                                refreshLoading();
+                            }
+                        }
+                    });
+        }
     }
 
     public void saveCategory(Category category) {
-        error.setValue(DataCallback.NOT_READY);
+        if (category == null) {
+            error.postValue("Thông tin danh mục không hợp lệ.");
+            return;
+        }
+        if (!AdminCategoryRules.isValidName(category.getName())) {
+            error.postValue("Tên danh mục không được để trống và không quá 100 ký tự.");
+            return;
+        }
+        if (!AdminCategoryRules.isValidParent(category, categories.getValue())) {
+            error.postValue("Danh mục cha phải là danh mục gốc.");
+            return;
+        }
+
+        category.setName(category.getName().trim());
+        if (category.getParentId() == null) {
+            category.setParentId("");
+        }
+        if (category.getConditionFields() == null) {
+            category.setConditionFields(new ArrayList<String>());
+        }
+
+        final int token = writeGuard.begin();
+        refreshLoading();
+        if (category.getId() == null || category.getId().trim().isEmpty()) {
+            categoryRepository.add(category, new DataCallback<String>() {
+                @Override
+                public void onSuccess(String id) {
+                    finishWrite(token);
+                }
+
+                @Override
+                public void onError(String message) {
+                    failRequest(writeGuard, token, message);
+                }
+            });
+        } else {
+            categoryRepository.update(category, plainWrite(token));
+        }
     }
 
     public void deleteCategory(String id) {
-        error.setValue(DataCallback.NOT_READY);
+        if (isBlank(id)) {
+            error.postValue(MESSAGE_ID_REQUIRED);
+            return;
+        }
+        Map<String, Integer> counts = categoryCounts.getValue();
+        if (counts != null && counts.containsKey(id) && counts.get(id) != null && counts.get(id) > 0) {
+            error.postValue("Không thể xóa danh mục còn tin đăng; hãy ẩn danh mục.");
+            return;
+        }
+        List<Category> all = categories.getValue();
+        if (all != null) {
+            for (Category c : all) {
+                if (id.equals(c.getParentId())) {
+                    error.postValue("Không thể xóa danh mục còn danh mục con; hãy ẩn danh mục.");
+                    return;
+                }
+            }
+        }
+        final int token = writeGuard.begin();
+        refreshLoading();
+        categoryRepository.delete(id, plainWrite(token));
     }
 
     public void setConditionFields(String id, List<String> fields) {
@@ -518,6 +639,9 @@ public class AdminContentViewModel extends ViewModel {
         if (keywordsAsked) {
             loadKeywords();
         }
+        if (categoriesAsked) {
+            loadCategories();
+        }
     }
 
     // One image at a time keeps the order; an image that cannot be read stays as empty bytes in its place.
@@ -556,7 +680,8 @@ public class AdminContentViewModel extends ViewModel {
 
     private void refreshLoading() {
         boolean busy = reportsGuard.isActive() || listingGuard.isActive() || writeGuard.isActive()
-                || flaggedGuard.isActive() || keywordsGuard.isActive();
+                || flaggedGuard.isActive() || keywordsGuard.isActive()
+                || categoriesGuard.isActive() || categoryCountsGuard.isActive();
         loading.postValue(busy);
     }
 
