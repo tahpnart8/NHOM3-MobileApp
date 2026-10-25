@@ -28,6 +28,8 @@ public class User extends BaseDocument {
     private Timestamp lastActiveAt;
     private String lockReason;
     private List<String> searchKeywords;
+    // Empty like the value createProfile writes; only the review batch sets it (security-rules.md, users).
+    private String lastReviewId = "";
 
     public User() {
     }
@@ -182,6 +184,14 @@ public class User extends BaseDocument {
 
     public void setSearchKeywords(List<String> searchKeywords) {
         this.searchKeywords = searchKeywords;
+    }
+
+    public String getLastReviewId() {
+        return lastReviewId;
+    }
+
+    public void setLastReviewId(String lastReviewId) {
+        this.lastReviewId = lastReviewId;
     }
 
     @Exclude

@@ -130,4 +130,15 @@ public class UserTest {
         assertTrue(keywords.contains("thuy"));
         assertTrue(keywords.contains("ngan"));
     }
+
+    @Test
+    public void testLastReviewIdStartsEmptyNotNull() {
+        assertEquals("", new User().getLastReviewId());
+    }
+
+    @Test
+    public void testLastReviewIdKeepsTheReviewId() {
+        user.setLastReviewId("review-1");
+        assertEquals("review-1", user.getLastReviewId());
+    }
 }
