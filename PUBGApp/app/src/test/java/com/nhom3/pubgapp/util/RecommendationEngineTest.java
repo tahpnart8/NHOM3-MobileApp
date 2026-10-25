@@ -2,6 +2,7 @@ package com.nhom3.pubgapp.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.firebase.Timestamp;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/** Unit tests for RecommendationEngine following goi-y.md specification. */
 public class RecommendationEngineTest {
 
     private RecommendationEngine engine;
@@ -40,6 +42,11 @@ public class RecommendationEngineTest {
             listing.setCreatedAt(new Timestamp(createdAt));
         }
         return listing;
+    }
+
+    private Listing createListing(String id, String categoryId, ItemCondition condition,
+                                  long price, ListingStatus status) {
+        return createListing(id, categoryId, condition, "Hà Nội", price, null, status, new Date());
     }
 
     @Test
@@ -155,5 +162,115 @@ public class RecommendationEngineTest {
         assertEquals(2, result.size());
         assertEquals("newer", result.get(0).getId());
         assertEquals("older", result.get(1).getId());
+    }
+
+    @Test
+    public void priceRange_nullOrEmptyInput_returnsEmptyArray() {
+        Listing target = createListing("t1", "cat1", ItemCondition.LIKE_NEW, 1000000L, ListingStatus.AVAILABLE);
+
+        long[] r1 = engine.priceRange(null, new ArrayList<Listing>());
+        assertNotNull(r1);
+        assertEquals(0, r1.length);
+
+        long[] r2 = engine.priceRange(target, null);
+        assertNotNull(r2);
+        assertEquals(0, r2.length);
+
+        long[] r3 = engine.priceRange(target, new ArrayList<Listing>());
+        assertNotNull(r3);
+        assertEquals(0, r3.length);
+    }
+
+    @Test
+    public void priceRange_lessThanFiveCandidates_returnsEmptyArray() {
+        Listing target = createListing("t1", "cat1", ItemCondition.LIKE_NEW, 1000000L, ListingStatus.AVAILABLE);
+        List<Listing> candidates = new ArrayList<Listing>();
+        candidates.add(createListing("c1", "cat1", ItemCondition.LIKE_NEW, 500000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c2", "cat1", ItemCondition.LIKE_NEW, 600000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c3", "cat1", ItemCondition.LIKE_NEW, 700000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c4", "cat1", ItemCondition.LIKE_NEW, 800000L, ListingStatus.AVAILABLE));
+
+        long[] range = engine.priceRange(target, candidates);
+        assertNotNull(range);
+        assertEquals(0, range.length);
+    }
+
+    @Test
+    public void priceRange_atLeastFiveSameCondition_usesP1() {
+        Listing target = createListing("t1", "cat1", ItemCondition.LIKE_NEW, 1000000L, ListingStatus.AVAILABLE);
+        List<Listing> candidates = new ArrayList<Listing>();
+        candidates.add(createListing("c1", "cat1", ItemCondition.LIKE_NEW, 100000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c2", "cat1", ItemCondition.LIKE_NEW, 200000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c3", "cat1", ItemCondition.LIKE_NEW, 300000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c4", "cat1", ItemCondition.LIKE_NEW, 400000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c5", "cat1", ItemCondition.LIKE_NEW, 500000L, ListingStatus.AVAILABLE));
+
+        candidates.add(createListing("c6", "cat1", ItemCondition.USED, 2000000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c7", "cat1", ItemCondition.USED, 3000000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c8", "cat1", ItemCondition.USED, 4000000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c9", "cat1", ItemCondition.USED, 5000000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c10", "cat1", ItemCondition.USED, 6000000L, ListingStatus.AVAILABLE));
+
+        long[] range = engine.priceRange(target, candidates);
+        assertNotNull(range);
+        assertEquals(2, range.length);
+        assertEquals(200000L, range[0]);
+        assertEquals(400000L, range[1]);
+    }
+
+    @Test
+    public void priceRange_lessThanFiveSameCondition_atLeastFiveSameCategory_usesP2() {
+        Listing target = createListing("t1", "cat1", ItemCondition.LIKE_NEW, 1000000L, ListingStatus.AVAILABLE);
+        List<Listing> candidates = new ArrayList<Listing>();
+        candidates.add(createListing("c1", "cat1", ItemCondition.LIKE_NEW, 100000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c2", "cat1", ItemCondition.LIKE_NEW, 200000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c3", "cat1", ItemCondition.LIKE_NEW, 300000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c4", "cat1", ItemCondition.USED, 400000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c5", "cat1", ItemCondition.USED, 500000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c6", "cat1", ItemCondition.USED, 600000L, ListingStatus.AVAILABLE));
+
+        long[] range = engine.priceRange(target, candidates);
+        assertNotNull(range);
+        assertEquals(2, range.length);
+        assertEquals(200000L, range[0]);
+        assertEquals(500000L, range[1]);
+    }
+
+    @Test
+    public void priceRange_excludesTargetSelfNonAvailableAndZeroPrice() {
+        Listing target = createListing("t1", "cat1", ItemCondition.LIKE_NEW, 1000000L, ListingStatus.AVAILABLE);
+        List<Listing> candidates = new ArrayList<Listing>();
+        candidates.add(createListing("t1", "cat1", ItemCondition.LIKE_NEW, 100000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c1", "cat1", ItemCondition.LIKE_NEW, 200000L, ListingStatus.SOLD));
+        candidates.add(createListing("c2", "cat1", ItemCondition.LIKE_NEW, 300000L, ListingStatus.DRAFT));
+        candidates.add(createListing("c3", "cat1", ItemCondition.LIKE_NEW, 400000L, ListingStatus.HIDDEN));
+        candidates.add(createListing("c4", "cat1", ItemCondition.LIKE_NEW, 0L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c5", "cat2", ItemCondition.LIKE_NEW, 500000L, ListingStatus.AVAILABLE));
+
+        candidates.add(createListing("c6", "cat1", ItemCondition.LIKE_NEW, 100000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c7", "cat1", ItemCondition.LIKE_NEW, 200000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c8", "cat1", ItemCondition.LIKE_NEW, 300000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c9", "cat1", ItemCondition.LIKE_NEW, 400000L, ListingStatus.AVAILABLE));
+
+        long[] range = engine.priceRange(target, candidates);
+        assertNotNull(range);
+        assertEquals(0, range.length);
+    }
+
+    @Test
+    public void priceRange_roundsToNearestTenThousand() {
+        Listing target = createListing("t1", "cat1", ItemCondition.USED, 500000L, ListingStatus.AVAILABLE);
+        List<Listing> candidates = new ArrayList<Listing>();
+        candidates.add(createListing("c1", "cat1", ItemCondition.USED, 104000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c2", "cat1", ItemCondition.USED, 126000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c3", "cat1", ItemCondition.USED, 200000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c4", "cat1", ItemCondition.USED, 345000L, ListingStatus.AVAILABLE));
+        candidates.add(createListing("c5", "cat1", ItemCondition.USED, 500000L, ListingStatus.AVAILABLE));
+
+        long[] range = engine.priceRange(target, candidates);
+        assertNotNull(range);
+        assertEquals(2, range.length);
+        assertEquals(130000L, range[0]);
+        assertEquals(350000L, range[1]);
     }
 }
