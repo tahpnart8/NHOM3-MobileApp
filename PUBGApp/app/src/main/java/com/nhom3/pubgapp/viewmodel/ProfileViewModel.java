@@ -49,9 +49,24 @@ public class ProfileViewModel extends ViewModel {
     static final int FORM_MISSING_ID_IMAGE = 3;
     static final int FORM_MISSING_PORTRAIT_IMAGE = 4;
 
+    static final int ADDRESS_FORM_OK = 0;
+    static final int ADDRESS_FORM_MISSING_RECEIVER = 1;
+    static final int ADDRESS_FORM_MISSING_PHONE = 2;
+    static final int ADDRESS_FORM_BAD_PHONE = 3;
+    static final int ADDRESS_FORM_MISSING_PROVINCE = 4;
+    static final int ADDRESS_FORM_MISSING_DISTRICT = 5;
+    static final int ADDRESS_FORM_MISSING_DETAIL = 6;
+
     // ViewModels have no Context, so messages are Vietnamese constants, like the repositories.
     private static final String MESSAGE_NOT_SIGNED_IN = "Bạn cần đăng nhập để xem hồ sơ.";
     private static final String MESSAGE_OFFLINE = "Không có kết nối.";
+    private static final String MESSAGE_MISSING_RECEIVER = "Vui lòng nhập họ tên người nhận.";
+    private static final String MESSAGE_MISSING_PHONE = "Vui lòng nhập số điện thoại.";
+    private static final String MESSAGE_BAD_PHONE =
+            "Số điện thoại không hợp lệ (10 chữ số bắt đầu bằng 0).";
+    private static final String MESSAGE_MISSING_PROVINCE = "Vui lòng nhập Tỉnh / Thành phố.";
+    private static final String MESSAGE_MISSING_DISTRICT = "Vui lòng nhập Quận / Huyện.";
+    private static final String MESSAGE_MISSING_DETAIL = "Vui lòng nhập địa chỉ chi tiết.";
     private static final String MESSAGE_MISSING_NATIONAL_ID = "Hãy nhập số CCCD.";
     private static final String MESSAGE_BAD_NATIONAL_ID = "Số CCCD phải gồm đúng 12 chữ số.";
     private static final String MESSAGE_MISSING_ID_IMAGE = "Hãy chọn ảnh giấy tờ.";
@@ -225,8 +240,40 @@ public class ProfileViewModel extends ViewModel {
         });
     }
 
-    public void saveAddress(UserAddress address) {
-        error.setValue(DataCallback.NOT_READY);
+    public void saveAddress(final UserAddress address) {
+        final String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        if (address == null) {
+            return;
+        }
+        int check = checkAddressForm(address.getReceiverName(), address.getPhone(),
+                address.getProvince(), address.getDistrict(), address.getDetail());
+        if (check != ADDRESS_FORM_OK) {
+            error.setValue(addressFormErrorMessage(check));
+            return;
+        }
+        loading.setValue(true);
+        userRepository.saveAddress(uid, address, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                fetchAddresses(uid);
+                loading.postValue(false);
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void deleteAddress(String id) {
@@ -848,6 +895,71 @@ public class ProfileViewModel extends ViewModel {
         }
         if (formResult == FORM_MISSING_PORTRAIT_IMAGE) {
             return MESSAGE_MISSING_PORTRAIT_IMAGE;
+        }
+        return null;
+    }
+
+    static boolean isPhoneValid(String phone) {
+        if (phone == null) {
+            return false;
+        }
+        String trimmed = phone.trim();
+        if (trimmed.length() != 10) {
+            return false;
+        }
+        if (!trimmed.startsWith("0")) {
+            return false;
+        }
+        for (int i = 0; i < trimmed.length(); i++) {
+            char digit = trimmed.charAt(i);
+            if (digit < '0' || digit > '9') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static int checkAddressForm(String receiverName, String phone, String province,
+            String district, String detail) {
+        if (receiverName == null || receiverName.trim().isEmpty()) {
+            return ADDRESS_FORM_MISSING_RECEIVER;
+        }
+        if (phone == null || phone.trim().isEmpty()) {
+            return ADDRESS_FORM_MISSING_PHONE;
+        }
+        if (!isPhoneValid(phone)) {
+            return ADDRESS_FORM_BAD_PHONE;
+        }
+        if (province == null || province.trim().isEmpty()) {
+            return ADDRESS_FORM_MISSING_PROVINCE;
+        }
+        if (district == null || district.trim().isEmpty()) {
+            return ADDRESS_FORM_MISSING_DISTRICT;
+        }
+        if (detail == null || detail.trim().isEmpty()) {
+            return ADDRESS_FORM_MISSING_DETAIL;
+        }
+        return ADDRESS_FORM_OK;
+    }
+
+    static String addressFormErrorMessage(int formResult) {
+        if (formResult == ADDRESS_FORM_MISSING_RECEIVER) {
+            return MESSAGE_MISSING_RECEIVER;
+        }
+        if (formResult == ADDRESS_FORM_MISSING_PHONE) {
+            return MESSAGE_MISSING_PHONE;
+        }
+        if (formResult == ADDRESS_FORM_BAD_PHONE) {
+            return MESSAGE_BAD_PHONE;
+        }
+        if (formResult == ADDRESS_FORM_MISSING_PROVINCE) {
+            return MESSAGE_MISSING_PROVINCE;
+        }
+        if (formResult == ADDRESS_FORM_MISSING_DISTRICT) {
+            return MESSAGE_MISSING_DISTRICT;
+        }
+        if (formResult == ADDRESS_FORM_MISSING_DETAIL) {
+            return MESSAGE_MISSING_DETAIL;
         }
         return null;
     }
