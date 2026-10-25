@@ -1,10 +1,13 @@
 package com.nhom3.pubgapp.viewmodel;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.enums.ReportReason;
+import com.nhom3.pubgapp.model.enums.ReportStatus;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
 
 import org.junit.Test;
@@ -85,6 +88,38 @@ public class TrustViewModelTest {
         assertEquals(TrustViewModel.REPORT_MISSING_CONVERSATION, TrustViewModel.checkReport(report, 0, ME));
         report.setConversationId("conversation-1");
         assertEquals(TrustViewModel.REPORT_OK, TrustViewModel.checkReport(report, 0, ME));
+    }
+
+    @Test
+    public void ownOpenReportMayBeCancelled() {
+        Report report = sentReport(ME, ReportStatus.OPEN);
+        assertTrue(TrustViewModel.canCancelReport(report, ME));
+    }
+
+    @Test
+    public void handledReportsMayNotBeCancelled() {
+        assertFalse(TrustViewModel.canCancelReport(sentReport(ME, ReportStatus.RESOLVED), ME));
+        assertFalse(TrustViewModel.canCancelReport(sentReport(ME, ReportStatus.DISMISSED), ME));
+        assertFalse(TrustViewModel.canCancelReport(sentReport(ME, ReportStatus.CANCELLED), ME));
+    }
+
+    @Test
+    public void someoneElsesReportMayNotBeCancelled() {
+        Report report = sentReport(OTHER, ReportStatus.OPEN);
+        assertFalse(TrustViewModel.canCancelReport(report, ME));
+    }
+
+    @Test
+    public void missingReportOrUserMayNotCancel() {
+        assertFalse(TrustViewModel.canCancelReport(null, ME));
+        assertFalse(TrustViewModel.canCancelReport(sentReport(ME, ReportStatus.OPEN), null));
+    }
+
+    private static Report sentReport(String reporterId, ReportStatus status) {
+        Report report = report(ReportTarget.LISTING, "listing-1", ReportReason.SCAM);
+        report.setReporterId(reporterId);
+        report.setStatus(status);
+        return report;
     }
 
     private static Report report(ReportTarget target, String targetId, ReportReason reason) {
