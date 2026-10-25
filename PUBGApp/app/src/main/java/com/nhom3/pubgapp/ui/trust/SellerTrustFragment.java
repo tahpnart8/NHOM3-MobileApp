@@ -35,6 +35,7 @@ import com.nhom3.pubgapp.viewmodel.TrustViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -44,7 +45,7 @@ public class SellerTrustFragment extends Fragment {
     private static final String ARG_USER_ID = "userId";
     private static final String ARG_TARGET_TYPE = "targetType";
     private static final String ARG_TARGET_ID = "targetId";
-    private static final String JOINED_PATTERN = "yyyy";
+    private static final String JOINED_PATTERN = "MM/yyyy";
     private static final int GRID_COLUMNS = 2;
     private static final int RECENT_REVIEW_LIMIT = 10;
     private static final int PERCENT = 100;
@@ -370,10 +371,15 @@ public class SellerTrustFragment extends Fragment {
             binding.textJoined.setVisibility(View.GONE);
             return;
         }
-        SimpleDateFormat format = new SimpleDateFormat(JOINED_PATTERN, Locale.ROOT);
-        String year = format.format(user.getCreatedAt().toDate());
-        binding.textJoined.setText(getString(R.string.profile_seller_trust_joined, year));
+        String monthYear = formatJoinedMonth(user.getCreatedAt().toDate());
+        binding.textJoined.setText(getString(R.string.profile_seller_trust_joined, monthYear));
         binding.textJoined.setVisibility(View.VISIBLE);
+    }
+
+    // "10/2026" for the line "tham gia tháng 10/2026"; the year alone did not say when.
+    static String formatJoinedMonth(Date joined) {
+        SimpleDateFormat format = new SimpleDateFormat(JOINED_PATTERN, Locale.ROOT);
+        return format.format(joined);
     }
 
     private void showVerifiedBadge(VerificationStatus status) {
