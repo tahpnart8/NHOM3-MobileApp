@@ -378,12 +378,6 @@ public class ListingDetailViewModel extends ViewModel {
             priceRange.setValue(new long[0]);
             return;
         }
-        List<Listing> candidates = similar.getValue();
-        if (candidates != null && !candidates.isEmpty()) {
-            long[] range = recommendationEngine.priceRange(current, candidates);
-            priceRange.setValue(range);
-            return;
-        }
         listingRepository.getSimilar(current, new DataCallback<List<Listing>>() {
             @Override
             public void onSuccess(List<Listing> fetchedCandidates) {
