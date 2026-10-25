@@ -14,6 +14,18 @@
         <action
             android:id="@+id/action_admin_dashboard_to_moderation"
             app:destination="@id/adminModerationFragment" />
+        <action
+            android:id="@+id/action_admin_dashboard_to_category"
+            app:destination="@id/adminCategoryFragment" />
+        <action
+            android:id="@+id/action_admin_dashboard_to_deal_monitor"
+            app:destination="@id/adminDealMonitorFragment" />
+        <action
+            android:id="@+id/action_admin_dashboard_to_admin_account"
+            app:destination="@id/adminAccountFragment" />
+        <action
+            android:id="@+id/action_admin_dashboard_to_complaint_list"
+            app:destination="@id/adminComplaintListFragment" />
     </fragment>
 
     <fragment
@@ -49,6 +61,48 @@
         android:name="com.nhom3.pubgapp.ui.admin.AdminListingDetailFragment">
         <argument
             android:name="listingId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminComplaintListFragment"
+        android:name="com.nhom3.pubgapp.ui.admin.AdminComplaintListFragment">
+        <action
+            android:id="@+id/action_admin_complaint_list_to_detail"
+            app:destination="@id/adminComplaintDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminComplaintDetailFragment"
+        android:name="com.nhom3.pubgapp.ui.admin.AdminComplaintDetailFragment">
+        <argument
+            android:name="complaintId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminAccountFragment"
+        android:name="com.nhom3.pubgapp.ui.admin.AdminAccountFragment">
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminCategoryFragment"
+        android:name="com.nhom3.pubgapp.ui.admin.AdminCategoryFragment">
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminDealMonitorFragment"
+        android:name="com.nhom3.pubgapp.ui.admin.AdminDealMonitorFragment">
+        <action
+            android:id="@+id/action_admin_deal_monitor_to_detail"
+            app:destination="@id/adminDealDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminDealDetailFragment"
+        android:name="com.nhom3.pubgapp.ui.admin.AdminDealDetailFragment">
+        <argument
+            android:name="dealId"
             app:argType="string" />
     </fragment>
 </navigation>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Empty shell of AddressListFragment. The owning issue replaces this body; keep the root and the ids it needs. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground">
+
+    <TextView
+        android:id="@+id/textShellTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/account_address_list_title"
+        android:textAppearance="?attr/textAppearanceHeadlineSmall" />
+</FrameLayout>

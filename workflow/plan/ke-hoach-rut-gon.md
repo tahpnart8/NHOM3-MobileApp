@@ -1,5 +1,8 @@
 # Kế hoạch rút gọn: 33 issue, chia sao cho 5 người không đụng nhau
 
+> **Cập nhật 2026-10-25:** phần cắt ở mục 4 đã được **gỡ bỏ**. Toàn bộ STT "Đợt này" và 43 UC sẽ được làm xong trước hết ngày 2026-10-27 (xem `workflow/memory/decisions.md`, mục cùng ngày). Giữ tài liệu này để biết lịch sử.
+
+
 Viết ngày 2026-10-22. Đợt này làm 24 trong 33 màn hình, đủ để chạy trọn mạch demo và chạm đủ mọi dòng barem.
 
 Tệp này **thắng** `phase-1-nen-mong.md` đến `phase-4-tich-hop-demo.md`, và thắng `so-huu.md` mục 5 ở phần chia phương thức.
