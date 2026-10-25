@@ -165,4 +165,9 @@
     <string name="profile_my_profile_row_my_reports">Báo cáo và khiếu nại của tôi</string>
     <string name="profile_my_profile_row_account_settings">Cài đặt tài khoản</string>
     <string name="profile_my_profile_row_addresses">Địa chỉ giao nhận</string>
+
+    <!-- D07 MyReportsFragment, tab "Báo cáo của tôi" -->
+    <string name="profile_my_reports_tab_reports">Báo cáo của tôi</string>
+    <string name="profile_my_reports_tab_complaints">Khiếu nại của tôi</string>
+    <string name="profile_my_reports_export">Xuất danh sách</string>
 </resources>
