@@ -143,7 +143,7 @@ public class ForgotPasswordFragment extends Fragment {
         try {
             return NetworkMonitor.getInstance().isOnline();
         } catch (Exception e) {
-            // NetworkMonitor throws NOT_READY until fully implemented; falls back to ConnectivityManager.
+            // NetworkMonitor provides connectivity state; falls back to ConnectivityManager if unavailable.
             ConnectivityManager cm = (ConnectivityManager)
                     requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
             if (cm != null) {
