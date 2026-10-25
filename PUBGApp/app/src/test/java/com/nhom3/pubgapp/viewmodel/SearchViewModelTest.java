@@ -349,4 +349,21 @@ public class SearchViewModelTest {
         fChangedCategory.setCategoryId("cat123");
         assertFalse(SearchViewModel.canReorderExistingResults(fNewest, fChangedCategory));
     }
+
+    @Test
+    public void testIsUserSearchKeywordValid_tooShortOrEmpty() {
+        assertFalse(SearchViewModel.isUserSearchKeywordValid(null));
+        assertFalse(SearchViewModel.isUserSearchKeywordValid(""));
+        assertFalse(SearchViewModel.isUserSearchKeywordValid("   "));
+        assertFalse(SearchViewModel.isUserSearchKeywordValid("a"));
+        assertFalse(SearchViewModel.isUserSearchKeywordValid(" a "));
+    }
+
+    @Test
+    public void testIsUserSearchKeywordValid_validKeyword() {
+        assertTrue(SearchViewModel.isUserSearchKeywordValid("ab"));
+        assertTrue(SearchViewModel.isUserSearchKeywordValid("abc"));
+        assertTrue(SearchViewModel.isUserSearchKeywordValid("  an  "));
+        assertTrue(SearchViewModel.isUserSearchKeywordValid("Nguyen Van A"));
+    }
 }
