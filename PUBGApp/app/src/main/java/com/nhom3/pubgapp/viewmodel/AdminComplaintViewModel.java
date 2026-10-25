@@ -217,8 +217,38 @@ public class AdminComplaintViewModel extends ViewModel {
         error.setValue(DataCallback.NOT_READY);
     }
 
+    // The note goes to the admin-only sub-document (STT 90); users never read it.
     public void saveNote(String id, String note) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!SessionManager.getInstance().isAdmin()) {
+            error.setValue(MESSAGE_NOT_ADMIN);
+            return;
+        }
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        final String text = note != null ? note.trim() : "";
+        loading.setValue(true);
+        complaintRepository.saveAdminNote(id, text, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Complaint current = selected.getValue();
+                if (current != null) {
+                    current.setAdminNote(text);
+                }
+                loading.postValue(false);
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     // High priority first, then the newest; a missing priority counts as MEDIUM, the default (trang-thai.md 6).
