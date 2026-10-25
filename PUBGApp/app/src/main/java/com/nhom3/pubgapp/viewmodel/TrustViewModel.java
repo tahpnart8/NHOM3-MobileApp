@@ -300,8 +300,49 @@ public class TrustViewModel extends ViewModel {
         checkDealThenSubmit(complaint, images, uid);
     }
 
+    // ComplaintRepository.addEvidence checks NEEDS_EVIDENCE and the owner; here only the image count is checked.
     public void addEvidence(String id, List<Uri> evidenceUris) {
-        error.setValue(DataCallback.NOT_READY);
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        List<Uri> images = new ArrayList<Uri>();
+        if (evidenceUris != null) {
+            images.addAll(evidenceUris);
+        }
+        if (images.isEmpty()) {
+            error.setValue(MESSAGE_COMPLAINT_NO_IMAGE);
+            return;
+        }
+        if (images.size() > MAX_COMPLAINT_IMAGES) {
+            error.setValue(MESSAGE_COMPLAINT_TOO_MANY);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        loading.setValue(true);
+        saveImagesThen(images, new ArrayList<String>(), new ImagesSaved() {
+            @Override
+            public void onSaved(List<String> imageIds) {
+                sendEvidence(id, imageIds);
+            }
+        });
+    }
+
+    private void sendEvidence(String id, List<String> imageIds) {
+        complaintRepository.addEvidence(id, imageIds, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                failReport(imageIds, message);
+            }
+        });
     }
 
     public void loadMyComplaints() {
