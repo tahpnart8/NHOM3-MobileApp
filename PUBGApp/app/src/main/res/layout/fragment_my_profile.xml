@@ -288,6 +288,15 @@
                                 android:visibility="gone" />
                         </LinearLayout>
 
+                        <TextView
+                            android:id="@+id/textIdImageError"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/profile_my_profile_verify_missing_id_image"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:textColor="?attr/colorError"
+                            android:visibility="gone" />
+
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -314,6 +323,15 @@
                                 android:scaleType="centerCrop"
                                 android:visibility="gone" />
                         </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/textPortraitImageError"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/profile_my_profile_verify_missing_portrait_image"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:textColor="?attr/colorError"
+                            android:visibility="gone" />
 
                         <TextView
                             android:id="@+id/textImageHint"

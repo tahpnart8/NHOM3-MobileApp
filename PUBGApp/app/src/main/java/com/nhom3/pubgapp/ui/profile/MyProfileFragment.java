@@ -57,6 +57,7 @@ public class MyProfileFragment extends Fragment {
     private static final String STATE_PORTRAIT_IMAGE = "verificationPortraitImage";
     private static final String IMAGE_TYPE_PREFIX = "image/";
     private static final int PREVIEW_SAMPLE_SIZE = 8;
+    private static final int NATIONAL_ID_LENGTH = 12;
 
     private FragmentMyProfileBinding binding;
     private ProfileViewModel profileViewModel;
@@ -215,6 +216,7 @@ public class MyProfileFragment extends Fragment {
             return;
         }
         idImageUri = uri;
+        binding.textIdImageError.setVisibility(View.GONE);
         showPreview(binding.imageIdPreview, uri);
     }
 
@@ -223,6 +225,7 @@ public class MyProfileFragment extends Fragment {
             return;
         }
         portraitImageUri = uri;
+        binding.textPortraitImageError.setVisibility(View.GONE);
         showPreview(binding.imagePortraitPreview, uri);
     }
 
@@ -244,10 +247,46 @@ public class MyProfileFragment extends Fragment {
         if (binding.editNationalId.getText() != null) {
             nationalId = binding.editNationalId.getText().toString();
         }
+        if (!showFormErrors(nationalId)) {
+            return;
+        }
         List<Uri> imageUris = new ArrayList<Uri>();
         imageUris.add(idImageUri);
         imageUris.add(portraitImageUri);
         profileViewModel.requestVerification(nationalId, imageUris);
+    }
+
+    // Each missing piece is shown under its own field; returns true when the form can be sent.
+    private boolean showFormErrors(String nationalId) {
+        int idProblem = nationalIdProblem(nationalId);
+        if (idProblem == 0) {
+            binding.inputNationalId.setError(null);
+        } else {
+            binding.inputNationalId.setError(getString(idProblem));
+        }
+        boolean missingIdImage = idImageUri == null;
+        boolean missingPortrait = portraitImageUri == null;
+        binding.textIdImageError.setVisibility(missingIdImage ? View.VISIBLE : View.GONE);
+        binding.textPortraitImageError.setVisibility(missingPortrait ? View.VISIBLE : View.GONE);
+        return idProblem == 0 && !missingIdImage && !missingPortrait;
+    }
+
+    // Same rule as ProfileViewModel.checkVerificationForm, which the Fragment cannot call from its package.
+    static int nationalIdProblem(String nationalId) {
+        String trimmed = nationalId == null ? "" : nationalId.trim();
+        if (trimmed.isEmpty()) {
+            return R.string.profile_my_profile_verify_missing_national_id;
+        }
+        if (trimmed.length() != NATIONAL_ID_LENGTH) {
+            return R.string.profile_my_profile_verify_bad_national_id;
+        }
+        for (int i = 0; i < trimmed.length(); i++) {
+            char digit = trimmed.charAt(i);
+            if (digit < '0' || digit > '9') {
+                return R.string.profile_my_profile_verify_bad_national_id;
+            }
+        }
+        return 0;
     }
 
     private void updateSubmitEnabled() {
@@ -264,6 +303,9 @@ public class MyProfileFragment extends Fragment {
         idImageUri = null;
         portraitImageUri = null;
         binding.editNationalId.setText("");
+        binding.inputNationalId.setError(null);
+        binding.textIdImageError.setVisibility(View.GONE);
+        binding.textPortraitImageError.setVisibility(View.GONE);
         binding.imageIdPreview.setVisibility(View.GONE);
         binding.imagePortraitPreview.setVisibility(View.GONE);
         binding.layoutVerificationForm.setVisibility(View.GONE);
