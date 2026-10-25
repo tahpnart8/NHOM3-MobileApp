@@ -442,13 +442,20 @@ public class ListingDetailFragment extends Fragment {
         if (conditionVals != null && !conditionVals.isEmpty()) {
             StringBuilder condBuilder = new StringBuilder();
             for (Map.Entry<String, String> entry : conditionVals.entrySet()) {
-                if (condBuilder.length() > 0) {
-                    condBuilder.append("\n");
+                String val = entry.getValue();
+                if (val != null && !val.trim().isEmpty()) {
+                    if (condBuilder.length() > 0) {
+                        condBuilder.append("\n");
+                    }
+                    condBuilder.append(entry.getKey()).append(": ").append(val.trim());
                 }
-                condBuilder.append(entry.getKey()).append(": ").append(entry.getValue());
             }
-            binding.textConditionDetails.setText(condBuilder.toString());
-            binding.layoutConditionDetails.setVisibility(View.VISIBLE);
+            if (condBuilder.length() > 0) {
+                binding.textConditionDetails.setText(condBuilder.toString());
+                binding.layoutConditionDetails.setVisibility(View.VISIBLE);
+            } else {
+                binding.layoutConditionDetails.setVisibility(View.GONE);
+            }
         } else {
             binding.layoutConditionDetails.setVisibility(View.GONE);
         }
