@@ -196,7 +196,33 @@ public class ProfileViewModel extends ViewModel {
     }
 
     public void loadAddresses() {
-        error.setValue(DataCallback.NOT_READY);
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        loading.setValue(true);
+        fetchAddresses(uid);
+    }
+
+    private void fetchAddresses(String uid) {
+        userRepository.getAddresses(uid, new DataCallback<List<UserAddress>>() {
+            @Override
+            public void onSuccess(List<UserAddress> result) {
+                loading.postValue(false);
+                addresses.postValue(result);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void saveAddress(UserAddress address) {
@@ -204,7 +230,31 @@ public class ProfileViewModel extends ViewModel {
     }
 
     public void deleteAddress(String id) {
-        error.setValue(DataCallback.NOT_READY);
+        final String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        if (id == null || id.trim().isEmpty()) {
+            return;
+        }
+        loading.setValue(true);
+        userRepository.deleteAddress(uid, id, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                fetchAddresses(uid);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     // uid is the person being followed; the follower is always the signed-in user.
