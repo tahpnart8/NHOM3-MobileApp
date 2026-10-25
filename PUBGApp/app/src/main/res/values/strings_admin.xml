@@ -247,6 +247,14 @@
     <string name="admin_account_title">Tài khoản quản trị</string>
     <string name="admin_category_title">Quản lý danh mục</string>
     <string name="admin_deal_monitor_title">Giám sát giao dịch</string>
+    <string name="admin_deal_monitor_filter_all">Tất cả</string>
+    <string name="admin_deal_monitor_empty_title">Không có giao dịch nào</string>
+    <string name="admin_deal_monitor_empty_message">Không có giao dịch nào ở trạng thái đang chọn.</string>
+    <string name="admin_deal_monitor_code">Đơn #%1$s</string>
+    <string name="admin_deal_monitor_parties">Mua: %1$s • Bán: %2$s</string>
+    <string name="admin_deal_monitor_overdue">Quá hạn giải ngân</string>
+    <string name="admin_deal_monitor_updated">Cập nhật: %1$s</string>
+    <string name="admin_deal_monitor_item_thumb_desc">Ảnh sản phẩm giao dịch</string>
     <string name="admin_deal_detail_title">Chi tiết giao dịch</string>
 
     <!-- D06 AdminComplaintListFragment and AdminComplaintDetailFragment -->
