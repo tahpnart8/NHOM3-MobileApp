@@ -1,5 +1,8 @@
 package com.nhom3.pubgapp.viewmodel;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -29,6 +32,18 @@ public class AdminComplaintViewModel extends ViewModel {
     private static final String MESSAGE_NOT_ADMIN = "Chỉ tài khoản admin mới xem được khiếu nại.";
     private static final String MESSAGE_OFFLINE = "Không có kết nối.";
     private static final String MESSAGE_CHAT_FAILED = "Không tải được lịch sử chat của giao dịch.";
+
+    static final int DECISION_OK = 0;
+    static final int DECISION_MISSING = 1;
+    static final int DECISION_EMPTY_MESSAGE = 2;
+    static final int DECISION_CLOSED = 3;
+    static final int DECISION_EVIDENCE_PENDING = 4;
+    private static final String MESSAGE_DECISION_MISSING = "Hãy chọn một quyết định.";
+    private static final String MESSAGE_DECISION_EMPTY = "Hãy nhập lời nhắn gửi hai bên.";
+    private static final String MESSAGE_DECISION_CLOSED =
+            "Khiếu nại này đã có quyết định hoặc đã rút.";
+    private static final String MESSAGE_DECISION_EVIDENCE_PENDING =
+            "Đã yêu cầu bổ sung bằng chứng, đang chờ người khiếu nại gửi ảnh.";
 
     private final MutableLiveData<List<Complaint>> complaints = new MutableLiveData<>();
     private final MutableLiveData<Complaint> selected = new MutableLiveData<>();
@@ -213,8 +228,82 @@ public class AdminComplaintViewModel extends ViewModel {
         return dealOfComplaint.getListingId() + "_" + dealOfComplaint.getBuyerId();
     }
 
+    // ComplaintRepository.decide moves the complaint, the deal and the payment and notifies both parties (R18).
     public void decide(String id, ComplaintDecision decision, String message) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!SessionManager.getInstance().isAdmin()) {
+            error.setValue(MESSAGE_NOT_ADMIN);
+            return;
+        }
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        String checkMessage = decisionErrorMessage(checkDecision(selected.getValue(), decision, message));
+        if (checkMessage != null) {
+            error.setValue(checkMessage);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        loading.setValue(true);
+        complaintRepository.decide(id, decision, message.trim(), new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                done.postValue(true);
+                reloadAfterDecision(id);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                loading.postValue(false);
+                error.postValue(errorMessage);
+            }
+        });
+    }
+
+    // Read the file again after loading is false, so the screen shows the status the server now holds.
+    private void reloadAfterDecision(final String id) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                loadDetail(id);
+            }
+        });
+    }
+
+    // trang-thai.md section 6: only an open complaint is decided; evidence is requested only while OPEN.
+    static int checkDecision(Complaint current, ComplaintDecision decision, String message) {
+        if (decision == null) {
+            return DECISION_MISSING;
+        }
+        if (message == null || message.trim().isEmpty()) {
+            return DECISION_EMPTY_MESSAGE;
+        }
+        if (current == null || !current.isOpen()) {
+            return DECISION_CLOSED;
+        }
+        if (decision == ComplaintDecision.REQUEST_EVIDENCE && current.getStatus() != ComplaintStatus.OPEN) {
+            return DECISION_EVIDENCE_PENDING;
+        }
+        return DECISION_OK;
+    }
+
+    private static String decisionErrorMessage(int checkResult) {
+        if (checkResult == DECISION_MISSING) {
+            return MESSAGE_DECISION_MISSING;
+        }
+        if (checkResult == DECISION_EMPTY_MESSAGE) {
+            return MESSAGE_DECISION_EMPTY;
+        }
+        if (checkResult == DECISION_CLOSED) {
+            return MESSAGE_DECISION_CLOSED;
+        }
+        if (checkResult == DECISION_EVIDENCE_PENDING) {
+            return MESSAGE_DECISION_EVIDENCE_PENDING;
+        }
+        return null;
     }
 
     // The note goes to the admin-only sub-document (STT 90); users never read it.
