@@ -13,6 +13,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,16 +24,21 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
+import com.google.firebase.firestore.GeoPoint;
 import com.nhom3.pubgapp.R;
+import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.databinding.FragmentSearchBinding;
 import com.nhom3.pubgapp.databinding.LayoutListingFilterPanelBinding;
 import com.nhom3.pubgapp.model.Category;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.SearchFilter;
+import com.nhom3.pubgapp.model.UserAddress;
 import com.nhom3.pubgapp.model.enums.ItemCondition;
 import com.nhom3.pubgapp.model.enums.SortOrder;
 import com.nhom3.pubgapp.model.enums.TradeType;
 import com.nhom3.pubgapp.util.NetworkMonitor;
+import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.SearchViewModel;
 
 import java.util.ArrayList;
@@ -46,6 +52,8 @@ public class SearchFragment extends Fragment {
     private ListingCardAdapter adapter;
     private final List<Category> loadedCategories = new ArrayList<Category>();
     private final List<String> provinceNames = new ArrayList<String>();
+    private final UserRepository userRepo = new UserRepository();
+    private GeoPoint userLocation = null;
 
     @Nullable
     @Override
@@ -68,6 +76,7 @@ public class SearchFragment extends Fragment {
         observeViewModel();
 
         updateOfflineBanner();
+        loadUserLocation();
 
         // Load categories and recent search history once at start
         viewModel.loadCategories();
@@ -80,10 +89,57 @@ public class SearchFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        loadUserLocation();
+    }
+
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         // Views die with the view hierarchy; holding the binding would leak them.
         binding = null;
+    }
+
+    private void loadUserLocation() {
+        if (!SessionManager.getInstance().isLoggedIn()) {
+            userLocation = null;
+            return;
+        }
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null || uid.isEmpty()) {
+            userLocation = null;
+            return;
+        }
+        userRepo.getAddresses(uid, new DataCallback<List<UserAddress>>() {
+            @Override
+            public void onSuccess(List<UserAddress> addresses) {
+                if (addresses == null || addresses.isEmpty()) {
+                    userLocation = null;
+                    return;
+                }
+                UserAddress defaultAddress = null;
+                for (int i = 0; i < addresses.size(); i++) {
+                    UserAddress addr = addresses.get(i);
+                    if (addr != null && addr.isDefault()) {
+                        defaultAddress = addr;
+                        break;
+                    }
+                }
+                if (defaultAddress != null && defaultAddress.getLocation() != null) {
+                    userLocation = defaultAddress.getLocation();
+                } else if (addresses.get(0).getLocation() != null) {
+                    userLocation = addresses.get(0).getLocation();
+                } else {
+                    userLocation = null;
+                }
+            }
+
+            @Override
+            public void onError(String err) {
+                userLocation = null;
+            }
+        });
     }
 
     private void setupRecyclerView() {
@@ -193,6 +249,7 @@ public class SearchFragment extends Fragment {
 
         setupQuickPriceChips();
         setupProvinceSpinner();
+        setupRadiusChips();
 
         panel.buttonResetFilter.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -270,6 +327,27 @@ public class SearchFragment extends Fragment {
                 provinceNames);
         provinceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         binding.includeFilterPanel.spinnerProvince.setAdapter(provinceAdapter);
+    }
+
+    private void setupRadiusChips() {
+        final LayoutListingFilterPanelBinding panel = binding.includeFilterPanel;
+        CompoundButton.OnCheckedChangeListener radiusListener = new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked && userLocation == null) {
+                    buttonView.setChecked(false);
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(),
+                                R.string.listing_search_no_location,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        };
+        panel.chipRadiusNearMe.setOnCheckedChangeListener(radiusListener);
+        panel.chipRadius1km.setOnCheckedChangeListener(radiusListener);
+        panel.chipRadius3km.setOnCheckedChangeListener(radiusListener);
+        panel.chipRadius5km.setOnCheckedChangeListener(radiusListener);
     }
 
     private void setupStates() {
@@ -470,6 +548,22 @@ public class SearchFragment extends Fragment {
             panel.spinnerProvince.setSelection(0);
         }
 
+        // Sync radius and distance (STT 27)
+        if (f.getCenter() != null) {
+            int radius = f.getRadiusKm();
+            if (radius == 1) {
+                panel.chipGroupRadius.check(R.id.chipRadius1km);
+            } else if (radius == 3) {
+                panel.chipGroupRadius.check(R.id.chipRadius3km);
+            } else if (radius == 5) {
+                panel.chipGroupRadius.check(R.id.chipRadius5km);
+            } else {
+                panel.chipGroupRadius.check(R.id.chipRadiusNearMe);
+            }
+        } else {
+            panel.chipGroupRadius.clearCheck();
+        }
+
         // Sync sort order
         SortOrder order = f.getSortOrder();
         if (order == SortOrder.PRICE_ASC) {
@@ -491,6 +585,7 @@ public class SearchFragment extends Fragment {
         panel.chipGroupCondition.clearCheck();
         panel.chipGroupTradeType.clearCheck();
         panel.spinnerProvince.setSelection(0);
+        panel.chipGroupRadius.clearCheck();
         panel.chipGroupSort.check(R.id.chipSortNewest);
     }
 
@@ -575,6 +670,29 @@ public class SearchFragment extends Fragment {
         int provincePos = panel.spinnerProvince.getSelectedItemPosition();
         if (provincePos > 0 && provincePos < provinceNames.size()) {
             newFilter.setProvince(provinceNames.get(provincePos));
+        }
+
+        // Radius and distance (STT 27)
+        int checkedRadiusId = panel.chipGroupRadius.getCheckedChipId();
+        if (checkedRadiusId != View.NO_ID && checkedRadiusId != -1) {
+            if (userLocation != null) {
+                newFilter.setCenter(userLocation);
+                if (checkedRadiusId == R.id.chipRadius1km) {
+                    newFilter.setRadiusKm(1);
+                } else if (checkedRadiusId == R.id.chipRadius3km) {
+                    newFilter.setRadiusKm(3);
+                } else if (checkedRadiusId == R.id.chipRadius5km) {
+                    newFilter.setRadiusKm(5);
+                } else {
+                    newFilter.setRadiusKm(0);
+                }
+            } else {
+                newFilter.setCenter(null);
+                newFilter.setRadiusKm(0);
+            }
+        } else {
+            newFilter.setCenter(null);
+            newFilter.setRadiusKm(0);
         }
 
         // Sort order
