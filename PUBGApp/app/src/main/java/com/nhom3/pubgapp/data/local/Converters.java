@@ -101,11 +101,17 @@ public class Converters {
 
     @TypeConverter
     public long fromTimestamp(Timestamp timestamp) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (timestamp == null) {
+            return 0L;
+        }
+        return timestamp.toDate().getTime();
     }
 
     @TypeConverter
     public Timestamp toTimestamp(long millis) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (millis <= 0L) {
+            return null;
+        }
+        return new Timestamp(new Date(millis));
     }
 }
