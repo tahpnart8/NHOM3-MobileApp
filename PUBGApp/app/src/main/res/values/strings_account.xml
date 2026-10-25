@@ -134,4 +134,35 @@
 
     <string name="account_settings_section_delete">Xóa tài khoản</string>
     <string name="account_settings_delete_placeholder">Vô hiệu hóa tài khoản và xóa dữ liệu cá nhân</string>
+
+    <!-- A06 Quản lý địa chỉ giao nhận (STT 6) -->
+    <string name="account_address_add_new">Thêm địa chỉ mới</string>
+    <string name="account_address_empty_title">Bạn chưa có địa chỉ nào</string>
+    <string name="account_address_empty_prompt">Thêm địa chỉ giao nhận để thuận tiện cho việc mua bán và giao dịch.</string>
+    <string name="account_address_default_badge">Mặc định</string>
+    <string name="account_address_edit">Sửa</string>
+    <string name="account_address_delete">Xóa</string>
+    <string name="account_address_delete_confirm_title">Xóa địa chỉ</string>
+    <string name="account_address_delete_confirm_message">Bạn có chắc chắn muốn xóa địa chỉ này?</string>
+    <string name="account_address_delete_success">Đã xóa địa chỉ thành công</string>
+    <string name="account_address_delete_cannot_delete_only_one">Bạn cần giữ ít nhất một địa chỉ mặc định</string>
+    <string name="account_address_retry">Thử lại</string>
+    <string name="account_address_offline">Không có kết nối mạng</string>
+    <string name="account_address_edit_title_add">Thêm địa chỉ mới</string>
+    <string name="account_address_edit_title_edit">Chỉnh sửa địa chỉ</string>
+    <string name="account_address_label_hint">Nhãn địa chỉ (Nhà riêng, Văn phòng...)</string>
+    <string name="account_address_receiver_name_hint">Họ và tên người nhận</string>
+    <string name="account_address_receiver_name_empty">Vui lòng nhập họ tên người nhận</string>
+    <string name="account_address_phone_hint">Số điện thoại nhận hàng</string>
+    <string name="account_address_phone_empty">Vui lòng nhập số điện thoại</string>
+    <string name="account_address_phone_invalid">Số điện thoại không hợp lệ (10 chữ số bắt đầu bằng 0)</string>
+    <string name="account_address_province_hint">Tỉnh / Thành phố</string>
+    <string name="account_address_province_empty">Vui lòng nhập Tỉnh / Thành phố</string>
+    <string name="account_address_district_hint">Quận / Huyện</string>
+    <string name="account_address_district_empty">Vui lòng nhập Quận / Huyện</string>
+    <string name="account_address_detail_hint">Địa chỉ chi tiết (số nhà, tên đường, phường/xã)</string>
+    <string name="account_address_detail_empty">Vui lòng nhập địa chỉ chi tiết</string>
+    <string name="account_address_set_default">Đặt làm địa chỉ mặc định</string>
+    <string name="account_address_save_button">Lưu địa chỉ</string>
+    <string name="account_address_save_success">Đã lưu địa chỉ thành công</string>
 </resources>
