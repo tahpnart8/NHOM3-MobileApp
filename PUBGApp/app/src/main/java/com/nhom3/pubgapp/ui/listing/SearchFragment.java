@@ -47,6 +47,8 @@ import java.util.List;
 /** Screen B02 Search & Filter: 2-column grid with keyword search, history chips and filter panel. */
 public class SearchFragment extends Fragment {
 
+    private static final String KEY_FILTER_OPEN = "key_filter_panel_open";
+
     private FragmentSearchBinding binding;
     private SearchViewModel viewModel;
     private ListingCardAdapter adapter;
@@ -85,6 +87,20 @@ public class SearchFragment extends Fragment {
         // Perform initial search only if results are not already present (survives rotation)
         if (viewModel.getResults().getValue() == null) {
             viewModel.search();
+        }
+
+        if (savedInstanceState != null) {
+            boolean isOpen = savedInstanceState.getBoolean(KEY_FILTER_OPEN, false);
+            binding.includeFilterPanel.getRoot().setVisibility(isOpen ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (binding != null) {
+            boolean isOpen = binding.includeFilterPanel.getRoot().getVisibility() == View.VISIBLE;
+            outState.putBoolean(KEY_FILTER_OPEN, isOpen);
         }
     }
 
