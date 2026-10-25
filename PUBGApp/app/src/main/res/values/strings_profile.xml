@@ -183,4 +183,22 @@
     <string name="profile_my_reports_cancel_keep">Giữ lại</string>
     <string name="profile_my_reports_export_chooser">Chia sẻ danh sách báo cáo</string>
     <string name="profile_my_reports_export_no_app">Máy chưa có ứng dụng nào mở được tệp CSV.</string>
+    <!-- D05 CreateComplaintFragment -->
+    <string name="profile_create_complaint_toolbar">Khiếu nại giao dịch</string>
+    <string name="profile_create_complaint_deal_code">Giao dịch #%1$s</string>
+    <string name="profile_create_complaint_reason_title">Lý do khiếu nại</string>
+    <string name="profile_create_complaint_reason_not_as_described">Hàng không đúng mô tả</string>
+    <string name="profile_create_complaint_reason_not_as_described_hint">Món nhận được khác ảnh, mô tả hoặc tình trạng đã thỏa thuận.</string>
+    <string name="profile_create_complaint_reason_not_received">Không nhận được hàng</string>
+    <string name="profile_create_complaint_reason_not_received_hint">Người bán báo đã gửi nhưng bạn chưa nhận được món nào.</string>
+    <string name="profile_create_complaint_reason_damaged">Hàng bị hư hỏng</string>
+    <string name="profile_create_complaint_reason_damaged_hint">Món bị vỡ, hỏng hoặc thiếu phụ kiện khi nhận.</string>
+    <string name="profile_create_complaint_reason_other">Khác</string>
+    <string name="profile_create_complaint_reason_other_hint">Vấn đề khác, hãy ghi rõ ở phần mô tả.</string>
+    <string name="profile_create_complaint_description">Mô tả chi tiết</string>
+    <string name="profile_create_complaint_evidence_title">Ảnh bằng chứng (tối thiểu 1 ảnh, tối đa 5)</string>
+    <string name="profile_create_complaint_evidence_full">Đã đủ 5 ảnh. Xóa bớt một ảnh nếu muốn thay.</string>
+    <string name="profile_create_complaint_warning">Gửi khiếu nại thì giao dịch chuyển sang "Tranh chấp" (tạm đóng băng) và dừng đếm ngược tự giải ngân trong lúc chờ admin xử lý.</string>
+    <string name="profile_create_complaint_submit">Gửi khiếu nại</string>
+    <string name="profile_create_complaint_sent">Đã gửi khiếu nại. Theo dõi ở mục Báo cáo và khiếu nại của tôi.</string>
 </resources>
