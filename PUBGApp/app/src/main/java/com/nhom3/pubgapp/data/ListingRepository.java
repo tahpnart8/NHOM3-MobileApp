@@ -1039,7 +1039,13 @@ public class ListingRepository extends BaseRepository {
                     List<RecentViewEntity> views = dao.getRecentViews(limit);
                     if (views != null) {
                         for (int i = 0; i < views.size(); i++) {
-                            result.add(views.get(i).getListingId());
+                            RecentViewEntity view = views.get(i);
+                            if (view != null) {
+                                String categoryId = view.getCategoryId();
+                                if (categoryId != null && !categoryId.isEmpty()) {
+                                    result.add(categoryId);
+                                }
+                            }
                         }
                     }
                 }

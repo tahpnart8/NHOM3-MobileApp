@@ -239,7 +239,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void recordView(Listing listing)` | Ghi `RecentViewEntity` (thay nếu đã có), rồi cắt còn 50 dòng. | 38 |
 | `public void recordSearch(String keyword)` | Ghi `RecentSearchEntity` (từ khóa là khóa chính nên không trùng), rồi cắt còn 20 dòng. | 38 |
 | `public void getBannedKeywords(DataCallback<List<BannedKeyword>> cb)` | Đọc danh sách từ khóa cấm để `KeywordFilter` gắn cờ khi người bán soạn tin (mọi người đã đăng nhập đọc được danh sách này). | 78 |
-| `public void getRecentViews(int limit, DataCallback<List<String>> cb)` | Các lần xem gần nhất trên máy, giới hạn số dòng. |  |
+| `public void getRecentViews(int limit, DataCallback<List<String>> cb)` | Danh sách mã danh mục (categoryId) của các lần xem gần nhất trên máy, giới hạn số dòng. |  |
 | `public void getRecentSearches(int limit, DataCallback<List<String>> cb)` | Các từ khóa đã tìm gần nhất trên máy, giới hạn số dòng. |  |
 
 **Quan hệ trên sơ đồ lớp**
