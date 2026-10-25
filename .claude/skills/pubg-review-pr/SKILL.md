@@ -33,7 +33,7 @@ only grew; commits authored by the team with no AI byline; title and body in Vie
 
 ## Recommendation values
 
-`READY`, `CHANGES NEEDED`, or `BLOCKED`. This is a recommendation. **You never approve or merge on your own initiative.** When the leader, or Hai Long for code he reviewed as code owner, tells you to merge, run `gh pr merge N --squash` (the ruleset supplies the message); they decided and you are the hands.
+`READY`, `CHANGES NEEDED`, or `BLOCKED`. This is a recommendation. **You never approve or merge on your own initiative.** When the leader, or Hai Long for code he reviewed as code owner, tells you to merge, run `gh pr merge N --rebase` (every commit of the branch is kept on `main`; never add `--delete-branch`); they decided and you are the hands.
 
 ## Read only
 

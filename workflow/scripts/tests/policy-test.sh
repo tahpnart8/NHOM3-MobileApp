@@ -120,6 +120,8 @@ good=$(b64 "feat(auth): add google sign-in button")
 expect "team member commit"            none check_commit_row aaaaaaaa1 tahpnart8 tahpnart8 "Tran Duc Phat" a@b.c "$good"
 expect "login case and web-flow"       none check_commit_row aaaaaaaa1 TAHPNART8 web-flow "Tran Duc Phat" a@b.c "$good"
 expect "unlinked e-mail"               some check_commit_row aaaaaaaa2 NONE NONE "Someone" a@b.c "$good"
+expect "merge commit with two parents" some check_commit_row aaaaaaaa3 tahpnart8 tahpnart8 "Tran Duc Phat" a@b.c "$good" 2
+expect "ordinary commit one parent"    none check_commit_row aaaaaaaa4 tahpnart8 tahpnart8 "Tran Duc Phat" a@b.c "$good" 1
 expect "outsider"                      some check_commit_row aaaaaaaa3 stranger stranger "Stranger" a@b.c "$good"
 expect "AI identity"                   some check_commit_row aaaaaaaa4 tahpnart8 tahpnart8 "Claude" noreply@anthropic.com "$good"
 expect "outside co-author"             some check_commit_row aaaaaaaa5 tahpnart8 tahpnart8 "Tran Duc Phat" a@b.c "$(b64 "feat: x

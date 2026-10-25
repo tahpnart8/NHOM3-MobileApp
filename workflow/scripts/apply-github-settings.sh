@@ -10,11 +10,11 @@
 #                many document pull requests open at once, that turned every merge into an Update branch,
 #                a re-run of CI and a second review for everyone else. The reviewer builds the merged tree
 #                instead (skill pubg-review-pr), and `build` runs again on main after each merge.
-#   main-review  pull request required, 1 approval from a code owner, squash only. The admin role may
+#   main-review  pull request required, no approval count, rebase or squash merge. The admin role may
 #                bypass it inside a pull request only, because the leader cannot approve their own PR.
 #                An approval is NOT dismissed by a later push, so fixing a typo does not cost a review.
-# Squash merges use the pull request title and an EMPTY body, so no trailer from a branch commit can
-# reach main.
+# Rebase merge keeps every commit of the branch. A trailer in a commit is rejected by CI (ci-policy.sh),
+# not by an empty body.
 set -eu
 root=$(cd "$(dirname "$0")/../.." && pwd)
 repo=${REPO:-$(gh repo view --json nameWithOwner --jq .nameWithOwner)}
@@ -44,11 +44,11 @@ fi
 echo "applying to $repo"
 
 gh api -X PATCH "repos/$repo" --silent \
-    -F allow_squash_merge=true -F allow_merge_commit=false -F allow_rebase_merge=false \
+    -F allow_squash_merge=true -F allow_merge_commit=false -F allow_rebase_merge=true \
     -f squash_merge_commit_title=PR_TITLE -f squash_merge_commit_message=BLANK \
-    -F delete_branch_on_merge=true -F allow_update_branch=true -F allow_auto_merge=false \
+    -F delete_branch_on_merge=false -F allow_update_branch=true -F allow_auto_merge=false \
     -F has_wiki=false -F has_discussions=false
-echo "merge settings: squash only, title only, delete branch after merge"
+echo "merge settings: rebase or squash, keep the branch after merge"
 
 printf '{"security_and_analysis":{"secret_scanning":{"status":"enabled"},"secret_scanning_push_protection":{"status":"enabled"}}}' |
     gh api -X PATCH "repos/$repo" --silent --input - && echo "secret scanning and push protection: on" ||

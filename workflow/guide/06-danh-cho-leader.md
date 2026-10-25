@@ -27,10 +27,10 @@ Viết bình luận review cho PR #<N> từ các phát hiện blocking và major
 Khi bạn đã quyết định:
 
 ```
-Merge PR #<N> bằng squash. Trước đó xác nhận các check build và policy đều xanh, không có xung đột, và tiêu đề PR đúng khuôn. Sau khi merge, đọc lại main để chắc commit chỉ có tiêu đề PR và không có dòng đồng tác giả.
+Merge PR #<N> bằng rebase (giữ mọi commit). Trước đó xác nhận các check build và policy đều xanh, không có xung đột, và tiêu đề PR đúng khuôn. Sau khi merge, đọc lại main để chắc các commit đúng khuôn và không có dòng đồng tác giả.
 ```
 
-Lệnh sẽ là `gh pr merge <N> --squash`. Ruleset của repo đặt nội dung commit squash là tiêu đề PR với thân trống.
+Lệnh sẽ là `gh pr merge <N> --rebase`, không thêm `--delete-branch`.
 
 ## Mở việc và giao việc
 
