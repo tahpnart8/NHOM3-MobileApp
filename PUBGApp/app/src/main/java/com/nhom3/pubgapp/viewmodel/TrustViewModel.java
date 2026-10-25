@@ -7,13 +7,19 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.firebase.Timestamp;
+import com.nhom3.pubgapp.data.ComplaintRepository;
 import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.DealRepository;
 import com.nhom3.pubgapp.data.MediaRepository;
 import com.nhom3.pubgapp.data.ReportRepository;
 import com.nhom3.pubgapp.data.ReviewRepository;
 import com.nhom3.pubgapp.model.Complaint;
+import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.model.Review;
+import com.nhom3.pubgapp.model.enums.DealStatus;
+import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.ImagePurpose;
 import com.nhom3.pubgapp.model.enums.ReportStatus;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
@@ -65,10 +71,36 @@ public class TrustViewModel extends ViewModel {
     private static final String MESSAGE_NOTHING_TO_EXPORT = "Chưa có báo cáo nào để xuất.";
     private static final String MESSAGE_EXPORT_FAILED = "Không tạo được tệp danh sách, hãy thử lại.";
 
+    // STT 64 and trang-thai.md section 6: at least one evidence image, at most five.
+    static final int MAX_COMPLAINT_IMAGES = 5;
+    static final int COMPLAINT_OK = 0;
+    static final int COMPLAINT_MISSING_REASON = 1;
+    static final int COMPLAINT_NO_IMAGE = 2;
+    static final int COMPLAINT_TOO_MANY_IMAGES = 3;
+    static final int COMPLAINT_NO_DEAL = 4;
+    static final int COMPLAINT_NOT_PARTY = 5;
+    static final int COMPLAINT_WRONG_STATUS = 6;
+    static final int COMPLAINT_COUNTDOWN_OVER = 7;
+    private static final String MESSAGE_COMPLAINT_NOT_SIGNED_IN =
+            "Bạn cần đăng nhập để gửi khiếu nại.";
+    private static final String MESSAGE_COMPLAINT_REASON = "Hãy chọn một lý do khiếu nại.";
+    private static final String MESSAGE_COMPLAINT_NO_IMAGE = "Cần ít nhất 1 ảnh bằng chứng.";
+    private static final String MESSAGE_COMPLAINT_TOO_MANY = "Chỉ đính kèm được tối đa 5 ảnh.";
+    private static final String MESSAGE_COMPLAINT_NO_DEAL = "Không tìm thấy giao dịch.";
+    private static final String MESSAGE_COMPLAINT_NOT_PARTY =
+            "Chỉ người mua hoặc người bán của giao dịch mới khiếu nại được.";
+    private static final String MESSAGE_COMPLAINT_WRONG_STATUS =
+            "Chỉ khiếu nại được khi giao dịch đã giao và còn đếm ngược, "
+            + "hoặc đã xác nhận với hình thức gặp trực tiếp.";
+    private static final String MESSAGE_COMPLAINT_COUNTDOWN_OVER =
+            "Đã hết thời gian đếm ngược, giao dịch không còn khiếu nại được.";
+
     private final ReviewRepository reviewRepository = new ReviewRepository();
     private final ReportRepository reportRepository = new ReportRepository();
     private final MediaRepository mediaRepository = new MediaRepository();
     private final ExecutorService exportExecutor = Executors.newSingleThreadExecutor();
+    private final ComplaintRepository complaintRepository = new ComplaintRepository();
+    private final DealRepository dealRepository = new DealRepository();
 
     // Which list is in reviews ("uid:received"), so a rotation does not read it again.
     private String loadedReviewsKey;
@@ -243,7 +275,29 @@ public class TrustViewModel extends ViewModel {
     }
 
     public void submitComplaint(Complaint complaint, List<Uri> evidenceUris) {
-        error.setValue(DataCallback.NOT_READY);
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null || uid.isEmpty()) {
+            error.setValue(MESSAGE_COMPLAINT_NOT_SIGNED_IN);
+            return;
+        }
+        List<Uri> images = new ArrayList<Uri>();
+        if (evidenceUris != null) {
+            images.addAll(evidenceUris);
+        }
+        String formMessage = complaintErrorMessage(checkComplaintForm(complaint, images.size()));
+        if (formMessage != null) {
+            error.setValue(formMessage);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        loading.setValue(true);
+        checkDealThenSubmit(complaint, images, uid);
     }
 
     public void addEvidence(String id, List<Uri> evidenceUris) {
@@ -313,6 +367,131 @@ public class TrustViewModel extends ViewModel {
                 error.postValue(message);
             }
         });
+    }
+
+    // The deal is read first, so no image is uploaded for a complaint the deal would refuse.
+    private void checkDealThenSubmit(Complaint complaint, List<Uri> images, String uid) {
+        dealRepository.getById(complaint.getDealId(), new DataCallback<Deal>() {
+            @Override
+            public void onSuccess(Deal deal) {
+                String dealMessage = complaintErrorMessage(checkComplaintDeal(deal, uid, Timestamp.now()));
+                if (dealMessage != null) {
+                    loading.postValue(false);
+                    error.postValue(dealMessage);
+                    return;
+                }
+                saveImagesThen(images, new ArrayList<String>(), new ImagesSaved() {
+                    @Override
+                    public void onSaved(List<String> imageIds) {
+                        sendComplaint(complaint, imageIds);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
+    }
+
+    private void sendComplaint(Complaint complaint, List<String> imageIds) {
+        complaint.setEvidenceImageIds(imageIds);
+        complaintRepository.create(complaint, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                failReport(imageIds, message);
+            }
+        });
+    }
+
+    /** Called once every picked image has been saved, with their ids in the picked order. */
+    private interface ImagesSaved {
+        void onSaved(List<String> imageIds);
+    }
+
+    // One image at a time keeps the ids in the order the user picked them; a failure deletes the saved ones.
+    private void saveImagesThen(List<Uri> imageUris, List<String> savedIds, ImagesSaved next) {
+        if (savedIds.size() == imageUris.size()) {
+            next.onSaved(savedIds);
+            return;
+        }
+        Uri image = imageUris.get(savedIds.size());
+        mediaRepository.saveImage(image, ImagePurpose.EVIDENCE, new DataCallback<String>() {
+            @Override
+            public void onSuccess(String imageId) {
+                savedIds.add(imageId);
+                saveImagesThen(imageUris, savedIds, next);
+            }
+
+            @Override
+            public void onError(String message) {
+                failReport(savedIds, message);
+            }
+        });
+    }
+
+    static int checkComplaintForm(Complaint complaint, int imageCount) {
+        if (complaint == null || complaint.getReason() == null) {
+            return COMPLAINT_MISSING_REASON;
+        }
+        if (imageCount < 1) {
+            return COMPLAINT_NO_IMAGE;
+        }
+        if (imageCount > MAX_COMPLAINT_IMAGES) {
+            return COMPLAINT_TOO_MANY_IMAGES;
+        }
+        return COMPLAINT_OK;
+    }
+
+    // trang-thai.md section 3: SHIPPED before autoReleaseAt, or CONFIRMED when meeting in person.
+    static int checkComplaintDeal(Deal deal, String uid, Timestamp now) {
+        if (deal == null) {
+            return COMPLAINT_NO_DEAL;
+        }
+        if (uid == null || !deal.isParticipant(uid)) {
+            return COMPLAINT_NOT_PARTY;
+        }
+        DealStatus status = deal.getStatus();
+        if (status == DealStatus.CONFIRMED && deal.getDeliveryMethod() == DeliveryMethod.MEET_UP) {
+            return COMPLAINT_OK;
+        }
+        if (status != DealStatus.SHIPPED) {
+            return COMPLAINT_WRONG_STATUS;
+        }
+        Timestamp releaseAt = deal.getAutoReleaseAt();
+        if (releaseAt != null && now.compareTo(releaseAt) >= 0) {
+            return COMPLAINT_COUNTDOWN_OVER;
+        }
+        return COMPLAINT_OK;
+    }
+
+    private static String complaintErrorMessage(int checkResult) {
+        switch (checkResult) {
+            case COMPLAINT_MISSING_REASON:
+                return MESSAGE_COMPLAINT_REASON;
+            case COMPLAINT_NO_IMAGE:
+                return MESSAGE_COMPLAINT_NO_IMAGE;
+            case COMPLAINT_TOO_MANY_IMAGES:
+                return MESSAGE_COMPLAINT_TOO_MANY;
+            case COMPLAINT_NO_DEAL:
+                return MESSAGE_COMPLAINT_NO_DEAL;
+            case COMPLAINT_NOT_PARTY:
+                return MESSAGE_COMPLAINT_NOT_PARTY;
+            case COMPLAINT_WRONG_STATUS:
+                return MESSAGE_COMPLAINT_WRONG_STATUS;
+            case COMPLAINT_COUNTDOWN_OVER:
+                return MESSAGE_COMPLAINT_COUNTDOWN_OVER;
+            default:
+                return null;
+        }
     }
 
     // Rules section 18 also enforce the image cap and the conversation link; the self report rule is the app's.
