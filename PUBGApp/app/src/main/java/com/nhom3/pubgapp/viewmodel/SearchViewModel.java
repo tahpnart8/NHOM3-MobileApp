@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.GeoPoint;
 import com.nhom3.pubgapp.data.CategoryRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.ListingRepository;
@@ -13,6 +14,7 @@ import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.SearchFilter;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.SortOrder;
+import com.nhom3.pubgapp.util.GeoUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,6 +34,7 @@ public class SearchViewModel extends ViewModel {
 
     private final ListingRepository listingRepo = new ListingRepository();
     private final CategoryRepository categoryRepo = new CategoryRepository();
+    private final GeoUtils geoUtils = new GeoUtils();
 
     // Plain field, not LiveData: the ViewModel itself survives rotation.
     private SearchFilter filter = new SearchFilter();
@@ -44,6 +47,38 @@ public class SearchViewModel extends ViewModel {
             return true;
         }
         return maxPrice >= minPrice;
+    }
+
+    static List<Listing> filterByRadius(List<Listing> list, GeoPoint center, int radiusKm, GeoUtils geoUtils) {
+        if (list == null) {
+            return new ArrayList<Listing>();
+        }
+        if (center == null || radiusKm <= 0) {
+            return new ArrayList<Listing>(list);
+        }
+        GeoUtils utils = geoUtils != null ? geoUtils : new GeoUtils();
+        List<Listing> filtered = new ArrayList<Listing>();
+        for (int i = 0; i < list.size(); i++) {
+            Listing item = list.get(i);
+            if (item != null && item.getLocation() != null
+                    && utils.isWithinRadius(item.getLocation(), center, radiusKm)) {
+                filtered.add(item);
+            }
+        }
+        return filtered;
+    }
+
+    static List<Listing> sortByDistance(List<Listing> list, GeoPoint center, GeoUtils geoUtils) {
+        if (list == null) {
+            return new ArrayList<Listing>();
+        }
+        List<Listing> copy = new ArrayList<Listing>(list);
+        if (center == null) {
+            return copy;
+        }
+        GeoUtils utils = geoUtils != null ? geoUtils : new GeoUtils();
+        utils.sortByDistance(copy, center);
+        return copy;
     }
 
     static List<Listing> sortResults(List<Listing> list, SortOrder order) {
