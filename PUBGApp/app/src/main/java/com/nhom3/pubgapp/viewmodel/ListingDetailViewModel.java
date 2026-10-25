@@ -159,10 +159,27 @@ public class ListingDetailViewModel extends ViewModel {
                                     saved.postValue(false);
                                 }
                             });
+                            userRepository.getFollowingIds(currentUid, new DataCallback<List<String>>() {
+                                @Override
+                                public void onSuccess(List<String> followingIds) {
+                                    if (result.getSellerId() != null && followingIds != null
+                                            && followingIds.contains(result.getSellerId())) {
+                                        followingSeller.postValue(true);
+                                    } else {
+                                        followingSeller.postValue(false);
+                                    }
+                                }
+
+                                @Override
+                                public void onError(String errorMessage) {
+                                    followingSeller.postValue(false);
+                                }
+                            });
                         }
                     } else {
                         seller.postValue(null);
                         saved.postValue(false);
+                        followingSeller.postValue(false);
                     }
                 }
             }
