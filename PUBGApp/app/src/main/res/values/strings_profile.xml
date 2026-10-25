@@ -176,4 +176,9 @@
     <string name="profile_my_reports_sent_on">Gửi ngày %1$s</string>
     <string name="profile_my_reports_empty_title">Chưa có báo cáo nào</string>
     <string name="profile_my_reports_empty_message">Báo cáo bạn gửi về tin đăng, người dùng hoặc tin nhắn sẽ hiện ở đây.</string>
+    <string name="profile_my_reports_cancel">Hủy báo cáo</string>
+    <string name="profile_my_reports_cancel_title">Hủy báo cáo này?</string>
+    <string name="profile_my_reports_cancel_message">Báo cáo sẽ chuyển sang "Người báo cáo đã hủy" và admin không xử lý nữa. Không hoàn tác được.</string>
+    <string name="profile_my_reports_cancel_confirm">Hủy báo cáo</string>
+    <string name="profile_my_reports_cancel_keep">Giữ lại</string>
 </resources>

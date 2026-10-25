@@ -13,6 +13,7 @@ import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.ItemMyReportBinding;
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.model.enums.ReportReason;
+import com.nhom3.pubgapp.model.enums.ReportStatus;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
 import com.nhom3.pubgapp.ui.common.StatusChips;
 
@@ -24,9 +25,19 @@ import java.util.Locale;
 /** Rows of the reports the user has sent, on D07. */
 public class MyReportAdapter extends RecyclerView.Adapter<MyReportAdapter.ReportViewHolder> {
 
+    /** Called when the user taps "Hủy báo cáo" on a row. */
+    interface CancelListener {
+        void onCancel(Report report);
+    }
+
     private static final String DATE_PATTERN = "dd/MM/yyyy";
 
     private final List<Report> reports = new ArrayList<Report>();
+    private final CancelListener cancelListener;
+
+    MyReportAdapter(CancelListener cancelListener) {
+        this.cancelListener = cancelListener;
+    }
 
     public void submitList(List<Report> newReports) {
         reports.clear();
@@ -46,7 +57,7 @@ public class MyReportAdapter extends RecyclerView.Adapter<MyReportAdapter.Report
 
     @Override
     public void onBindViewHolder(@NonNull ReportViewHolder holder, int position) {
-        holder.bind(reports.get(position));
+        holder.bind(reports.get(position), cancelListener);
     }
 
     @Override
@@ -63,12 +74,21 @@ public class MyReportAdapter extends RecyclerView.Adapter<MyReportAdapter.Report
             this.binding = binding;
         }
 
-        void bind(Report report) {
+        void bind(final Report report, final CancelListener listener) {
             Context context = binding.getRoot().getContext();
             binding.textTarget.setText(targetLabel(report.getTargetType()));
             binding.textReason.setText(reasonLabel(report.getReason()));
             StatusChips.bind(binding.includeStatusChip.textStatusChip, report.getStatus());
             showSentDate(context, report.getCreatedAt());
+            // Only an OPEN report can be cancelled (STT 62); the ViewModel checks the owner again.
+            boolean open = report.getStatus() == ReportStatus.OPEN;
+            binding.buttonCancelReport.setVisibility(open ? View.VISIBLE : View.GONE);
+            binding.buttonCancelReport.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View clicked) {
+                    listener.onCancel(report);
+                }
+            });
         }
 
         // A report just written has no server time yet, so the date line stays hidden until it arrives.
