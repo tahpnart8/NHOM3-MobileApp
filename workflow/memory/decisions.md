@@ -848,3 +848,26 @@ Review of PR #153 pointed out that `isPasswordValid`, `isPhoneValid`, and `isPas
 
 ### Owner
 loopy-tnw
+
+## 2026-10-25 - Pull requests merge with rebase, so every commit of every person stays on main
+
+### Decision
+Pull requests are merged with **rebase and merge**. Squash stays enabled but is not used. The ruleset `main-review` asks for no approval count (the leader and Claude review in comments and merge), allows `rebase` and `squash`, and the repository no longer deletes head branches on merge.
+
+A branch must hold no merge commit, because GitHub reports `rebaseable: false` for it and cannot rebase and merge it. CI now fails a pull request that contains a merge commit. Catching up with `main` is done with `git rebase origin/main` and `git push --force-with-lease` on one's own work branch (never `main`), after a backup branch, as the `pubg-sync-branch` skill says. A branch that is only behind `main` needs nothing.
+
+### Context
+The course grades the number and spread of commits per person. With squash, a pull request of ten commits became one, and the pull requests Claude opened for the leader were all credited to the leader, so main showed 43 commits for the leader and 12 to 16 for each other member.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep squash and ask for more pull requests | Splits real work into artificial pull requests and still gives one commit each |
+| Plain merge commits | The ruleset `required_linear_history` forbids them, and they bury commits in merge noise |
+| Rebase merge but keep merging `main` into branches | GitHub cannot rebase a branch with a merge commit |
+
+### Impact
+`AGENTS.md` (R9, R10, section 8), `CLAUDE.md`, skills `pubg-sync-branch` and `pubg-review-pr`, `.github/NAMING.md`, `.github/rulesets/main-review.json`, `workflow/scripts/ci-policy.sh`, `apply-github-settings.sh`, workflow documents.
+
+### Owner
+tahpnart8

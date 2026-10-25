@@ -39,7 +39,7 @@ Chia theo module, mỗi người sở hữu trọn một module từ dữ liệu
 1. Nhận issue (assignee là mình), chạy skill `pubg-start-task`: tạo nhánh từ `main` mới nhất, chép nguyên danh sách file được sửa của issue.
 2. Cho AI đọc đúng các tài liệu issue liệt kê. Tên lớp, trường, phương thức, trạng thái lấy từ `workflow/docs/architecture/dac-ta-lop/` và `workflow/docs/data/`; chuyển trạng thái theo `workflow/docs/architecture/trang-thai.md`. Tài liệu thiếu tên cần dùng thì hỏi trong issue, không tự đặt.
 3. Làm trong khoảng nửa ngày đến một ngày. Chạy `./gradlew assembleDebug testDebugUnitTest lintDebug` và `sh workflow/scripts/check-java-style.sh`, chạy thử trên máy ảo.
-4. Mở Pull Request bằng skill `pubg-open-pr`, ghi lại đã thử gì trên máy ảo. Chờ duyệt; sửa theo góp ý; người duyệt squash merge.
+4. Mở Pull Request bằng skill `pubg-open-pr`, ghi lại đã thử gì trên máy ảo. Chờ duyệt; sửa theo góp ý; người duyệt rebase merge (mọi commit của bạn được giữ trên main).
 
 ## Nguyên tắc để không chặn nhau
 

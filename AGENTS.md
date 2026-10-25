@@ -68,9 +68,9 @@ sh workflow/scripts/tests/policy-test.sh                          # after touchi
 
 **R8. No AI attribution, ever.** Only the 5 collaborators may appear as contributors. Never add a `Co-authored-by` trailer, a "Generated with" or "Made with" line, a robot emoji byline, or any mention of an AI tool as author, in a commit message, pull request title or body, issue, or comment. Commits are authored by the human whose machine you are on. Never run `git config user.name` or `user.email`. The hooks, CI and the repository rules reject all of the above; do not look for a way around them.
 
-**R9. Git discipline.** Branch from the latest `main` as `type/issue-slug` (for example `feat/12-google-sign-in`). One issue per pull request. Commit subjects are `type(scope): imperative summary`. Never push to `main`, never force push, never use `--no-verify`. The full grammar is `.github/NAMING.md`.
+**R9. Git discipline.** Branch from the latest `main` as `type/issue-slug` (for example `feat/12-google-sign-in`). One issue per pull request. Commit subjects are `type(scope): imperative summary`. Never push to `main`, never force push to `main`, never use `--no-verify`. Every pull request is merged with **rebase and merge**, so every commit of your branch stays on `main` under your name: commit in small steps that each build and each have a real subject, and never write an empty or meaningless commit. For that reason **never merge `main` into your work branch** (a merge commit makes the pull request unmergeable and CI rejects it). To catch up with `main`, follow the `pubg-sync-branch` skill: rebase, then `git push --force-with-lease` on your own work branch only. The full grammar is `.github/NAMING.md`.
 
-**R10. You do not decide that work is done.** No AI step approves, merges or marks its own work verified. A passing build is not a decision. When the leader, or Hai Long for code he reviewed as code owner (`.github/CODEOWNERS`), asks you to merge a specific pull request, do it (`gh pr merge --squash`); they decided and you are the hands.
+**R10. You do not decide that work is done.** No AI step approves, merges or marks its own work verified. A passing build is not a decision. When the leader, or Hai Long for code he reviewed as code owner (`.github/CODEOWNERS`), asks you to merge a specific pull request, do it (`gh pr merge --rebase`, never `--delete-branch`); they decided and you are the hands.
 
 **R11. No secrets.** Never commit keys, keystores, tokens, passwords or `local.properties`. `google-services.json` is the only configuration file that is committed: it holds public identifiers, and the Firebase Security Rules are what protect the data.
 
@@ -111,7 +111,7 @@ Details are in `workflow/docs/conventions/android-java.md`.
 
 ## 8. Workflow and skills
 
-Issue, then branch, then pull request, then the leader or the code owner (`.github/CODEOWNERS`) reviews and squash merges. The skills below carry out each step the same way for everyone; their source is `.agents/skills/`.
+Issue, then branch, then pull request, then the leader or the code owner (`.github/CODEOWNERS`) reviews and rebase merges (every commit of the branch is kept on `main`). The skills below carry out each step the same way for everyone; their source is `.agents/skills/`.
 
 **A pull request that changes no file under `PUBGApp/` takes the short path.** It uses the four heading template `.github/PULL_REQUEST_TEMPLATE/tai-lieu.md`, not the long one; nobody runs Gradle for it, on a machine or in CI, because a build proves nothing about a Markdown file; and the reviewer judges the document against the issue instead of building the merged tree. `pubg-open-pr` and `pubg-review-pr` both begin by deciding which path applies. What still holds: `Closes #N` in the body, Vietnamese title and body (R14), the branch and commit grammar (R9), and no AI attribution (R8).
 

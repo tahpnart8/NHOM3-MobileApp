@@ -65,6 +65,9 @@ without_team_coauthors() {
 # check_commit_row <sha> <author login> <committer login> <author name> <author email> <message base64>
 check_commit_row() {
     _sha=$(printf '%s' "$1" | cut -c1-8)
+    if [ "${7:-1}" -gt 1 ]; then
+        note "commit $_sha: là commit gộp nhánh. Merge bằng rebase không nhận commit gộp. Đừng gộp main vào nhánh: chạy theo skill pubg-sync-branch (git rebase origin/main rồi git push --force-with-lease)."
+    fi
     if ! is_team "$2"; then
         note "commit $_sha: author login '$2' is not on the team list (.github/team.txt). If the e-mail is not linked to a GitHub account the login shows as NONE."
     fi
@@ -154,12 +157,12 @@ $raw_body"; then
     tmp=$(mktemp)
     trap 'rm -f "$tmp"' EXIT
 
-    gh api --paginate "repos/$REPO/pulls/$PR/commits" --jq '.[] | [.sha, (.author.login // "NONE"), (.committer.login // "NONE"), .commit.author.name, .commit.author.email, (.commit.message | @base64)] | @tsv' >"$tmp"
+    gh api --paginate "repos/$REPO/pulls/$PR/commits" --jq '.[] | [.sha, (.author.login // "NONE"), (.committer.login // "NONE"), .commit.author.name, .commit.author.email, (.commit.message | @base64), (.parents | length)] | @tsv' >"$tmp"
     count=0
-    while IFS="$TAB" read -r sha alogin clogin aname aemail msg64; do
+    while IFS="$TAB" read -r sha alogin clogin aname aemail msg64 parents; do
         [ -n "$sha" ] || continue
         count=$((count + 1))
-        check_commit_row "$sha" "$alogin" "$clogin" "$aname" "$aemail" "$msg64"
+        check_commit_row "$sha" "$alogin" "$clogin" "$aname" "$aemail" "$msg64" "$parents"
     done <"$tmp"
     echo "checked $count commit(s)"
 

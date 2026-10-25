@@ -19,7 +19,7 @@ Cả nhóm làm **một kiểu duy nhất**. Quy tắc đặt tên chi tiết �
 
 ```
 Issue  ->  nhận task  ->  branch từ main mới nhất  ->  commit nhỏ
-   ->  Pull Request (Closes #N)  ->  CI xanh  ->  người duyệt  ->  squash merge
+   ->  Pull Request (Closes #N)  ->  CI xanh  ->  người duyệt  ->  rebase merge
 ```
 
 1. **Issue.** Mọi việc bắt đầu từ một issue dùng form (`feature`, `bug`, `chore`). Nhờ AI tạo bằng lệnh `/new-issue` cho đúng mẫu. Không có issue thì không có code. Issue code gắn với một việc trong [kế hoạch](../../plan/README.md) (đóng băng code 2026-10-26, nộp bài 2026-10-30) và ghi danh sách file được sửa.

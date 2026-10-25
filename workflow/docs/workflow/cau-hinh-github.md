@@ -6,7 +6,7 @@ Những gì đã được áp dụng cho `tahpnart8/NHOM3-MobileApp`, để lead
 
 | Cấu hình | Giá trị |
 | --- | --- |
-| Cách merge | Chỉ **squash merge**. Commit trên `main` có tiêu đề là tiêu đề PR và **thân trống**, nên không dòng đồng tác giả nào lọt vào được |
+| Cách merge | **Rebase and merge** (squash vẫn được phép nhưng không dùng). Mọi commit của nhánh được giữ trên `main`. Dòng đồng tác giả bị CI từ chối ở từng commit, không phải nhờ thân commit trống nữa. Nhánh có commit gộp `main` không merge được |
 | Nhánh sau khi merge | Tự xóa |
 | Nút "Update branch" | Bật |
 | Wiki, Discussions | Tắt |
@@ -18,7 +18,7 @@ Những gì đã được áp dụng cho `tahpnart8/NHOM3-MobileApp`, để lead
 
 **Ruleset `main-checks`** (không ai được bỏ qua, kể cả leader): cấm xóa `main`, cấm force push, bắt buộc lịch sử tuyến tính, và bắt buộc hai check **`build`** và **`policy`** đều xanh. Nhánh không bắt buộc phải cập nhật với `main` mới merge được (tắt từ 2026-09-29): với nhiều Pull Request tài liệu mở cùng lúc, yêu cầu đó từng biến mỗi lần merge một cái thành việc mọi cái còn lại phải "Update branch" và chạy lại CI. Người duyệt bù lại bằng cách build cây đã merge trước khi duyệt (skill `pubg-review-pr`), và `build` vẫn chạy lại trên `main` sau mỗi lần merge.
 
-**Ruleset `main-review`**: mọi thay đổi vào `main` phải qua Pull Request, có **1 approval của người trong `CODEOWNERS` cho đường dẫn bị đổi**, các thảo luận đã được giải quyết, chỉ squash. Với hầu hết file thì đó là leader; riêng `PUBGApp/` và `workflow/docs/` có thêm Hải Long (`@Contest451`) làm người duyệt thứ hai, một trong hai người duyệt là đủ (xem `.github/CODEOWNERS`). Trong `PUBGApp/`, file Gradle (`libs.versions.toml`, `build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`), `google-services.json` và `AndroidManifest.xml`, cùng thư mục `firebase/`, chỉ leader duyệt. Pull Request đụng cả file của leader lẫn file chung vẫn cần leader. Hải Long được merge Pull Request mà chính anh đã duyệt; không ai tự duyệt Pull Request của mình. Review cũ **không** bị hủy khi có commit mới (tắt từ 2026-09-29), nên sửa một lỗi chính tả sau khi đã được duyệt không mất approval. Vai trò admin được bỏ qua ruleset này **bên trong một PR**, vì leader không thể tự approve PR của chính mình.
+**Ruleset `main-review`**: mọi thay đổi vào `main` phải qua Pull Request, có **1 approval của người trong `CODEOWNERS` cho đường dẫn bị đổi**, các thảo luận đã được giải quyết, merge bằng rebase (hoặc squash). Với hầu hết file thì đó là leader; riêng `PUBGApp/` và `workflow/docs/` có thêm Hải Long (`@Contest451`) làm người duyệt thứ hai, một trong hai người duyệt là đủ (xem `.github/CODEOWNERS`). Trong `PUBGApp/`, file Gradle (`libs.versions.toml`, `build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`), `google-services.json` và `AndroidManifest.xml`, cùng thư mục `firebase/`, chỉ leader duyệt. Pull Request đụng cả file của leader lẫn file chung vẫn cần leader. Hải Long được merge Pull Request mà chính anh đã duyệt; không ai tự duyệt Pull Request của mình. Review cũ **không** bị hủy khi có commit mới (tắt từ 2026-09-29), nên sửa một lỗi chính tả sau khi đã được duyệt không mất approval. Vai trò admin được bỏ qua ruleset này **bên trong một PR**, vì leader không thể tự approve PR của chính mình.
 
 ## Việc định kỳ
 
