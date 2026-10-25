@@ -33,3 +33,16 @@ for the real decode. A single stream reused for both returns null the second tim
 Integer division bottoms out at 0 and `0 >= 0` is true, so a target size of 0 makes the doubling loop run
 forever. `chooseTargetSize` never returns 0 today, which is exactly why the guard belongs in the arithmetic
 rather than in the caller.
+
+## Session restore and tab blocking order
+
+On cold start, Firebase session restore runs asynchronously (`restoreViewModel.restoreSession()`).
+During this in-flight window, `SessionManager.isLoggedIn()` is temporarily false while the user
+identity is being re-established.
+To prevent premature guest-blocking:
+1. `MainActivity.decideTabAction` returns `TabAction.WAIT_RESTORE` when a protected tab is tapped
+   during session restore. It stores `pendingTabId` and displays `R.string.common_loading`. Once
+   restore finishes, it dispatches to `pendingTabId` if logged in, or `action_global_sign_in` if not.
+2. `HomeFragment.shouldShowGuestSignIn` hides the guest header while `isRestoring` is true,
+   preventing the sign-in button from flashing or staying visible when the user is logged in.
+
