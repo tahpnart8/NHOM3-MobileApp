@@ -10,6 +10,7 @@ import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.enums.ComplaintReason;
+import com.nhom3.pubgapp.model.enums.ComplaintStatus;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.ReportReason;
@@ -175,6 +176,37 @@ public class TrustViewModelTest {
         assertEquals(TrustViewModel.COMPLAINT_NOT_PARTY, TrustViewModel.checkComplaintDeal(deal, "stranger", NOW));
         assertEquals(TrustViewModel.COMPLAINT_OK, TrustViewModel.checkComplaintDeal(deal, OTHER, NOW));
         assertEquals(TrustViewModel.COMPLAINT_NO_DEAL, TrustViewModel.checkComplaintDeal(null, ME, NOW));
+    }
+
+    @Test
+    public void ownWaitingComplaintMayBeWithdrawn() {
+        assertTrue(TrustViewModel.canWithdrawComplaint(sentComplaint(ME, ComplaintStatus.OPEN), ME));
+        assertTrue(TrustViewModel.canWithdrawComplaint(sentComplaint(ME, ComplaintStatus.NEEDS_EVIDENCE), ME));
+    }
+
+    @Test
+    public void closedComplaintsMayNotBeWithdrawn() {
+        assertFalse(TrustViewModel.canWithdrawComplaint(sentComplaint(ME, ComplaintStatus.RESOLVED), ME));
+        assertFalse(TrustViewModel.canWithdrawComplaint(sentComplaint(ME, ComplaintStatus.WITHDRAWN), ME));
+    }
+
+    @Test
+    public void someoneElsesComplaintMayNotBeWithdrawn() {
+        assertFalse(TrustViewModel.canWithdrawComplaint(sentComplaint(OTHER, ComplaintStatus.OPEN), ME));
+    }
+
+    @Test
+    public void missingComplaintOrUserMayNotWithdraw() {
+        assertFalse(TrustViewModel.canWithdrawComplaint(null, ME));
+        assertFalse(TrustViewModel.canWithdrawComplaint(sentComplaint(ME, ComplaintStatus.OPEN), null));
+        assertFalse(TrustViewModel.canWithdrawComplaint(sentComplaint(ME, ComplaintStatus.OPEN), ""));
+    }
+
+    private static Complaint sentComplaint(String complainantId, ComplaintStatus status) {
+        Complaint complaint = new Complaint();
+        complaint.setComplainantId(complainantId);
+        complaint.setStatus(status);
+        return complaint;
     }
 
     private static Deal deal(DealStatus status, DeliveryMethod method, Timestamp autoReleaseAt) {
