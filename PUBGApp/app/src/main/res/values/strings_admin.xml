@@ -312,4 +312,27 @@
     <string name="admin_report_evidence_message_image">[Ảnh]</string>
     <string name="admin_report_evidence_message_offer">[Đề nghị giá]</string>
     <string name="admin_report_evidence_close">Đóng</string>
+
+    <!-- E05 Category management (STT 79) -->
+    <string name="admin_category_add">Thêm danh mục</string>
+    <string name="admin_category_edit">Sửa danh mục</string>
+    <string name="admin_category_delete">Xóa danh mục</string>
+    <string name="admin_category_name_label">Tên danh mục</string>
+    <string name="admin_category_name_hint">Nhập tên danh mục (tối đa 100 ký tự)</string>
+    <string name="admin_category_parent_label">Danh mục cha</string>
+    <string name="admin_category_parent_root">Không có (Danh mục gốc)</string>
+    <string name="admin_category_active">Đang dùng</string>
+    <string name="admin_category_listings_count">%1$d tin đăng</string>
+    <string name="admin_category_empty_title">Chưa có danh mục nào</string>
+    <string name="admin_category_empty_subtitle">Bấm nút bên dưới để tạo danh mục đầu tiên.</string>
+    <string name="admin_category_delete_confirm_title">Xác nhận xóa danh mục</string>
+    <string name="admin_category_delete_confirm_message">Bạn có chắc chắn muốn xóa danh mục \"%1$s\"?</string>
+    <string name="admin_category_name_required">Tên danh mục không được để trống.</string>
+    <string name="admin_category_name_too_long">Tên danh mục không được vượt quá 100 ký tự.</string>
+    <string name="admin_category_parent_invalid">Danh mục cha phải là danh mục gốc.</string>
+    <string name="admin_category_parent_self">Danh mục không thể là cha của chính mình.</string>
+    <string name="admin_category_save_success">Đã lưu danh mục thành công.</string>
+    <string name="admin_category_delete_success">Đã xóa danh mục.</string>
+    <string name="admin_category_retry">Thử lại</string>
+    <string name="admin_category_badge_child">Danh mục con</string>
 </resources>
