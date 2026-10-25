@@ -966,7 +966,45 @@ public class ListingRepository extends BaseRepository {
     }
 
     public void getSimilar(final Listing listing, final DataCallback<List<Listing>> cb) {
-        cb.onError(DataCallback.NOT_READY);
+        if (listing == null || listing.getCategoryId() == null || listing.getCategoryId().isEmpty()) {
+            cb.onSuccess(new ArrayList<Listing>());
+            return;
+        }
+        db.collection(COLLECTION_LISTINGS)
+                .whereEqualTo("status", ListingStatus.AVAILABLE.name())
+                .whereEqualTo("categoryId", listing.getCategoryId())
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .limit(100)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot snapshots) {
+                        List<Listing> rawList = toListingList(snapshots);
+                        List<Listing> candidates = new ArrayList<Listing>();
+                        String currentListingId = listing.getId();
+                        String viewerId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
+                        for (int i = 0; i < rawList.size(); i++) {
+                            Listing candidate = rawList.get(i);
+                            if (candidate == null) {
+                                continue;
+                            }
+                            if (currentListingId != null && currentListingId.equals(candidate.getId())) {
+                                continue;
+                            }
+                            if (viewerId != null && viewerId.equals(candidate.getSellerId())) {
+                                continue;
+                            }
+                            candidates.add(candidate);
+                        }
+                        cb.onSuccess(candidates);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(Exception e) {
+                        fail(cb, e);
+                    }
+                });
     }
 
     public void recordView(final Listing listing) {
