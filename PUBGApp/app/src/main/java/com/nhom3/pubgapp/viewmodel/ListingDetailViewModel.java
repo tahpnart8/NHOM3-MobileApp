@@ -55,6 +55,16 @@ public class ListingDetailViewModel extends ViewModel {
         return listing.getStatus() == ListingStatus.AVAILABLE;
     }
 
+    public static boolean canFollowSeller(String sellerId, String viewerId) {
+        if (sellerId == null || sellerId.trim().isEmpty()) {
+            return false;
+        }
+        if (viewerId != null && viewerId.equals(sellerId)) {
+            return false;
+        }
+        return true;
+    }
+
     private final ListingRepository listingRepository = new ListingRepository();
     private final UserRepository userRepository = new UserRepository();
     private final MediaRepository mediaRepository = new MediaRepository();
@@ -286,7 +296,56 @@ public class ListingDetailViewModel extends ViewModel {
     }
 
     public void toggleFollowSeller() {
-        error.setValue(DataCallback.NOT_READY);
+        final Listing current = listing.getValue();
+        if (current == null || current.getSellerId() == null || current.getSellerId().isEmpty()) {
+            return;
+        }
+        final String sellerId = current.getSellerId();
+        if (!SessionManager.getInstance().isLoggedIn()) {
+            error.setValue("Vui lòng đăng nhập để theo dõi người bán");
+            return;
+        }
+        final String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null || uid.isEmpty()) {
+            error.setValue("Vui lòng đăng nhập để theo dõi người bán");
+            return;
+        }
+        if (uid.equals(sellerId)) {
+            error.setValue("Không thể theo dõi chính mình");
+            return;
+        }
+        final boolean isCurrentlyFollowing = Boolean.TRUE.equals(followingSeller.getValue());
+        final boolean newFollowing = !isCurrentlyFollowing;
+        loading.setValue(true);
+        if (newFollowing) {
+            userRepository.follow(uid, sellerId, new DataCallback<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    loading.postValue(false);
+                    followingSeller.postValue(true);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    loading.postValue(false);
+                    error.postValue(errorMessage);
+                }
+            });
+        } else {
+            userRepository.unfollow(uid, sellerId, new DataCallback<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    loading.postValue(false);
+                    followingSeller.postValue(false);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    loading.postValue(false);
+                    error.postValue(errorMessage);
+                }
+            });
+        }
     }
 
     public void loadSimilar() {
