@@ -347,7 +347,8 @@ public class RecommendationEngine {
 
         double savedScore = 0.0;
         if (savedCategoryIds != null && listing.getCategoryId() != null
-                && savedCategoryIds.contains(listing.getCategoryId())) {
+                && (savedCategoryIds.contains(listing.getCategoryId())
+                || (listing.getId() != null && savedCategoryIds.contains(listing.getId())))) {
             savedScore = 0.5;
         }
 
