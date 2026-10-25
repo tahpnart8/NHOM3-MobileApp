@@ -299,4 +299,17 @@
     <string name="admin_complaint_decision_waiting">Đã yêu cầu bổ sung: %1$s</string>
     <string name="admin_complaint_decision_result">Đã quyết định: %1$s. Lời giải thích: %2$s</string>
     <string name="admin_complaint_decision_withdrawn">Người khiếu nại đã rút đơn, không ra quyết định được nữa.</string>
+    <!-- E04 evidence dialog of a report -->
+    <string name="admin_report_evidence_action">Bằng chứng</string>
+    <string name="admin_report_evidence_title">Bằng chứng của báo cáo</string>
+    <string name="admin_report_evidence_images_title">Ảnh đính kèm</string>
+    <string name="admin_report_evidence_no_images">Báo cáo không có ảnh bằng chứng.</string>
+    <string name="admin_report_evidence_image">Ảnh bằng chứng của báo cáo</string>
+    <string name="admin_report_evidence_chat_title">Đoạn chat quanh tin nhắn bị báo cáo</string>
+    <string name="admin_report_evidence_no_messages">Không đọc được tin nhắn nào của cuộc trò chuyện.</string>
+    <string name="admin_report_evidence_message_line">%1$s  %2$s</string>
+    <string name="admin_report_evidence_message_reported">%1$s (tin bị báo cáo)</string>
+    <string name="admin_report_evidence_message_image">[Ảnh]</string>
+    <string name="admin_report_evidence_message_offer">[Đề nghị giá]</string>
+    <string name="admin_report_evidence_close">Đóng</string>
 </resources>
