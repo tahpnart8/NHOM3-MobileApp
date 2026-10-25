@@ -204,4 +204,14 @@
     <!-- D07 tab "Khiếu nại của tôi" -->
     <string name="profile_my_complaints_empty_title">Chưa có khiếu nại nào</string>
     <string name="profile_my_complaints_empty_message">Khiếu nại bạn gửi về một giao dịch sẽ hiện ở đây, kèm tiến độ xử lý.</string>
+    <string name="profile_my_complaints_evidence_title">Ảnh bằng chứng</string>
+    <string name="profile_my_complaints_no_evidence">Không có ảnh bằng chứng.</string>
+    <string name="profile_my_complaints_evidence_request_title">Admin cần bạn bổ sung bằng chứng</string>
+    <string name="profile_my_complaints_decision_title">Quyết định của admin</string>
+    <string name="profile_my_complaints_decision_refund">Hoàn tiền</string>
+    <string name="profile_my_complaints_decision_return_item">Hoàn trả sản phẩm</string>
+    <string name="profile_my_complaints_decision_cancel_deal">Hủy giao dịch</string>
+    <string name="profile_my_complaints_decision_reject">Không chấp nhận khiếu nại</string>
+    <string name="profile_my_complaints_close">Đóng</string>
+    <string name="profile_my_complaints_view_deal">Xem giao dịch</string>
 </resources>

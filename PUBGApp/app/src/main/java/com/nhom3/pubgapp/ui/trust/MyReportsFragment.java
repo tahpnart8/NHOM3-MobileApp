@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
@@ -22,6 +23,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.nhom3.pubgapp.R;
+import com.nhom3.pubgapp.databinding.DialogComplaintDetailBinding;
 import com.nhom3.pubgapp.databinding.FragmentMyReportsBinding;
 import com.nhom3.pubgapp.databinding.ViewEmptyStateBinding;
 import com.nhom3.pubgapp.model.Complaint;
@@ -38,6 +40,8 @@ public class MyReportsFragment extends Fragment {
     private static final String STATE_SELECTED_TAB = "selected_tab";
     private static final int TAB_REPORTS = 0;
     private static final String STATE_OPEN_COMPLAINT = "open_complaint";
+    // Argument name of the deal detail destination in nav_main.xml.
+    private static final String ARG_DEAL_ID = "dealId";
     private static final String STATE_SHARED_EXPORT = "shared_export";
     // Matches android:authorities="${applicationId}.fileprovider" in the manifest.
     private static final String FILE_PROVIDER_SUFFIX = ".fileprovider";
@@ -56,6 +60,8 @@ public class MyReportsFragment extends Fragment {
     private String openComplaintId;
     // Set when a read fails before any complaint arrived, so the tab shows the error instead of the spinner.
     private boolean complaintsFailed;
+    @Nullable
+    private AlertDialog complaintDialog;
 
     @Nullable
     @Override
@@ -279,6 +285,61 @@ public class MyReportsFragment extends Fragment {
                 updateComplaintsState();
             }
         });
+        trustViewModel.getSelectedComplaint().observe(getViewLifecycleOwner(), new Observer<Complaint>() {
+            @Override
+            public void onChanged(Complaint complaint) {
+                showComplaintDetail(complaint);
+            }
+        });
+    }
+
+    // Shown only for the row the user opened; after a rotation openComplaintId brings the same one back.
+    private void showComplaintDetail(@Nullable Complaint complaint) {
+        if (complaint == null || openComplaintId == null || !openComplaintId.equals(complaint.getId())) {
+            return;
+        }
+        dismissComplaintDialog();
+        DialogComplaintDetailBinding detail = DialogComplaintDetailBinding.inflate(getLayoutInflater());
+        MyComplaintAdapter.bindDetail(detail, complaint);
+        final String dealId = complaint.getDealId();
+        complaintDialog = new MaterialAlertDialogBuilder(requireContext())
+                .setView(detail.getRoot())
+                .setPositiveButton(R.string.profile_my_complaints_close, null)
+                .setNeutralButton(R.string.profile_my_complaints_view_deal, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        openDeal(dealId);
+                    }
+                })
+                .create();
+        complaintDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                openComplaintId = null;
+                complaintDialog = null;
+            }
+        });
+        complaintDialog.show();
+    }
+
+    // Closing without the listener keeps openComplaintId, so a rotation reopens the dialog.
+    private void dismissComplaintDialog() {
+        if (complaintDialog == null) {
+            return;
+        }
+        complaintDialog.setOnDismissListener(null);
+        complaintDialog.dismiss();
+        complaintDialog = null;
+    }
+
+    // The complaint id is the deal id, and C03 is reached through its global action (R22).
+    private void openDeal(@Nullable String dealId) {
+        if (dealId == null || dealId.isEmpty()) {
+            return;
+        }
+        Bundle args = new Bundle();
+        args.putString(ARG_DEAL_ID, dealId);
+        NavHostFragment.findNavController(this).navigate(R.id.action_global_deal_detail, args);
     }
 
     // Reports and complaints share one loading flag, so the complaints tab waits for its own list or failure.
@@ -327,6 +388,7 @@ public class MyReportsFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        dismissComplaintDialog();
         // Views are gone after this call, so the binding must not outlive them.
         binding = null;
     }
