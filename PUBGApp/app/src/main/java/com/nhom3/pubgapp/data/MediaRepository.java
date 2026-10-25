@@ -12,11 +12,14 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.nhom3.pubgapp.model.MediaImage;
 import com.nhom3.pubgapp.model.enums.ImagePurpose;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -66,14 +69,7 @@ public class MediaRepository extends BaseRepository {
                     final DocumentReference ref = db.collection(COLLECTION_IMAGES).document();
                     final String imageId = ref.getId();
 
-                    MediaImage image = new MediaImage();
-                    image.setId(imageId);
-                    image.setOwnerId(uid);
-                    image.setPurpose(purpose);
-                    image.setData(base64);
-                    image.setWidth(width);
-                    image.setHeight(height);
-                    image.setSizeBytes(bytes.length);
+                    Map<String, Object> image = buildImageDocument(uid, purpose, base64, width, height, bytes.length);
 
                     MEMORY_CACHE.put(imageId, bytes);
 
@@ -95,6 +91,20 @@ public class MediaRepository extends BaseRepository {
                 }
             }
         });
+    }
+
+    // A Map, not a MediaImage: BaseDocument would add updatedAt, and the images rule allows only these keys.
+    static Map<String, Object> buildImageDocument(String ownerId, ImagePurpose purpose, String base64,
+                                                  int width, int height, int sizeBytes) {
+        Map<String, Object> image = new HashMap<String, Object>();
+        image.put("ownerId", ownerId);
+        image.put("purpose", purpose.name());
+        image.put("data", base64);
+        image.put("width", width);
+        image.put("height", height);
+        image.put("sizeBytes", sizeBytes);
+        image.put("createdAt", FieldValue.serverTimestamp());
+        return image;
     }
 
     public void makeThumb(final Uri uri, final DataCallback<String> cb) {
