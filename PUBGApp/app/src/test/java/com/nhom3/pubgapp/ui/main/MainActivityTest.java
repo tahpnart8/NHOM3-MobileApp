@@ -1,5 +1,6 @@
 package com.nhom3.pubgapp.ui.main;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -74,5 +75,43 @@ public class MainActivityTest {
     @Test
     public void isBadgeOverflow_oneHundred_showsNinetyNinePlus() {
         assertTrue(MainActivity.isBadgeOverflow(Integer.valueOf(100)));
+    }
+
+    @Test
+    public void decideTabAction_publicTabs_alwaysNavigate() {
+        assertEquals(MainActivity.TabAction.NAVIGATE,
+                MainActivity.decideTabAction(R.id.homeFragment, false, false));
+        assertEquals(MainActivity.TabAction.NAVIGATE,
+                MainActivity.decideTabAction(R.id.homeFragment, false, true));
+        assertEquals(MainActivity.TabAction.NAVIGATE,
+                MainActivity.decideTabAction(R.id.searchFragment, true, false));
+    }
+
+    @Test
+    public void decideTabAction_protectedTab_signedIn_navigates() {
+        assertEquals(MainActivity.TabAction.NAVIGATE,
+                MainActivity.decideTabAction(R.id.myProfileFragment, true, false));
+        assertEquals(MainActivity.TabAction.NAVIGATE,
+                MainActivity.decideTabAction(R.id.postListingFragment, true, true));
+    }
+
+    @Test
+    public void decideTabAction_protectedTab_restoring_waitsRestore() {
+        assertEquals(MainActivity.TabAction.WAIT_RESTORE,
+                MainActivity.decideTabAction(R.id.myProfileFragment, false, true));
+        assertEquals(MainActivity.TabAction.WAIT_RESTORE,
+                MainActivity.decideTabAction(R.id.postListingFragment, false, true));
+        assertEquals(MainActivity.TabAction.WAIT_RESTORE,
+                MainActivity.decideTabAction(R.id.conversationListFragment, false, true));
+    }
+
+    @Test
+    public void decideTabAction_protectedTab_guestNotRestoring_blocksToSignIn() {
+        assertEquals(MainActivity.TabAction.BLOCK_TO_SIGN_IN,
+                MainActivity.decideTabAction(R.id.myProfileFragment, false, false));
+        assertEquals(MainActivity.TabAction.BLOCK_TO_SIGN_IN,
+                MainActivity.decideTabAction(R.id.postListingFragment, false, false));
+        assertEquals(MainActivity.TabAction.BLOCK_TO_SIGN_IN,
+                MainActivity.decideTabAction(R.id.conversationListFragment, false, false));
     }
 }

@@ -67,6 +67,26 @@ public class MainActivity extends AppCompatActivity {
         outState.putBoolean(STATE_AUTO_RELEASE_CHECKED, autoReleaseChecked);
     }
 
+    enum TabAction {
+        NAVIGATE,
+        WAIT_RESTORE,
+        BLOCK_TO_SIGN_IN
+    }
+
+    /** Decides whether to allow navigation, wait for session restore, or block to sign-in. */
+    static TabAction decideTabAction(int tabId, boolean loggedIn, boolean isRestoring) {
+        if (!isTabBlockedForGuest(tabId, false)) {
+            return TabAction.NAVIGATE;
+        }
+        if (loggedIn) {
+            return TabAction.NAVIGATE;
+        }
+        if (isRestoring) {
+            return TabAction.WAIT_RESTORE;
+        }
+        return TabAction.BLOCK_TO_SIGN_IN;
+    }
+
     /** Guests may open Home and Search only; the other three tabs send them to A01. */
     static boolean isTabBlockedForGuest(int tabId, boolean loggedIn) {
         if (loggedIn) {
