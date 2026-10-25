@@ -89,4 +89,13 @@ public class ListingDetailViewModelTest {
         assertFalse(ListingDetailViewModel.canSendOffer(sold, null));
         assertFalse(ListingDetailViewModel.canSendOffer(sold, "buyer-1"));
     }
+
+    @Test
+    public void testCanFollowSeller() {
+        assertFalse(ListingDetailViewModel.canFollowSeller(null, "buyer-1"));
+        assertFalse(ListingDetailViewModel.canFollowSeller("", "buyer-1"));
+        assertFalse(ListingDetailViewModel.canFollowSeller("seller-1", "seller-1"));
+        assertTrue(ListingDetailViewModel.canFollowSeller("seller-1", null));
+        assertTrue(ListingDetailViewModel.canFollowSeller("seller-1", "buyer-1"));
+    }
 }
