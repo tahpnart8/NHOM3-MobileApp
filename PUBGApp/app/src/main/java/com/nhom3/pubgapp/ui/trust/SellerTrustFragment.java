@@ -126,6 +126,7 @@ public class SellerTrustFragment extends Fragment {
         listingAdapter = new ProfileListingAdapter();
         binding.recyclerListings.setLayoutManager(new GridLayoutManager(requireContext(), GRID_COLUMNS));
         binding.recyclerListings.setAdapter(listingAdapter);
+        binding.textSellingTitle.setText(R.string.profile_seller_trust_selling_loading);
         reviewAdapter = new ReviewAdapter();
         binding.recyclerReviews.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerReviews.setAdapter(reviewAdapter);
@@ -436,7 +437,11 @@ public class SellerTrustFragment extends Fragment {
 
     private void showListings(List<Listing> all) {
         List<Listing> selling = ProfileListingAdapter.filterSelling(all);
-        binding.textSellingTitle.setText(getString(R.string.profile_seller_trust_selling, selling.size()));
+        if (all == null) {
+            binding.textSellingTitle.setText(R.string.profile_seller_trust_selling_loading);
+        } else {
+            binding.textSellingTitle.setText(getString(R.string.profile_seller_trust_selling, selling.size()));
+        }
         binding.progressListings.setVisibility(all == null ? View.VISIBLE : View.GONE);
         listingAdapter.submitList(selling);
         boolean empty = all != null && selling.isEmpty();

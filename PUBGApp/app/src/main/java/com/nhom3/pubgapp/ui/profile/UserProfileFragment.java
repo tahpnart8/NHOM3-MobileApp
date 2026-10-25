@@ -572,6 +572,12 @@ public class UserProfileFragment extends Fragment {
         if (sellingTab == null || soldTab == null) {
             return;
         }
+        // Not loaded yet: a count of 0 would read as "sells nothing".
+        if (listings == null) {
+            sellingTab.setText(R.string.profile_user_profile_tab_selling_loading);
+            soldTab.setText(R.string.profile_user_profile_tab_sold_loading);
+            return;
+        }
         int sellingCount = ProfileListingAdapter.filterSelling(listings).size();
         int soldCount = ProfileListingAdapter.filterSold(listings).size();
         sellingTab.setText(getString(R.string.profile_user_profile_tab_selling, sellingCount));

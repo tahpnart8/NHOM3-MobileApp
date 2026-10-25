@@ -91,6 +91,9 @@
     <string name="profile_user_profile_stat_unknown">-</string>
     <string name="profile_user_profile_tab_selling">Đang bán (%1$d)</string>
     <string name="profile_user_profile_tab_sold">Đã bán (%1$d)</string>
+    <string name="profile_user_profile_tab_selling_loading">Đang bán</string>
+    <string name="profile_user_profile_tab_sold_loading">Đã bán</string>
+    <string name="profile_user_profile_stat_loading">…</string>
     <string name="profile_user_profile_tab_reviews">Đánh giá</string>
     <string name="profile_user_profile_empty_selling_title">Chưa có món đang bán</string>
     <string name="profile_user_profile_empty_selling_message">Người này hiện không có tin nào đang bán.</string>
@@ -119,6 +122,7 @@
     <string name="profile_seller_trust_criteria_value">%1$.1f</string>
     <string name="profile_seller_trust_recent_reviews">Đánh giá gần đây</string>
     <string name="profile_seller_trust_selling">Đang bán (%1$d)</string>
+    <string name="profile_seller_trust_selling_loading">Đang bán</string>
     <string name="profile_seller_trust_reviews_empty_title">Chưa có đánh giá nào</string>
     <string name="profile_seller_trust_reviews_empty_message">Người bán này chưa nhận được đánh giá.</string>
     <string name="profile_seller_trust_selling_empty_title">Không có món đang bán</string>
