@@ -62,6 +62,7 @@ public class ProfileViewModel extends ViewModel {
     private static final String MESSAGE_ALREADY_APPROVED = "Tài khoản đã xác thực.";
     private static final String MESSAGE_NO_RESUBMIT_LEFT = "Đã hết số lần gửi lại, hãy liên hệ admin.";
     private static final String MESSAGE_CANNOT_FOLLOW_SELF = "Bạn không thể tự theo dõi chính mình.";
+    private static final String MESSAGE_STATS_FAILED = "Không tải được thống kê, bấm Thử lại.";
 
     private final UserRepository userRepository = new UserRepository();
     private final AuthRepository authRepository = new AuthRepository();
@@ -416,10 +417,11 @@ public class ProfileViewModel extends ViewModel {
                 loading.postValue(false);
             }
 
+            // The raw Firestore text is in the log; the user gets one short sentence.
             @Override
             public void onError(String message) {
                 loading.postValue(false);
-                error.postValue(message);
+                error.postValue(MESSAGE_STATS_FAILED);
             }
         });
     }
