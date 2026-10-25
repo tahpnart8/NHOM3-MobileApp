@@ -473,6 +473,11 @@ public class AdminModerationFragment extends Fragment {
                 NavHostFragment.findNavController(AdminModerationFragment.this)
                         .navigate(R.id.adminUserDetailFragment, args);
             }
+
+            @Override
+            public void onViewEvidence(AdminReportGrouping.Group group) {
+                openEvidence(group);
+            }
         });
         binding.recyclerReports.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerReports.setAdapter(adapter);

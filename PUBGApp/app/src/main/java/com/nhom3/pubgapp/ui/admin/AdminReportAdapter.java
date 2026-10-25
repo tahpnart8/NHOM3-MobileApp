@@ -35,6 +35,8 @@ public class AdminReportAdapter extends RecyclerView.Adapter<AdminReportAdapter.
         void onHide(AdminReportGrouping.Group group);
 
         void onViewUser(AdminReportGrouping.Group group);
+
+        void onViewEvidence(AdminReportGrouping.Group group);
     }
 
     private final List<AdminReportGrouping.Group> groups = new ArrayList<AdminReportGrouping.Group>();
@@ -134,6 +136,13 @@ public class AdminReportAdapter extends RecyclerView.Adapter<AdminReportAdapter.
     private void bindButtons(ItemAdminReportBinding binding, AdminReportGrouping.Group group,
             @Nullable Listing listing) {
         final AdminReportGrouping.Group target = group;
+        // Evidence stays readable after a report is closed, so this button is wired before the read-only return.
+        binding.buttonEvidence.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                listener.onViewEvidence(target);
+            }
+        });
         boolean isOpen = group.getStatus() == ReportStatus.OPEN;
         binding.layoutActions.setVisibility(isOpen ? View.VISIBLE : View.GONE);
         binding.textHint.setVisibility(View.GONE);
