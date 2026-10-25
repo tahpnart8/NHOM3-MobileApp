@@ -249,4 +249,10 @@
 
     <!-- B02 Search sort by seller rating -->
     <string name="listing_search_sort_top_rated">Đánh giá tốt</string>
+
+    <!-- B04 Category condition fields (Issue #220) -->
+    <string name="listing_post_category_condition_label">Thuộc tính theo danh mục</string>
+    <string name="listing_post_category_change_warning">Đổi danh mục sẽ xóa các thuộc tính bạn đã nhập. Bạn có muốn tiếp tục?</string>
+    <string name="listing_post_category_change_positive">Đổi danh mục</string>
+    <string name="listing_post_category_change_negative">Giữ lại</string>
 </resources>

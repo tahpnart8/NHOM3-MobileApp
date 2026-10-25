@@ -7,12 +7,15 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultCallback;
@@ -30,6 +33,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentPostListingBinding;
@@ -50,7 +55,10 @@ import com.nhom3.pubgapp.viewmodel.ShopViewModel;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Screen B04: post a new listing with images, details, and seller verification check. */
 public class PostListingFragment extends Fragment {
@@ -83,6 +91,8 @@ public class PostListingFragment extends Fragment {
     private String editingListingId;
     private Listing editingListing;
     private String selectedCategoryId;
+    private final Map<String, EditText> conditionEditTexts = new LinkedHashMap<String, EditText>();
+    private Map<String, String> pendingConditionValues;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -340,11 +350,7 @@ public class PostListingFragment extends Fragment {
         binding.spinnerCategory.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (position >= 0 && position < loadedCategories.size()) {
-                    selectedCategoryId = loadedCategories.get(position).getId();
-                } else {
-                    selectedCategoryId = null;
-                }
+                onCategorySelected(position);
             }
         });
 
@@ -359,6 +365,18 @@ public class PostListingFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 attemptSaveDraft();
+            }
+        });
+
+        binding.spinnerCategory.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                onCategorySelected(position);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                clearCategoryConditionFields();
             }
         });
     }
@@ -399,6 +417,7 @@ public class PostListingFragment extends Fragment {
                     binding.spinnerCategory.setAdapter(null);
                     binding.spinnerCategory.setText("", false);
                     selectedCategoryId = null;
+                    clearCategoryConditionFields();
                 } else {
                     binding.layoutCategory.setHelperText(null);
                     ArrayAdapter<String> adapter = new ArrayAdapter<String>(
@@ -905,15 +924,135 @@ public class PostListingFragment extends Fragment {
         updateImageButtonsVisibility();
     }
 
+    private boolean hasUserEnteredConditionValues() {
+        for (EditText editText : conditionEditTexts.values()) {
+            if (editText != null && editText.getText() != null) {
+                String text = editText.getText().toString().trim();
+                if (!text.isEmpty()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void onCategorySelected(final int newPosition) {
+        if (newPosition < 0 || newPosition >= loadedCategories.size()) {
+            clearCategoryConditionFields();
+            selectedCategoryId = null;
+            return;
+        }
+
+        final Category newCat = loadedCategories.get(newPosition);
+        if (newCat == null) {
+            clearCategoryConditionFields();
+            selectedCategoryId = null;
+            return;
+        }
+
+        final String newId = newCat.getId();
+        if (selectedCategoryId != null && !selectedCategoryId.equals(newId)) {
+            if (hasUserEnteredConditionValues()) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                builder.setMessage(R.string.listing_post_category_change_warning);
+                builder.setPositiveButton(R.string.listing_post_category_change_positive,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                selectedCategoryId = newId;
+                                binding.spinnerCategory.setText(newCat.getName(), false);
+                                renderCategoryConditionFields(newCat);
+                            }
+                        });
+                builder.setNegativeButton(R.string.listing_post_category_change_negative,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                selectCategory(selectedCategoryId);
+                            }
+                        });
+                builder.setCancelable(false);
+                builder.create().show();
+                return;
+            }
+        }
+
+        selectedCategoryId = newId;
+        renderCategoryConditionFields(newCat);
+    }
+
+    private void clearCategoryConditionFields() {
+        if (binding != null) {
+            binding.layoutCategoryConditionFields.removeAllViews();
+            binding.layoutCategoryConditionFields.setVisibility(View.GONE);
+        }
+        conditionEditTexts.clear();
+    }
+
+    private void renderCategoryConditionFields(Category category) {
+        if (getContext() == null || binding == null) {
+            return;
+        }
+        binding.layoutCategoryConditionFields.removeAllViews();
+        conditionEditTexts.clear();
+
+        if (category == null || category.getConditionFields() == null
+                || category.getConditionFields().isEmpty()) {
+            binding.layoutCategoryConditionFields.setVisibility(View.GONE);
+            return;
+        }
+
+        List<String> fields = category.getConditionFields();
+        int marginSm = getResources().getDimensionPixelSize(R.dimen.space_sm);
+        for (int i = 0; i < fields.size(); i++) {
+            String fieldName = fields.get(i);
+            if (fieldName == null || fieldName.trim().isEmpty()) {
+                continue;
+            }
+            String trimmedName = fieldName.trim();
+            TextInputLayout inputLayout = new TextInputLayout(requireContext());
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            lp.setMargins(0, marginSm, 0, 0);
+            inputLayout.setLayoutParams(lp);
+            inputLayout.setHint(trimmedName);
+
+            TextInputEditText editText = new TextInputEditText(inputLayout.getContext());
+            editText.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            ));
+            editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+
+            if (pendingConditionValues != null && pendingConditionValues.containsKey(trimmedName)) {
+                String existingVal = pendingConditionValues.get(trimmedName);
+                if (existingVal != null) {
+                    editText.setText(existingVal);
+                }
+            }
+
+            inputLayout.addView(editText);
+            binding.layoutCategoryConditionFields.addView(inputLayout);
+            conditionEditTexts.put(trimmedName, editText);
+        }
+
+        binding.layoutCategoryConditionFields.setVisibility(
+                conditionEditTexts.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
     private void selectCategory(String categoryId) {
         selectedCategoryId = categoryId;
         if (categoryId == null || loadedCategories.isEmpty()) {
+            clearCategoryConditionFields();
             return;
         }
         for (int i = 0; i < loadedCategories.size(); i++) {
             Category cat = loadedCategories.get(i);
             if (cat != null && categoryId.equals(cat.getId())) {
                 binding.spinnerCategory.setText(cat.getName(), false);
+                renderCategoryConditionFields(cat);
                 break;
             }
         }
