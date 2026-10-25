@@ -120,6 +120,21 @@ public class SearchViewModel extends ViewModel {
         return sorted;
     }
 
+    private List<Listing> processResults(List<Listing> list) {
+        if (list == null) {
+            return new ArrayList<Listing>();
+        }
+        List<Listing> processed = list;
+        if (filter != null && filter.getRadiusKm() > 0 && filter.getCenter() != null) {
+            processed = filterByRadius(processed, filter.getCenter(), filter.getRadiusKm(), geoUtils);
+        }
+        List<Listing> sorted = sortResults(processed, filter != null ? filter.getSortOrder() : null);
+        if (filter != null && filter.getCenter() != null) {
+            sorted = sortByDistance(sorted, filter.getCenter(), geoUtils);
+        }
+        return sorted;
+    }
+
     public LiveData<List<Listing>> getResults() {
         return results;
     }
@@ -195,7 +210,7 @@ public class SearchViewModel extends ViewModel {
                 if (list != null && !list.isEmpty()) {
                     lastCreatedAt = list.get(list.size() - 1).getCreatedAt();
                 }
-                List<Listing> sorted = sortResults(list, filter.getSortOrder());
+                List<Listing> sorted = processResults(list);
                 results.postValue(sorted);
             }
 
@@ -234,7 +249,7 @@ public class SearchViewModel extends ViewModel {
                     merged.addAll(current);
                 }
                 merged.addAll(page);
-                List<Listing> sorted = sortResults(merged, filter.getSortOrder());
+                List<Listing> sorted = processResults(merged);
                 results.postValue(sorted);
             }
 
