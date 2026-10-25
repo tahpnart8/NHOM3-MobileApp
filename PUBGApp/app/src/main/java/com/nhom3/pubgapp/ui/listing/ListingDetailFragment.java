@@ -286,6 +286,11 @@ public class ListingDetailFragment extends Fragment {
                 if (currentSimilar == null) {
                     viewModel.loadSimilar();
                 }
+
+                long[] currentPriceRange = viewModel.getPriceRange().getValue();
+                if (currentPriceRange == null) {
+                    viewModel.loadPriceRange();
+                }
             }
         });
 
@@ -450,12 +455,13 @@ public class ListingDetailFragment extends Fragment {
 
         binding.textDescription.setText(listing.getDescription());
 
-        viewModel.loadPriceRange();
-
         setupActionButtons(listing, currentUid);
     }
 
     private void displayPriceRange(long[] range) {
+        if (binding.textPriceRange == null) {
+            return;
+        }
         if (range == null || range.length < 2) {
             binding.textPriceRange.setVisibility(View.GONE);
             return;
