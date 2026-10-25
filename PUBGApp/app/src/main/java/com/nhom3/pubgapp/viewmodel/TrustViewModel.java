@@ -23,6 +23,8 @@ import com.nhom3.pubgapp.util.SessionManager;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 // State for reviews, reports and complaints on the user side. Action bodies report NOT_READY until the repositories are filled.
 public class TrustViewModel extends ViewModel {
@@ -59,10 +61,13 @@ public class TrustViewModel extends ViewModel {
     private static final String MESSAGE_MY_REPORTS_NOT_SIGNED_IN = "Bạn cần đăng nhập để xem báo cáo của mình.";
     private static final String MESSAGE_CANNOT_CANCEL_REPORT =
             "Chỉ hủy được báo cáo của bạn khi báo cáo còn chờ xử lý.";
+    private static final String MESSAGE_NOTHING_TO_EXPORT = "Chưa có báo cáo nào để xuất.";
+    private static final String MESSAGE_EXPORT_FAILED = "Không tạo được tệp danh sách, hãy thử lại.";
 
     private final ReviewRepository reviewRepository = new ReviewRepository();
     private final ReportRepository reportRepository = new ReportRepository();
     private final MediaRepository mediaRepository = new MediaRepository();
+    private final ExecutorService exportExecutor = Executors.newSingleThreadExecutor();
 
     // Which list is in reviews ("uid:received"), so a rotation does not read it again.
     private String loadedReviewsKey;
@@ -211,7 +216,29 @@ public class TrustViewModel extends ViewModel {
     }
 
     public void exportReports() {
-        error.setValue(DataCallback.NOT_READY);
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        List<Report> current = reports.getValue();
+        if (current == null || current.isEmpty()) {
+            error.setValue(MESSAGE_NOTHING_TO_EXPORT);
+            return;
+        }
+        final List<Report> snapshot = new ArrayList<Report>(current);
+        loading.setValue(true);
+        // exportCsv writes a file, so it runs off the main thread.
+        exportExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                File file = reportRepository.exportCsv(snapshot);
+                loading.postValue(false);
+                if (file == null) {
+                    error.postValue(MESSAGE_EXPORT_FAILED);
+                    return;
+                }
+                exportedFile.postValue(file);
+            }
+        });
     }
 
     public void submitComplaint(Complaint complaint, List<Uri> evidenceUris) {
@@ -428,6 +455,12 @@ public class TrustViewModel extends ViewModel {
             loading.postValue(false);
             error.postValue(message);
         }
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        exportExecutor.shutdown();
     }
 
     public void clearError() {
