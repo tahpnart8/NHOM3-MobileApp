@@ -368,18 +368,6 @@ public class PostListingFragment extends Fragment {
                 attemptSaveDraft();
             }
         });
-
-        binding.spinnerCategory.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                onCategorySelected(position);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                clearCategoryConditionFields();
-            }
-        });
     }
 
     private void checkSellerVerification() {
