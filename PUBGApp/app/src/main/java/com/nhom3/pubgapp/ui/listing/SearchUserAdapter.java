@@ -68,7 +68,8 @@ public class SearchUserAdapter extends RecyclerView.Adapter<SearchUserAdapter.Us
             String displayName = user.getDisplayName();
             binding.textDisplayName.setText(displayName != null ? displayName : "");
 
-            ImageLoader.load(user.getAvatar(), binding.imageAvatar, R.drawable.bg_avatar, R.drawable.bg_avatar);
+            ImageLoader.load(user.getAvatarBase64(), binding.imageAvatar,
+                    R.drawable.bg_avatar, R.drawable.bg_avatar);
 
             int ratingCount = user.getRatingCount();
             if (ratingCount > 0) {

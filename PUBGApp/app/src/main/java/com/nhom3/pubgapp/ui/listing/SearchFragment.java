@@ -33,6 +33,7 @@ import com.nhom3.pubgapp.databinding.LayoutListingFilterPanelBinding;
 import com.nhom3.pubgapp.model.Category;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.SearchFilter;
+import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.UserAddress;
 import com.nhom3.pubgapp.model.enums.ItemCondition;
 import com.nhom3.pubgapp.model.enums.SortOrder;
@@ -826,7 +827,7 @@ public class SearchFragment extends Fragment {
             binding.recyclerSearchResults.setVisibility(View.VISIBLE);
             binding.includeEmptyState.getRoot().setVisibility(View.GONE);
 
-            List<Listing> list = viewModel.getSearchResults().getValue();
+            List<Listing> list = viewModel.getResults().getValue();
             if (list == null || list.isEmpty()) {
                 List<String> recents = viewModel.getRecentSearches().getValue();
                 boolean hasRecent = recents != null && !recents.isEmpty();
