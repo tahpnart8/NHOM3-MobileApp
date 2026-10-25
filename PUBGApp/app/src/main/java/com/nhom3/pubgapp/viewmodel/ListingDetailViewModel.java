@@ -12,6 +12,7 @@ import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.ProfileStats;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
+import com.nhom3.pubgapp.util.RecommendationEngine;
 import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
@@ -71,6 +72,7 @@ public class ListingDetailViewModel extends ViewModel {
     private final ListingRepository listingRepository = new ListingRepository();
     private final UserRepository userRepository = new UserRepository();
     private final MediaRepository mediaRepository = new MediaRepository();
+    private final RecommendationEngine recommendationEngine = new RecommendationEngine();
 
     private final MutableLiveData<Listing> listing = new MutableLiveData<>();
     private final MutableLiveData<User> seller = new MutableLiveData<>();
@@ -352,7 +354,22 @@ public class ListingDetailViewModel extends ViewModel {
     }
 
     public void loadSimilar() {
-        error.setValue(DataCallback.NOT_READY);
+        final Listing current = listing.getValue();
+        if (current == null) {
+            return;
+        }
+        listingRepository.getSimilar(current, new DataCallback<List<Listing>>() {
+            @Override
+            public void onSuccess(List<Listing> candidates) {
+                List<Listing> scored = recommendationEngine.similarTo(current, candidates);
+                similar.postValue(scored);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                similar.postValue(new ArrayList<Listing>());
+            }
+        });
     }
 
     public void loadPriceRange() {
