@@ -97,6 +97,8 @@ public class TrustViewModel extends ViewModel {
     private static final String MESSAGE_MY_COMPLAINTS_NOT_SIGNED_IN =
             "Bạn cần đăng nhập để xem khiếu nại của mình.";
     private static final String MESSAGE_COMPLAINT_NOT_FOUND = "Không tìm thấy khiếu nại này.";
+    private static final String MESSAGE_CANNOT_WITHDRAW_COMPLAINT =
+            "Chỉ rút được khiếu nại của bạn khi khiếu nại còn chờ xử lý.";
 
     private final ReviewRepository reviewRepository = new ReviewRepository();
     private final ReportRepository reportRepository = new ReportRepository();
@@ -373,7 +375,33 @@ public class TrustViewModel extends ViewModel {
     }
 
     public void withdrawComplaint(String id) {
-        error.setValue(DataCallback.NOT_READY);
+        if (Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (!canWithdrawComplaint(findComplaint(id), uid)) {
+            error.setValue(MESSAGE_CANNOT_WITHDRAW_COMPLAINT);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        final String complainantId = uid;
+        loading.setValue(true);
+        complaintRepository.withdraw(id, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                refreshMyComplaints(complainantId);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     // The Rules let only the reporter cancel, and only while the report is OPEN (STT 62).
@@ -425,6 +453,24 @@ public class TrustViewModel extends ViewModel {
                 loadedReportsUid = null;
                 loading.postValue(false);
                 error.postValue(message);
+            }
+        });
+    }
+
+    // Mirrors the Rules and Complaint.withdraw: only the complainant, and only while the complaint is open (STT 66).
+    static boolean canWithdrawComplaint(Complaint complaint, String currentUid) {
+        if (complaint == null || currentUid == null || currentUid.isEmpty()) {
+            return false;
+        }
+        return complaint.isOpen() && currentUid.equals(complaint.getComplainantId());
+    }
+
+    // Read again after a withdraw so the row shows WITHDRAWN as the server now holds it.
+    private void refreshMyComplaints(String uid) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                fetchMyComplaints(uid);
             }
         });
     }

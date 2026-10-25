@@ -33,9 +33,11 @@ import java.util.Locale;
 /** Rows of the complaints the user has sent, on D07, and the detail dialog a row opens. */
 public class MyComplaintAdapter extends RecyclerView.Adapter<MyComplaintAdapter.ComplaintViewHolder> {
 
-    /** Called when the user taps a row. */
+    /** Called when the user taps a row, or "Rút khiếu nại" on it. */
     interface ComplaintListener {
         void onOpen(Complaint complaint);
+
+        void onWithdraw(Complaint complaint);
     }
 
     private static final String DATE_PATTERN = "dd/MM/yyyy";
@@ -176,6 +178,14 @@ public class MyComplaintAdapter extends RecyclerView.Adapter<MyComplaintAdapter.
             binding.textReason.setText(reasonLabel(complaint.getReason()));
             StatusChips.bind(binding.includeStatusChip.textStatusChip, complaint.getStatus());
             showSentDate(context, complaint.getCreatedAt());
+            // Only a complaint still waiting (OPEN or NEEDS_EVIDENCE) can be withdrawn (STT 66).
+            binding.buttonWithdrawComplaint.setVisibility(complaint.isOpen() ? View.VISIBLE : View.GONE);
+            binding.buttonWithdrawComplaint.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View clicked) {
+                    listener.onWithdraw(complaint);
+                }
+            });
             binding.getRoot().setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View clicked) {
