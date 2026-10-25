@@ -201,4 +201,7 @@
     <string name="profile_create_complaint_warning">Gửi khiếu nại thì giao dịch chuyển sang "Tranh chấp" (tạm đóng băng) và dừng đếm ngược tự giải ngân trong lúc chờ admin xử lý.</string>
     <string name="profile_create_complaint_submit">Gửi khiếu nại</string>
     <string name="profile_create_complaint_sent">Đã gửi khiếu nại. Theo dõi ở mục Báo cáo và khiếu nại của tôi.</string>
+    <!-- D07 tab "Khiếu nại của tôi" -->
+    <string name="profile_my_complaints_empty_title">Chưa có khiếu nại nào</string>
+    <string name="profile_my_complaints_empty_message">Khiếu nại bạn gửi về một giao dịch sẽ hiện ở đây, kèm tiến độ xử lý.</string>
 </resources>
