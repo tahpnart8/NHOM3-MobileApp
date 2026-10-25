@@ -255,4 +255,25 @@
     <string name="admin_complaint_reason_not_received">Không nhận được hàng</string>
     <string name="admin_complaint_reason_damaged">Hàng bị hư hỏng</string>
     <string name="admin_complaint_reason_other">Khác</string>
+    <string name="admin_complaint_detail_deal_code">Mã giao dịch: %1$s</string>
+    <string name="admin_complaint_detail_complainant">Người khiếu nại: %1$s</string>
+    <string name="admin_complaint_detail_complainant_unknown">Người khiếu nại: đang tải giao dịch</string>
+    <string name="admin_complaint_detail_role_buyer">Người mua</string>
+    <string name="admin_complaint_detail_role_seller">Người bán</string>
+    <string name="admin_complaint_detail_reason">Lý do: %1$s</string>
+    <string name="admin_complaint_detail_priority">Mức ưu tiên</string>
+    <string name="admin_complaint_detail_description">Mô tả từ người khiếu nại</string>
+    <string name="admin_complaint_detail_no_description">Người khiếu nại không viết mô tả.</string>
+    <string name="admin_complaint_detail_evidence">Ảnh bằng chứng</string>
+    <string name="admin_complaint_detail_evidence_image">Ảnh bằng chứng của khiếu nại</string>
+    <string name="admin_complaint_detail_no_evidence">Không có ảnh bằng chứng.</string>
+    <string name="admin_complaint_detail_chat">Lịch sử chat liên quan</string>
+    <string name="admin_complaint_detail_chat_count">%1$d tin nhắn giữa hai bên, bấm để xem</string>
+    <string name="admin_complaint_detail_chat_row">%1$s: %2$s</string>
+    <string name="admin_complaint_detail_chat_image">[Ảnh]</string>
+    <string name="admin_complaint_detail_chat_offer">[Đề nghị giá]</string>
+    <string name="admin_complaint_detail_chat_close">Đóng</string>
+    <string name="admin_complaint_detail_timeline">Lịch sử trạng thái giao dịch</string>
+    <string name="admin_complaint_detail_timeline_row">%1$s: %2$s</string>
+    <string name="admin_complaint_detail_no_timeline">Giao dịch chưa có dòng lịch sử nào.</string>
 </resources>
