@@ -296,4 +296,7 @@
     <string name="admin_complaint_note_hint">Ghi chú cho admin, người dùng không thấy</string>
     <string name="admin_complaint_note_save">Lưu ghi chú</string>
     <string name="admin_complaint_note_saved">Đã lưu ghi chú nội bộ.</string>
+    <string name="admin_complaint_decision_waiting">Đã yêu cầu bổ sung: %1$s</string>
+    <string name="admin_complaint_decision_result">Đã quyết định: %1$s. Lời giải thích: %2$s</string>
+    <string name="admin_complaint_decision_withdrawn">Người khiếu nại đã rút đơn, không ra quyết định được nữa.</string>
 </resources>
