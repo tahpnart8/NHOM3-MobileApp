@@ -335,4 +335,29 @@
     <string name="admin_category_delete_success">Đã xóa danh mục.</string>
     <string name="admin_category_retry">Thử lại</string>
     <string name="admin_category_badge_child">Danh mục con</string>
+
+    <!-- E07 Quản lý tài khoản admin (STT 105) -->
+    <string name="admin_account_back_desc">Quay lại</string>
+    <string name="admin_account_add_title">Thêm quản trị viên</string>
+    <string name="admin_account_add_subtitle">Nhập email của người dùng đang hoạt động để cấp quyền quản trị.</string>
+    <string name="admin_account_email_hint">Email tài khoản</string>
+    <string name="admin_account_find_button">Tìm</string>
+    <string name="admin_account_grant_button">Cấp quyền</string>
+    <string name="admin_account_list_title">Danh sách quản trị viên</string>
+    <string name="admin_account_revoke_button">Gỡ quyền</string>
+    <string name="admin_account_self_label">(Chính bạn)</string>
+    <string name="admin_account_empty_title">Không có quản trị viên</string>
+    <string name="admin_account_empty_message">Chưa tải được danh sách tài khoản quản trị viên.</string>
+    <string name="admin_account_grant_dialog_title">Cấp quyền quản trị viên</string>
+    <string name="admin_account_grant_dialog_message">Cấp quyền quản trị cho tài khoản %1$s (%2$s)? Tài khoản này sẽ có toàn quyền quản trị hệ thống.</string>
+    <string name="admin_account_revoke_dialog_title">Gỡ quyền quản trị viên</string>
+    <string name="admin_account_revoke_dialog_message">Gỡ quyền quản trị của tài khoản %1$s (%2$s)? Tài khoản này sẽ trở về người dùng thường.</string>
+    <string name="admin_account_dialog_confirm">Xác nhận</string>
+    <string name="admin_account_dialog_cancel">Hủy</string>
+    <string name="admin_account_grant_success">Đã cấp quyền quản trị viên thành công.</string>
+    <string name="admin_account_revoke_success">Đã gỡ quyền quản trị viên thành công.</string>
+    <string name="admin_account_email_invalid">Vui lòng nhập email hợp lệ.</string>
+    <string name="admin_account_self_revoke_denied">Bạn không thể tự gỡ quyền quản trị của chính mình.</string>
+    <string name="admin_account_self_grant_denied">Bạn không thể tự cấp quyền cho chính mình.</string>
+    <string name="admin_account_offline_warning">Không có kết nối mạng. Vui lòng thử lại sau.</string>
 </resources>
