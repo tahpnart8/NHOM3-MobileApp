@@ -1,6 +1,9 @@
 package com.nhom3.pubgapp.ui.trust;
 
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +11,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -23,6 +27,7 @@ import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.viewmodel.TrustViewModel;
 
+import java.io.File;
 import java.util.List;
 
 /** D07: the reports and complaints the signed-in user has sent. */
@@ -30,10 +35,16 @@ public class MyReportsFragment extends Fragment {
 
     private static final String STATE_SELECTED_TAB = "selected_tab";
     private static final int TAB_REPORTS = 0;
+    private static final String STATE_SHARED_EXPORT = "shared_export";
+    // Matches android:authorities="${applicationId}.fileprovider" in the manifest.
+    private static final String FILE_PROVIDER_SUFFIX = ".fileprovider";
+    private static final String CSV_MIME_TYPE = "text/csv";
 
     @Nullable
     private FragmentMyReportsBinding binding;
     private int selectedTab = TAB_REPORTS;
+    @Nullable
+    private String sharedExportPath;
     private TrustViewModel trustViewModel;
     private MyReportAdapter reportAdapter;
 
@@ -50,12 +61,14 @@ public class MyReportsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         if (savedInstanceState != null) {
             selectedTab = savedInstanceState.getInt(STATE_SELECTED_TAB, TAB_REPORTS);
+            sharedExportPath = savedInstanceState.getString(STATE_SHARED_EXPORT);
         }
         trustViewModel = new ViewModelProvider(this).get(TrustViewModel.class);
         setUpToolbar();
         setUpTabs();
         setUpReportList();
         observeReports();
+        observeExport();
         trustViewModel.loadMyReports();
     }
 
@@ -74,6 +87,7 @@ public class MyReportsFragment extends Fragment {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(STATE_SELECTED_TAB, selectedTab);
+        outState.putString(STATE_SHARED_EXPORT, sharedExportPath);
     }
 
     private void setUpToolbar() {
@@ -127,6 +141,40 @@ public class MyReportsFragment extends Fragment {
                 trustViewModel.loadMyReports();
             }
         });
+        binding.includeReports.buttonExportReports.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View clicked) {
+                trustViewModel.exportReports();
+            }
+        });
+    }
+
+    // The ViewModel keeps the last file, so a file already shared is not shared again after a rotation.
+    private void observeExport() {
+        trustViewModel.getExportedFile().observe(getViewLifecycleOwner(), new Observer<File>() {
+            @Override
+            public void onChanged(File file) {
+                if (file == null || file.getAbsolutePath().equals(sharedExportPath)) {
+                    return;
+                }
+                sharedExportPath = file.getAbsolutePath();
+                shareCsv(file);
+            }
+        });
+    }
+
+    private void shareCsv(File file) {
+        Uri uri = FileProvider.getUriForFile(requireContext(),
+                requireContext().getPackageName() + FILE_PROVIDER_SUFFIX, file);
+        Intent send = new Intent(Intent.ACTION_SEND);
+        send.setType(CSV_MIME_TYPE);
+        send.putExtra(Intent.EXTRA_STREAM, uri);
+        send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        try {
+            startActivity(Intent.createChooser(send, getString(R.string.profile_my_reports_export_chooser)));
+        } catch (ActivityNotFoundException noApp) {
+            Snackbar.make(binding.getRoot(), R.string.profile_my_reports_export_no_app, Snackbar.LENGTH_LONG).show();
+        }
     }
 
     // Cancelling cannot be undone, so the user confirms it first (D07).
@@ -176,6 +224,8 @@ public class MyReportsFragment extends Fragment {
         binding.includeReports.recyclerReports.setVisibility(hasList && !empty ? View.VISIBLE : View.GONE);
         binding.includeReports.includeReportsEmpty.getRoot().setVisibility(empty ? View.VISIBLE : View.GONE);
         binding.includeReports.includeReportsError.getRoot().setVisibility(!hasList && !loading ? View.VISIBLE : View.GONE);
+        binding.includeReports.buttonExportReports.setVisibility(hasList && !empty ? View.VISIBLE : View.GONE);
+        binding.includeReports.buttonExportReports.setEnabled(!loading);
     }
 
     private void showError(String message) {

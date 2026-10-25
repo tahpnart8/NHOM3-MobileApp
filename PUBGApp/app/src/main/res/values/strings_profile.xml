@@ -181,4 +181,6 @@
     <string name="profile_my_reports_cancel_message">Báo cáo sẽ chuyển sang "Người báo cáo đã hủy" và admin không xử lý nữa. Không hoàn tác được.</string>
     <string name="profile_my_reports_cancel_confirm">Hủy báo cáo</string>
     <string name="profile_my_reports_cancel_keep">Giữ lại</string>
+    <string name="profile_my_reports_export_chooser">Chia sẻ danh sách báo cáo</string>
+    <string name="profile_my_reports_export_no_app">Máy chưa có ứng dụng nào mở được tệp CSV.</string>
 </resources>
