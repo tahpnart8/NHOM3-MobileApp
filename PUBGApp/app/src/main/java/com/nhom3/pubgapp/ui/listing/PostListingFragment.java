@@ -1,7 +1,9 @@
 package com.nhom3.pubgapp.ui.listing;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -19,6 +21,7 @@ import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -64,6 +67,7 @@ public class PostListingFragment extends Fragment {
     private ProfileViewModel profileViewModel;
     private PostImageAdapter imageAdapter;
     private ActivityResultLauncher<PickVisualMediaRequest> photoPickerLauncher;
+    private ActivityResultLauncher<String> cameraPermissionLauncher;
 
     private final List<Category> loadedCategories = new ArrayList<Category>();
     private VerificationStatus currentVerification = VerificationStatus.NONE;
@@ -81,6 +85,20 @@ public class PostListingFragment extends Fragment {
                     @Override
                     public void onActivityResult(List<Uri> uris) {
                         handlePickedUris(uris);
+                    }
+                }
+        );
+        cameraPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                new ActivityResultCallback<Boolean>() {
+                    @Override
+                    public void onActivityResult(Boolean isGranted) {
+                        if (Boolean.TRUE.equals(isGranted)) {
+                            prepareAndLaunchCamera();
+                        } else {
+                            Toast.makeText(requireContext(),
+                                    R.string.listing_post_camera_permission_denied, Toast.LENGTH_SHORT).show();
+                        }
                     }
                 }
         );
@@ -189,6 +207,16 @@ public class PostListingFragment extends Fragment {
                     R.string.listing_post_max_images_reached, Toast.LENGTH_SHORT).show();
             return;
         }
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+            prepareAndLaunchCamera();
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+        }
+    }
+
+    private void prepareAndLaunchCamera() {
+        // Implemented in next commit
     }
 
     private void handlePickedUris(List<Uri> uris) {
