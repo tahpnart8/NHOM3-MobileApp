@@ -99,4 +99,74 @@ public class ProfileViewModelTest {
     public void otherPageNeverReadsStats() {
         assertFalse(ProfileViewModel.needsStatsRead(false, false));
     }
+
+    @Test
+    public void emptyReceiverNameIsRejected() {
+        int result = ProfileViewModel.checkAddressForm(
+                "", "0912345678", "Hà Nội", "Cầu Giấy", "123 Đường Láng");
+        assertEquals(ProfileViewModel.ADDRESS_FORM_MISSING_RECEIVER, result);
+    }
+
+    @Test
+    public void emptyPhoneIsRejected() {
+        int result = ProfileViewModel.checkAddressForm(
+                "Nguyễn Văn A", "", "Hà Nội", "Cầu Giấy", "123 Đường Láng");
+        assertEquals(ProfileViewModel.ADDRESS_FORM_MISSING_PHONE, result);
+    }
+
+    @Test
+    public void phoneWithLettersIsRejected() {
+        int result = ProfileViewModel.checkAddressForm(
+                "Nguyễn Văn A", "091234567A", "Hà Nội", "Cầu Giấy", "123 Đường Láng");
+        assertEquals(ProfileViewModel.ADDRESS_FORM_BAD_PHONE, result);
+    }
+
+    @Test
+    public void phoneWithNineDigitsIsRejected() {
+        int result = ProfileViewModel.checkAddressForm(
+                "Nguyễn Văn A", "091234567", "Hà Nội", "Cầu Giấy", "123 Đường Láng");
+        assertEquals(ProfileViewModel.ADDRESS_FORM_BAD_PHONE, result);
+    }
+
+    @Test
+    public void phoneWithElevenDigitsIsRejected() {
+        int result = ProfileViewModel.checkAddressForm(
+                "Nguyễn Văn A", "09123456789", "Hà Nội", "Cầu Giấy", "123 Đường Láng");
+        assertEquals(ProfileViewModel.ADDRESS_FORM_BAD_PHONE, result);
+    }
+
+    @Test
+    public void phoneNotStartingWithZeroIsRejected() {
+        int result = ProfileViewModel.checkAddressForm(
+                "Nguyễn Văn A", "1912345678", "Hà Nội", "Cầu Giấy", "123 Đường Láng");
+        assertEquals(ProfileViewModel.ADDRESS_FORM_BAD_PHONE, result);
+    }
+
+    @Test
+    public void emptyProvinceIsRejected() {
+        int result = ProfileViewModel.checkAddressForm(
+                "Nguyễn Văn A", "0912345678", "", "Cầu Giấy", "123 Đường Láng");
+        assertEquals(ProfileViewModel.ADDRESS_FORM_MISSING_PROVINCE, result);
+    }
+
+    @Test
+    public void emptyDistrictIsRejected() {
+        int result = ProfileViewModel.checkAddressForm(
+                "Nguyễn Văn A", "0912345678", "Hà Nội", "", "123 Đường Láng");
+        assertEquals(ProfileViewModel.ADDRESS_FORM_MISSING_DISTRICT, result);
+    }
+
+    @Test
+    public void emptyDetailIsRejected() {
+        int result = ProfileViewModel.checkAddressForm(
+                "Nguyễn Văn A", "0912345678", "Hà Nội", "Cầu Giấy", "");
+        assertEquals(ProfileViewModel.ADDRESS_FORM_MISSING_DETAIL, result);
+    }
+
+    @Test
+    public void validAddressPasses() {
+        int result = ProfileViewModel.checkAddressForm(
+                "Nguyễn Văn A", "0912345678", "Hà Nội", "Cầu Giấy", "123 Đường Láng");
+        assertEquals(ProfileViewModel.ADDRESS_FORM_OK, result);
+    }
 }
