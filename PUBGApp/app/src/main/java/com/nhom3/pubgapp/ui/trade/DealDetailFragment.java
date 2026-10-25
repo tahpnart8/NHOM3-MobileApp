@@ -42,7 +42,6 @@ import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.DeliveryMethod;
-import com.nhom3.pubgapp.model.enums.ReportTarget;
 import com.nhom3.pubgapp.model.enums.TradeType;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
 import com.nhom3.pubgapp.util.FormatUtils;
@@ -1168,15 +1167,13 @@ public class DealDetailFragment extends Fragment {
             binding.layoutActions.setVisibility(View.GONE);
         }
 
-        final String partnerId = isBuyer ? deal.getSellerId() : deal.getBuyerId();
         binding.buttonComplain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Bundle args = new Bundle();
-                args.putString("targetType", ReportTarget.USER.name());
-                args.putString("targetId", partnerId);
+                args.putString("dealId", deal.getId());
                 NavController navController = NavHostFragment.findNavController(DealDetailFragment.this);
-                navController.navigate(R.id.action_global_report, args);
+                navController.navigate(R.id.action_global_create_complaint, args);
             }
         });
 

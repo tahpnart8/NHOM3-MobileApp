@@ -181,7 +181,6 @@
     <string name="trade_deal_detail_verification_warning_shipping">Tài khoản cần được admin duyệt xác thực trước khi giao hoặc xác nhận nhận hàng.</string>
     <string name="trade_deal_detail_complain">Khiếu nại giao dịch</string>
     <string name="trade_deal_detail_view_complaint">Xem khiếu nại</string>
-    <string name="trade_deal_detail_complaint_not_supported">Chức năng khiếu nại đã chuyển sang báo cáo vi phạm.</string>
 
     <!-- Titles of the screens restored on 2026-10-25; the owning issue refines the text -->
     <string name="trade_deal_history_title">Lịch sử giao dịch</string>
