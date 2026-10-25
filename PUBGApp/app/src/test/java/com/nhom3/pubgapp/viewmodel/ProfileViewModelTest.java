@@ -84,4 +84,19 @@ public class ProfileViewModelTest {
     public void unverifiedEmailMayNotSubmit() {
         assertFalse(ProfileViewModel.canSubmitVerification(VerificationStatus.NONE, false));
     }
+
+    @Test
+    public void ownPageWithoutStatsReadsAgain() {
+        assertTrue(ProfileViewModel.needsStatsRead(true, false));
+    }
+
+    @Test
+    public void ownPageWithStatsIsNotReadAgain() {
+        assertFalse(ProfileViewModel.needsStatsRead(true, true));
+    }
+
+    @Test
+    public void otherPageNeverReadsStats() {
+        assertFalse(ProfileViewModel.needsStatsRead(false, false));
+    }
 }
