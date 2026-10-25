@@ -1183,10 +1183,8 @@ public class DealDetailFragment extends Fragment {
         binding.buttonViewComplaint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Bundle args = new Bundle();
-                args.putString("dealId", dealId);
                 NavHostFragment.findNavController(DealDetailFragment.this)
-                        .navigate(R.id.action_global_create_complaint, args);
+                        .navigate(R.id.action_global_my_reports);
             }
         });
     }
