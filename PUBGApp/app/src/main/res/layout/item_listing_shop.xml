@@ -7,8 +7,8 @@
     android:layout_marginHorizontal="@dimen/space_md"
     android:layout_marginVertical="@dimen/space_xs"
     app:cardCornerRadius="@dimen/radius_md"
-    app:cardElevation="1dp"
-    app:strokeColor="?attr/colorOutlineVariant"
+    app:cardElevation="@dimen/elevation_card"
+    app:strokeColor="?attr/colorOutline"
     app:strokeWidth="1dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
