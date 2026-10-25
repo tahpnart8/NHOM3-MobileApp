@@ -5,14 +5,17 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.Timestamp;
+import com.nhom3.pubgapp.data.ChatRepository;
 import com.nhom3.pubgapp.data.ComplaintRepository;
 import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.DealRepository;
 import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Complaint;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.enums.ComplaintDecision;
 import com.nhom3.pubgapp.model.enums.ComplaintStatus;
 import com.nhom3.pubgapp.model.enums.Priority;
+import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
@@ -24,6 +27,8 @@ import java.util.List;
 public class AdminComplaintViewModel extends ViewModel {
 
     private static final String MESSAGE_NOT_ADMIN = "Chỉ tài khoản admin mới xem được khiếu nại.";
+    private static final String MESSAGE_OFFLINE = "Không có kết nối.";
+    private static final String MESSAGE_CHAT_FAILED = "Không tải được lịch sử chat của giao dịch.";
 
     private final MutableLiveData<List<Complaint>> complaints = new MutableLiveData<>();
     private final MutableLiveData<Complaint> selected = new MutableLiveData<>();
@@ -34,6 +39,8 @@ public class AdminComplaintViewModel extends ViewModel {
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
 
     private final ComplaintRepository complaintRepository = new ComplaintRepository();
+    private final DealRepository dealRepository = new DealRepository();
+    private final ChatRepository chatRepository = new ChatRepository();
 
     // The filter whose answer is in complaints, so a rotation or a chip restore does not query again.
     private String loadedFilterKey;
@@ -101,11 +108,109 @@ public class AdminComplaintViewModel extends ViewModel {
     }
 
     public void loadDetail(String id) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!SessionManager.getInstance().isAdmin()) {
+            error.setValue(MESSAGE_NOT_ADMIN);
+            return;
+        }
+        if (id == null || id.isEmpty() || Boolean.TRUE.equals(loading.getValue())) {
+            return;
+        }
+        loading.setValue(true);
+        complaintRepository.getDetail(id, new DataCallback<Complaint>() {
+            @Override
+            public void onSuccess(Complaint result) {
+                if (result.getId() == null) {
+                    result.setId(id);
+                }
+                selected.postValue(result);
+                loadDealOf(result);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void setPriority(String id, Priority priority) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!SessionManager.getInstance().isAdmin()) {
+            error.setValue(MESSAGE_NOT_ADMIN);
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            restoreSelected();
+            return;
+        }
+        loading.setValue(true);
+        complaintRepository.setPriority(id, priority, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Complaint current = selected.getValue();
+                if (current != null) {
+                    current.setPriority(priority);
+                    selected.postValue(current);
+                }
+                loading.postValue(false);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+                restoreSelected();
+            }
+        });
+    }
+
+    // Posting the unchanged complaint again puts the chips back on the saved priority.
+    private void restoreSelected() {
+        Complaint current = selected.getValue();
+        if (current != null) {
+            selected.postValue(current);
+        }
+    }
+
+    // The deal of the complaint (same id) and then the chat of its two parties, for the file (STT 88).
+    private void loadDealOf(Complaint complaint) {
+        dealRepository.getById(complaint.getDealId(), new DataCallback<Deal>() {
+            @Override
+            public void onSuccess(Deal result) {
+                deal.postValue(result);
+                loadChatOf(result);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
+    }
+
+    private void loadChatOf(Deal dealOfComplaint) {
+        chatRepository.getMessagesOnce(conversationIdOf(dealOfComplaint), new DataCallback<List<ChatMessage>>() {
+            @Override
+            public void onSuccess(List<ChatMessage> result) {
+                messages.postValue(result != null ? result : new ArrayList<ChatMessage>());
+                loading.postValue(false);
+            }
+
+            // The file is still useful without the chat, so only a short note is shown.
+            @Override
+            public void onError(String message) {
+                messages.postValue(new ArrayList<ChatMessage>());
+                loading.postValue(false);
+                error.postValue(MESSAGE_CHAT_FAILED);
+            }
+        });
+    }
+
+    // firestore-schema.md, conversations: the document id is listingId_buyerId.
+    static String conversationIdOf(Deal dealOfComplaint) {
+        return dealOfComplaint.getListingId() + "_" + dealOfComplaint.getBuyerId();
     }
 
     public void decide(String id, ComplaintDecision decision, String message) {
