@@ -184,4 +184,14 @@
 
     <!-- Titles of the screens restored on 2026-10-25; the owning issue refines the text -->
     <string name="trade_deal_history_title">Lịch sử giao dịch</string>
+
+    <!-- C04 Deal History (Issue #229, STT 57) -->
+    <string name="trade_deal_history_filter_all">Tất cả</string>
+    <string name="trade_deal_history_filter_in_progress">Đang xử lý</string>
+    <string name="trade_deal_history_filter_completed">Hoàn tất</string>
+    <string name="trade_deal_history_filter_cancelled">Đã hủy</string>
+    <string name="trade_deal_history_role_prefix">Vai trò: %s</string>
+    <string name="trade_deal_history_empty_title">Bạn chưa có giao dịch nào</string>
+    <string name="trade_deal_history_empty_message">Các giao dịch bạn tham gia mua hoặc bán sẽ hiển thị ở đây.</string>
+    <string name="trade_deal_history_not_signed_in">Bạn cần đăng nhập để xem lịch sử giao dịch.</string>
 </resources>
