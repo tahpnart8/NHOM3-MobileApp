@@ -35,8 +35,9 @@ public class MainActivity extends AppCompatActivity {
     // The unread badge shows this many, then "99+".
     private static final int BADGE_MAX = 99;
     private static final String STATE_AUTO_RELEASE_CHECKED = "autoReleaseChecked";
+    private static final String STATE_PENDING_TAB_ID = "pendingTabId";
     // A keyed instance keeps the restore result apart from the AuthViewModel the child screens share.
-    private static final String RESTORE_VIEW_MODEL_KEY = "mainRestoreSession";
+    public static final String RESTORE_VIEW_MODEL_KEY = "mainRestoreSession";
 
     private ActivityMainBinding binding;
     private NavController navController;
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private NotificationViewModel notificationViewModel;
     private DealViewModel dealViewModel;
     private boolean autoReleaseChecked;
+    private int pendingTabId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         if (savedInstanceState != null) {
             autoReleaseChecked = savedInstanceState.getBoolean(STATE_AUTO_RELEASE_CHECKED, false);
+            pendingTabId = savedInstanceState.getInt(STATE_PENDING_TAB_ID, 0);
         }
         applyWindowInsets();
         setUpViewModels();
@@ -65,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean(STATE_AUTO_RELEASE_CHECKED, autoReleaseChecked);
+        outState.putInt(STATE_PENDING_TAB_ID, pendingTabId);
     }
 
     enum TabAction {
@@ -127,6 +131,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(String message) {
                 showRestoreError(message);
+            }
+        });
+        restoreViewModel.getLoading().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean loading) {
+                if (loading != null && !loading.booleanValue()) {
+                    onRestoreSessionFinished();
+                }
             }
         });
         notificationViewModel.getUnreadCount().observe(this, new Observer<Integer>() {
@@ -213,11 +225,34 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean handleTabSelected(MenuItem item) {
         boolean loggedIn = SessionManager.getInstance().isLoggedIn();
-        if (isTabBlockedForGuest(item.getItemId(), loggedIn)) {
+        Boolean restoring = restoreViewModel.getLoading().getValue();
+        boolean isRestoring = restoring != null && restoring.booleanValue();
+        TabAction action = decideTabAction(item.getItemId(), loggedIn, isRestoring);
+        if (action == TabAction.WAIT_RESTORE) {
+            pendingTabId = item.getItemId();
+            Snackbar.make(binding.getRoot(), R.string.common_loading, Snackbar.LENGTH_SHORT).show();
+            return false;
+        }
+        if (action == TabAction.BLOCK_TO_SIGN_IN) {
             navController.navigate(R.id.action_global_sign_in);
             return false;
         }
         return NavigationUI.onNavDestinationSelected(item, navController);
+    }
+
+    // Runs when session restore finishes, redirecting any tab tap that was deferred.
+    private void onRestoreSessionFinished() {
+        if (pendingTabId == 0) {
+            return;
+        }
+        int targetTab = pendingTabId;
+        pendingTabId = 0;
+        boolean loggedIn = SessionManager.getInstance().isLoggedIn();
+        if (loggedIn) {
+            binding.bottomNavigation.setSelectedItemId(targetTab);
+        } else {
+            navController.navigate(R.id.action_global_sign_in);
+        }
     }
 
     // Per ui/README.md: the bottom bar shows on the five tabs only, the top bar on Home only.
