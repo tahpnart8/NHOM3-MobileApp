@@ -10,10 +10,13 @@ import com.nhom3.pubgapp.model.Payment;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.PaymentStatus;
+import com.nhom3.pubgapp.ui.trade.DealHistoryAdapter;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 // Tests DealViewModel button and action guard conditions without Firebase.
 public class DealViewModelTest {
@@ -244,6 +247,68 @@ public class DealViewModelTest {
         assertFalse(DealViewModel.canComplain(shippingConfirmed, "buyer1", now));
     }
 
+    @Test
+    public void matchesFilter_classifiesDealStatusesCorrectly() {
+        assertFalse(DealHistoryAdapter.matchesFilter(null, DealHistoryAdapter.FILTER_ALL));
+
+        Deal pending = createSampleDeal(DealStatus.PENDING_CONFIRM);
+        Deal confirmed = createSampleDeal(DealStatus.CONFIRMED);
+        Deal shipped = createSampleDeal(DealStatus.SHIPPED);
+        Deal disputed = createSampleDeal(DealStatus.DISPUTED);
+        Deal received = createSampleDeal(DealStatus.RECEIVED);
+        Deal completed = createSampleDeal(DealStatus.COMPLETED);
+        Deal cancelled = createSampleDeal(DealStatus.CANCELLED);
+
+        // FILTER_ALL matches any non-null deal with status
+        assertTrue(DealHistoryAdapter.matchesFilter(pending, DealHistoryAdapter.FILTER_ALL));
+        assertTrue(DealHistoryAdapter.matchesFilter(completed, DealHistoryAdapter.FILTER_ALL));
+        assertTrue(DealHistoryAdapter.matchesFilter(cancelled, DealHistoryAdapter.FILTER_ALL));
+
+        // FILTER_IN_PROGRESS
+        assertTrue(DealHistoryAdapter.matchesFilter(pending, DealHistoryAdapter.FILTER_IN_PROGRESS));
+        assertTrue(DealHistoryAdapter.matchesFilter(confirmed, DealHistoryAdapter.FILTER_IN_PROGRESS));
+        assertTrue(DealHistoryAdapter.matchesFilter(shipped, DealHistoryAdapter.FILTER_IN_PROGRESS));
+        assertTrue(DealHistoryAdapter.matchesFilter(disputed, DealHistoryAdapter.FILTER_IN_PROGRESS));
+        assertFalse(DealHistoryAdapter.matchesFilter(received, DealHistoryAdapter.FILTER_IN_PROGRESS));
+        assertFalse(DealHistoryAdapter.matchesFilter(completed, DealHistoryAdapter.FILTER_IN_PROGRESS));
+        assertFalse(DealHistoryAdapter.matchesFilter(cancelled, DealHistoryAdapter.FILTER_IN_PROGRESS));
+
+        // FILTER_COMPLETED
+        assertFalse(DealHistoryAdapter.matchesFilter(shipped, DealHistoryAdapter.FILTER_COMPLETED));
+        assertTrue(DealHistoryAdapter.matchesFilter(received, DealHistoryAdapter.FILTER_COMPLETED));
+        assertTrue(DealHistoryAdapter.matchesFilter(completed, DealHistoryAdapter.FILTER_COMPLETED));
+        assertFalse(DealHistoryAdapter.matchesFilter(cancelled, DealHistoryAdapter.FILTER_COMPLETED));
+
+        // FILTER_CANCELLED
+        assertFalse(DealHistoryAdapter.matchesFilter(completed, DealHistoryAdapter.FILTER_CANCELLED));
+        assertTrue(DealHistoryAdapter.matchesFilter(cancelled, DealHistoryAdapter.FILTER_CANCELLED));
+
+        // Unknown filter index
+        assertFalse(DealHistoryAdapter.matchesFilter(pending, 999));
+    }
+
+    @Test
+    public void filterDeals_returnsMatchingDealsOrEmptyList() {
+        assertEquals(0, DealHistoryAdapter.filterDeals(null, DealHistoryAdapter.FILTER_ALL).size());
+
+        List<Deal> list = new ArrayList<Deal>();
+        list.add(createSampleDeal(DealStatus.PENDING_CONFIRM));
+        list.add(createSampleDeal(DealStatus.SHIPPED));
+        list.add(createSampleDeal(DealStatus.COMPLETED));
+        list.add(createSampleDeal(DealStatus.CANCELLED));
+
+        List<Deal> all = DealHistoryAdapter.filterDeals(list, DealHistoryAdapter.FILTER_ALL);
+        assertEquals(4, all.size());
+
+        List<Deal> inProgress = DealHistoryAdapter.filterDeals(list, DealHistoryAdapter.FILTER_IN_PROGRESS);
+        assertEquals(2, inProgress.size());
+
+        List<Deal> completed = DealHistoryAdapter.filterDeals(list, DealHistoryAdapter.FILTER_COMPLETED);
+        assertEquals(1, completed.size());
+
+        List<Deal> cancelled = DealHistoryAdapter.filterDeals(list, DealHistoryAdapter.FILTER_CANCELLED);
+        assertEquals(1, cancelled.size());
+    }
 
     private Deal createSampleDeal(DealStatus status) {
         Deal deal = new Deal();
