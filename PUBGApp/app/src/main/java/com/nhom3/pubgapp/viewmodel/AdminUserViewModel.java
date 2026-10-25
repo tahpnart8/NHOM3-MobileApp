@@ -300,11 +300,31 @@ public class AdminUserViewModel extends ViewModel {
     }
 
     public void loadAdmins() {
-        error.setValue(DataCallback.NOT_READY);
+        beginReads(1);
+        adminRepository.listAdmins(new ReadCallback<List<User>>(admins));
     }
 
     public void findAdminCandidate(String email) {
-        error.setValue(DataCallback.NOT_READY);
+        if (email == null || email.trim().isEmpty()) {
+            error.setValue("Hãy nhập email cần tìm.");
+            return;
+        }
+        pendingAdmin.setValue(null);
+        beginReads(1);
+        adminRepository.findUserByEmail(email.trim(), new DataCallback<User>() {
+            @Override
+            public void onSuccess(User user) {
+                pendingAdmin.postValue(user);
+                endRead();
+            }
+
+            @Override
+            public void onError(String message) {
+                pendingAdmin.postValue(null);
+                error.postValue(message);
+                endRead();
+            }
+        });
     }
 
     public void grantAdmin(String userId) {
