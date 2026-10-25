@@ -5,6 +5,8 @@ import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
 
+import com.nhom3.pubgapp.model.enums.ItemCondition;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -149,7 +151,73 @@ public class RecommendationEngine {
     }
 
     public long[] priceRange(Listing listing, List<Listing> candidates) {
-        throw new UnsupportedOperationException("NOT_READY");
+        if (listing == null || candidates == null || candidates.isEmpty()) {
+            return new long[0];
+        }
+        String targetId = listing.getId();
+        String targetCategoryId = listing.getCategoryId();
+        ItemCondition targetCondition = listing.getItemCondition();
+
+        List<Long> p1 = new ArrayList<Long>();
+        List<Long> p2 = new ArrayList<Long>();
+
+        for (int i = 0; i < candidates.size(); i++) {
+            Listing c = candidates.get(i);
+            if (c == null) {
+                continue;
+            }
+            if (targetId != null && targetId.equals(c.getId())) {
+                continue;
+            }
+            if (c.getStatus() != ListingStatus.AVAILABLE) {
+                continue;
+            }
+            if (targetCategoryId == null || !targetCategoryId.equals(c.getCategoryId())) {
+                continue;
+            }
+            long price = c.getPrice();
+            if (price <= 0L) {
+                continue;
+            }
+            if (targetCondition != null && targetCondition == c.getItemCondition()) {
+                p1.add(price);
+            }
+            p2.add(price);
+        }
+
+        List<Long> selectedPrices;
+        if (p1.size() >= 5) {
+            selectedPrices = p1;
+        } else if (p2.size() >= 5) {
+            selectedPrices = p2;
+        } else {
+            return new long[0];
+        }
+
+        Collections.sort(selectedPrices);
+        int n = selectedPrices.size();
+        int idx25 = (int) Math.ceil(0.25 * n) - 1;
+        if (idx25 < 0) {
+            idx25 = 0;
+        }
+        int idx75 = (int) Math.ceil(0.75 * n) - 1;
+        if (idx75 < 0) {
+            idx75 = 0;
+        }
+        if (idx75 >= n) {
+            idx75 = n - 1;
+        }
+
+        long low = roundToTenThousand(selectedPrices.get(idx25));
+        long high = roundToTenThousand(selectedPrices.get(idx75));
+        return new long[] { low, high };
+    }
+
+    private long roundToTenThousand(long val) {
+        if (val <= 0L) {
+            return 0L;
+        }
+        return ((val + 5000L) / 10000L) * 10000L;
     }
 
     private double score(Listing listing) {
