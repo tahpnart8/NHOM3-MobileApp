@@ -30,6 +30,7 @@ import com.nhom3.pubgapp.model.Complaint;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.StatusChange;
 import com.nhom3.pubgapp.model.enums.ComplaintDecision;
+import com.nhom3.pubgapp.model.enums.ComplaintStatus;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.MessageType;
 import com.nhom3.pubgapp.model.enums.Priority;
@@ -195,6 +196,41 @@ public class AdminComplaintDetailFragment extends Fragment {
         });
     }
 
+    // D06: a decided or withdrawn complaint shows its result and no buttons; evidence is asked only while OPEN.
+    private void showDecisionState(@NonNull Complaint complaint) {
+        boolean open = complaint.isOpen();
+        binding.layoutDecisionButtons.setVisibility(open ? View.VISIBLE : View.GONE);
+        binding.buttonRequestEvidence.setEnabled(complaint.getStatus() == ComplaintStatus.OPEN);
+        String request = complaint.getEvidenceRequest();
+        boolean waiting = complaint.getStatus() == ComplaintStatus.NEEDS_EVIDENCE
+                && request != null && !request.isEmpty();
+        binding.textEvidenceRequest.setVisibility(waiting ? View.VISIBLE : View.GONE);
+        if (waiting) {
+            binding.textEvidenceRequest.setText(getString(R.string.admin_complaint_decision_waiting, request));
+        }
+        binding.textDecisionResult.setVisibility(open ? View.GONE : View.VISIBLE);
+        if (!open) {
+            binding.textDecisionResult.setText(resultText(complaint));
+        }
+    }
+
+    private String resultText(@NonNull Complaint complaint) {
+        if (complaint.getStatus() == ComplaintStatus.WITHDRAWN) {
+            return getString(R.string.admin_complaint_decision_withdrawn);
+        }
+        String decision = complaint.getDecision() != null ? getString(decisionLabel(complaint.getDecision())) : "";
+        String message = complaint.getResolutionMessage() != null ? complaint.getResolutionMessage() : "";
+        return getString(R.string.admin_complaint_decision_result, decision, message);
+    }
+
+    private void setDecisionEnabled(boolean enabled) {
+        binding.buttonDecideRefund.setEnabled(enabled);
+        binding.buttonDecideReturnItem.setEnabled(enabled);
+        binding.buttonDecideCancelDeal.setEnabled(enabled);
+        binding.buttonDecideReject.setEnabled(enabled);
+        binding.buttonSaveNote.setEnabled(enabled);
+    }
+
     // The note is internal (STT 90): it is filled once from the admin-only sub-document, never shown to users.
     private void fillNoteOnce(@NonNull Complaint complaint) {
         if (noteFilled) {
@@ -306,6 +342,7 @@ public class AdminComplaintDetailFragment extends Fragment {
         binding.scrollContent.setVisibility(hasComplaint ? View.VISIBLE : View.GONE);
         binding.includeErrorState.getRoot().setVisibility(!hasComplaint && !loading ? View.VISIBLE : View.GONE);
         binding.chipGroupPriority.setEnabled(!loading);
+        setDecisionEnabled(!loading);
     }
 
     private void showComplaint(@Nullable Complaint complaint) {
@@ -330,6 +367,7 @@ public class AdminComplaintDetailFragment extends Fragment {
         binding.textNoEvidence.setVisibility(noEvidence ? View.VISIBLE : View.GONE);
         showComplainantRole();
         fillNoteOnce(complaint);
+        showDecisionState(complaint);
     }
 
     private void showPriority(@Nullable Priority priority) {
