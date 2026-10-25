@@ -301,6 +301,7 @@ public class ListingDetailFragment extends Fragment {
                 } else {
                     binding.buttonFollowSeller.setText(R.string.listing_detail_btn_follow);
                 }
+                binding.buttonFollowSeller.setEnabled(isFollowing != null);
             }
         });
 
@@ -494,14 +495,27 @@ public class ListingDetailFragment extends Fragment {
             }
         });
 
-        boolean isSelf = currentUid != null && currentUid.equals(sellerId);
-        if (isSelf) {
+        if (!ListingDetailViewModel.canFollowSeller(sellerId, currentUid)) {
             binding.buttonFollowSeller.setVisibility(View.GONE);
         } else {
             binding.buttonFollowSeller.setVisibility(View.VISIBLE);
             binding.buttonFollowSeller.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    if (!SessionManager.getInstance().isLoggedIn()) {
+                        Navigation.findNavController(v).navigate(R.id.action_global_sign_in);
+                        return;
+                    }
+                    try {
+                        if (!NetworkMonitor.getInstance().isOnline()) {
+                            Snackbar.make(binding.getRoot(),
+                                    R.string.listing_detail_offline_follow_warning,
+                                    Snackbar.LENGTH_SHORT).show();
+                            return;
+                        }
+                    } catch (UnsupportedOperationException e) {
+                        // Fallback when NetworkMonitor is not yet configured
+                    }
                     viewModel.toggleFollowSeller();
                 }
             });
