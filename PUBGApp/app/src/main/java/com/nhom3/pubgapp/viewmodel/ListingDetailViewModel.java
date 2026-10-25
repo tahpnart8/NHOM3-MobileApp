@@ -55,7 +55,10 @@ public class ListingDetailViewModel extends ViewModel {
         return listing.getStatus() == ListingStatus.AVAILABLE;
     }
 
-    public static boolean canFollowSeller(String sellerId, String viewerId) {
+    private static final String MESSAGE_LOGIN_TO_FOLLOW = "Vui lòng đăng nhập để theo dõi người bán";
+    private static final String MESSAGE_CANNOT_FOLLOW_SELF = "Không thể theo dõi chính mình";
+
+    static boolean canFollowSeller(String sellerId, String viewerId) {
         if (sellerId == null || sellerId.trim().isEmpty()) {
             return false;
         }
@@ -302,16 +305,16 @@ public class ListingDetailViewModel extends ViewModel {
         }
         final String sellerId = current.getSellerId();
         if (!SessionManager.getInstance().isLoggedIn()) {
-            error.setValue("Vui lòng đăng nhập để theo dõi người bán");
+            error.setValue(MESSAGE_LOGIN_TO_FOLLOW);
             return;
         }
         final String uid = SessionManager.getInstance().getCurrentUserId();
         if (uid == null || uid.isEmpty()) {
-            error.setValue("Vui lòng đăng nhập để theo dõi người bán");
+            error.setValue(MESSAGE_LOGIN_TO_FOLLOW);
             return;
         }
         if (uid.equals(sellerId)) {
-            error.setValue("Không thể theo dõi chính mình");
+            error.setValue(MESSAGE_CANNOT_FOLLOW_SELF);
             return;
         }
         final boolean isCurrentlyFollowing = Boolean.TRUE.equals(followingSeller.getValue());

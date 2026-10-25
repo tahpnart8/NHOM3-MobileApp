@@ -495,7 +495,7 @@ public class ListingDetailFragment extends Fragment {
             }
         });
 
-        if (!ListingDetailViewModel.canFollowSeller(sellerId, currentUid)) {
+        if (!canFollowSeller(sellerId, currentUid)) {
             binding.buttonFollowSeller.setVisibility(View.GONE);
         } else {
             binding.buttonFollowSeller.setVisibility(View.VISIBLE);
@@ -506,20 +506,26 @@ public class ListingDetailFragment extends Fragment {
                         Navigation.findNavController(v).navigate(R.id.action_global_sign_in);
                         return;
                     }
-                    try {
-                        if (!NetworkMonitor.getInstance().isOnline()) {
-                            Snackbar.make(binding.getRoot(),
-                                    R.string.listing_detail_offline_follow_warning,
-                                    Snackbar.LENGTH_SHORT).show();
-                            return;
-                        }
-                    } catch (UnsupportedOperationException e) {
-                        // Fallback when NetworkMonitor is not yet configured
+                    if (!NetworkMonitor.getInstance().isOnline()) {
+                        Snackbar.make(binding.getRoot(),
+                                R.string.listing_detail_offline_follow_warning,
+                                Snackbar.LENGTH_SHORT).show();
+                        return;
                     }
                     viewModel.toggleFollowSeller();
                 }
             });
         }
+    }
+
+    private boolean canFollowSeller(String sellerId, String currentUid) {
+        if (sellerId == null || sellerId.trim().isEmpty()) {
+            return false;
+        }
+        if (currentUid != null && currentUid.equals(sellerId)) {
+            return false;
+        }
+        return true;
     }
 
     private void setupActionButtons(final Listing listing, String currentUid) {
