@@ -30,11 +30,31 @@ public class ProfileListingAdapter extends RecyclerView.Adapter<ProfileListingAd
     private final FormatUtils formatUtils = new FormatUtils();
 
     public void submitList(List<Listing> newListings) {
+        // A tab switch or rotation hands back the same listings; rebinding would decode every cover again.
+        if (holdsSameListings(newListings)) {
+            return;
+        }
         listings.clear();
         if (newListings != null) {
             listings.addAll(newListings);
         }
         notifyDataSetChanged();
+    }
+
+    // Same objects in the same order: the filters keep the ViewModel's Listing instances.
+    private boolean holdsSameListings(List<Listing> newListings) {
+        if (newListings == null) {
+            return listings.isEmpty();
+        }
+        if (newListings.size() != listings.size()) {
+            return false;
+        }
+        for (int i = 0; i < listings.size(); i++) {
+            if (newListings.get(i) != listings.get(i)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @NonNull
