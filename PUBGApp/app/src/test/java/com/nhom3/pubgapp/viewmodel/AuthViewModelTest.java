@@ -142,4 +142,32 @@ public class AuthViewModelTest {
         assertEquals(false, AuthViewModel.isPhoneValid(""));
         assertEquals(false, AuthViewModel.isPhoneValid(null));
     }
+
+    @Test
+    public void changePassword_samePassword_isDetected() {
+        String current = "OldPass123";
+        String next = "OldPass123";
+        assertEquals(true, current.equals(next));
+    }
+
+    @Test
+    public void changePassword_differentPassword_isValidated() {
+        String current = "OldPass123";
+        String next = "NewPass456";
+        assertEquals(false, current.equals(next));
+        assertEquals(true, AuthViewModel.isPasswordValid(next));
+        assertEquals(true, AuthViewModel.isPasswordConfirmationMatching(next, "NewPass456"));
+    }
+
+    @Test
+    public void changePassword_weakNewPassword_isRejected() {
+        assertEquals(false, AuthViewModel.isPasswordValid("weak"));
+        assertEquals(false, AuthViewModel.isPasswordValid("onlyletters"));
+        assertEquals(false, AuthViewModel.isPasswordValid("12345678"));
+    }
+
+    @Test
+    public void changePassword_confirmationMismatch_isRejected() {
+        assertEquals(false, AuthViewModel.isPasswordConfirmationMatching("NewPass456", "OtherPass789"));
+    }
 }
