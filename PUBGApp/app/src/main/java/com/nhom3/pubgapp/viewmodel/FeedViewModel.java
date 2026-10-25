@@ -165,32 +165,26 @@ public class FeedViewModel extends ViewModel {
         listingRepo.getRecentViews(20, new DataCallback<List<String>>() {
             @Override
             public void onSuccess(final List<String> viewedCategoryIds) {
-                listingRepo.getRecentSearches(10, new DataCallback<List<String>>() {
-                    @Override
-                    public void onSuccess(final List<String> recentKeywords) {
-                        checkUserAndRecommend(viewedCategoryIds, recentKeywords);
-                    }
-
-                    @Override
-                    public void onError(String err) {
-                        checkUserAndRecommend(viewedCategoryIds, new ArrayList<String>());
-                    }
-                });
+                loadSearchesAndRecommend(viewedCategoryIds);
             }
 
             @Override
             public void onError(String err) {
-                listingRepo.getRecentSearches(10, new DataCallback<List<String>>() {
-                    @Override
-                    public void onSuccess(final List<String> recentKeywords) {
-                        checkUserAndRecommend(new ArrayList<String>(), recentKeywords);
-                    }
+                loadSearchesAndRecommend(new ArrayList<String>());
+            }
+        });
+    }
 
-                    @Override
-                    public void onError(String searchErr) {
-                        checkUserAndRecommend(new ArrayList<String>(), new ArrayList<String>());
-                    }
-                });
+    private void loadSearchesAndRecommend(final List<String> viewedCategoryIds) {
+        listingRepo.getRecentSearches(10, new DataCallback<List<String>>() {
+            @Override
+            public void onSuccess(final List<String> recentKeywords) {
+                checkUserAndRecommend(viewedCategoryIds, recentKeywords);
+            }
+
+            @Override
+            public void onError(String err) {
+                checkUserAndRecommend(viewedCategoryIds, new ArrayList<String>());
             }
         });
     }
@@ -198,28 +192,74 @@ public class FeedViewModel extends ViewModel {
     private void checkUserAndRecommend(final List<String> viewedCategoryIds,
                                        final List<String> recentKeywords) {
         if (!SessionManager.getInstance().isLoggedIn()) {
-            evaluateAndFetch(viewedCategoryIds, recentKeywords, null, null);
+            evaluateAndFetch(viewedCategoryIds, recentKeywords, new ArrayList<String>(), null);
             return;
         }
 
         final User currentUser = SessionManager.getInstance().getCurrentUser();
         String uid = SessionManager.getInstance().getCurrentUserId();
         if (uid == null || uid.isEmpty()) {
-            evaluateAndFetch(viewedCategoryIds, recentKeywords, null, currentUser);
+            evaluateAndFetch(viewedCategoryIds, recentKeywords, new ArrayList<String>(), currentUser);
             return;
         }
 
         userRepo.getSavedIds(uid, new DataCallback<List<String>>() {
             @Override
             public void onSuccess(List<String> savedIds) {
-                evaluateAndFetch(viewedCategoryIds, recentKeywords, savedIds, currentUser);
+                resolveSavedCategories(savedIds, viewedCategoryIds, recentKeywords, currentUser);
             }
 
             @Override
             public void onError(String errorMessage) {
-                evaluateAndFetch(viewedCategoryIds, recentKeywords, null, currentUser);
+                evaluateAndFetch(viewedCategoryIds, recentKeywords, new ArrayList<String>(), currentUser);
             }
         });
+    }
+
+    private void resolveSavedCategories(final List<String> savedIds,
+                                        final List<String> viewedCategoryIds,
+                                        final List<String> recentKeywords,
+                                        final User currentUser) {
+        if (savedIds == null || savedIds.isEmpty()) {
+            evaluateAndFetch(viewedCategoryIds, recentKeywords, new ArrayList<String>(), currentUser);
+            return;
+        }
+
+        // Limit to 20 most recent saved listings to conserve Firestore read quota on Spark plan
+        final int limit = Math.min(20, savedIds.size());
+        final List<String> savedCategoryIds = new ArrayList<String>();
+        final int[] remaining = new int[] { limit };
+        final Object lock = new Object();
+
+        for (int i = 0; i < limit; i++) {
+            String savedId = savedIds.get(i);
+            listingRepo.getById(savedId, new DataCallback<Listing>() {
+                @Override
+                public void onSuccess(Listing result) {
+                    synchronized (lock) {
+                        if (result != null && result.getCategoryId() != null
+                                && !savedCategoryIds.contains(result.getCategoryId())) {
+                            savedCategoryIds.add(result.getCategoryId());
+                        }
+                        checkDone();
+                    }
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    synchronized (lock) {
+                        checkDone();
+                    }
+                }
+
+                private void checkDone() {
+                    remaining[0]--;
+                    if (remaining[0] <= 0) {
+                        evaluateAndFetch(viewedCategoryIds, recentKeywords, savedCategoryIds, currentUser);
+                    }
+                }
+            });
+        }
     }
 
     private void evaluateAndFetch(final List<String> viewedCategoryIds,
