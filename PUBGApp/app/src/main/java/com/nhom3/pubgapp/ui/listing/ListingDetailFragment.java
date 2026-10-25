@@ -48,6 +48,7 @@ public class ListingDetailFragment extends Fragment {
     private ListingDetailViewModel viewModel;
     private ShopViewModel shopViewModel;
     private ListingImagePagerAdapter imageAdapter;
+    private ListingCardAdapter similarAdapter;
     private String listingId;
 
     @Nullable
@@ -72,6 +73,7 @@ public class ListingDetailFragment extends Fragment {
 
         setupToolbar();
         setupCarousel();
+        setupSimilarListings();
         setupErrorAndEmptyStates();
         observeViewModel();
 
@@ -158,6 +160,24 @@ public class ListingDetailFragment extends Fragment {
                 }
             }
         });
+    }
+
+    private void setupSimilarListings() {
+        similarAdapter = new ListingCardAdapter();
+        int cardWidth = (int) (180 * getResources().getDisplayMetrics().density);
+        similarAdapter.setItemWidth(cardWidth);
+        similarAdapter.setOnListingClickListener(new ListingCardAdapter.OnListingClickListener() {
+            @Override
+            public void onListingClick(Listing item) {
+                if (item != null && item.getId() != null && !item.getId().isEmpty()) {
+                    Bundle args = new Bundle();
+                    args.putString(ARG_LISTING_ID, item.getId());
+                    Navigation.findNavController(requireView()).navigate(
+                            R.id.action_global_listing_detail, args);
+                }
+            }
+        });
+        binding.recyclerSimilarListings.setAdapter(similarAdapter);
     }
 
     private void updateImageCounter() {
@@ -260,6 +280,23 @@ public class ListingDetailFragment extends Fragment {
                 List<byte[]> currentImages = viewModel.getImages().getValue();
                 if (currentImages == null || currentImages.isEmpty()) {
                     viewModel.loadImages();
+                }
+
+                List<Listing> currentSimilar = viewModel.getSimilar().getValue();
+                if (currentSimilar == null) {
+                    viewModel.loadSimilar();
+                }
+            }
+        });
+
+        viewModel.getSimilar().observe(getViewLifecycleOwner(), new Observer<List<Listing>>() {
+            @Override
+            public void onChanged(List<Listing> similarListings) {
+                if (similarListings != null && !similarListings.isEmpty()) {
+                    similarAdapter.submitList(similarListings);
+                    binding.layoutSimilarListings.setVisibility(View.VISIBLE);
+                } else {
+                    binding.layoutSimilarListings.setVisibility(View.GONE);
                 }
             }
         });
