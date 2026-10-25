@@ -48,10 +48,15 @@ import java.util.List;
 public class SearchFragment extends Fragment {
 
     private static final String KEY_FILTER_OPEN = "key_filter_panel_open";
+    private static final String KEY_SEARCH_TAB = "key_search_tab";
+    private static final int TAB_LISTINGS = 0;
+    private static final int TAB_USERS = 1;
 
     private FragmentSearchBinding binding;
     private SearchViewModel viewModel;
     private ListingCardAdapter adapter;
+    private SearchUserAdapter userAdapter;
+    private int currentTab = TAB_LISTINGS;
     private final List<Category> loadedCategories = new ArrayList<Category>();
     private final List<String> provinceNames = new ArrayList<String>();
     private final UserRepository userRepo = new UserRepository();
@@ -89,9 +94,20 @@ public class SearchFragment extends Fragment {
             viewModel.search();
         }
 
+        setupTabSwitcher();
+
         if (savedInstanceState != null) {
             boolean isOpen = savedInstanceState.getBoolean(KEY_FILTER_OPEN, false);
             binding.includeFilterPanel.getRoot().setVisibility(isOpen ? View.VISIBLE : View.GONE);
+            currentTab = savedInstanceState.getInt(KEY_SEARCH_TAB, TAB_LISTINGS);
+            if (currentTab == TAB_USERS) {
+                com.google.android.material.tabs.TabLayout.Tab tab =
+                        binding.tabLayoutSearchType.getTabAt(TAB_USERS);
+                if (tab != null) {
+                    tab.select();
+                }
+                switchSearchTab(TAB_USERS);
+            }
         }
     }
 
@@ -101,6 +117,7 @@ public class SearchFragment extends Fragment {
         if (binding != null) {
             boolean isOpen = binding.includeFilterPanel.getRoot().getVisibility() == View.VISIBLE;
             outState.putBoolean(KEY_FILTER_OPEN, isOpen);
+            outState.putInt(KEY_SEARCH_TAB, currentTab);
         }
     }
 
@@ -182,6 +199,23 @@ public class SearchFragment extends Fragment {
                 }
             }
         });
+
+        userAdapter = new SearchUserAdapter();
+        userAdapter.setListener(new SearchUserAdapter.OnUserClickListener() {
+            @Override
+            public void onUserClick(User user) {
+                if (user == null || user.getId() == null) {
+                    return;
+                }
+                Bundle args = new Bundle();
+                args.putString("userId", user.getId());
+                androidx.navigation.fragment.NavHostFragment.findNavController(SearchFragment.this)
+                        .navigate(R.id.action_global_user_profile, args);
+            }
+        });
+        binding.recyclerUserResults.setLayoutManager(
+                new androidx.recyclerview.widget.LinearLayoutManager(getContext()));
+        binding.recyclerUserResults.setAdapter(userAdapter);
     }
 
     private void setupSearchInput() {
@@ -229,8 +263,12 @@ public class SearchFragment extends Fragment {
             public void onClick(View v) {
                 binding.editKeyword.setText("");
                 binding.buttonClearKeyword.setVisibility(View.GONE);
-                viewModel.setKeyword("");
-                viewModel.search();
+                if (currentTab == TAB_USERS) {
+                    viewModel.searchUsers("");
+                } else {
+                    viewModel.setKeyword("");
+                    viewModel.search();
+                }
             }
         });
 
@@ -248,8 +286,12 @@ public class SearchFragment extends Fragment {
 
     private void triggerSearchFromInput() {
         String keyword = binding.editKeyword.getText().toString().trim();
-        viewModel.setKeyword(keyword);
-        viewModel.search();
+        if (currentTab == TAB_USERS) {
+            viewModel.searchUsers(keyword);
+        } else {
+            viewModel.setKeyword(keyword);
+            viewModel.search();
+        }
         hideKeyboard();
     }
 
@@ -446,6 +488,16 @@ public class SearchFragment extends Fragment {
             @Override
             public void onChanged(List<String> searches) {
                 updateRecentSearchChips(searches);
+            }
+        });
+
+        viewModel.getUserResults().observe(getViewLifecycleOwner(), new Observer<List<User>>() {
+            @Override
+            public void onChanged(List<User> users) {
+                userAdapter.setItems(users);
+                if (currentTab == TAB_USERS) {
+                    updateUserResultsVisibility(users);
+                }
             }
         });
     }
@@ -728,6 +780,80 @@ public class SearchFragment extends Fragment {
         panel.getRoot().setVisibility(View.GONE);
         hideKeyboard();
         viewModel.applyFilter(newFilter);
+    }
+
+    private void setupTabSwitcher() {
+        binding.tabLayoutSearchType.addOnTabSelectedListener(
+                new com.google.android.material.tabs.TabLayout.OnTabSelectedListener() {
+                    @Override
+                    public void onTabSelected(com.google.android.material.tabs.TabLayout.Tab tab) {
+                        if (tab != null) {
+                            switchSearchTab(tab.getPosition());
+                        }
+                    }
+
+                    @Override
+                    public void onTabUnselected(com.google.android.material.tabs.TabLayout.Tab tab) {
+                    }
+
+                    @Override
+                    public void onTabReselected(com.google.android.material.tabs.TabLayout.Tab tab) {
+                    }
+                });
+    }
+
+    private void switchSearchTab(int tabPosition) {
+        currentTab = tabPosition;
+        if (currentTab == TAB_USERS) {
+            binding.editKeyword.setHint(R.string.listing_search_hint_users);
+            binding.buttonToggleFilter.setVisibility(View.GONE);
+            binding.includeFilterPanel.getRoot().setVisibility(View.GONE);
+            binding.layoutRecentSearches.setVisibility(View.GONE);
+            binding.textResultCount.setVisibility(View.GONE);
+            binding.recyclerSearchResults.setVisibility(View.GONE);
+            binding.recyclerUserResults.setVisibility(View.VISIBLE);
+
+            String keyword = binding.editKeyword.getText().toString().trim();
+            if (keyword.length() >= 2) {
+                viewModel.searchUsers(keyword);
+            } else {
+                updateUserResultsVisibility(viewModel.getUserResults().getValue());
+            }
+        } else {
+            binding.editKeyword.setHint(R.string.listing_search_hint);
+            binding.buttonToggleFilter.setVisibility(View.VISIBLE);
+            binding.recyclerUserResults.setVisibility(View.GONE);
+            binding.recyclerSearchResults.setVisibility(View.VISIBLE);
+            binding.includeEmptyState.getRoot().setVisibility(View.GONE);
+
+            List<Listing> list = viewModel.getSearchResults().getValue();
+            if (list == null || list.isEmpty()) {
+                List<String> recents = viewModel.getRecentSearches().getValue();
+                boolean hasRecent = recents != null && !recents.isEmpty();
+                binding.layoutRecentSearches.setVisibility(hasRecent ? View.VISIBLE : View.GONE);
+                binding.textResultCount.setVisibility(View.GONE);
+            } else {
+                binding.textResultCount.setVisibility(View.VISIBLE);
+                binding.layoutRecentSearches.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private void updateUserResultsVisibility(List<User> users) {
+        if (binding == null || currentTab != TAB_USERS) {
+            return;
+        }
+        boolean hasData = users != null && !users.isEmpty();
+        binding.recyclerUserResults.setVisibility(hasData ? View.VISIBLE : View.GONE);
+        binding.includeEmptyState.getRoot().setVisibility(
+                hasData ? View.GONE : View.VISIBLE);
+        if (!hasData) {
+            binding.includeEmptyState.textEmptyTitle.setText(
+                    R.string.listing_search_user_empty_title);
+            binding.includeEmptyState.textEmptyMessage.setText(
+                    R.string.listing_search_user_empty_message);
+            binding.includeEmptyState.buttonEmptyAction.setVisibility(View.GONE);
+        }
     }
 
     private void updateOfflineBanner() {
