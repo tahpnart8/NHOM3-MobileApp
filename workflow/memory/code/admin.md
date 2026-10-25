@@ -25,7 +25,22 @@
 - **Why it matters here:** the signatures in `viewmodel.md` have no `force` flag, so the guard has to live inside the method. After a review the ViewModel reloads through its private starters, which skip the guard.
 - **Source:** `PUBGApp/app/src/main/java/com/nhom3/pubgapp/viewmodel/AdminUserViewModel.java`. **Checked:** 2026-10-24.
 
-### `NetworkMonitor.getInstance()` still throws
-- **Fact:** `NetworkMonitor` is a skeleton: `getInstance()` throws `UnsupportedOperationException("NOT_READY")`.
-- **Why it matters here:** a screen that calls it directly crashes. `AdminUserDetailFragment` catches the exception and asks `ConnectivityManager` instead, as `LoginFragment` does. Remove the fallback when the class is filled.
+### `NetworkMonitor.getInstance()` works now, two screens still carry the old fallback
+- **Fact:** `NetworkMonitor` is filled: `getInstance().isOnline()` returns the real state. `AdminUserDetailFragment.isOnline` and `AdminModerationFragment.isOnline` still catch `UnsupportedOperationException` from the time it was a skeleton, so that branch can no longer run.
+- **Why it matters here:** remove the `catch` when someone next opens those two methods; it is not worth a change of its own.
 - **Source:** `PUBGApp/app/src/main/java/com/nhom3/pubgapp/util/NetworkMonitor.java`. **Checked:** 2026-10-24.
+
+### E03 actions: lock, unlock and warn reload the profile, remove-all does not
+- **Fact:** `AdminUserViewModel.lock`, `unlock` and `warn` run one write with a 15 second timeout and, on success, start the private profile load so the status, the warning count and the violation history redraw. `AdminContentViewModel.removeAllOf` belongs to the other ViewModel, which cannot reach that private load, and `loadProfile` returns at once for a user it already holds. So the Listings tab of E03 shows the old statuses until the screen is opened again.
+- **Why it matters here:** a force refresh needs a method that is not in `viewmodel.md`, which AGENTS.md R20 forbids adding. Ask the leader before adding one.
+- **Source:** `viewmodel/AdminUserViewModel.java` (`ActionCallback`), `viewmodel/AdminContentViewModel.java` (`removeAllOf`). **Checked:** 2026-10-24.
+
+### E04 lists for flagged listings and keywords have their own request guards
+- **Fact:** `flaggedGuard` and `keywordsGuard` sit beside `reportsGuard`, `listingGuard` and `writeGuard`, for the same reason: one tab opening must not cancel another tab's read. A write reloads the flagged and keyword lists only if their tab was opened (`flaggedAsked`, `keywordsAsked`), so hiding a flagged listing drops it from the tab.
+- **Why it matters here:** `refreshLoading` ORs all five guards. A sixth kind of work needs its own guard and an entry in that line.
+- **Source:** `viewmodel/AdminContentViewModel.java`. **Checked:** 2026-10-24.
+
+### A banned keyword must be ASCII after accent stripping, the box accepts more
+- **Fact:** the `bannedKeywords` create rule demands `^[ -~]+$` and a lower case value. `AdminKeywordRules.isValidKeyword` accepts any letter or digit, because Vietnamese letters lose their marks in `AdminRepository.addKeyword`. A letter with no ASCII form (for example a Chinese character) passes the box and is refused by the Rules with a permission error.
+- **Why it matters here:** the admin sees a generic denied message for such a word. Tightening the box would need the leader to confirm UC38 (open question 3 of P2-E3c).
+- **Source:** `firebase/firestore.rules` (`match /bannedKeywords/{id}`). **Checked:** 2026-10-24.

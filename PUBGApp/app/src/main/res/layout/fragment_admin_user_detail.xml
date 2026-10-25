@@ -382,12 +382,172 @@
                     android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
 
-            <!-- Left empty for the lock, warn and unlock buttons of the next issue (P2-E2c) -->
+            <!-- Action block: warn, lock, unlock, remove all listings. The Fragment shows what the status allows. -->
             <FrameLayout
                 android:id="@+id/layoutActionBlock"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:visibility="gone" />
+                android:layout_marginTop="@dimen/space_lg"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/admin_user_action_title"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <TextView
+                        android:id="@+id/textActionNotice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:background="@color/chip_background_beige"
+                        android:padding="@dimen/space_sm"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="@color/warning" />
+
+                    <TextView
+                        android:id="@+id/textLockInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorError"
+                        android:visibility="gone" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/inputActionReason"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_md"
+                        android:hint="@string/admin_user_action_reason_hint"
+                        app:counterEnabled="true"
+                        app:counterMaxLength="200">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editActionReason"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textMultiLine|textCapSentences"
+                            android:maxLength="200"
+                            android:minLines="2" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:id="@+id/textReasonNote"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:text="@string/admin_user_action_reason_note"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutLockDuration"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_md"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/admin_user_action_duration_title"
+                            android:textAppearance="?attr/textAppearanceTitleSmall"
+                            android:textColor="?attr/colorOnSurface" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/inputLockDays"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_sm"
+                            android:hint="@string/admin_user_action_days_hint">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editLockDays"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:maxLength="4" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switchPermanent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minHeight="@dimen/touch_min"
+                            android:text="@string/admin_user_action_permanent" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/textActionBlocked"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:accessibilityLiveRegion="polite"
+                        android:text="@string/admin_user_action_blocked_offline"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="@color/warning"
+                        android:visibility="gone" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutWarnLockButtons"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_md"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonWarn"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_sm"
+                            android:layout_weight="1"
+                            android:minHeight="@dimen/touch_min"
+                            android:text="@string/admin_user_action_warn"
+                            app:cornerRadius="@dimen/radius_md" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonLock"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/space_sm"
+                            android:layout_weight="1"
+                            android:minHeight="@dimen/touch_min"
+                            android:text="@string/admin_user_action_lock"
+                            app:backgroundTint="?attr/colorError"
+                            app:cornerRadius="@dimen/radius_md" />
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonUnlock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_md"
+                        android:minHeight="@dimen/touch_min"
+                        android:text="@string/admin_user_action_unlock"
+                        app:cornerRadius="@dimen/radius_md" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonRemoveListings"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:minHeight="@dimen/touch_min"
+                        android:text="@string/admin_user_action_remove_listings"
+                        android:textColor="?attr/colorError"
+                        app:cornerRadius="@dimen/radius_md" />
+                </LinearLayout>
+            </FrameLayout>
 
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tabLayoutHistory"

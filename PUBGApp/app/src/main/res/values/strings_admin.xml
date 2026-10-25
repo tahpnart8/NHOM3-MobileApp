@@ -173,4 +173,67 @@
     <string name="admin_verification_reject_hint">Lý do từ chối</string>
     <string name="admin_verification_reject_note">Người dùng sẽ thấy lý do này trong thông báo.</string>
     <string name="admin_verification_reject_required">Hãy nhập lý do từ chối.</string>
+
+    <!-- E03 action block (#111): warn in three tiers, lock, unlock, remove all listings -->
+    <string name="admin_user_action_title">Xử lý tài khoản</string>
+    <string name="admin_user_action_reason_hint">Lý do (bắt buộc)</string>
+    <string name="admin_user_action_reason_note">Lý do được ghi vào lịch sử vi phạm và gửi kèm thông báo cho người dùng.</string>
+    <string name="admin_user_action_reason_required">Hãy nhập lý do.</string>
+    <string name="admin_user_action_duration_title">Thời hạn khóa</string>
+    <string name="admin_user_action_days_hint">Số ngày khóa</string>
+    <string name="admin_user_action_days_invalid">Nhập số ngày từ 1 đến %d.</string>
+    <string name="admin_user_action_days_not_permanent">Cảnh báo bậc 2 khóa tạm, hãy tắt “Khóa vĩnh viễn” và nhập số ngày.</string>
+    <string name="admin_user_action_permanent">Khóa vĩnh viễn</string>
+    <string name="admin_user_action_blocked_offline">Đang không có mạng nên chưa thể xử lý tài khoản.</string>
+    <string name="admin_user_action_warn">Cảnh báo</string>
+    <string name="admin_user_action_lock">Khóa tài khoản</string>
+    <string name="admin_user_action_unlock">Mở khóa</string>
+    <string name="admin_user_action_remove_listings">Gỡ toàn bộ tin</string>
+    <string name="admin_user_action_notice_first">Lần cảnh báo tiếp theo là bậc %d: chỉ ghi cảnh báo, tài khoản vẫn hoạt động.</string>
+    <string name="admin_user_action_notice_temp">Lần cảnh báo tiếp theo là bậc %d: tài khoản bị khóa tạm đến hạn bạn chọn.</string>
+    <string name="admin_user_action_notice_perm">Lần cảnh báo tiếp theo là bậc %d: tài khoản bị khóa vĩnh viễn.</string>
+    <string name="admin_user_action_lock_info_temp">Đang bị khóa tạm đến %1$s. Lý do: %2$s</string>
+    <string name="admin_user_action_lock_info_perm">Đang bị khóa vĩnh viễn. Lý do: %s</string>
+    <string name="admin_user_action_no_reason">chưa ghi lý do</string>
+    <string name="admin_user_action_warn_title">Cảnh báo tài khoản</string>
+    <string name="admin_user_action_lock_title">Khóa tài khoản</string>
+    <string name="admin_user_action_unlock_title">Mở khóa tài khoản</string>
+    <string name="admin_user_action_remove_title">Gỡ toàn bộ tin</string>
+    <string name="admin_user_action_warn_first_message">Cảnh báo bậc %1$d: ghi vào lịch sử vi phạm, tài khoản vẫn hoạt động.\nLý do: %2$s</string>
+    <string name="admin_user_action_warn_temp_message">Cảnh báo bậc %1$d: khóa tạm tài khoản %2$d ngày.\nLý do: %3$s</string>
+    <string name="admin_user_action_warn_perm_message">Cảnh báo bậc %1$d: khóa vĩnh viễn tài khoản. Hệ thống không tự gỡ tin.\nLý do: %2$s</string>
+    <string name="admin_user_action_lock_temp_message">Khóa tạm tài khoản %1$d ngày.\nLý do: %2$s</string>
+    <string name="admin_user_action_lock_perm_message">Khóa vĩnh viễn tài khoản.\nLý do: %s</string>
+    <string name="admin_user_action_unlock_message">Tài khoản trở về trạng thái đang hoạt động. Số lần cảnh báo được giữ nguyên.</string>
+    <string name="admin_user_action_remove_message">Mọi tin nháp, đang bán và đã ẩn của tài khoản này sẽ bị gỡ và không khôi phục được. Đề nghị giá đang chờ trên các tin đang bán bị từ chối. Tin đang giữ chỗ hoặc đã bán không bị đụng tới.</string>
+    <string name="admin_user_action_warn_done">Đã cảnh báo tài khoản.</string>
+    <string name="admin_user_action_lock_done">Đã khóa tài khoản.</string>
+    <string name="admin_user_action_unlock_done">Đã mở khóa tài khoản.</string>
+    <string name="admin_user_action_remove_done">Đã gỡ toàn bộ tin của tài khoản.</string>
+
+    <!-- E04 flagged listings and banned keywords tabs (#111) -->
+    <string name="admin_moderation_tab_flagged">Tin bị gắn cờ</string>
+    <string name="admin_moderation_tab_keywords">Từ khóa cấm</string>
+    <string name="admin_moderation_flagged_empty_title">Không có tin nào bị gắn cờ</string>
+    <string name="admin_moderation_flagged_empty_message">Tin chứa từ khóa cấm sẽ hiện ở đây để bạn xem.</string>
+    <string name="admin_moderation_flagged_thumb_desc">Ảnh bìa của tin bị gắn cờ</string>
+    <string name="admin_moderation_flagged_posted">Đăng ngày %s</string>
+    <string name="admin_moderation_flagged_clear">Bỏ cờ</string>
+    <string name="admin_moderation_flagged_cleared">Đã bỏ cờ cho tin.</string>
+    <string name="admin_moderation_keyword_hint">Từ khóa cấm mới</string>
+    <string name="admin_moderation_keyword_note">Từ khóa mới chỉ gắn cờ tin đăng hoặc sửa sau đó, không phân biệt hoa thường và dấu.</string>
+    <string name="admin_moderation_keyword_add">Thêm</string>
+    <string name="admin_moderation_keyword_invalid">Từ khóa dài 2 đến 60 ký tự, chỉ gồm chữ cái, chữ số và khoảng trắng.</string>
+    <string name="admin_moderation_keyword_empty_title">Chưa có từ khóa cấm nào</string>
+    <string name="admin_moderation_keyword_empty_message">Thêm từ khóa ở ô phía trên để gắn cờ các tin đăng mới.</string>
+    <string name="admin_moderation_keyword_added_on">Thêm ngày %s</string>
+    <string name="admin_moderation_keyword_remove">Xóa</string>
+    <string name="admin_moderation_keyword_remove_desc">Xóa từ khóa %s</string>
+    <string name="admin_moderation_keyword_remove_title">Xóa từ khóa</string>
+    <string name="admin_moderation_keyword_remove_message">Xóa từ khóa “%s”? Tin đã đăng không bị rà lại, từ này chỉ thôi gắn cờ các tin đăng hoặc sửa từ nay.</string>
+    <string name="admin_moderation_keyword_done_added">Đã thêm từ khóa cấm.</string>
+    <string name="admin_moderation_keyword_done_removed">Đã xóa từ khóa cấm.</string>
+
+    <!-- E03: an admin does not act on their own account -->
+    <string name="admin_user_action_self">Đây là tài khoản của bạn nên không thể cảnh báo hoặc khóa.</string>
 </resources>
