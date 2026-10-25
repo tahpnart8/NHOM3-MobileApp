@@ -276,4 +276,24 @@
     <string name="admin_complaint_detail_timeline">Lịch sử trạng thái giao dịch</string>
     <string name="admin_complaint_detail_timeline_row">%1$s: %2$s</string>
     <string name="admin_complaint_detail_no_timeline">Giao dịch chưa có dòng lịch sử nào.</string>
+
+    <!-- D06 decision and internal note -->
+    <string name="admin_complaint_decision_title">Quyết định xử lý</string>
+    <string name="admin_complaint_decision_refund">Hoàn tiền</string>
+    <string name="admin_complaint_decision_return_item">Hoàn trả sản phẩm</string>
+    <string name="admin_complaint_decision_cancel_deal">Hủy giao dịch</string>
+    <string name="admin_complaint_decision_reject">Bác khiếu nại</string>
+    <string name="admin_complaint_decision_request_evidence">Yêu cầu bổ sung bằng chứng</string>
+    <string name="admin_complaint_decision_warning">Quyết định áp dụng ngay cho giao dịch và khoản thanh toán, hai bên nhận thông báo kết quả. Không hoàn tác được.</string>
+    <string name="admin_complaint_decision_warning_evidence">Khiếu nại chuyển sang chờ bổ sung bằng chứng; người khiếu nại bổ sung ảnh ở mục Báo cáo và khiếu nại của tôi. Hai bên nhận thông báo.</string>
+    <string name="admin_complaint_decision_message_hint">Lời giải thích gửi hai bên</string>
+    <string name="admin_complaint_decision_request_hint">Nội dung yêu cầu bổ sung</string>
+    <string name="admin_complaint_decision_empty">Hãy nhập lời nhắn gửi hai bên.</string>
+    <string name="admin_complaint_decision_send">Gửi quyết định</string>
+    <string name="admin_complaint_decision_back">Quay lại</string>
+    <string name="admin_complaint_decision_sent">Đã gửi quyết định. Hai bên đã nhận thông báo kết quả.</string>
+    <string name="admin_complaint_note_title">Ghi chú nội bộ (chỉ admin thấy)</string>
+    <string name="admin_complaint_note_hint">Ghi chú cho admin, người dùng không thấy</string>
+    <string name="admin_complaint_note_save">Lưu ghi chú</string>
+    <string name="admin_complaint_note_saved">Đã lưu ghi chú nội bộ.</string>
 </resources>

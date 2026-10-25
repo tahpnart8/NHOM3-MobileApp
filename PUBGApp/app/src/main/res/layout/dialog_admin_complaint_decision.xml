@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- D06 decision dialog: the chosen decision, a warning that it cannot be undone and the message to both parties. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="@dimen/space_lg"
+    android:paddingTop="@dimen/space_md">
+
+    <TextView
+        android:id="@+id/textDecisionWarning"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layoutDecisionMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_md"
+        app:counterEnabled="true"
+        app:counterMaxLength="1000">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editDecisionMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top|start"
+            android:inputType="textMultiLine|textCapSentences"
+            android:maxLength="1000"
+            android:minLines="3" />
+    </com.google.android.material.textfield.TextInputLayout>
+</LinearLayout>
