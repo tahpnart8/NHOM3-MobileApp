@@ -23,6 +23,8 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentMyReportsBinding;
+import com.nhom3.pubgapp.databinding.ViewEmptyStateBinding;
+import com.nhom3.pubgapp.model.Complaint;
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.viewmodel.TrustViewModel;
@@ -35,6 +37,7 @@ public class MyReportsFragment extends Fragment {
 
     private static final String STATE_SELECTED_TAB = "selected_tab";
     private static final int TAB_REPORTS = 0;
+    private static final String STATE_OPEN_COMPLAINT = "open_complaint";
     private static final String STATE_SHARED_EXPORT = "shared_export";
     // Matches android:authorities="${applicationId}.fileprovider" in the manifest.
     private static final String FILE_PROVIDER_SUFFIX = ".fileprovider";
@@ -47,6 +50,12 @@ public class MyReportsFragment extends Fragment {
     private String sharedExportPath;
     private TrustViewModel trustViewModel;
     private MyReportAdapter reportAdapter;
+    private MyComplaintAdapter complaintAdapter;
+    // The complaint whose detail is open, kept so a rotation opens it again.
+    @Nullable
+    private String openComplaintId;
+    // Set when a read fails before any complaint arrived, so the tab shows the error instead of the spinner.
+    private boolean complaintsFailed;
 
     @Nullable
     @Override
@@ -62,12 +71,15 @@ public class MyReportsFragment extends Fragment {
         if (savedInstanceState != null) {
             selectedTab = savedInstanceState.getInt(STATE_SELECTED_TAB, TAB_REPORTS);
             sharedExportPath = savedInstanceState.getString(STATE_SHARED_EXPORT);
+            openComplaintId = savedInstanceState.getString(STATE_OPEN_COMPLAINT);
         }
         trustViewModel = new ViewModelProvider(this).get(TrustViewModel.class);
         setUpToolbar();
         setUpTabs();
         setUpReportList();
+        setUpComplaintList();
         observeReports();
+        observeComplaints();
         observeExport();
         trustViewModel.loadMyReports();
     }
@@ -88,6 +100,7 @@ public class MyReportsFragment extends Fragment {
         super.onSaveInstanceState(outState);
         outState.putInt(STATE_SELECTED_TAB, selectedTab);
         outState.putString(STATE_SHARED_EXPORT, sharedExportPath);
+        outState.putString(STATE_OPEN_COMPLAINT, openComplaintId);
     }
 
     private void setUpToolbar() {
@@ -149,6 +162,34 @@ public class MyReportsFragment extends Fragment {
         });
     }
 
+    private void setUpComplaintList() {
+        complaintAdapter = new MyComplaintAdapter(new MyComplaintAdapter.ComplaintListener() {
+            @Override
+            public void onOpen(Complaint complaint) {
+                openComplaint(complaint);
+            }
+        });
+        binding.includeComplaints.recyclerComplaints.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.includeComplaints.recyclerComplaints.setAdapter(complaintAdapter);
+        ViewEmptyStateBinding empty = binding.includeComplaints.includeComplaintsEmpty;
+        empty.textEmptyTitle.setText(R.string.profile_my_complaints_empty_title);
+        empty.textEmptyMessage.setText(R.string.profile_my_complaints_empty_message);
+        empty.buttonEmptyAction.setVisibility(View.GONE);
+        binding.includeComplaints.includeComplaintsError.buttonRetry.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View clicked) {
+                complaintsFailed = false;
+                trustViewModel.loadMyComplaints();
+                updateComplaintsState();
+            }
+        });
+    }
+
+    private void openComplaint(Complaint complaint) {
+        openComplaintId = complaint.getId();
+        trustViewModel.loadComplaint(complaint.getId());
+    }
+
     // The ViewModel keeps the last file, so a file already shared is not shared again after a rotation.
     private void observeExport() {
         trustViewModel.getExportedFile().observe(getViewLifecycleOwner(), new Observer<File>() {
@@ -204,6 +245,7 @@ public class MyReportsFragment extends Fragment {
             @Override
             public void onChanged(Boolean loading) {
                 updateReportsState();
+                updateComplaintsState();
             }
         });
         trustViewModel.getError().observe(getViewLifecycleOwner(), new Observer<String>() {
@@ -229,13 +271,44 @@ public class MyReportsFragment extends Fragment {
         binding.includeReports.buttonExportReports.setEnabled(!loading);
     }
 
+    private void observeComplaints() {
+        trustViewModel.getComplaints().observe(getViewLifecycleOwner(), new Observer<List<Complaint>>() {
+            @Override
+            public void onChanged(List<Complaint> complaints) {
+                complaintAdapter.submitList(complaints);
+                updateComplaintsState();
+            }
+        });
+    }
+
+    // Reports and complaints share one loading flag, so the complaints tab waits for its own list or failure.
+    private void updateComplaintsState() {
+        List<Complaint> complaints = trustViewModel.getComplaints().getValue();
+        boolean hasList = complaints != null;
+        boolean empty = hasList && complaints.isEmpty();
+        boolean failed = !hasList && complaintsFailed;
+        binding.includeComplaints.progressComplaints.setVisibility(!hasList && !failed ? View.VISIBLE : View.GONE);
+        binding.includeComplaints.recyclerComplaints.setVisibility(hasList && !empty ? View.VISIBLE : View.GONE);
+        binding.includeComplaints.includeComplaintsEmpty.getRoot().setVisibility(empty ? View.VISIBLE : View.GONE);
+        binding.includeComplaints.includeComplaintsError.getRoot().setVisibility(failed ? View.VISIBLE : View.GONE);
+    }
+
     private void showError(String message) {
         if (message == null || message.isEmpty()) {
             return;
         }
+        boolean shownInPlace = false;
         if (trustViewModel.getReports().getValue() == null) {
             binding.includeReports.includeReportsError.textErrorMessage.setText(message);
-        } else {
+            shownInPlace = true;
+        }
+        if (selectedTab != TAB_REPORTS && trustViewModel.getComplaints().getValue() == null) {
+            binding.includeComplaints.includeComplaintsError.textErrorMessage.setText(message);
+            complaintsFailed = true;
+            updateComplaintsState();
+            shownInPlace = true;
+        }
+        if (!shownInPlace) {
             Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_LONG).show();
         }
         trustViewModel.clearError();
@@ -245,6 +318,10 @@ public class MyReportsFragment extends Fragment {
         boolean reports = position == TAB_REPORTS;
         binding.includeReports.getRoot().setVisibility(reports ? View.VISIBLE : View.GONE);
         binding.includeComplaints.getRoot().setVisibility(reports ? View.GONE : View.VISIBLE);
+        // Complaints are read the first time their tab shows, so the two lists do not race for one flag.
+        if (!reports) {
+            trustViewModel.loadMyComplaints();
+        }
     }
 
     @Override
