@@ -1,15 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Empty shell of AccountSettingsFragment. The owning issue replaces this body; keep the root and the ids it needs. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground">
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/textShellTitle"
-        android:layout_width="wrap_content"
+    <!-- Top App Bar -->
+    <LinearLayout
+        android:id="@+id/layoutTopBar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="@string/account_settings_title"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall" />
-</FrameLayout>
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/touch_min"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/space_sm"
+        android:paddingVertical="@dimen/space_xs">
+
+        <ImageButton
+            android:id="@+id/buttonBack"
+            android:layout_width="@dimen/touch_min"
+            android:layout_height="@dimen/touch_min"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/common_back"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="?attr/colorOnSurface" />
+
+        <TextView
+            android:id="@+id/textTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:layout_weight="1"
+            android:text="@string/account_settings_title"
+            android:textAppearance="?attr/textAppearanceTitleLarge"
+            android:textColor="?attr/colorOnSurface" />
+    </LinearLayout>
+
+    <!-- Offline Banner -->
+    <LinearLayout
+        android:id="@+id/layoutOfflineBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/info"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/space_md"
+        android:paddingVertical="@dimen/space_xs"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/textOffline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/account_settings_offline"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
+    <!-- Content with 3 sections -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:padding="@dimen/space_md">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Section 1: Change Password -->
+            <include
+                android:id="@+id/includePassword"
+                layout="@layout/view_account_settings_password" />
+
+            <!-- Section 2: Notifications Settings -->
+            <include
+                android:id="@+id/includeNotifications"
+                layout="@layout/view_account_settings_notifications"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md" />
+
+            <!-- Section 3: Delete Account -->
+            <include
+                android:id="@+id/includeDelete"
+                layout="@layout/view_account_settings_delete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
