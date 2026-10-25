@@ -12,6 +12,10 @@
     <string name="admin_dashboard_shortcuts_heading">Lối tắt quản lý</string>
     <string name="admin_dashboard_shortcut_users">Người dùng</string>
     <string name="admin_dashboard_shortcut_reports">Tin bị báo cáo</string>
+    <string name="admin_dashboard_shortcut_complaints">Khiếu nại</string>
+    <string name="admin_dashboard_shortcut_deals">Giao dịch</string>
+    <string name="admin_dashboard_shortcut_categories">Danh mục</string>
+    <string name="admin_dashboard_shortcut_admin_accounts">Tài khoản quản trị</string>
     <string name="admin_dashboard_back_to_app">Về ứng dụng</string>
     <string name="admin_dashboard_label_new">Mới</string>
     <string name="admin_dashboard_label_waiting">Chờ</string>
