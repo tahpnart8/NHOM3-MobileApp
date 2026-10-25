@@ -20,6 +20,7 @@ import com.nhom3.pubgapp.model.Payment;
 import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.enums.PaymentMethod;
 
+import java.util.ArrayList;
 import java.util.List;
 
 // State for the deal screens, from creation to completion. Action bodies report NOT_READY until the repositories are filled.
@@ -459,7 +460,25 @@ public class DealViewModel extends ViewModel {
     }
 
     public void loadHistory() {
-        error.setValue(DataCallback.NOT_READY);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            error.setValue("Chưa đăng nhập");
+            return;
+        }
+        loading.setValue(true);
+        dealRepository.getMyDeals(user.getUid(), new DataCallback<List<Deal>>() {
+            @Override
+            public void onSuccess(List<Deal> result) {
+                loading.postValue(false);
+                deals.postValue(result != null ? result : new ArrayList<Deal>());
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void loadPayments() {
