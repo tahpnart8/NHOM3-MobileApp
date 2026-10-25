@@ -141,6 +141,30 @@ public class AdminDashboardFragment extends Fragment {
                 navigate(R.id.action_admin_dashboard_to_moderation, null);
             }
         });
+        binding.buttonShortcutComplaints.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                navigate(R.id.action_admin_dashboard_to_complaint_list, null);
+            }
+        });
+        binding.buttonShortcutDeals.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                navigate(R.id.action_admin_dashboard_to_deal_monitor, null);
+            }
+        });
+        binding.buttonShortcutCategories.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                navigate(R.id.action_admin_dashboard_to_category, null);
+            }
+        });
+        binding.buttonShortcutAdminAccounts.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                navigate(R.id.action_admin_dashboard_to_admin_account, null);
+            }
+        });
         binding.buttonBackToApp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
