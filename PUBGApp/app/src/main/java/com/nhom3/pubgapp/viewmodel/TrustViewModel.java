@@ -58,7 +58,8 @@ public class TrustViewModel extends ViewModel {
     private static final String MESSAGE_MISSING_CONVERSATION =
             "Thiếu cuộc trò chuyện của tin nhắn bị báo cáo.";
     private static final String MESSAGE_OFFLINE = "Không có kết nối.";
-    private static final String MESSAGE_MY_REPORTS_NOT_SIGNED_IN = "Bạn cần đăng nhập để xem báo cáo của mình.";
+    private static final String MESSAGE_MY_REPORTS_NOT_SIGNED_IN =
+            "Bạn cần đăng nhập để xem báo cáo của mình.";
     private static final String MESSAGE_CANNOT_CANCEL_REPORT =
             "Chỉ hủy được báo cáo của bạn khi báo cáo còn chờ xử lý.";
     private static final String MESSAGE_NOTHING_TO_EXPORT = "Chưa có báo cáo nào để xuất.";

@@ -223,7 +223,8 @@ public class MyReportsFragment extends Fragment {
         binding.includeReports.progressReports.setVisibility(loading && !hasList ? View.VISIBLE : View.GONE);
         binding.includeReports.recyclerReports.setVisibility(hasList && !empty ? View.VISIBLE : View.GONE);
         binding.includeReports.includeReportsEmpty.getRoot().setVisibility(empty ? View.VISIBLE : View.GONE);
-        binding.includeReports.includeReportsError.getRoot().setVisibility(!hasList && !loading ? View.VISIBLE : View.GONE);
+        boolean failed = !hasList && !loading;
+        binding.includeReports.includeReportsError.getRoot().setVisibility(failed ? View.VISIBLE : View.GONE);
         binding.includeReports.buttonExportReports.setVisibility(hasList && !empty ? View.VISIBLE : View.GONE);
         binding.includeReports.buttonExportReports.setEnabled(!loading);
     }
