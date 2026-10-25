@@ -49,13 +49,13 @@ public class ProfileViewModel extends ViewModel {
     static final int FORM_MISSING_ID_IMAGE = 3;
     static final int FORM_MISSING_PORTRAIT_IMAGE = 4;
 
-    static final int ADDRESS_FORM_OK = 0;
-    static final int ADDRESS_FORM_MISSING_RECEIVER = 1;
-    static final int ADDRESS_FORM_MISSING_PHONE = 2;
-    static final int ADDRESS_FORM_BAD_PHONE = 3;
-    static final int ADDRESS_FORM_MISSING_PROVINCE = 4;
-    static final int ADDRESS_FORM_MISSING_DISTRICT = 5;
-    static final int ADDRESS_FORM_MISSING_DETAIL = 6;
+    public static final int ADDRESS_FORM_OK = 0;
+    public static final int ADDRESS_FORM_MISSING_RECEIVER = 1;
+    public static final int ADDRESS_FORM_MISSING_PHONE = 2;
+    public static final int ADDRESS_FORM_BAD_PHONE = 3;
+    public static final int ADDRESS_FORM_MISSING_PROVINCE = 4;
+    public static final int ADDRESS_FORM_MISSING_DISTRICT = 5;
+    public static final int ADDRESS_FORM_MISSING_DETAIL = 6;
 
     // ViewModels have no Context, so messages are Vietnamese constants, like the repositories.
     private static final String MESSAGE_NOT_SIGNED_IN = "Bạn cần đăng nhập để xem hồ sơ.";
@@ -919,7 +919,7 @@ public class ProfileViewModel extends ViewModel {
         return true;
     }
 
-    static int checkAddressForm(String receiverName, String phone, String province,
+    public static int checkAddressForm(String receiverName, String phone, String province,
             String district, String detail) {
         if (receiverName == null || receiverName.trim().isEmpty()) {
             return ADDRESS_FORM_MISSING_RECEIVER;
