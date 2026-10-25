@@ -231,4 +231,12 @@
     <string name="listing_post_edit_title">Chỉnh sửa tin đăng</string>
     <string name="listing_post_edit_button_save">Lưu thay đổi</string>
     <string name="listing_post_edit_success">Cập nhật sản phẩm thành công!</string>
+
+    <!-- B02 Search radius & location strings (STT 27) -->
+    <string name="listing_search_radius_label">Bán kính và khoảng cách</string>
+    <string name="listing_search_radius_near_me">Gần tôi</string>
+    <string name="listing_search_radius_1km">1 km</string>
+    <string name="listing_search_radius_3km">3 km</string>
+    <string name="listing_search_radius_5km">5 km</string>
+    <string name="listing_search_no_location">Không xác định được vị trí của bạn. Vui lòng thiết lập địa chỉ trong hồ sơ</string>
 </resources>
