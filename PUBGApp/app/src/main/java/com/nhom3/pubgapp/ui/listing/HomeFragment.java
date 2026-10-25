@@ -71,6 +71,13 @@ public class HomeFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        setupTopHeader();
+        updateOfflineBanner();
+    }
+
+    @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean(KEY_FOLLOWING_CHANNEL, isFollowingChannel);
@@ -109,19 +116,16 @@ public class HomeFragment extends Fragment {
     }
 
     private void setupTopHeader() {
+        if (binding == null) {
+            return;
+        }
         boolean loggedIn = SessionManager.getInstance().isLoggedIn();
         if (loggedIn) {
+            binding.layoutTopHeader.setVisibility(View.GONE);
             binding.buttonSignIn.setVisibility(View.GONE);
-            binding.imageAvatar.setVisibility(View.VISIBLE);
-            binding.imageAvatar.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Navigation.findNavController(v).navigate(R.id.action_global_my_profile);
-                }
-            });
         } else {
+            binding.layoutTopHeader.setVisibility(View.VISIBLE);
             binding.buttonSignIn.setVisibility(View.VISIBLE);
-            binding.imageAvatar.setVisibility(View.GONE);
             binding.buttonSignIn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

@@ -15,29 +15,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Top Header: Brand Name + (Guest SignIn Button / Logged-in Avatar Button) -->
+    <!-- Guest sign-in banner: shown only when not logged in -->
     <LinearLayout
         android:id="@+id/layoutTopHeader"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
+        android:gravity="end|center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="@dimen/space_md"
-        android:paddingTop="@dimen/space_sm"
+        android:paddingTop="@dimen/space_xs"
         android:paddingBottom="@dimen/space_xs"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/includeOfflineBanner">
-
-        <TextView
-            android:id="@+id/textBrand"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/listing_home_brand"
-            android:textAppearance="?attr/textAppearanceHeadlineSmall"
-            android:textColor="?attr/colorPrimary"
-            android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonSignIn"
@@ -47,15 +38,6 @@
             android:text="@string/listing_home_guest_sign_in"
             android:textColor="?attr/colorPrimary"
             android:visibility="gone" />
-
-        <ImageView
-            android:id="@+id/imageAvatar"
-            android:layout_width="@dimen/touch_min"
-            android:layout_height="@dimen/touch_min"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/listing_home_avatar_desc"
-            android:padding="@dimen/space_sm"
-            android:src="@drawable/ic_tab_profile" />
     </LinearLayout>
 
     <!-- Search bar and refresh button row -->
