@@ -137,7 +137,7 @@ public class ProfileViewModel extends ViewModel {
             return;
         }
         // A failed count leaves stats empty, so opening the screen or Retry reads it again.
-        if (stats.getValue() == null && isOwnPage(uid)) {
+        if (needsStatsRead(isOwnPage(uid), stats.getValue() != null)) {
             loading.setValue(true);
             fetchStats(uid);
         }
@@ -770,6 +770,11 @@ public class ProfileViewModel extends ViewModel {
             }
         }
         return true;
+    }
+
+    // Same uid is skipped only when the counts are there or the page is not the own one.
+    static boolean needsStatsRead(boolean ownPage, boolean hasStats) {
+        return ownPage && !hasStats;
     }
 
     static boolean canSubmitVerification(VerificationStatus status, boolean emailVerified) {
