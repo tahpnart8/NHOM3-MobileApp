@@ -153,6 +153,7 @@
     <string name="listing_detail_invalid_id">Mã tin không hợp lệ</string>
     <string name="listing_detail_login_required">Vui lòng đăng nhập để thực hiện thao tác này</string>
     <string name="listing_detail_similar_title">Sản phẩm tương tự</string>
+    <string name="listing_detail_price_range_format">Giá tham khảo: %1$s đến %2$s</string>
     <string-array name="listing_provinces">
         <item>TP.HCM</item>
         <item>Hà Nội</item>
