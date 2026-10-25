@@ -356,6 +356,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_sort_price_desc" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipSortTopRated"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/listing_search_sort_top_rated" />
         </com.google.android.material.chip.ChipGroup>
 
         <!-- Action Buttons: Reset and Apply -->

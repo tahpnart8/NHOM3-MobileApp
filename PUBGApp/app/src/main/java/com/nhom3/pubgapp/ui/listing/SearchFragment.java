@@ -586,6 +586,8 @@ public class SearchFragment extends Fragment {
             panel.chipGroupSort.check(R.id.chipSortPriceAsc);
         } else if (order == SortOrder.PRICE_DESC) {
             panel.chipGroupSort.check(R.id.chipSortPriceDesc);
+        } else if (order == SortOrder.TOP_RATED) {
+            panel.chipGroupSort.check(R.id.chipSortTopRated);
         } else {
             panel.chipGroupSort.check(R.id.chipSortNewest);
         }
@@ -717,6 +719,8 @@ public class SearchFragment extends Fragment {
             newFilter.setSortOrder(SortOrder.PRICE_ASC);
         } else if (checkedSortId == R.id.chipSortPriceDesc) {
             newFilter.setSortOrder(SortOrder.PRICE_DESC);
+        } else if (checkedSortId == R.id.chipSortTopRated) {
+            newFilter.setSortOrder(SortOrder.TOP_RATED);
         } else {
             newFilter.setSortOrder(SortOrder.NEWEST);
         }
