@@ -89,7 +89,7 @@
                     android:id="@+id/textPrice"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_2xs"
+                    android:layout_marginTop="@dimen/space_xs"
                     android:textAppearance="?attr/textAppearanceTitleSmall"
                     android:textColor="?attr/colorPrimary" />
             </LinearLayout>
@@ -109,7 +109,7 @@
             android:id="@+id/textUpdated"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_2xs"
+            android:layout_marginTop="@dimen/space_xs"
             android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
