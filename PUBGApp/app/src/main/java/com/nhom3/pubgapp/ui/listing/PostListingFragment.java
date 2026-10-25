@@ -22,6 +22,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -45,6 +46,8 @@ import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.ProfileViewModel;
 import com.nhom3.pubgapp.viewmodel.ShopViewModel;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,6 +71,8 @@ public class PostListingFragment extends Fragment {
     private PostImageAdapter imageAdapter;
     private ActivityResultLauncher<PickVisualMediaRequest> photoPickerLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
+    private ActivityResultLauncher<Uri> takePictureLauncher;
+    private Uri currentPhotoUri;
 
     private final List<Category> loadedCategories = new ArrayList<Category>();
     private VerificationStatus currentVerification = VerificationStatus.NONE;
@@ -99,6 +104,15 @@ public class PostListingFragment extends Fragment {
                             Toast.makeText(requireContext(),
                                     R.string.listing_post_camera_permission_denied, Toast.LENGTH_SHORT).show();
                         }
+                    }
+                }
+        );
+        takePictureLauncher = registerForActivityResult(
+                new ActivityResultContracts.TakePicture(),
+                new ActivityResultCallback<Boolean>() {
+                    @Override
+                    public void onActivityResult(Boolean isSuccess) {
+                        handleCameraResult(isSuccess);
                     }
                 }
         );
@@ -216,7 +230,35 @@ public class PostListingFragment extends Fragment {
     }
 
     private void prepareAndLaunchCamera() {
-        // Implemented in next commit
+        if (getContext() == null) {
+            return;
+        }
+        File cameraDir = new File(requireContext().getCacheDir(), "camera");
+        if (!cameraDir.exists()) {
+            boolean created = cameraDir.mkdirs();
+            if (!created && !cameraDir.exists()) {
+                Toast.makeText(requireContext(),
+                        R.string.listing_post_camera_error, Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
+        File photoFile;
+        try {
+            photoFile = File.createTempFile("photo_", ".jpg", cameraDir);
+        } catch (IOException e) {
+            Toast.makeText(requireContext(),
+                    R.string.listing_post_camera_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String authority = requireContext().getPackageName() + ".fileprovider";
+        currentPhotoUri = FileProvider.getUriForFile(requireContext(), authority, photoFile);
+        takePictureLauncher.launch(currentPhotoUri);
+    }
+
+    private void handleCameraResult(Boolean isSuccess) {
+        // Will be completed in next commit
     }
 
     private void handlePickedUris(List<Uri> uris) {
