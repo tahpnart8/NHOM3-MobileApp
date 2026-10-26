@@ -25,6 +25,8 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:layout_gravity="center_vertical"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_inbox"
             app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Small" />
@@ -88,7 +90,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/space_xs"
-                    android:text="·"
+                    android:text="@string/trade_bullet_separator"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 

@@ -14,8 +14,6 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentWriteReviewBinding;
 import com.nhom3.pubgapp.databinding.ViewRatingBinding;
@@ -24,6 +22,7 @@ import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.util.NetworkMonitor;
+import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.DealViewModel;
 import com.nhom3.pubgapp.viewmodel.TrustViewModel;
 
@@ -316,11 +315,8 @@ public class WriteReviewFragment extends Fragment {
     }
 
     private String currentUserId() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) {
-            return "";
-        }
-        return user.getUid();
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        return uid != null ? uid : "";
     }
 
     private void restoreRatings(@NonNull Bundle state) {

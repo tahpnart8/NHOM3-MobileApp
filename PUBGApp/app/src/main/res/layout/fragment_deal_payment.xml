@@ -306,9 +306,10 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
+                            android:layout_width="@dimen/touch_min"
+                            android:layout_height="@dimen/touch_min"
                             android:contentDescription="@string/trade_deal_payment_heading"
+                            android:importantForAccessibility="no"
                             android:src="@drawable/ic_inbox"
                             app:tint="?attr/colorPrimary" />
 

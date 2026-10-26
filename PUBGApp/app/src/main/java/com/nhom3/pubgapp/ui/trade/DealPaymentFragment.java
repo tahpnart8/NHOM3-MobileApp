@@ -1,9 +1,6 @@
 package com.nhom3.pubgapp.ui.trade;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +15,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentDealPaymentBinding;
 import com.nhom3.pubgapp.model.Deal;
@@ -26,8 +22,10 @@ import com.nhom3.pubgapp.model.Payment;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.PaymentMethod;
 import com.nhom3.pubgapp.model.enums.PaymentStatus;
+import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.util.FormatUtils;
 import com.nhom3.pubgapp.util.NetworkMonitor;
+import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.DealViewModel;
 
 import java.text.SimpleDateFormat;
@@ -213,7 +211,8 @@ public class DealPaymentFragment extends Fragment {
             binding.textReceiptTime.setText(getString(R.string.trade_deal_payment_time_label,
                     sdf.format(payment.getHeldAt().toDate())));
         } else {
-            binding.textReceiptTime.setText(getString(R.string.trade_deal_payment_time_label, "Vừa xong"));
+            binding.textReceiptTime.setText(getString(R.string.trade_deal_payment_time_label,
+                    getString(R.string.trade_deal_payment_just_now)));
         }
 
         int statusRes = R.string.trade_deal_payment_status_held;
@@ -323,25 +322,15 @@ public class DealPaymentFragment extends Fragment {
 
     private void decodeProductThumbnail(String thumbBase64) {
         if (thumbBase64 != null && !thumbBase64.trim().isEmpty()) {
-            try {
-                byte[] decoded = Base64.decode(thumbBase64, Base64.DEFAULT);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
-                if (bitmap != null) {
-                    binding.imageProductThumb.setImageBitmap(bitmap);
-                    return;
-                }
-            } catch (Exception e) {
-                // Fallback to placeholder
-            }
+            ImageLoader.load(thumbBase64, binding.imageProductThumb, R.drawable.ic_inbox, R.drawable.ic_inbox);
+        } else {
+            binding.imageProductThumb.setImageResource(R.drawable.ic_inbox);
         }
-        binding.imageProductThumb.setImageResource(R.drawable.ic_inbox);
     }
 
     private String getCurrentUserId() {
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            return FirebaseAuth.getInstance().getCurrentUser().getUid();
-        }
-        return "";
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        return uid != null ? uid : "";
     }
 
     @Override

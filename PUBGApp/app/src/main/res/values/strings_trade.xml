@@ -209,4 +209,8 @@
     <string name="trade_payment_time_released">Giải ngân: %1$s</string>
     <string name="trade_payment_time_refunded">Hoàn tiền: %1$s</string>
     <string name="trade_payment_deal_code">Giao dịch #%1$s</string>
+
+    <!-- UI polish and separators (Issue #236) -->
+    <string name="trade_bullet_separator">·</string>
+    <string name="trade_deal_payment_just_now">Vừa xong</string>
 </resources>
