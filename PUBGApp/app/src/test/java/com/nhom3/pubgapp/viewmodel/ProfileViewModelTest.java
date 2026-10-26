@@ -104,6 +104,7 @@ public class ProfileViewModelTest {
     }
 
     @Test
+<<<<<<< HEAD
     public void emptyReceiverNameIsRejected() {
         int result = ProfileViewModel.checkAddressForm(
                 "", "0912345678", "Hà Nội", "Cầu Giấy", "123 Đường Láng");
@@ -263,5 +264,21 @@ public class ProfileViewModelTest {
 
         assertEquals(1, updated.size());
         assertFalse(updated.get("DEAL_UPDATE").booleanValue());
+    }
+
+    @Test
+    public void deletePasswordNullOrEmptyIsRejected() {
+        assertTrue(ProfileViewModel.isDeletePasswordEmpty(null));
+        assertTrue(ProfileViewModel.isDeletePasswordEmpty(""));
+        assertTrue(ProfileViewModel.isDeletePasswordEmpty("   "));
+        assertFalse(ProfileViewModel.isDeletePasswordEmpty("secret123"));
+    }
+
+    @Test
+    public void googleReauthRequiredOnlyWhenIdTokenProvided() {
+        assertFalse(ProfileViewModel.requiresGoogleReauth(null));
+        assertFalse(ProfileViewModel.requiresGoogleReauth(""));
+        assertFalse(ProfileViewModel.requiresGoogleReauth("   "));
+        assertTrue(ProfileViewModel.requiresGoogleReauth("google-id-token-abc"));
     }
 }
