@@ -169,4 +169,48 @@ public class ProfileViewModelTest {
                 "Nguyễn Văn A", "0912345678", "Hà Nội", "Cầu Giấy", "123 Đường Láng");
         assertEquals(ProfileViewModel.ADDRESS_FORM_OK, result);
     }
+
+    @Test
+    public void hanoiCoordinatesAreFound() {
+        com.google.firebase.firestore.GeoPoint point = ProfileViewModel.findCoordinatesByProvince("Hà Nội");
+        org.junit.Assert.assertNotNull(point);
+        assertEquals(21.0285, point.getLatitude(), 0.001);
+        assertEquals(105.8542, point.getLongitude(), 0.001);
+    }
+
+    @Test
+    public void hcmcCoordinatesAreFound() {
+        com.google.firebase.firestore.GeoPoint point = ProfileViewModel.findCoordinatesByProvince("TP.HCM");
+        org.junit.Assert.assertNotNull(point);
+        assertEquals(10.7769, point.getLatitude(), 0.001);
+        assertEquals(106.7009, point.getLongitude(), 0.001);
+    }
+
+    @Test
+    public void danangCoordinatesAreFound() {
+        com.google.firebase.firestore.GeoPoint point = ProfileViewModel.findCoordinatesByProvince("Đà Nẵng");
+        org.junit.Assert.assertNotNull(point);
+        assertEquals(16.0544, point.getLatitude(), 0.001);
+        assertEquals(108.2022, point.getLongitude(), 0.001);
+    }
+
+    @Test
+    public void caseInsensitiveAndWithoutAccentsMatches() {
+        com.google.firebase.firestore.GeoPoint point = ProfileViewModel.findCoordinatesByProvince("can tho");
+        org.junit.Assert.assertNotNull(point);
+        assertEquals(10.0452, point.getLatitude(), 0.001);
+        assertEquals(105.7469, point.getLongitude(), 0.001);
+    }
+
+    @Test
+    public void unknownProvinceReturnsNull() {
+        com.google.firebase.firestore.GeoPoint point = ProfileViewModel.findCoordinatesByProvince("TinhKhongTonTai");
+        org.junit.Assert.assertNull(point);
+    }
+
+    @Test
+    public void nullOrEmptyProvinceReturnsNull() {
+        org.junit.Assert.assertNull(ProfileViewModel.findCoordinatesByProvince(null));
+        org.junit.Assert.assertNull(ProfileViewModel.findCoordinatesByProvince("   "));
+    }
 }
