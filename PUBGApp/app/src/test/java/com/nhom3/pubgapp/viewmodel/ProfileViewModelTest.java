@@ -104,7 +104,6 @@ public class ProfileViewModelTest {
     }
 
     @Test
-<<<<<<< HEAD
     public void emptyReceiverNameIsRejected() {
         int result = ProfileViewModel.checkAddressForm(
                 "", "0912345678", "Hà Nội", "Cầu Giấy", "123 Đường Láng");
@@ -280,5 +279,17 @@ public class ProfileViewModelTest {
         assertFalse(ProfileViewModel.requiresGoogleReauth(""));
         assertFalse(ProfileViewModel.requiresGoogleReauth("   "));
         assertTrue(ProfileViewModel.requiresGoogleReauth("google-id-token-abc"));
+    }
+
+    @Test
+    public void recentSignInWindowCheck() {
+        long now = 1000000L;
+        assertFalse(ProfileViewModel.hasRecentSignIn(0L, now));
+        assertFalse(ProfileViewModel.hasRecentSignIn(-1L, now));
+        assertFalse(ProfileViewModel.hasRecentSignIn(now + 1000L, now));
+        assertTrue(ProfileViewModel.hasRecentSignIn(now, now));
+        assertTrue(ProfileViewModel.hasRecentSignIn(now - 60000L, now));
+        assertTrue(ProfileViewModel.hasRecentSignIn(now - 300000L, now));
+        assertFalse(ProfileViewModel.hasRecentSignIn(now - 300001L, now));
     }
 }
