@@ -738,7 +738,33 @@ public class ProfileViewModel extends ViewModel {
     }
 
     public void deactivateWithGoogle(String idToken) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        final String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null || uid.isEmpty()) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        loading.setValue(true);
+        if (requiresGoogleReauth(idToken)) {
+            authRepository.reauthenticateWithGoogle(idToken, new DataCallback<Void>() {
+                @Override
+                public void onSuccess(Void unused) {
+                    deactivateFirestoreAndAuth(uid);
+                }
+
+                @Override
+                public void onError(String message) {
+                    loading.postValue(false);
+                    String fallback = "Không thể xác thực lại bằng tài khoản Google.";
+                    error.postValue(message != null ? message : fallback);
+                }
+            });
+        } else {
+            deactivateFirestoreAndAuth(uid);
+        }
     }
 
     // The ViewModel outlives a sign out, so another account must never see the previous one's data.
@@ -1274,7 +1300,13 @@ public class ProfileViewModel extends ViewModel {
                     @Override
                     public void onError(String message) {
                         loading.postValue(false);
-                        error.postValue(message != null ? message : "Không thể xóa thông tin đăng nhập.");
+                        String display = message;
+                        if (message != null && (message.contains("recent-login")
+                                || message.contains("CREDENTIAL_TOO_OLD")
+                                || message.contains("xác thực lại"))) {
+                            display = "Cần đăng nhập lại bằng Google trước khi xóa tài khoản.";
+                        }
+                        error.postValue(display != null ? display : "Không thể xóa thông tin đăng nhập.");
                     }
                 });
             }
@@ -1324,6 +1356,10 @@ public class ProfileViewModel extends ViewModel {
 
     public static boolean isDeletePasswordEmpty(String password) {
         return password == null || password.trim().isEmpty();
+    }
+
+    public static boolean requiresGoogleReauth(String idToken) {
+        return idToken != null && !idToken.trim().isEmpty();
     }
 
     public void clearError() {
