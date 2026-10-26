@@ -387,4 +387,43 @@
     <string name="admin_account_self_revoke_denied">Bạn không thể tự gỡ quyền quản trị của chính mình.</string>
     <string name="admin_account_self_grant_denied">Bạn không thể tự cấp quyền cho chính mình.</string>
     <string name="admin_account_offline_warning">Không có kết nối mạng. Vui lòng thử lại sau.</string>
+
+    <!-- E06 Deal Detail for Admin (Issue #232, STT 82) -->
+    <string name="admin_deal_detail_section_info">Thông tin giao dịch</string>
+    <string name="admin_deal_detail_section_parties">Hai bên giao dịch</string>
+    <string name="admin_deal_detail_section_payment">Thông tin thanh toán</string>
+    <string name="admin_deal_detail_section_history">Lịch sử trạng thái</string>
+    <string name="admin_deal_detail_code">Mã giao dịch: #%1$s</string>
+    <string name="admin_deal_detail_price">Giá thỏa thuận: %1$s</string>
+    <string name="admin_deal_detail_delivery_label">Phương thức: %1$s</string>
+    <string name="admin_deal_detail_delivery_meet_up">Gặp mặt trực tiếp</string>
+    <string name="admin_deal_detail_delivery_shipping">Giao hàng qua bưu điện</string>
+    <string name="admin_deal_detail_appointment_label">Hẹn gặp: %1$s</string>
+    <string name="admin_deal_detail_location_label">Địa điểm: %1$s</string>
+    <string name="admin_deal_detail_shipping_address">Địa chỉ nhận hàng: %1$s</string>
+    <string name="admin_deal_detail_tracking_number">Mã vận đơn: %1$s</string>
+    <string name="admin_deal_detail_scheduled_at">Thời gian hẹn: %1$s</string>
+    <string name="admin_deal_detail_delivery_address">Địa chỉ: %1$s</string>
+    <string name="admin_deal_detail_carrier_name">Đơn vị vận chuyển: %1$s</string>
+    <string name="admin_deal_detail_tracking_code">Mã vận đơn: %1$s</string>
+    <string name="admin_deal_detail_payment_method_card">Thẻ ngân hàng</string>
+    <string name="admin_deal_detail_payment_method_e_wallet">Ví điện tử</string>
+    <string name="admin_deal_detail_payment_method_bank_transfer">Chuyển khoản</string>
+    <string name="admin_deal_detail_buyer_title">Người mua</string>
+    <string name="admin_deal_detail_seller_title">Người bán</string>
+    <string name="admin_deal_detail_party_name">%1$s (UID: %2$s)</string>
+    <string name="admin_deal_detail_confirmed">Đã xác nhận</string>
+    <string name="admin_deal_detail_unconfirmed">Chưa xác nhận</string>
+    <string name="admin_deal_detail_payment_none">Giao dịch không sử dụng thanh toán mô phỏng</string>
+    <string name="admin_deal_detail_payment_amount">Số tiền: %1$s</string>
+    <string name="admin_deal_detail_payment_status">Trạng thái: %1$s</string>
+    <string name="admin_deal_detail_payment_method">Phương thức: %1$s</string>
+    <string name="admin_deal_detail_payment_held_at">Thời điểm giữ: %1$s</string>
+    <string name="admin_deal_detail_payment_released_at">Thời điểm giải ngân: %1$s</string>
+    <string name="admin_deal_detail_auto_release_at">Tự động giải ngân sau: %1$s</string>
+    <string name="admin_deal_detail_history_empty">Chưa có lịch sử chuyển trạng thái</string>
+    <string name="admin_deal_detail_history_by">Bởi: %1$s</string>
+    <string name="admin_deal_detail_history_reason">Lý do: %1$s</string>
+    <string name="admin_deal_detail_error_not_admin">Chỉ quản trị viên mới có quyền xem giao dịch</string>
+    <string name="admin_deal_detail_not_found">Không tìm thấy thông tin giao dịch</string>
 </resources>
