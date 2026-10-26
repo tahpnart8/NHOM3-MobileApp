@@ -482,7 +482,25 @@ public class DealViewModel extends ViewModel {
     }
 
     public void loadPayments() {
-        error.setValue(DataCallback.NOT_READY);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            error.setValue("Chưa đăng nhập");
+            return;
+        }
+        loading.setValue(true);
+        dealRepository.getPayments(user.getUid(), new DataCallback<List<Payment>>() {
+            @Override
+            public void onSuccess(List<Payment> result) {
+                loading.postValue(false);
+                payments.postValue(result != null ? result : new ArrayList<Payment>());
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void clearError() {
