@@ -30,7 +30,6 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.firebase.Timestamp;
-import com.google.firebase.auth.FirebaseAuth;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.MediaRepository;
@@ -43,6 +42,8 @@ import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.TradeType;
+import com.nhom3.pubgapp.ui.common.ImageLoader;
+import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
 import com.nhom3.pubgapp.util.FormatUtils;
 import com.nhom3.pubgapp.util.NetworkMonitor;
@@ -657,18 +658,10 @@ public class DealDetailFragment extends Fragment {
 
     private void decodeProductThumbnail(String thumbBase64) {
         if (thumbBase64 != null && !thumbBase64.trim().isEmpty()) {
-            try {
-                byte[] decoded = Base64.decode(thumbBase64, Base64.DEFAULT);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
-                if (bitmap != null) {
-                    binding.imageProductThumb.setImageBitmap(bitmap);
-                    return;
-                }
-            } catch (Exception e) {
-                // Fallback to placeholder on decode failure
-            }
+            ImageLoader.load(thumbBase64, binding.imageProductThumb, R.drawable.ic_inbox, R.drawable.ic_inbox);
+        } else {
+            binding.imageProductThumb.setImageResource(R.drawable.ic_inbox);
         }
-        binding.imageProductThumb.setImageResource(R.drawable.ic_inbox);
     }
 
     private void renderDealInfo(Deal deal, String currentUid) {
@@ -784,11 +777,9 @@ public class DealDetailFragment extends Fragment {
             @Override
             public void onSuccess(byte[] bytes) {
                 if (binding != null && bytes != null && bytes.length > 0) {
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                    if (bitmap != null) {
-                        binding.imageWaybillPhoto.setImageBitmap(bitmap);
-                        binding.imageWaybillPhoto.setVisibility(View.VISIBLE);
-                    }
+                    ImageLoader.load(bytes, imageId, binding.imageWaybillPhoto,
+                            R.drawable.ic_inbox, R.drawable.ic_inbox);
+                    binding.imageWaybillPhoto.setVisibility(View.VISIBLE);
                 }
             }
 
@@ -798,7 +789,7 @@ public class DealDetailFragment extends Fragment {
         });
     }
 
-    private void loadReceivedImage(String imageId) {
+    private void loadReceivedImage(final String imageId) {
         if (binding == null) {
             return;
         }
@@ -813,12 +804,10 @@ public class DealDetailFragment extends Fragment {
             @Override
             public void onSuccess(byte[] bytes) {
                 if (binding != null && bytes != null && bytes.length > 0) {
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                    if (bitmap != null) {
-                        binding.imageReceivedPhoto.setImageBitmap(bitmap);
-                        binding.imageReceivedPhoto.setVisibility(View.VISIBLE);
-                        binding.cardReceivedInfo.setVisibility(View.VISIBLE);
-                    }
+                    ImageLoader.load(bytes, imageId, binding.imageReceivedPhoto,
+                            R.drawable.ic_inbox, R.drawable.ic_inbox);
+                    binding.imageReceivedPhoto.setVisibility(View.VISIBLE);
+                    binding.cardReceivedInfo.setVisibility(View.VISIBLE);
                 }
             }
 
@@ -1200,10 +1189,8 @@ public class DealDetailFragment extends Fragment {
     }
 
     private String getCurrentUserId() {
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            return FirebaseAuth.getInstance().getCurrentUser().getUid();
-        }
-        return "";
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        return uid != null ? uid : "";
     }
 
     @Override
