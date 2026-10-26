@@ -6,11 +6,8 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-<<<<<<< HEAD
 import android.widget.CompoundButton;
-=======
 import android.widget.FrameLayout;
->>>>>>> 83c6628 (feat(account): nối khối xóa tài khoản và về chế độ khách)
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -40,6 +37,9 @@ import java.util.Map;
 /** Screen A05 Account Settings: contains password change, notifications, and account deletion. */
 public class AccountSettingsFragment extends Fragment {
 
+    private static final String KEY_WAITING_GOOGLE_REAUTH = "key_waiting_google_reauth";
+    private static final String KEY_DEACTIVATING = "key_deactivating";
+
     @Nullable
     private FragmentAccountSettingsBinding binding;
     private AuthViewModel authViewModel;
@@ -59,6 +59,11 @@ public class AccountSettingsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        if (savedInstanceState != null) {
+            isWaitingForGoogleReauthToDelete = savedInstanceState.getBoolean(
+                    KEY_WAITING_GOOGLE_REAUTH, false);
+            isDeactivating = savedInstanceState.getBoolean(KEY_DEACTIVATING, false);
+        }
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         profileViewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
 
@@ -79,6 +84,13 @@ public class AccountSettingsFragment extends Fragment {
     public void onResume() {
         super.onResume();
         updateOfflineBanner();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(KEY_WAITING_GOOGLE_REAUTH, isWaitingForGoogleReauthToDelete);
+        outState.putBoolean(KEY_DEACTIVATING, isDeactivating);
     }
 
     @Override
@@ -179,7 +191,6 @@ public class AccountSettingsFragment extends Fragment {
         authViewModel.changePassword(current, next);
     }
 
-<<<<<<< HEAD
     private void setupNotificationSection() {
         if (binding == null) {
             return;
@@ -284,19 +295,31 @@ public class AccountSettingsFragment extends Fragment {
     }
 
     private void showGoogleDeleteConfirmDialog() {
-        new MaterialAlertDialogBuilder(requireContext())
+        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.account_settings_delete_dialog_title)
                 .setMessage(R.string.account_settings_delete_google_dialog_message)
-                .setNegativeButton(R.string.common_cancel, null)
+                .setNegativeButton(R.string.common_cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int which) {
+                        isWaitingForGoogleReauthToDelete = false;
+                    }
+                })
                 .setPositiveButton(R.string.account_settings_delete_google_reauth_button,
                         new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
+                            public void onClick(DialogInterface d, int which) {
                                 isWaitingForGoogleReauthToDelete = true;
                                 authViewModel.loginWithGoogleBrowser(requireActivity());
                             }
                         })
-                .show();
+                .create();
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface d) {
+                isWaitingForGoogleReauthToDelete = false;
+            }
+        });
+        dialog.show();
     }
 
     private void showEmailDeleteConfirmDialog() {
@@ -331,7 +354,7 @@ public class AccountSettingsFragment extends Fragment {
                         if (editPassword.getText() != null) {
                             password = editPassword.getText().toString();
                         }
-                        if (ProfileViewModel.isDeletePasswordEmpty(password)) {
+                        if (isDeletePasswordEmpty(password)) {
                             textLayout.setError(
                                     getString(R.string.account_settings_delete_password_empty));
                             return;
@@ -354,7 +377,6 @@ public class AccountSettingsFragment extends Fragment {
                 .setLaunchSingleTop(true)
                 .build();
         NavHostFragment.findNavController(this).navigate(R.id.homeFragment, null, options);
->>>>>>> 83c6628 (feat(account): nối khối xóa tài khoản và về chế độ khách)
     }
 
     private void observeViewModel() {
@@ -381,6 +403,7 @@ public class AccountSettingsFragment extends Fragment {
                 if (binding == null || message == null || message.isEmpty()) {
                     return;
                 }
+                isWaitingForGoogleReauthToDelete = false;
                 String displayMessage = message;
                 if (message.contains("recent-login") || message.contains("CREDENTIAL_TOO_OLD")
                         || message.contains("xác thực lại")) {
@@ -458,6 +481,9 @@ public class AccountSettingsFragment extends Fragment {
                     binding.includeDelete.textDeleteError.setVisibility(View.VISIBLE);
                     Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show();
                     profileViewModel.clearError();
+                    if (!SessionManager.getInstance().isLoggedIn()) {
+                        goHomeAsGuest();
+                    }
                 } else {
                     binding.includeNotifications.textNotificationsError.setText(message);
                     binding.includeNotifications.textNotificationsError.setVisibility(View.VISIBLE);
@@ -508,5 +534,9 @@ public class AccountSettingsFragment extends Fragment {
         binding.includeNotifications.switchNotifyOffers.setEnabled(online && !isProfileLoading);
         binding.includeNotifications.switchNotifyDeals.setEnabled(online && !isProfileLoading);
         binding.includeDelete.buttonDeleteAccount.setEnabled(online && !isProfileLoading);
+    }
+
+    private static boolean isDeletePasswordEmpty(String password) {
+        return password == null || password.trim().isEmpty();
     }
 }

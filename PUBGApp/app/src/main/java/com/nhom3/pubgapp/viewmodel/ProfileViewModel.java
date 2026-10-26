@@ -1,15 +1,22 @@
 package com.nhom3.pubgapp.viewmodel;
 
+import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.FirebaseUserMetadata;
 import com.nhom3.pubgapp.data.AuthRepository;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.ListingRepository;
 import com.nhom3.pubgapp.data.MediaRepository;
 import com.nhom3.pubgapp.data.UserRepository;
+import com.nhom3.pubgapp.data.local.AppDatabase;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.ProfileStats;
 import com.nhom3.pubgapp.model.SellerVerification;
@@ -30,6 +37,8 @@ import java.util.Map;
 
 // State for the profile, address, saved-listing and verification screens. Action bodies report NOT_READY until the repositories are filled.
 public class ProfileViewModel extends ViewModel {
+
+    private static final String TAG = "ProfileViewModel";
 
     private final MutableLiveData<User> profile = new MutableLiveData<>();
     private final MutableLiveData<ProfileStats> stats = new MutableLiveData<>();
@@ -763,7 +772,13 @@ public class ProfileViewModel extends ViewModel {
                 }
             });
         } else {
-            deactivateFirestoreAndAuth(uid);
+            long lastSignIn = readLastSignInTimestamp();
+            if (hasRecentSignIn(lastSignIn, System.currentTimeMillis())) {
+                deactivateFirestoreAndAuth(uid);
+            } else {
+                loading.setValue(false);
+                error.setValue("Cần xác thực lại bằng tài khoản Google trước khi xóa tài khoản.");
+            }
         }
     }
 
@@ -1200,7 +1215,6 @@ public class ProfileViewModel extends ViewModel {
         return null;
     }
 
-<<<<<<< HEAD
     static boolean isPhoneValid(String phone) {
         if (phone == null) {
             return false;
@@ -1299,14 +1313,21 @@ public class ProfileViewModel extends ViewModel {
 
                     @Override
                     public void onError(String message) {
+                        authRepository.signOut();
+                        SessionManager.getInstance().clear();
+                        clearRoomDatabase();
+                        clearPreviousUser();
                         loading.postValue(false);
-                        String display = message;
+                        String display = "Tài khoản đã được đánh dấu xóa trên hệ thống"
+                                + " nhưng không thể xóa thông tin đăng nhập."
+                                + " Phiên làm việc đã kết thúc.";
                         if (message != null && (message.contains("recent-login")
                                 || message.contains("CREDENTIAL_TOO_OLD")
                                 || message.contains("xác thực lại"))) {
-                            display = "Cần đăng nhập lại bằng Google trước khi xóa tài khoản.";
+                            display = "Cần đăng nhập lại trước khi xóa hoàn toàn"
+                                    + " thông tin đăng nhập. Phiên làm việc đã kết thúc.";
                         }
-                        error.postValue(display != null ? display : "Không thể xóa thông tin đăng nhập.");
+                        error.postValue(display);
                     }
                 });
             }
@@ -1330,12 +1351,11 @@ public class ProfileViewModel extends ViewModel {
 
     private void clearRoomDatabase() {
         try {
-            com.google.firebase.FirebaseApp app = com.google.firebase.FirebaseApp.getInstance();
+            FirebaseApp app = FirebaseApp.getInstance();
             if (app != null) {
-                android.content.Context context = app.getApplicationContext();
+                Context context = app.getApplicationContext();
                 if (context != null) {
-                    final com.nhom3.pubgapp.data.local.AppDatabase db =
-                            com.nhom3.pubgapp.data.local.AppDatabase.getInstance(context);
+                    final AppDatabase db = AppDatabase.getInstance(context);
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -1344,21 +1364,44 @@ public class ProfileViewModel extends ViewModel {
                                 db.chatDao().clearAll();
                                 db.dealDao().clearAll();
                                 db.historyDao().clearAll();
-                            } catch (Exception ignored) {
+                            } catch (Exception e) {
+                                Log.w(TAG, "Could not clear local Room tables on deactivation", e);
                             }
                         }
                     }).start();
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            Log.w(TAG, "Could not access application context to clear Room on deactivation", e);
         }
     }
 
-    public static boolean isDeletePasswordEmpty(String password) {
+    private long readLastSignInTimestamp() {
+        try {
+            FirebaseAuth auth = FirebaseAuth.getInstance();
+            FirebaseUser user = auth.getCurrentUser();
+            if (user != null) {
+                FirebaseUserMetadata metadata = user.getMetadata();
+                if (metadata != null) {
+                    return metadata.getLastSignInTimestamp();
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Could not read last sign-in timestamp", e);
+        }
+        return 0L;
+    }
+
+    static boolean hasRecentSignIn(long lastSignInTime, long currentTime) {
+        long fiveMinutesMs = 5 * 60 * 1000L;
+        return lastSignInTime > 0L && currentTime >= lastSignInTime && (currentTime - lastSignInTime) <= fiveMinutesMs;
+    }
+
+    static boolean isDeletePasswordEmpty(String password) {
         return password == null || password.trim().isEmpty();
     }
 
-    public static boolean requiresGoogleReauth(String idToken) {
+    static boolean requiresGoogleReauth(String idToken) {
         return idToken != null && !idToken.trim().isEmpty();
     }
 
