@@ -13,12 +13,18 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
+import android.content.Context;
+import android.location.Address;
+import android.location.Geocoder;
+
+import com.google.firebase.firestore.GeoPoint;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentAddressEditBinding;
 import com.nhom3.pubgapp.model.UserAddress;
 import com.nhom3.pubgapp.viewmodel.ProfileViewModel;
 
 import java.util.List;
+import java.util.Locale;
 
 // Screen A06: Add or edit a user delivery address.
 public class AddressEditFragment extends Fragment {
@@ -130,7 +136,7 @@ public class AddressEditFragment extends Fragment {
         String label = textOf(binding.editLabel);
         String receiverName = textOf(binding.editReceiverName);
         String phone = textOf(binding.editPhone);
-        String province = textOf(binding.editProvince);
+        final String province = textOf(binding.editProvince);
         String district = textOf(binding.editDistrict);
         String detail = textOf(binding.editDetail);
         boolean isDefault = binding.switchDefault.isChecked();
@@ -160,7 +166,7 @@ public class AddressEditFragment extends Fragment {
             return;
         }
 
-        UserAddress target;
+        final UserAddress target;
         if (currentAddress != null) {
             target = currentAddress;
         } else {
@@ -174,7 +180,45 @@ public class AddressEditFragment extends Fragment {
         target.setDetail(detail);
         target.setDefault(isDefault);
 
-        viewModel.saveAddress(target);
+        binding.progressSave.setVisibility(View.VISIBLE);
+        binding.btnSaveAddress.setEnabled(false);
+
+        final Context appContext = requireContext().getApplicationContext();
+        Thread geocodeThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                GeoPoint resolved = null;
+                if (Geocoder.isPresent()) {
+                    try {
+                        Geocoder geocoder = new Geocoder(appContext, new Locale("vi", "VN"));
+                        String query = target.getFullText();
+                        List<Address> results = geocoder.getFromLocationName(query, 1);
+                        if (results != null && !results.isEmpty()) {
+                            Address match = results.get(0);
+                            resolved = new GeoPoint(match.getLatitude(), match.getLongitude());
+                        }
+                    } catch (Exception e) {
+                        // Geocoder lookup failed or network is down; saveAddress will use province fallback.
+                    }
+                }
+                final GeoPoint finalLocation = resolved;
+                if (getActivity() != null) {
+                    requireActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!isAdded()) {
+                                return;
+                            }
+                            if (finalLocation != null) {
+                                target.setLocation(finalLocation);
+                            }
+                            viewModel.saveAddress(target);
+                        }
+                    });
+                }
+            }
+        });
+        geocodeThread.start();
     }
 
     private String textOf(com.google.android.material.textfield.TextInputEditText editText) {
