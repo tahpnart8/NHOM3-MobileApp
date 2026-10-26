@@ -30,6 +30,7 @@ public class DealHistoryFragment extends Fragment {
 
     private static final String ARG_DEAL_ID = "dealId";
     private static final String STATE_SELECTED_TAB = "state_selected_tab";
+    private static final String STATE_SELECTED_FILTER = "state_selected_filter";
     public static final int TAB_DEALS = 0;
     public static final int TAB_PAYMENTS = 1;
 
@@ -39,6 +40,7 @@ public class DealHistoryFragment extends Fragment {
     private DealHistoryAdapter adapter;
     private PaymentHistoryAdapter paymentAdapter;
     private int currentTab = TAB_DEALS;
+    private int currentFilter = DealHistoryAdapter.FILTER_ALL;
 
     @Nullable
     @Override
@@ -55,6 +57,7 @@ public class DealHistoryFragment extends Fragment {
 
         if (savedInstanceState != null) {
             currentTab = savedInstanceState.getInt(STATE_SELECTED_TAB, TAB_DEALS);
+            currentFilter = savedInstanceState.getInt(STATE_SELECTED_FILTER, DealHistoryAdapter.FILTER_ALL);
         }
 
         setUpToolbar();
@@ -84,6 +87,7 @@ public class DealHistoryFragment extends Fragment {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(STATE_SELECTED_TAB, currentTab);
+        outState.putInt(STATE_SELECTED_FILTER, currentFilter);
     }
 
     @Override
@@ -209,6 +213,17 @@ public class DealHistoryFragment extends Fragment {
         if (binding == null) {
             return;
         }
+        int checkId = R.id.chipStatusAll;
+        if (currentFilter == DealHistoryAdapter.FILTER_IN_PROGRESS) {
+            checkId = R.id.chipStatusInProgress;
+        } else if (currentFilter == DealHistoryAdapter.FILTER_COMPLETED) {
+            checkId = R.id.chipStatusCompleted;
+        } else if (currentFilter == DealHistoryAdapter.FILTER_CANCELLED) {
+            checkId = R.id.chipStatusCancelled;
+        }
+        binding.chipGroupStatus.check(checkId);
+        adapter.setFilter(currentFilter);
+
         binding.chipGroupStatus.setOnCheckedStateChangeListener(new ChipGroup.OnCheckedStateChangeListener() {
             @Override
             public void onCheckedChanged(@NonNull ChipGroup group, @NonNull List<Integer> checkedIds) {
@@ -223,7 +238,8 @@ public class DealHistoryFragment extends Fragment {
                         selectedFilter = DealHistoryAdapter.FILTER_CANCELLED;
                     }
                 }
-                adapter.setFilter(selectedFilter);
+                currentFilter = selectedFilter;
+                adapter.setFilter(currentFilter);
                 updateState();
             }
         });
