@@ -135,28 +135,27 @@ public class AddressEditFragment extends Fragment {
         String detail = textOf(binding.editDetail);
         boolean isDefault = binding.switchDefault.isChecked();
 
-        int check = ProfileViewModel.checkAddressForm(receiverName, phone, province, district, detail);
-        if (check == ProfileViewModel.ADDRESS_FORM_MISSING_RECEIVER) {
+        if (receiverName.isEmpty()) {
             binding.layoutReceiverName.setError(getString(R.string.account_address_receiver_name_empty));
             return;
         }
-        if (check == ProfileViewModel.ADDRESS_FORM_MISSING_PHONE) {
+        if (phone.isEmpty()) {
             binding.layoutPhone.setError(getString(R.string.account_address_phone_empty));
             return;
         }
-        if (check == ProfileViewModel.ADDRESS_FORM_BAD_PHONE) {
+        if (!isPhoneValid(phone)) {
             binding.layoutPhone.setError(getString(R.string.account_address_phone_invalid));
             return;
         }
-        if (check == ProfileViewModel.ADDRESS_FORM_MISSING_PROVINCE) {
+        if (province.isEmpty()) {
             binding.layoutProvince.setError(getString(R.string.account_address_province_empty));
             return;
         }
-        if (check == ProfileViewModel.ADDRESS_FORM_MISSING_DISTRICT) {
+        if (district.isEmpty()) {
             binding.layoutDistrict.setError(getString(R.string.account_address_district_empty));
             return;
         }
-        if (check == ProfileViewModel.ADDRESS_FORM_MISSING_DETAIL) {
+        if (detail.isEmpty()) {
             binding.layoutDetail.setError(getString(R.string.account_address_detail_empty));
             return;
         }
@@ -183,6 +182,27 @@ public class AddressEditFragment extends Fragment {
             return "";
         }
         return editText.getText().toString().trim();
+    }
+
+    // Phone numbers in Vietnam start with 0 and have exactly 10 digits.
+    private boolean isPhoneValid(String phone) {
+        if (phone == null) {
+            return false;
+        }
+        String trimmed = phone.trim();
+        if (trimmed.length() != 10) {
+            return false;
+        }
+        if (!trimmed.startsWith("0")) {
+            return false;
+        }
+        for (int i = 0; i < trimmed.length(); i++) {
+            char digit = trimmed.charAt(i);
+            if (digit < '0' || digit > '9') {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void clearFieldErrors() {
