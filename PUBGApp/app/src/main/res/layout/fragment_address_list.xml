@@ -12,22 +12,22 @@
         android:layout_height="?attr/actionBarSize"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="8dp">
+        android:paddingHorizontal="@dimen/space_sm">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="@dimen/touch_min"
+            android:layout_height="@dimen/touch_min"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/common_back"
             android:src="@drawable/ic_arrow_back"
-            app:tint="?android:attr/textColorPrimary" />
+            app:tint="?attr/colorOnSurface" />
 
         <TextView
             android:id="@+id/textTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="@dimen/space_sm"
             android:layout_weight="1"
             android:text="@string/account_address_list_title"
             android:textAppearance="?attr/textAppearanceTitleLarge"
@@ -50,7 +50,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingVertical="8dp"
+            android:paddingVertical="@dimen/space_sm"
             android:visibility="gone" />
 
         <!-- Four states: 2. Loading -->
@@ -68,20 +68,20 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="24dp"
+            android:padding="@dimen/space_lg"
             android:visibility="gone">
 
             <ImageView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+                android:layout_width="@dimen/touch_min"
+                android:layout_height="@dimen/touch_min"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_inbox"
-                app:tint="?android:attr/textColorSecondary" />
+                app:tint="?attr/colorOnSurfaceVariant" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_md"
                 android:text="@string/account_address_empty_title"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textStyle="bold" />
@@ -89,17 +89,18 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/space_sm"
                 android:gravity="center"
                 android:text="@string/account_address_empty_prompt"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?android:attr/textColorSecondary" />
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEmptyAdd"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_md"
+                android:minHeight="@dimen/touch_min"
                 android:text="@string/account_address_add_new" />
         </LinearLayout>
 
@@ -110,12 +111,12 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="24dp"
+            android:padding="@dimen/space_lg"
             android:visibility="gone">
 
             <ImageView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+                android:layout_width="@dimen/touch_min"
+                android:layout_height="@dimen/touch_min"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_error"
                 app:tint="?attr/colorError" />
@@ -124,17 +125,18 @@
                 android:id="@+id/textError"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_md"
                 android:gravity="center"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?android:attr/textColorSecondary" />
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnRetry"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_md"
+                android:minHeight="@dimen/touch_min"
                 android:text="@string/account_address_retry" />
         </LinearLayout>
     </FrameLayout>
@@ -144,13 +146,13 @@
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:padding="@dimen/space_md">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAddNewAddress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
+            android:minHeight="@dimen/touch_min"
             android:text="@string/account_address_add_new" />
     </LinearLayout>
 </LinearLayout>

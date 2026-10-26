@@ -54,7 +54,7 @@
             android:layout_height="wrap_content"
             android:text="@string/account_settings_offline"
             android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="@color/white" />
+            android:textColor="?attr/colorOnPrimary" />
     </LinearLayout>
 
     <!-- Content with 3 sections -->
