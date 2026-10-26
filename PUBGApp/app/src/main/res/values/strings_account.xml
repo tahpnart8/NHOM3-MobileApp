@@ -165,4 +165,6 @@
     <string name="account_address_set_default">Đặt làm địa chỉ mặc định</string>
     <string name="account_address_save_button">Lưu địa chỉ</string>
     <string name="account_address_save_success">Đã lưu địa chỉ thành công</string>
+
+    <string name="account_register_link_separator">|</string>
 </resources>
