@@ -23,6 +23,7 @@ import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.AuthViewModel;
 import com.nhom3.pubgapp.viewmodel.ProfileViewModel;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /** Screen A05 Account Settings: contains password change, notifications, and account deletion. */
@@ -207,7 +208,7 @@ public class AccountSettingsFragment extends Fragment {
         if (user != null) {
             current = user.getNotificationPrefs();
         }
-        Map<String, Boolean> updated = ProfileViewModel.buildUpdatedNotificationPrefs(current, typeKey, isChecked);
+        Map<String, Boolean> updated = buildUpdatedNotificationPrefs(current, typeKey, isChecked);
         profileViewModel.updateNotificationPrefs(updated);
     }
 
@@ -216,13 +217,34 @@ public class AccountSettingsFragment extends Fragment {
             return;
         }
         isBindingNotificationPrefs = true;
-        boolean msgEnabled = ProfileViewModel.isNotificationTypeEnabled(prefs, NotificationType.NEW_MESSAGE.name());
-        boolean offerEnabled = ProfileViewModel.isNotificationTypeEnabled(prefs, NotificationType.NEW_OFFER.name());
-        boolean dealEnabled = ProfileViewModel.isNotificationTypeEnabled(prefs, NotificationType.DEAL_UPDATE.name());
+        boolean msgEnabled = isNotificationTypeEnabled(prefs, NotificationType.NEW_MESSAGE.name());
+        boolean offerEnabled = isNotificationTypeEnabled(prefs, NotificationType.NEW_OFFER.name());
+        boolean dealEnabled = isNotificationTypeEnabled(prefs, NotificationType.DEAL_UPDATE.name());
         binding.includeNotifications.switchNotifyMessages.setChecked(msgEnabled);
         binding.includeNotifications.switchNotifyOffers.setChecked(offerEnabled);
         binding.includeNotifications.switchNotifyDeals.setChecked(dealEnabled);
         isBindingNotificationPrefs = false;
+    }
+
+    private static boolean isNotificationTypeEnabled(Map<String, Boolean> prefs, String typeKey) {
+        if (prefs == null || !prefs.containsKey(typeKey)) {
+            return true;
+        }
+        Boolean val = prefs.get(typeKey);
+        if (val == null) {
+            return true;
+        }
+        return val.booleanValue();
+    }
+
+    private static Map<String, Boolean> buildUpdatedNotificationPrefs(Map<String, Boolean> currentPrefs,
+            String typeKey, boolean enabled) {
+        Map<String, Boolean> updated = new HashMap<String, Boolean>();
+        if (currentPrefs != null) {
+            updated.putAll(currentPrefs);
+        }
+        updated.put(typeKey, Boolean.valueOf(enabled));
+        return updated;
     }
 
     private void observeViewModel() {
