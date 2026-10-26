@@ -24,9 +24,12 @@ import com.nhom3.pubgapp.viewmodel.ChatViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 // Screen C01: displays user conversations and opens C02 chat.
 public class ConversationListFragment extends Fragment implements ConversationAdapter.OnConversationClickListener {
+
+    private static final String STATE_SEARCH_QUERY = "state_search_query";
 
     private FragmentConversationListBinding binding;
     private ChatViewModel viewModel;
@@ -47,12 +50,26 @@ public class ConversationListFragment extends Fragment implements ConversationAd
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(ChatViewModel.class);
 
+        if (savedInstanceState != null) {
+            currentSearchQuery = savedInstanceState.getString(STATE_SEARCH_QUERY, "");
+        }
+
         setupRecyclerView();
         setupSearch();
         setupRetryButton();
         observeViewModel();
 
+        if (currentSearchQuery != null && !currentSearchQuery.isEmpty() && binding != null) {
+            binding.editSearch.setText(currentSearchQuery);
+        }
+
         checkNetworkAndShowBanner();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_SEARCH_QUERY, currentSearchQuery);
     }
 
     @Override
@@ -153,15 +170,17 @@ public class ConversationListFragment extends Fragment implements ConversationAd
 
     private void applyFilter() {
         List<Conversation> filtered = new ArrayList<Conversation>();
-        String query = currentSearchQuery.toLowerCase();
+        String query = currentSearchQuery.toLowerCase(Locale.getDefault());
 
         for (int i = 0; i < fullList.size(); i++) {
             Conversation conv = fullList.get(i);
             if (query.isEmpty()) {
                 filtered.add(conv);
             } else {
-                String msg = conv.getLastMessage() != null ? conv.getLastMessage().toLowerCase() : "";
-                String fallback = getString(R.string.trade_conversation_list_partner_fallback).toLowerCase();
+                String msg = conv.getLastMessage() != null
+                        ? conv.getLastMessage().toLowerCase(Locale.getDefault()) : "";
+                String fallback = getString(R.string.trade_conversation_list_partner_fallback)
+                        .toLowerCase(Locale.getDefault());
                 if (msg.contains(query) || fallback.contains(query)) {
                     filtered.add(conv);
                 }

@@ -37,6 +37,7 @@
             android:id="@+id/editSearch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="@dimen/touch_min"
             android:hint="@string/trade_conversation_list_search_hint"
             android:inputType="text"
             android:maxLines="1"
