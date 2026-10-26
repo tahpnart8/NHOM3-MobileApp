@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.DealRepository;
+import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Payment;
 import com.nhom3.pubgapp.model.User;
@@ -81,8 +82,71 @@ public class AdminDealViewModel extends ViewModel {
         });
     }
 
-    public void loadDetail(String dealId) {
-        error.setValue(DataCallback.NOT_READY);
+    public void loadDetail(final String dealId) {
+        if (!SessionManager.getInstance().isAdmin()) {
+            error.setValue("Chỉ quản trị viên mới có quyền xem giao dịch");
+            return;
+        }
+        if (dealId == null || dealId.trim().isEmpty()) {
+            return;
+        }
+        loading.setValue(true);
+        dealRepository.getById(dealId, new DataCallback<Deal>() {
+            @Override
+            public void onSuccess(final Deal result) {
+                selected.postValue(result);
+                if (result == null) {
+                    loading.postValue(false);
+                    return;
+                }
+                if (result.getBuyerId() != null && !result.getBuyerId().isEmpty()) {
+                    new UserRepository().getProfile(result.getBuyerId(), new DataCallback<User>() {
+                        @Override
+                        public void onSuccess(User userResult) {
+                            buyer.postValue(userResult);
+                        }
+
+                        @Override
+                        public void onError(String message) {
+                        }
+                    });
+                }
+                if (result.getSellerId() != null && !result.getSellerId().isEmpty()) {
+                    new UserRepository().getProfile(result.getSellerId(), new DataCallback<User>() {
+                        @Override
+                        public void onSuccess(User userResult) {
+                            seller.postValue(userResult);
+                        }
+
+                        @Override
+                        public void onError(String message) {
+                        }
+                    });
+                }
+                if (result.needsPayment()) {
+                    dealRepository.getPayment(dealId, new DataCallback<Payment>() {
+                        @Override
+                        public void onSuccess(Payment paymentResult) {
+                            loading.postValue(false);
+                            payment.postValue(paymentResult);
+                        }
+
+                        @Override
+                        public void onError(String message) {
+                            loading.postValue(false);
+                        }
+                    });
+                } else {
+                    loading.postValue(false);
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void clearError() {
