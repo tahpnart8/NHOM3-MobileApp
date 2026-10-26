@@ -26,13 +26,13 @@ Tính năng đã có ở đây được **bảo vệ**: xóa hoặc đổi tên 
 | F-05 | Tìm kiếm tin đăng và người dùng, bộ lọc, sắp xếp, kênh xem | 23 đến 34, 103 | done | Trần Anh Tú | #94, #211, #218, #224 | `listings`, `users`, `follows`; Room `listing_cache`, `recent_search` |
 | F-06 | Gợi ý: tin tương tự, giá tham khảo, Dành cho bạn | 36, 37, 38 | done | Trần Anh Tú | #221, #222, #223, #265 | `listings`; Room `recent_view`, `recent_search` |
 | F-07 | Lưu tin | 40, 41, 42 | done | Trần Anh Tú | #95 | `savedListings` |
-| F-08 | Chat chữ và ảnh, trạng thái hoạt động | 43, 44, 46 | planned | Nguyễn Lê Hải Long | | `conversations`, `messages`, `images`; Room `conversation_cache`, `message_cache` |
-| F-09 | Offer một chạm và giao dịch | 47 đến 55 | planned | Nguyễn Lê Hải Long | | `offers`, `deals`, `images`; Room `deal_cache` |
-| F-10 | Thanh toán mô phỏng trong ứng dụng, lịch sử giao dịch và thanh toán, đánh giá | 56 đến 59 | planned | Nguyễn Lê Hải Long | | `payments`, `deals`, `reviews` |
-| F-11 | Hồ sơ công khai, uy tín, theo dõi | 7, 8, 39, 60 | planned | Nguyễn Hoàng Phúc | | `users`, `follows`, `reviews` |
-| F-12 | Báo cáo và khiếu nại | 61 đến 66 | planned | Nguyễn Hoàng Phúc | | `reports`, `complaints`, `images` |
-| F-13 | Admin xử lý khiếu nại | 87 đến 91 | planned | Nguyễn Hoàng Phúc | | `complaints`, `adminNote`, `notifications` |
-| F-14 | Admin người dùng, nội dung, danh mục, giao dịch, chuyển tiền tự động, tài khoản admin | 68 đến 82, 84, 105, 106 | planned | Trần Đức Phát | | `users`, `warnings`, `sellerVerifications`, `admins`, `activityLogs`, `reports`, `bannedKeywords`, `categories`, `listings`, `deals`, `payments` |
+| F-08 | Chat chữ và ảnh, trạng thái hoạt động | 43, 44, 46 | done | Nguyễn Lê Hải Long | #96, #97 | `conversations`, `messages`, `images`; Room `conversation_cache`, `message_cache` |
+| F-09 | Offer một chạm và giao dịch | 47 đến 55 | done | Nguyễn Lê Hải Long | #98, #99, #270 | `offers`, `deals`, `images`; Room `deal_cache` |
+| F-10 | Thanh toán mô phỏng trong ứng dụng, lịch sử giao dịch và thanh toán, đánh giá | 56 đến 59 | done | Nguyễn Lê Hải Long | #100, #229, #230 | `payments`, `deals`, `reviews` |
+| F-11 | Hồ sơ công khai, uy tín, theo dõi | 7, 8, 39, 60 | done | Nguyễn Hoàng Phúc | #101, #102, #217, #237, #238, #239, #246 | `users`, `follows`, `reviews` |
+| F-12 | Báo cáo và khiếu nại | 61 đến 66 | done | Nguyễn Hoàng Phúc | #103, #240, #241, #242, #260 | `reports`, `complaints`, `images` |
+| F-13 | Admin xử lý khiếu nại | 87 đến 91 | done | Nguyễn Hoàng Phúc | #104, #243, #244, #245 | `complaints`, `adminNote`, `notifications` |
+| F-14 | Admin người dùng, nội dung, danh mục, giao dịch, chuyển tiền tự động, tài khoản admin | 68 đến 82, 84, 105, 106 | in-progress | Trần Đức Phát | #105, #106, #107, #212, #226, #227, #228, #231, #232; đang làm: #234 | `users`, `warnings`, `sellerVerifications`, `admins`, `activityLogs`, `reports`, `bannedKeywords`, `categories`, `listings`, `deals`, `payments` |
 
 STT 73 (duyệt yêu cầu xác thực tài khoản) thuộc F-14 ở phía admin; phía người dùng (biểu mẫu gửi yêu cầu) do Phúc làm cùng F-11, theo [so-huu.md](../../plan/so-huu.md).
 
