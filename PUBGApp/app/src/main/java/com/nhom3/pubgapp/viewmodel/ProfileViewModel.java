@@ -674,7 +674,38 @@ public class ProfileViewModel extends ViewModel {
     }
 
     public void updateNotificationPrefs(Map<String, Boolean> prefs) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null || uid.isEmpty()) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        loading.setValue(true);
+        userRepository.updateNotificationPrefs(uid, prefs, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loading.postValue(false);
+                User current = profile.getValue();
+                if (current != null) {
+                    Map<String, Boolean> copy = new HashMap<String, Boolean>();
+                    if (prefs != null) {
+                        copy.putAll(prefs);
+                    }
+                    current.setNotificationPrefs(copy);
+                    profile.postValue(current);
+                }
+                done.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message);
+            }
+        });
     }
 
     public void deactivateAccount(String password) {
@@ -1181,6 +1212,27 @@ public class ProfileViewModel extends ViewModel {
             return MESSAGE_MISSING_DETAIL;
         }
         return null;
+    }
+
+    static boolean isNotificationTypeEnabled(Map<String, Boolean> prefs, String typeKey) {
+        if (prefs == null || !prefs.containsKey(typeKey)) {
+            return true;
+        }
+        Boolean val = prefs.get(typeKey);
+        if (val == null) {
+            return true;
+        }
+        return val.booleanValue();
+    }
+
+    static Map<String, Boolean> buildUpdatedNotificationPrefs(Map<String, Boolean> currentPrefs,
+            String typeKey, boolean enabled) {
+        Map<String, Boolean> updated = new HashMap<String, Boolean>();
+        if (currentPrefs != null) {
+            updated.putAll(currentPrefs);
+        }
+        updated.put(typeKey, Boolean.valueOf(enabled));
+        return updated;
     }
 
     public void clearError() {
