@@ -194,4 +194,19 @@
     <string name="trade_deal_history_empty_title">Bạn chưa có giao dịch nào</string>
     <string name="trade_deal_history_empty_message">Các giao dịch bạn tham gia mua hoặc bán sẽ hiển thị ở đây.</string>
     <string name="trade_deal_history_not_signed_in">Bạn cần đăng nhập để xem lịch sử giao dịch.</string>
+
+    <!-- C04 Payment History (Issue #230, STT 58) -->
+    <string name="trade_deal_history_tab_deals">Giao dịch</string>
+    <string name="trade_deal_history_tab_payments">Thanh toán</string>
+    <string name="trade_payment_history_empty_title">Bạn chưa có thanh toán nào</string>
+    <string name="trade_payment_history_empty_message">Các khoản tiền giữ, giải ngân và hoàn tiền của bạn sẽ hiển thị ở đây.</string>
+    <string name="trade_payment_method_card">Thẻ ngân hàng</string>
+    <string name="trade_payment_method_e_wallet">Ví điện tử</string>
+    <string name="trade_payment_method_bank_transfer">Chuyển khoản</string>
+    <string name="trade_payment_role_payer">Đã trả</string>
+    <string name="trade_payment_role_payee">Đã nhận</string>
+    <string name="trade_payment_time_held">Giữ: %1$s</string>
+    <string name="trade_payment_time_released">Giải ngân: %1$s</string>
+    <string name="trade_payment_time_refunded">Hoàn tiền: %1$s</string>
+    <string name="trade_payment_deal_code">Giao dịch #%1$s</string>
 </resources>
