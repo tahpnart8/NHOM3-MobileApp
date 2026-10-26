@@ -15,6 +15,7 @@
         android:layout_height="@dimen/space_xl"
         android:layout_marginEnd="@dimen/space_md"
         android:background="@drawable/bg_avatar"
+        android:contentDescription="@null"
         android:padding="@dimen/space_xs" />
 
     <LinearLayout
