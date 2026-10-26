@@ -19,13 +19,13 @@ Tính năng đã có ở đây được **bảo vệ**: xóa hoặc đổi tên 
 
 | Mã | Tính năng | STT | Trạng thái | Người làm | Issue | Chạm tới |
 | --- | --- | --- | --- | --- | --- | --- |
-| F-01 | Đăng ký, đăng nhập (email và Google), đăng xuất, quên và đổi mật khẩu, chọn danh mục quan tâm | 1, 2, 3, 11, 35, 104 | planned | Nguyễn Thùy Ngân | | Firebase Auth; `users`, `identity`, `categories` |
-| F-02 | Hồ sơ cá nhân, ảnh, địa chỉ, định danh, cài đặt thông báo, vô hiệu hóa tài khoản | 4, 5, 6, 9, 10, 12 | planned | Nguyễn Thùy Ngân | | `users`, `addresses`, `identity`, `images` |
-| F-03 | Thông báo trong ứng dụng | 67 | planned | Nguyễn Thùy Ngân | | `notifications` |
-| F-04 | Đăng tin, lưu nháp, kệ hàng | 13 đến 22 | planned | Trần Anh Tú | | `listings`, `categories`, `images` |
-| F-05 | Tìm kiếm tin đăng và người dùng, bộ lọc, sắp xếp, kênh xem | 23 đến 34, 103 | planned | Trần Anh Tú | | `listings`, `users`, `follows`; Room `listing_cache`, `recent_search` |
-| F-06 | Gợi ý: tin tương tự, giá tham khảo, Dành cho bạn | 36, 37, 38 | planned | Trần Anh Tú | | `listings`; Room `recent_view`, `recent_search` |
-| F-07 | Lưu tin | 40, 41, 42 | planned | Trần Anh Tú | | `savedListings` |
+| F-01 | Đăng ký, đăng nhập (email và Google), đăng xuất, quên và đổi mật khẩu, chọn danh mục quan tâm | 1, 2, 3, 11, 35, 104 | done | Nguyễn Thùy Ngân | #89, #90, #205, #207 | Firebase Auth; `users`, `identity`, `categories` |
+| F-02 | Hồ sơ cá nhân, ảnh, địa chỉ, định danh, cài đặt thông báo, vô hiệu hóa tài khoản | 4, 5, 6, 9, 10, 12 | done | Nguyễn Thùy Ngân | #84, #208, #209, #210, #291 | `users`, `addresses`, `identity`, `images` |
+| F-03 | Thông báo trong ứng dụng | 67 | done | Nguyễn Thùy Ngân | #108, #163 | `notifications` |
+| F-04 | Đăng tin, lưu nháp, kệ hàng | 13 đến 22 | done | Trần Anh Tú | #91, #92, #93, #216, #219, #220 | `listings`, `categories`, `images` |
+| F-05 | Tìm kiếm tin đăng và người dùng, bộ lọc, sắp xếp, kênh xem | 23 đến 34, 103 | done | Trần Anh Tú | #94, #211, #218, #224 | `listings`, `users`, `follows`; Room `listing_cache`, `recent_search` |
+| F-06 | Gợi ý: tin tương tự, giá tham khảo, Dành cho bạn | 36, 37, 38 | done | Trần Anh Tú | #221, #222, #223, #265 | `listings`; Room `recent_view`, `recent_search` |
+| F-07 | Lưu tin | 40, 41, 42 | done | Trần Anh Tú | #95 | `savedListings` |
 | F-08 | Chat chữ và ảnh, trạng thái hoạt động | 43, 44, 46 | planned | Nguyễn Lê Hải Long | | `conversations`, `messages`, `images`; Room `conversation_cache`, `message_cache` |
 | F-09 | Offer một chạm và giao dịch | 47 đến 55 | planned | Nguyễn Lê Hải Long | | `offers`, `deals`, `images`; Room `deal_cache` |
 | F-10 | Thanh toán mô phỏng trong ứng dụng, lịch sử giao dịch và thanh toán, đánh giá | 56 đến 59 | planned | Nguyễn Lê Hải Long | | `payments`, `deals`, `reviews` |
