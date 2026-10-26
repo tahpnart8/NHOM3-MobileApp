@@ -1,19 +1,31 @@
 package com.nhom3.pubgapp.ui.account;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+<<<<<<< HEAD
 import android.widget.CompoundButton;
+=======
+import android.widget.FrameLayout;
+>>>>>>> 83c6628 (feat(account): nối khối xóa tài khoản và về chế độ khách)
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentAccountSettingsBinding;
 import com.nhom3.pubgapp.model.User;
@@ -22,7 +34,6 @@ import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.AuthViewModel;
 import com.nhom3.pubgapp.viewmodel.ProfileViewModel;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,6 +45,8 @@ public class AccountSettingsFragment extends Fragment {
     private AuthViewModel authViewModel;
     private ProfileViewModel profileViewModel;
     private boolean isBindingNotificationPrefs;
+    private boolean isWaitingForGoogleReauthToDelete;
+    private boolean isDeactivating;
 
     @Nullable
     @Override
@@ -52,6 +65,7 @@ public class AccountSettingsFragment extends Fragment {
         setupTopBar();
         setupPasswordSection();
         setupNotificationSection();
+        setupDeleteSection();
         observeViewModel();
         updateOfflineBanner();
 
@@ -165,6 +179,7 @@ public class AccountSettingsFragment extends Fragment {
         authViewModel.changePassword(current, next);
     }
 
+<<<<<<< HEAD
     private void setupNotificationSection() {
         if (binding == null) {
             return;
@@ -247,6 +262,101 @@ public class AccountSettingsFragment extends Fragment {
         return updated;
     }
 
+    private void setupDeleteSection() {
+        if (binding == null) {
+            return;
+        }
+        binding.includeDelete.buttonDeleteAccount.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!NetworkMonitor.getInstance().isOnline()) {
+                    Toast.makeText(requireContext(),
+                            R.string.account_settings_offline, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (authViewModel.isGoogleAccount()) {
+                    showGoogleDeleteConfirmDialog();
+                } else {
+                    showEmailDeleteConfirmDialog();
+                }
+            }
+        });
+    }
+
+    private void showGoogleDeleteConfirmDialog() {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.account_settings_delete_dialog_title)
+                .setMessage(R.string.account_settings_delete_google_dialog_message)
+                .setNegativeButton(R.string.common_cancel, null)
+                .setPositiveButton(R.string.account_settings_delete_google_reauth_button,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                isWaitingForGoogleReauthToDelete = true;
+                                authViewModel.loginWithGoogleBrowser(requireActivity());
+                            }
+                        })
+                .show();
+    }
+
+    private void showEmailDeleteConfirmDialog() {
+        final TextInputLayout textLayout = new TextInputLayout(requireContext());
+        textLayout.setHint(getString(R.string.account_settings_delete_password_hint));
+        textLayout.setEndIconMode(TextInputLayout.END_ICON_PASSWORD_TOGGLE);
+
+        final TextInputEditText editPassword = new TextInputEditText(requireContext());
+        editPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        textLayout.addView(editPassword);
+
+        FrameLayout container = new FrameLayout(requireContext());
+        int padding = getResources().getDimensionPixelSize(R.dimen.space_md);
+        container.setPadding(padding, padding / 2, padding, 0);
+        container.addView(textLayout);
+
+        final AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.account_settings_delete_dialog_title)
+                .setMessage(R.string.account_settings_delete_dialog_message)
+                .setView(container)
+                .setNegativeButton(R.string.common_cancel, null)
+                .setPositiveButton(R.string.account_settings_delete_confirm_button, null)
+                .create();
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String password = "";
+                        if (editPassword.getText() != null) {
+                            password = editPassword.getText().toString();
+                        }
+                        if (ProfileViewModel.isDeletePasswordEmpty(password)) {
+                            textLayout.setError(
+                                    getString(R.string.account_settings_delete_password_empty));
+                            return;
+                        }
+                        textLayout.setError(null);
+                        dialog.dismiss();
+                        isDeactivating = true;
+                        profileViewModel.deactivateAccount(password);
+                    }
+                });
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void goHomeAsGuest() {
+        NavOptions options = new NavOptions.Builder()
+                .setPopUpTo(R.id.homeFragment, false)
+                .setLaunchSingleTop(true)
+                .build();
+        NavHostFragment.findNavController(this).navigate(R.id.homeFragment, null, options);
+>>>>>>> 83c6628 (feat(account): nối khối xóa tài khoản và về chế độ khách)
+    }
+
     private void observeViewModel() {
         authViewModel.getLoading().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override
@@ -306,6 +416,17 @@ public class AccountSettingsFragment extends Fragment {
             }
         });
 
+        authViewModel.getLoggedIn().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean loggedIn) {
+                if (Boolean.TRUE.equals(loggedIn) && isWaitingForGoogleReauthToDelete) {
+                    isWaitingForGoogleReauthToDelete = false;
+                    isDeactivating = true;
+                    profileViewModel.deactivateWithGoogle("");
+                }
+            }
+        });
+
         profileViewModel.getLoading().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean loading) {
@@ -319,6 +440,9 @@ public class AccountSettingsFragment extends Fragment {
                 binding.includeNotifications.switchNotifyMessages.setEnabled(!isLoading && online);
                 binding.includeNotifications.switchNotifyOffers.setEnabled(!isLoading && online);
                 binding.includeNotifications.switchNotifyDeals.setEnabled(!isLoading && online);
+                binding.includeDelete.progressDeleteAccount.setVisibility(
+                        isLoading ? View.VISIBLE : View.GONE);
+                binding.includeDelete.buttonDeleteAccount.setEnabled(!isLoading && online);
             }
         });
 
@@ -328,13 +452,21 @@ public class AccountSettingsFragment extends Fragment {
                 if (binding == null || message == null || message.isEmpty()) {
                     return;
                 }
-                binding.includeNotifications.textNotificationsError.setText(message);
-                binding.includeNotifications.textNotificationsError.setVisibility(View.VISIBLE);
-                User current = profileViewModel.getProfile().getValue();
-                if (current != null) {
-                    applyNotificationPrefsToSwitches(current.getNotificationPrefs());
+                if (isDeactivating) {
+                    isDeactivating = false;
+                    binding.includeDelete.textDeleteError.setText(message);
+                    binding.includeDelete.textDeleteError.setVisibility(View.VISIBLE);
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show();
+                    profileViewModel.clearError();
+                } else {
+                    binding.includeNotifications.textNotificationsError.setText(message);
+                    binding.includeNotifications.textNotificationsError.setVisibility(View.VISIBLE);
+                    User current = profileViewModel.getProfile().getValue();
+                    if (current != null) {
+                        applyNotificationPrefsToSwitches(current.getNotificationPrefs());
+                    }
+                    profileViewModel.clearError();
                 }
-                profileViewModel.clearError();
             }
         });
 
@@ -344,10 +476,19 @@ public class AccountSettingsFragment extends Fragment {
                 if (binding == null || done == null || !done.booleanValue()) {
                     return;
                 }
-                profileViewModel.clearDone();
-                binding.includeNotifications.textNotificationsError.setVisibility(View.GONE);
-                Toast.makeText(requireContext(),
-                        R.string.account_settings_notifications_update_success, Toast.LENGTH_SHORT).show();
+                if (isDeactivating) {
+                    isDeactivating = false;
+                    profileViewModel.clearDone();
+                    Toast.makeText(requireContext(),
+                            R.string.account_settings_delete_success, Toast.LENGTH_LONG).show();
+                    authViewModel.logout();
+                    goHomeAsGuest();
+                } else {
+                    profileViewModel.clearDone();
+                    binding.includeNotifications.textNotificationsError.setVisibility(View.GONE);
+                    Toast.makeText(requireContext(),
+                            R.string.account_settings_notifications_update_success, Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -361,11 +502,11 @@ public class AccountSettingsFragment extends Fragment {
         Boolean loading = authViewModel.getLoading().getValue();
         boolean isLoading = loading != null && loading.booleanValue();
         binding.includePassword.buttonChangePassword.setEnabled(online && !isLoading);
-
         Boolean loadingProfile = profileViewModel.getLoading().getValue();
         boolean isProfileLoading = loadingProfile != null && loadingProfile.booleanValue();
         binding.includeNotifications.switchNotifyMessages.setEnabled(online && !isProfileLoading);
         binding.includeNotifications.switchNotifyOffers.setEnabled(online && !isProfileLoading);
         binding.includeNotifications.switchNotifyDeals.setEnabled(online && !isProfileLoading);
+        binding.includeDelete.buttonDeleteAccount.setEnabled(online && !isProfileLoading);
     }
 }
