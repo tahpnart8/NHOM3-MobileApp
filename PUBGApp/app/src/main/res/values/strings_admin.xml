@@ -361,6 +361,7 @@
     <string name="admin_category_fields_item_up">Lên</string>
     <string name="admin_category_fields_item_down">Xuống</string>
     <string name="admin_category_fields_item_delete">Xóa</string>
+    <string name="admin_category_fields_offline_warning">Không có kết nối mạng. Không thể cập nhật thuộc tính lúc này.</string>
 
     <!-- E07 Quản lý tài khoản admin (STT 105) -->
     <string name="admin_account_back_desc">Quay lại</string>
