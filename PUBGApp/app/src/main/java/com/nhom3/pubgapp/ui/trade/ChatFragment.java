@@ -42,6 +42,8 @@ import java.util.List;
 // Screen C02: Real-time chat with text, image, partner status, and listing banner.
 public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLongClickListener {
 
+    private static final String STATE_DRAFT_MESSAGE = "state_draft_message";
+
     private FragmentChatBinding binding;
     private ChatViewModel viewModel;
     private MessageAdapter adapter;
@@ -91,6 +93,13 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         setupHeader();
         setupProductBanner();
         observeViewModel();
+
+        if (savedInstanceState != null) {
+            String draft = savedInstanceState.getString(STATE_DRAFT_MESSAGE, "");
+            if (draft != null && !draft.isEmpty() && binding != null) {
+                binding.editMessage.setText(draft);
+            }
+        }
 
         checkNetwork();
 
@@ -426,6 +435,14 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
             }
         });
         popup.show();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (binding != null && binding.editMessage.getText() != null) {
+            outState.putString(STATE_DRAFT_MESSAGE, binding.editMessage.getText().toString());
+        }
     }
 
     @Override

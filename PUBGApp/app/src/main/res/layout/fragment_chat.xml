@@ -232,6 +232,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="@dimen/space_xs"
                 android:layout_weight="1"
+                android:minHeight="@dimen/touch_min"
                 android:hint="@string/trade_chat_input_hint"
                 android:inputType="textMultiLine"
                 android:maxLines="4"
@@ -242,6 +243,7 @@
                 style="@style/Widget.Material3.Button"
                 android:layout_width="wrap_content"
                 android:layout_height="@dimen/touch_min"
+                android:minWidth="@dimen/touch_min"
                 android:enabled="false"
                 android:text="@string/trade_chat_send"
                 app:cornerRadius="@dimen/radius_md" />

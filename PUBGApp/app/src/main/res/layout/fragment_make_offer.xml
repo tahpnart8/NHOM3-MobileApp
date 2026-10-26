@@ -62,6 +62,7 @@
                     android:id="@+id/radioOfferMoney"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:minHeight="@dimen/touch_min"
                     android:checked="true"
                     android:text="@string/trade_chat_offer_type_money" />
 
@@ -69,12 +70,14 @@
                     android:id="@+id/radioOfferItem"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:minHeight="@dimen/touch_min"
                     android:text="@string/trade_chat_offer_type_item" />
 
                 <RadioButton
                     android:id="@+id/radioOfferBoth"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:minHeight="@dimen/touch_min"
                     android:text="@string/trade_chat_offer_type_both" />
 
             </RadioGroup>
@@ -124,6 +127,7 @@
                 style="?attr/materialButtonStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:minHeight="@dimen/touch_min"
                 android:layout_marginTop="@dimen/space_md"
                 android:text="@string/trade_make_offer_submit"
                 app:backgroundTint="?attr/colorPrimary" />
