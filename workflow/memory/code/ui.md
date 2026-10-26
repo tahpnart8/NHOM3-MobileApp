@@ -58,3 +58,15 @@ To prevent premature guest-blocking:
    extracted to string resources (`@string/account_register_link_separator`) to comply with zero hardcoded
    string policy.
 
+## Trade and deal UI pitfalls
+
+1. **Rotation preservation on interactive inputs and filters**:
+   - `ChatFragment` draft messages and `ConversationListFragment` search queries must be saved in `onSaveInstanceState` and restored on view recreation to avoid wiping user text on rotation.
+   - `DealHistoryFragment` must persist `currentFilter` alongside `currentTab` in `outState` and re-apply chip selection and adapter filter upon rotation.
+2. **Standard image loading across all deal cards and receipts**:
+   - Always route thumbnail and media loading through `ImageLoader.load` instead of manual `BitmapFactory.decodeByteArray`. Manual decoding lacks recycling guards and causes image flickering and memory overhead on rotation.
+3. **Punctuation and bullet separators**:
+   - Metadata bullet separators (`·`) between role, payment method, and timestamp must use `@string/trade_bullet_separator` instead of hardcoded characters.
+4. **Touch targets on RadioGroup and action buttons**:
+   - In multi-step or bottom sheet forms like `MakeOfferFragment` and `DealPaymentFragment`, each `RadioButton` and action `MaterialButton` must have `android:minHeight="@dimen/touch_min"` (48dp).
+
