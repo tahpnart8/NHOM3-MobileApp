@@ -38,6 +38,8 @@ STT 73 (duyệt yêu cầu xác thực tài khoản) thuộc F-14 ở phía admi
 
 ## Phạm vi đợt rút gọn 2026-10-22
 
+> **Ghi chú cập nhật 2026-10-25:** Đợt rút gọn này đã được gỡ bỏ ngày 2026-10-25. Nhóm đã triển khai và đưa toàn bộ các STT dưới đây trở lại phạm vi thực hiện của dự án (các màn hình A04, A06, A05, C04, D05, D06, D07, E05, E06, E07 và các tính năng tương ứng đều đã có mã nguồn trên `main`).
+
 Còn 4 ngày code, nên đợt này làm 24 trong 33 màn hình. Bảng dưới ghi phần **bị bỏ lại** của từng tính năng. Tính năng không có trong bảng thì làm trọn vẹn.
 
 Cột STT dùng số của [bảng đặc tả chức năng](dac-ta-chuc-nang.md). Các STT bị bỏ **vẫn mang Phạm vi "Đợt này"** trong bảng đó, nên luật R17 không chặn được chúng; bảng này là chỗ duy nhất nói chúng bị bỏ. Ai code thì đọc [`ke-hoach-rut-gon.md`](../../plan/ke-hoach-rut-gon.md) mục 4 trước khi bắt đầu.
