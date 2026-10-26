@@ -143,6 +143,18 @@
 
     <string name="account_settings_section_delete">Xóa tài khoản</string>
     <string name="account_settings_delete_placeholder">Vô hiệu hóa tài khoản và xóa dữ liệu cá nhân</string>
+    <string name="account_settings_delete_desc">Vô hiệu hóa tài khoản sẽ ẩn thông tin hồ sơ và mọi tin đăng của bạn, đồng thời xóa thông tin đăng nhập. Lịch sử giao dịch và đánh giá cho đối tác vẫn được lưu giữ để đảm bảo quyền lợi cho hai bên.</string>
+    <string name="account_settings_delete_button">Xóa tài khoản</string>
+    <string name="account_settings_delete_dialog_title">Xác nhận xóa tài khoản</string>
+    <string name="account_settings_delete_dialog_message">Hành động này không thể hoàn tác. Bạn sẽ không thể đăng nhập lại bằng tài khoản này sau khi xóa.</string>
+    <string name="account_settings_delete_password_hint">Nhập mật khẩu để xác nhận</string>
+    <string name="account_settings_delete_password_empty">Vui lòng nhập mật khẩu để xóa tài khoản</string>
+    <string name="account_settings_delete_google_dialog_message">Tài khoản của bạn đăng nhập bằng Google. Vui lòng xác thực lại bằng cách đăng nhập lại Google trước khi tiến hành xóa tài khoản.</string>
+    <string name="account_settings_delete_google_reauth_button">Đăng nhập lại bằng Google</string>
+    <string name="account_settings_delete_confirm_button">Xóa vĩnh viễn</string>
+    <string name="account_settings_delete_success">Đã xóa tài khoản. Chuyển về chế độ khách.</string>
+    <string name="account_settings_delete_failed">Không thể xóa tài khoản. Vui lòng thử lại sau.</string>
+    <string name="account_settings_delete_google_reauth_required">Cần xác thực lại bằng Google trước khi xóa tài khoản.</string>
 
     <!-- A06 Quản lý địa chỉ giao nhận (STT 6) -->
     <string name="account_address_add_new">Thêm địa chỉ mới</string>
