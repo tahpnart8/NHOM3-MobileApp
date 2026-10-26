@@ -15,9 +15,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.tabs.TabLayout;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentDealHistoryBinding;
 import com.nhom3.pubgapp.model.Deal;
+import com.nhom3.pubgapp.model.Payment;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.viewmodel.DealViewModel;
 
@@ -27,11 +29,16 @@ import java.util.List;
 public class DealHistoryFragment extends Fragment {
 
     private static final String ARG_DEAL_ID = "dealId";
+    private static final String STATE_SELECTED_TAB = "state_selected_tab";
+    public static final int TAB_DEALS = 0;
+    public static final int TAB_PAYMENTS = 1;
 
     @Nullable
     private FragmentDealHistoryBinding binding;
     private DealViewModel viewModel;
     private DealHistoryAdapter adapter;
+    private PaymentHistoryAdapter paymentAdapter;
+    private int currentTab = TAB_DEALS;
 
     @Nullable
     @Override
@@ -46,12 +53,21 @@ public class DealHistoryFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(this).get(DealViewModel.class);
 
+        if (savedInstanceState != null) {
+            currentTab = savedInstanceState.getInt(STATE_SELECTED_TAB, TAB_DEALS);
+        }
+
         setUpToolbar();
+        setUpTabs();
         setUpList();
         setUpFilterChips();
         observeViewModel();
 
-        viewModel.loadHistory();
+        if (currentTab == TAB_DEALS) {
+            viewModel.loadHistory();
+        } else {
+            viewModel.loadPayments();
+        }
     }
 
     @Override
@@ -62,6 +78,12 @@ public class DealHistoryFragment extends Fragment {
         }
         boolean online = NetworkMonitor.getInstance().isOnline();
         binding.viewOfflineBanner.getRoot().setVisibility(online ? View.GONE : View.VISIBLE);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_SELECTED_TAB, currentTab);
     }
 
     @Override
@@ -84,6 +106,58 @@ public class DealHistoryFragment extends Fragment {
         });
     }
 
+    private void setUpTabs() {
+        if (binding == null) {
+            return;
+        }
+        TabLayout.Tab tab = binding.tabLayoutHistory.getTabAt(currentTab);
+        if (tab != null) {
+            tab.select();
+        }
+        applyTabSelection(currentTab);
+
+        binding.tabLayoutHistory.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab selected) {
+                currentTab = selected.getPosition();
+                applyTabSelection(currentTab);
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab unselected) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab reselected) {
+            }
+        });
+    }
+
+    private void applyTabSelection(int tabIndex) {
+        if (binding == null) {
+            return;
+        }
+        boolean isDeals = tabIndex == TAB_DEALS;
+        binding.scrollFilters.setVisibility(isDeals ? View.VISIBLE : View.GONE);
+        binding.recyclerDeals.setVisibility(isDeals ? View.VISIBLE : View.GONE);
+        binding.recyclerPayments.setVisibility(isDeals ? View.GONE : View.VISIBLE);
+
+        if (isDeals) {
+            binding.viewEmptyState.textEmptyTitle.setText(R.string.trade_deal_history_empty_title);
+            binding.viewEmptyState.textEmptyMessage.setText(R.string.trade_deal_history_empty_message);
+            if (viewModel.getDeals().getValue() == null) {
+                viewModel.loadHistory();
+            }
+        } else {
+            binding.viewEmptyState.textEmptyTitle.setText(R.string.trade_payment_history_empty_title);
+            binding.viewEmptyState.textEmptyMessage.setText(R.string.trade_payment_history_empty_message);
+            if (viewModel.getPayments().getValue() == null) {
+                viewModel.loadPayments();
+            }
+        }
+        updateState();
+    }
+
     private void setUpList() {
         if (binding == null) {
             return;
@@ -100,6 +174,21 @@ public class DealHistoryFragment extends Fragment {
         binding.recyclerDeals.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerDeals.setAdapter(adapter);
 
+        paymentAdapter = new PaymentHistoryAdapter(new PaymentHistoryAdapter.OnPaymentClickListener() {
+            @Override
+            public void onPaymentClick(Payment payment) {
+                if (payment == null || payment.getDealId() == null || payment.getDealId().isEmpty()) {
+                    return;
+                }
+                Bundle args = new Bundle();
+                args.putString(ARG_DEAL_ID, payment.getDealId());
+                NavHostFragment.findNavController(DealHistoryFragment.this)
+                        .navigate(R.id.action_global_deal_detail, args);
+            }
+        });
+        binding.recyclerPayments.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerPayments.setAdapter(paymentAdapter);
+
         binding.viewEmptyState.textEmptyTitle.setText(R.string.trade_deal_history_empty_title);
         binding.viewEmptyState.textEmptyMessage.setText(R.string.trade_deal_history_empty_message);
         binding.viewEmptyState.buttonEmptyAction.setVisibility(View.GONE);
@@ -107,7 +196,11 @@ public class DealHistoryFragment extends Fragment {
         binding.viewErrorState.buttonRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View clicked) {
-                viewModel.loadHistory();
+                if (currentTab == TAB_DEALS) {
+                    viewModel.loadHistory();
+                } else {
+                    viewModel.loadPayments();
+                }
             }
         });
     }
@@ -144,6 +237,15 @@ public class DealHistoryFragment extends Fragment {
                 updateState();
             }
         });
+        viewModel.getPayments().observe(getViewLifecycleOwner(), new Observer<List<Payment>>() {
+            @Override
+            public void onChanged(List<Payment> payments) {
+                if (paymentAdapter != null) {
+                    paymentAdapter.submitPayments(payments);
+                }
+                updateState();
+            }
+        });
         viewModel.getLoading().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean loading) {
@@ -163,13 +265,28 @@ public class DealHistoryFragment extends Fragment {
             return;
         }
         boolean loading = Boolean.TRUE.equals(viewModel.getLoading().getValue());
-        List<Deal> deals = viewModel.getDeals().getValue();
-        boolean hasData = deals != null;
-        boolean empty = hasData && adapter.getDisplayedItemCount() == 0;
+        boolean isDeals = currentTab == TAB_DEALS;
+        boolean hasData;
+        boolean empty;
+        if (isDeals) {
+            List<Deal> deals = viewModel.getDeals().getValue();
+            hasData = deals != null;
+            empty = hasData && adapter.getDisplayedItemCount() == 0;
+        } else {
+            List<Payment> payments = viewModel.getPayments().getValue();
+            hasData = payments != null;
+            empty = hasData && paymentAdapter != null && paymentAdapter.getItemCount() == 0;
+        }
         boolean failed = !hasData && !loading;
 
         binding.progressDeals.setVisibility(loading && !hasData ? View.VISIBLE : View.GONE);
-        binding.recyclerDeals.setVisibility(hasData && !empty ? View.VISIBLE : View.GONE);
+        if (isDeals) {
+            binding.recyclerDeals.setVisibility(hasData && !empty ? View.VISIBLE : View.GONE);
+            binding.recyclerPayments.setVisibility(View.GONE);
+        } else {
+            binding.recyclerDeals.setVisibility(View.GONE);
+            binding.recyclerPayments.setVisibility(hasData && !empty ? View.VISIBLE : View.GONE);
+        }
         binding.viewEmptyState.getRoot().setVisibility(empty && !loading ? View.VISIBLE : View.GONE);
         binding.viewErrorState.getRoot().setVisibility(failed ? View.VISIBLE : View.GONE);
     }
@@ -178,7 +295,11 @@ public class DealHistoryFragment extends Fragment {
         if (message == null || message.trim().isEmpty() || binding == null) {
             return;
         }
-        if (viewModel.getDeals().getValue() == null) {
+        boolean isDeals = currentTab == TAB_DEALS;
+        boolean noData = isDeals
+                ? viewModel.getDeals().getValue() == null
+                : viewModel.getPayments().getValue() == null;
+        if (noData) {
             binding.viewErrorState.textErrorMessage.setText(message);
         } else {
             Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_LONG).show();
