@@ -46,3 +46,15 @@ To prevent premature guest-blocking:
 2. `HomeFragment.shouldShowGuestSignIn` hides the guest header while `isRestoring` is true,
    preventing the sign-in button from flashing or staying visible when the user is logged in.
 
+## Account and notification UI pitfalls
+
+1. **Always null binding in `onDestroyView()`**: Long multi-step fragments like `RegisterFragment`
+   and settings screens retain view references in the binding field. If not cleared in `onDestroyView`,
+   the entire view hierarchy leaks across orientation changes and fragment transactions.
+2. **Standard theme tokens over hardcoded dp or color literals**: Always use `?attr/colorOnSurface`,
+   `?attr/colorOnSurfaceVariant` instead of `?android:attr/textColor*`, and use `@dimen/touch_min` (48dp)
+   for interactive buttons and touch targets.
+3. **Link and punctuation delimiters**: Separators like `|` between privacy and terms links must be
+   extracted to string resources (`@string/account_register_link_separator`) to comply with zero hardcoded
+   string policy.
+
