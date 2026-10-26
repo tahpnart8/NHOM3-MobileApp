@@ -19,6 +19,7 @@ import com.nhom3.pubgapp.model.UserIdentity;
 import com.nhom3.pubgapp.model.enums.ImagePurpose;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
+import com.google.firebase.firestore.GeoPoint;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
 
@@ -259,6 +260,12 @@ public class ProfileViewModel extends ViewModel {
             error.setValue(addressFormErrorMessage(check));
             return;
         }
+        if (address.getLocation() == null) {
+            GeoPoint fallback = findCoordinatesByProvince(address.getProvince());
+            if (fallback != null) {
+                address.setLocation(fallback);
+            }
+        }
         loading.setValue(true);
         userRepository.saveAddress(uid, address, new DataCallback<Void>() {
             @Override
@@ -274,6 +281,218 @@ public class ProfileViewModel extends ViewModel {
                 error.postValue(message);
             }
         });
+    }
+
+    // Coordinates of Vietnamese provinces used when Geocoder lookup fails or runs offline.
+    static GeoPoint findCoordinatesByProvince(String province) {
+        if (province == null) {
+            return null;
+        }
+        String p = normalizeProvinceName(province);
+        if (p.isEmpty()) {
+            return null;
+        }
+        if (p.contains("ha noi")) {
+            return new GeoPoint(21.0285, 105.8542);
+        }
+        if (p.contains("ho chi minh") || p.contains("hcm") || p.contains("sai gon")) {
+            return new GeoPoint(10.7769, 106.7009);
+        }
+        if (p.contains("da nang")) {
+            return new GeoPoint(16.0544, 108.2022);
+        }
+        if (p.contains("hai phong")) {
+            return new GeoPoint(20.8449, 106.6881);
+        }
+        if (p.contains("can tho")) {
+            return new GeoPoint(10.0452, 105.7469);
+        }
+        if (p.contains("binh duong")) {
+            return new GeoPoint(10.9805, 106.6519);
+        }
+        if (p.contains("dong nai")) {
+            return new GeoPoint(10.9574, 106.8427);
+        }
+        if (p.contains("ba ria") || p.contains("vung tau")) {
+            return new GeoPoint(10.5425, 107.2429);
+        }
+        if (p.contains("an giang")) {
+            return new GeoPoint(10.5216, 105.1259);
+        }
+        if (p.contains("bac giang")) {
+            return new GeoPoint(21.2731, 106.1946);
+        }
+        if (p.contains("bac kan") || p.contains("bac can")) {
+            return new GeoPoint(22.1470, 105.8348);
+        }
+        if (p.contains("bac lieu")) {
+            return new GeoPoint(9.2941, 105.7278);
+        }
+        if (p.contains("bac ninh")) {
+            return new GeoPoint(21.1861, 106.0763);
+        }
+        if (p.contains("ben tre")) {
+            return new GeoPoint(10.2434, 106.3756);
+        }
+        if (p.contains("binh dinh") || p.contains("quy nhon")) {
+            return new GeoPoint(13.7820, 109.2197);
+        }
+        if (p.contains("binh phuoc") || p.contains("dong xoai")) {
+            return new GeoPoint(11.5333, 106.9000);
+        }
+        if (p.contains("binh thuan") || p.contains("phan thiet")) {
+            return new GeoPoint(10.9333, 108.1000);
+        }
+        if (p.contains("ca mau")) {
+            return new GeoPoint(9.1769, 105.1500);
+        }
+        if (p.contains("cao bang")) {
+            return new GeoPoint(22.6667, 106.2500);
+        }
+        if (p.contains("dak lak") || p.contains("dac lac") || p.contains("buon ma thuot")) {
+            return new GeoPoint(12.6667, 108.0500);
+        }
+        if (p.contains("dak nong") || p.contains("dac nong")) {
+            return new GeoPoint(12.0000, 107.6833);
+        }
+        if (p.contains("dien bien")) {
+            return new GeoPoint(21.3833, 103.0167);
+        }
+        if (p.contains("dong thap") || p.contains("cao lanh")) {
+            return new GeoPoint(10.4592, 105.6328);
+        }
+        if (p.contains("gia lai") || p.contains("pleiku")) {
+            return new GeoPoint(13.9833, 108.0000);
+        }
+        if (p.contains("ha giang")) {
+            return new GeoPoint(22.8233, 104.9836);
+        }
+        if (p.contains("ha nam") || p.contains("phu ly")) {
+            return new GeoPoint(20.5411, 105.9139);
+        }
+        if (p.contains("ha tinh")) {
+            return new GeoPoint(18.3333, 105.9000);
+        }
+        if (p.contains("hai duong")) {
+            return new GeoPoint(20.9333, 106.3167);
+        }
+        if (p.contains("hau giang") || p.contains("vi thanh")) {
+            return new GeoPoint(9.7844, 105.4703);
+        }
+        if (p.contains("hoa binh")) {
+            return new GeoPoint(20.8167, 105.3333);
+        }
+        if (p.contains("hung yen")) {
+            return new GeoPoint(20.6500, 106.0500);
+        }
+        if (p.contains("khanh hoa") || p.contains("nha trang")) {
+            return new GeoPoint(12.2388, 109.1967);
+        }
+        if (p.contains("kien giang") || p.contains("rach gia")) {
+            return new GeoPoint(10.0125, 105.0809);
+        }
+        if (p.contains("kon tum")) {
+            return new GeoPoint(14.3500, 108.0000);
+        }
+        if (p.contains("lai chau")) {
+            return new GeoPoint(22.4000, 103.4667);
+        }
+        if (p.contains("lam dong") || p.contains("da lat")) {
+            return new GeoPoint(11.9404, 108.4583);
+        }
+        if (p.contains("lang son")) {
+            return new GeoPoint(21.8500, 106.7500);
+        }
+        if (p.contains("lao cai")) {
+            return new GeoPoint(22.4833, 103.9667);
+        }
+        if (p.contains("long an") || p.contains("tan an")) {
+            return new GeoPoint(10.5364, 106.4131);
+        }
+        if (p.contains("nam dinh")) {
+            return new GeoPoint(20.4333, 106.1667);
+        }
+        if (p.contains("nghe an") || p.contains("vinh")) {
+            return new GeoPoint(18.6734, 105.6811);
+        }
+        if (p.contains("ninh binh")) {
+            return new GeoPoint(20.2500, 105.9750);
+        }
+        if (p.contains("ninh thuan") || p.contains("phan rang")) {
+            return new GeoPoint(11.5667, 108.9833);
+        }
+        if (p.contains("phu tho") || p.contains("viet tri")) {
+            return new GeoPoint(21.3228, 105.4019);
+        }
+        if (p.contains("phu yen") || p.contains("tuy hoa")) {
+            return new GeoPoint(13.0955, 109.3210);
+        }
+        if (p.contains("quang binh") || p.contains("dong hoi")) {
+            return new GeoPoint(17.4833, 106.6000);
+        }
+        if (p.contains("quang nam") || p.contains("tam ky") || p.contains("hoi an")) {
+            return new GeoPoint(15.5667, 108.4833);
+        }
+        if (p.contains("quang ngai")) {
+            return new GeoPoint(15.1167, 108.8000);
+        }
+        if (p.contains("quang ninh") || p.contains("ha long")) {
+            return new GeoPoint(20.9505, 107.0734);
+        }
+        if (p.contains("quang tri") || p.contains("dong ha")) {
+            return new GeoPoint(16.8167, 107.1000);
+        }
+        if (p.contains("soc trang")) {
+            return new GeoPoint(9.6000, 105.9667);
+        }
+        if (p.contains("son la")) {
+            return new GeoPoint(21.3167, 103.9000);
+        }
+        if (p.contains("tay ninh")) {
+            return new GeoPoint(11.3000, 106.1000);
+        }
+        if (p.contains("thai binh")) {
+            return new GeoPoint(20.4500, 106.3333);
+        }
+        if (p.contains("thai nguyen")) {
+            return new GeoPoint(21.5833, 105.8333);
+        }
+        if (p.contains("thanh hoa")) {
+            return new GeoPoint(19.8000, 105.7667);
+        }
+        if (p.contains("thua thien") || p.contains("hue")) {
+            return new GeoPoint(16.4667, 107.6000);
+        }
+        if (p.contains("tien giang") || p.contains("my tho")) {
+            return new GeoPoint(10.3600, 106.3600);
+        }
+        if (p.contains("tra vinh")) {
+            return new GeoPoint(9.9333, 106.3333);
+        }
+        if (p.contains("tuyen quang")) {
+            return new GeoPoint(21.8167, 105.2167);
+        }
+        if (p.contains("vinh long")) {
+            return new GeoPoint(10.2500, 105.9667);
+        }
+        if (p.contains("vinh phuc") || p.contains("vinh yen")) {
+            return new GeoPoint(21.3093, 105.5972);
+        }
+        if (p.contains("yen bai")) {
+            return new GeoPoint(21.7000, 104.8667);
+        }
+        return null;
+    }
+
+    private static String normalizeProvinceName(String text) {
+        if (text == null) {
+            return "";
+        }
+        String normalized = java.text.Normalizer.normalize(
+                text.toLowerCase(java.util.Locale.ROOT),
+                java.text.Normalizer.Form.NFD);
+        String withoutAccents = normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        return withoutAccents.replace('đ', 'd').replace('Đ', 'd').trim();
     }
 
     public void deleteAddress(String id) {
