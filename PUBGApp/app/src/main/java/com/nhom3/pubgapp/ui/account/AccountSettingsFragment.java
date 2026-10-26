@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -15,8 +16,14 @@ import androidx.navigation.Navigation;
 
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentAccountSettingsBinding;
+import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.model.enums.NotificationType;
 import com.nhom3.pubgapp.util.NetworkMonitor;
+import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.AuthViewModel;
+import com.nhom3.pubgapp.viewmodel.ProfileViewModel;
+
+import java.util.Map;
 
 /** Screen A05 Account Settings: contains password change, notifications, and account deletion. */
 public class AccountSettingsFragment extends Fragment {
@@ -24,6 +31,8 @@ public class AccountSettingsFragment extends Fragment {
     @Nullable
     private FragmentAccountSettingsBinding binding;
     private AuthViewModel authViewModel;
+    private ProfileViewModel profileViewModel;
+    private boolean isBindingNotificationPrefs;
 
     @Nullable
     @Override
@@ -37,11 +46,18 @@ public class AccountSettingsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        profileViewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
 
         setupTopBar();
         setupPasswordSection();
+        setupNotificationSection();
         observeViewModel();
         updateOfflineBanner();
+
+        String currentUid = SessionManager.getInstance().getCurrentUserId();
+        if (currentUid != null && !currentUid.isEmpty()) {
+            profileViewModel.loadProfile(currentUid);
+        }
     }
 
     @Override
@@ -148,6 +164,67 @@ public class AccountSettingsFragment extends Fragment {
         authViewModel.changePassword(current, next);
     }
 
+    private void setupNotificationSection() {
+        if (binding == null) {
+            return;
+        }
+        binding.includeNotifications.switchNotifyMessages.setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        handleNotificationPrefChanged(NotificationType.NEW_MESSAGE.name(), isChecked, buttonView);
+                    }
+                });
+        binding.includeNotifications.switchNotifyOffers.setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        handleNotificationPrefChanged(NotificationType.NEW_OFFER.name(), isChecked, buttonView);
+                    }
+                });
+        binding.includeNotifications.switchNotifyDeals.setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        handleNotificationPrefChanged(NotificationType.DEAL_UPDATE.name(), isChecked, buttonView);
+                    }
+                });
+    }
+
+    private void handleNotificationPrefChanged(String typeKey, boolean isChecked, CompoundButton buttonView) {
+        if (isBindingNotificationPrefs || binding == null) {
+            return;
+        }
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            Toast.makeText(requireContext(), R.string.account_settings_offline, Toast.LENGTH_SHORT).show();
+            isBindingNotificationPrefs = true;
+            buttonView.setChecked(!isChecked);
+            isBindingNotificationPrefs = false;
+            return;
+        }
+        Map<String, Boolean> current = null;
+        User user = profileViewModel.getProfile().getValue();
+        if (user != null) {
+            current = user.getNotificationPrefs();
+        }
+        Map<String, Boolean> updated = ProfileViewModel.buildUpdatedNotificationPrefs(current, typeKey, isChecked);
+        profileViewModel.updateNotificationPrefs(updated);
+    }
+
+    private void applyNotificationPrefsToSwitches(Map<String, Boolean> prefs) {
+        if (binding == null) {
+            return;
+        }
+        isBindingNotificationPrefs = true;
+        boolean msgEnabled = ProfileViewModel.isNotificationTypeEnabled(prefs, NotificationType.NEW_MESSAGE.name());
+        boolean offerEnabled = ProfileViewModel.isNotificationTypeEnabled(prefs, NotificationType.NEW_OFFER.name());
+        boolean dealEnabled = ProfileViewModel.isNotificationTypeEnabled(prefs, NotificationType.DEAL_UPDATE.name());
+        binding.includeNotifications.switchNotifyMessages.setChecked(msgEnabled);
+        binding.includeNotifications.switchNotifyOffers.setChecked(offerEnabled);
+        binding.includeNotifications.switchNotifyDeals.setChecked(dealEnabled);
+        isBindingNotificationPrefs = false;
+    }
+
     private void observeViewModel() {
         authViewModel.getLoading().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override
@@ -196,6 +273,61 @@ public class AccountSettingsFragment extends Fragment {
                 Navigation.findNavController(requireView()).navigate(R.id.action_global_sign_in);
             }
         });
+
+        profileViewModel.getProfile().observe(getViewLifecycleOwner(), new Observer<User>() {
+            @Override
+            public void onChanged(User user) {
+                if (binding == null || user == null) {
+                    return;
+                }
+                applyNotificationPrefsToSwitches(user.getNotificationPrefs());
+            }
+        });
+
+        profileViewModel.getLoading().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean loading) {
+                if (binding == null) {
+                    return;
+                }
+                boolean isLoading = loading != null && loading.booleanValue();
+                binding.includeNotifications.progressNotifications.setVisibility(
+                        isLoading ? View.VISIBLE : View.GONE);
+                boolean online = NetworkMonitor.getInstance().isOnline();
+                binding.includeNotifications.switchNotifyMessages.setEnabled(!isLoading && online);
+                binding.includeNotifications.switchNotifyOffers.setEnabled(!isLoading && online);
+                binding.includeNotifications.switchNotifyDeals.setEnabled(!isLoading && online);
+            }
+        });
+
+        profileViewModel.getError().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String message) {
+                if (binding == null || message == null || message.isEmpty()) {
+                    return;
+                }
+                binding.includeNotifications.textNotificationsError.setText(message);
+                binding.includeNotifications.textNotificationsError.setVisibility(View.VISIBLE);
+                User current = profileViewModel.getProfile().getValue();
+                if (current != null) {
+                    applyNotificationPrefsToSwitches(current.getNotificationPrefs());
+                }
+                profileViewModel.clearError();
+            }
+        });
+
+        profileViewModel.getDone().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean done) {
+                if (binding == null || done == null || !done.booleanValue()) {
+                    return;
+                }
+                profileViewModel.clearDone();
+                binding.includeNotifications.textNotificationsError.setVisibility(View.GONE);
+                Toast.makeText(requireContext(),
+                        R.string.account_settings_notifications_update_success, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void updateOfflineBanner() {
@@ -207,5 +339,11 @@ public class AccountSettingsFragment extends Fragment {
         Boolean loading = authViewModel.getLoading().getValue();
         boolean isLoading = loading != null && loading.booleanValue();
         binding.includePassword.buttonChangePassword.setEnabled(online && !isLoading);
+
+        Boolean loadingProfile = profileViewModel.getLoading().getValue();
+        boolean isProfileLoading = loadingProfile != null && loadingProfile.booleanValue();
+        binding.includeNotifications.switchNotifyMessages.setEnabled(online && !isProfileLoading);
+        binding.includeNotifications.switchNotifyOffers.setEnabled(online && !isProfileLoading);
+        binding.includeNotifications.switchNotifyDeals.setEnabled(online && !isProfileLoading);
     }
 }
