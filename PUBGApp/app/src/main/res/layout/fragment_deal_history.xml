@@ -15,7 +15,28 @@
         android:id="@+id/viewOfflineBanner"
         layout="@layout/view_offline_banner" />
 
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayoutHistory"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:tabIndicatorFullWidth="false"
+        app:tabMode="fixed">
+
+        <com.google.android.material.tabs.TabItem
+            android:id="@+id/tabDeals"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/trade_deal_history_tab_deals" />
+
+        <com.google.android.material.tabs.TabItem
+            android:id="@+id/tabPayments"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/trade_deal_history_tab_payments" />
+    </com.google.android.material.tabs.TabLayout>
+
     <HorizontalScrollView
+        android:id="@+id/scrollFilters"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="@dimen/space_md"
@@ -72,6 +93,14 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:paddingBottom="@dimen/space_md" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerPayments"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/space_md"
+            android:visibility="gone" />
 
         <include
             android:id="@+id/viewEmptyState"
