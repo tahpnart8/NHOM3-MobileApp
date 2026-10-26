@@ -256,7 +256,7 @@ public class AdminAccountFragment extends Fragment {
             return;
         }
         String currentId = SessionManager.getInstance().getCurrentUserId();
-        if (AdminUserViewModel.isSelfAdminAction(user.getId(), currentId)) {
+        if (isSelfAdminAction(user.getId(), currentId)) {
             Toast.makeText(getContext(), R.string.admin_account_self_grant_denied, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -280,6 +280,14 @@ public class AdminAccountFragment extends Fragment {
                 .show();
     }
 
+    // An admin cannot grant or revoke their own admin status (R12).
+    static boolean isSelfAdminAction(String targetUserId, String currentUserId) {
+        if (targetUserId == null || currentUserId == null) {
+            return false;
+        }
+        return targetUserId.equals(currentUserId);
+    }
+
     private void showRevokeConfirmDialog(final User user) {
         if (getContext() == null || user == null) {
             return;
@@ -289,7 +297,7 @@ public class AdminAccountFragment extends Fragment {
             return;
         }
         String currentId = SessionManager.getInstance().getCurrentUserId();
-        if (AdminUserViewModel.isSelfAdminAction(user.getId(), currentId)) {
+        if (isSelfAdminAction(user.getId(), currentId)) {
             Toast.makeText(getContext(), R.string.admin_account_self_revoke_denied, Toast.LENGTH_SHORT).show();
             return;
         }
