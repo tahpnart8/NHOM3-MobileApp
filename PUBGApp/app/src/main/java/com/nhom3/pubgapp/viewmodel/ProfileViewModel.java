@@ -709,7 +709,32 @@ public class ProfileViewModel extends ViewModel {
     }
 
     public void deactivateAccount(String password) {
-        error.setValue(DataCallback.NOT_READY);
+        if (!NetworkMonitor.getInstance().isOnline()) {
+            error.setValue(MESSAGE_OFFLINE);
+            return;
+        }
+        if (isDeletePasswordEmpty(password)) {
+            error.setValue("Vui lòng nhập mật khẩu để xóa tài khoản.");
+            return;
+        }
+        final String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null || uid.isEmpty()) {
+            error.setValue(MESSAGE_NOT_SIGNED_IN);
+            return;
+        }
+        loading.setValue(true);
+        authRepository.reauthenticate(password, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                deactivateFirestoreAndAuth(uid);
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message != null ? message : "Mật khẩu không đúng.");
+            }
+        });
     }
 
     public void deactivateWithGoogle(String idToken) {
@@ -1149,6 +1174,7 @@ public class ProfileViewModel extends ViewModel {
         return null;
     }
 
+<<<<<<< HEAD
     static boolean isPhoneValid(String phone) {
         if (phone == null) {
             return false;
@@ -1233,6 +1259,71 @@ public class ProfileViewModel extends ViewModel {
         }
         updated.put(typeKey, Boolean.valueOf(enabled));
         return updated;
+    }
+
+    private void deactivateFirestoreAndAuth(final String uid) {
+        userRepository.deactivate(uid, new DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                authRepository.deleteLogin(new DataCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        completeDeactivation();
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        loading.postValue(false);
+                        error.postValue(message != null ? message : "Không thể xóa thông tin đăng nhập.");
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                loading.postValue(false);
+                error.postValue(message != null ? message : "Không thể vô hiệu hóa tài khoản.");
+            }
+        });
+    }
+
+    private void completeDeactivation() {
+        authRepository.signOut();
+        SessionManager.getInstance().clear();
+        clearRoomDatabase();
+        clearPreviousUser();
+        loading.postValue(false);
+        done.postValue(true);
+    }
+
+    private void clearRoomDatabase() {
+        try {
+            com.google.firebase.FirebaseApp app = com.google.firebase.FirebaseApp.getInstance();
+            if (app != null) {
+                android.content.Context context = app.getApplicationContext();
+                if (context != null) {
+                    final com.nhom3.pubgapp.data.local.AppDatabase db =
+                            com.nhom3.pubgapp.data.local.AppDatabase.getInstance(context);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                db.listingDao().clearAll();
+                                db.chatDao().clearAll();
+                                db.dealDao().clearAll();
+                                db.historyDao().clearAll();
+                            } catch (Exception ignored) {
+                            }
+                        }
+                    }).start();
+                }
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    public static boolean isDeletePasswordEmpty(String password) {
+        return password == null || password.trim().isEmpty();
     }
 
     public void clearError() {
