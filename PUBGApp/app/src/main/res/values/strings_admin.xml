@@ -347,6 +347,20 @@
     <string name="admin_category_delete_success">Đã xóa danh mục.</string>
     <string name="admin_category_retry">Thử lại</string>
     <string name="admin_category_badge_child">Danh mục con</string>
+    <string name="admin_category_fields_dialog_title">Thuộc tính tình trạng - %1$s</string>
+    <string name="admin_category_fields_subtitle">Tối đa 30 thuộc tính, mỗi thuộc tính tối đa 50 ký tự</string>
+    <string name="admin_category_fields_input_label">Thêm thuộc tính</string>
+    <string name="admin_category_fields_add_button">Thêm</string>
+    <string name="admin_category_fields_empty">Chưa có thuộc tính tình trạng nào.</string>
+    <string name="admin_category_fields_count">%1$d/30 thuộc tính</string>
+    <string name="admin_category_fields_name_empty">Tên thuộc tính không được để trống.</string>
+    <string name="admin_category_fields_name_duplicate">Tên thuộc tính không được trùng lặp.</string>
+    <string name="admin_category_fields_name_too_long">Tên thuộc tính không được vượt quá 50 ký tự.</string>
+    <string name="admin_category_fields_limit_reached">Đã đạt giới hạn tối đa 30 thuộc tính.</string>
+    <string name="admin_category_fields_save_success">Đã cập nhật thuộc tính tình trạng.</string>
+    <string name="admin_category_fields_item_up">Lên</string>
+    <string name="admin_category_fields_item_down">Xuống</string>
+    <string name="admin_category_fields_item_delete">Xóa</string>
 
     <!-- E07 Quản lý tài khoản admin (STT 105) -->
     <string name="admin_account_back_desc">Quay lại</string>
