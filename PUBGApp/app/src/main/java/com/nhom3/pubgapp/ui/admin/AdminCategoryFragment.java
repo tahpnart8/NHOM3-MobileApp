@@ -3,10 +3,13 @@ package com.nhom3.pubgapp.ui.admin;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.Editable;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,17 +19,21 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.DialogAdminCategoryBinding;
+import com.nhom3.pubgapp.databinding.DialogAdminCategoryFieldsBinding;
 import com.nhom3.pubgapp.databinding.FragmentAdminCategoryBinding;
 import com.nhom3.pubgapp.model.Category;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.viewmodel.AdminContentViewModel;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +45,10 @@ public class AdminCategoryFragment extends Fragment {
     private static final String STATE_CATEGORY_NAME = "state_category_name";
     private static final String STATE_PARENT_ID = "state_parent_id";
     private static final String STATE_ACTIVE = "state_active";
+    private static final String STATE_FIELDS_DIALOG_OPEN = "state_fields_dialog_open";
+    private static final String STATE_FIELDS_CATEGORY_ID = "state_fields_category_id";
+    private static final String STATE_FIELDS_LIST = "state_fields_list";
+    private static final String STATE_FIELDS_INPUT = "state_fields_input";
 
     @Nullable
     private FragmentAdminCategoryBinding binding;
@@ -51,6 +62,15 @@ public class AdminCategoryFragment extends Fragment {
     @Nullable
     private String activeEditingId;
     private boolean lastActionWasDelete;
+
+    @Nullable
+    private AlertDialog activeFieldsDialog;
+    @Nullable
+    private DialogAdminCategoryFieldsBinding activeFieldsDialogBinding;
+    @Nullable
+    private String activeFieldsCategoryId;
+    private final ArrayList<String> activeFieldsList = new ArrayList<String>();
+    private boolean lastActionWasFields;
 
     @Nullable
     @Override
@@ -78,6 +98,13 @@ public class AdminCategoryFragment extends Fragment {
             boolean active = savedInstanceState.getBoolean(STATE_ACTIVE, true);
             restoreCategoryDialog(id, name, parentId, active);
         }
+
+        if (savedInstanceState != null && savedInstanceState.getBoolean(STATE_FIELDS_DIALOG_OPEN, false)) {
+            String catId = savedInstanceState.getString(STATE_FIELDS_CATEGORY_ID);
+            ArrayList<String> list = savedInstanceState.getStringArrayList(STATE_FIELDS_LIST);
+            String input = savedInstanceState.getString(STATE_FIELDS_INPUT, "");
+            restoreFieldsDialog(catId, list, input);
+        }
     }
 
     @Override
@@ -88,6 +115,11 @@ public class AdminCategoryFragment extends Fragment {
         }
         boolean online = NetworkMonitor.getInstance().isOnline();
         binding.viewOfflineBanner.getRoot().setVisibility(online ? View.GONE : View.VISIBLE);
+        if (activeFieldsDialogBinding != null) {
+            boolean canAdd = online && activeFieldsList.size() < 30;
+            activeFieldsDialogBinding.buttonAddField.setEnabled(canAdd);
+            activeFieldsDialogBinding.buttonSaveFields.setEnabled(online);
+        }
     }
 
     @Override
@@ -100,6 +132,13 @@ public class AdminCategoryFragment extends Fragment {
             outState.putString(STATE_CATEGORY_NAME, text != null ? text.toString() : "");
             outState.putBoolean(STATE_ACTIVE, activeDialogBinding.switchDialogActive.isChecked());
         }
+        if (activeFieldsDialog != null && activeFieldsDialog.isShowing() && activeFieldsDialogBinding != null) {
+            outState.putBoolean(STATE_FIELDS_DIALOG_OPEN, true);
+            outState.putString(STATE_FIELDS_CATEGORY_ID, activeFieldsCategoryId);
+            outState.putStringArrayList(STATE_FIELDS_LIST, activeFieldsList);
+            Editable text = activeFieldsDialogBinding.editNewField.getText();
+            outState.putString(STATE_FIELDS_INPUT, text != null ? text.toString() : "");
+        }
     }
 
     @Override
@@ -110,6 +149,11 @@ public class AdminCategoryFragment extends Fragment {
             activeDialog = null;
         }
         activeDialogBinding = null;
+        if (activeFieldsDialog != null) {
+            activeFieldsDialog.dismiss();
+            activeFieldsDialog = null;
+        }
+        activeFieldsDialogBinding = null;
         binding = null;
     }
 
@@ -155,6 +199,33 @@ public class AdminCategoryFragment extends Fragment {
         });
         binding.recyclerCategories.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerCategories.setAdapter(adapter);
+        binding.recyclerCategories.addOnChildAttachStateChangeListener(
+                new RecyclerView.OnChildAttachStateChangeListener() {
+            @Override
+            public void onChildViewAttachedToWindow(@NonNull View childView) {
+                childView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (binding == null) {
+                            return;
+                        }
+                        int position = binding.recyclerCategories.getChildAdapterPosition(v);
+                        if (position != RecyclerView.NO_POSITION) {
+                            List<Category> all = viewModel.getCategories().getValue();
+                            List<Category> tree = AdminCategoryRules.buildTreeList(all);
+                            if (position >= 0 && position < tree.size()) {
+                                showConditionFieldsDialog(tree.get(position), null, null);
+                            }
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onChildViewDetachedFromWindow(@NonNull View childView) {
+                childView.setOnClickListener(null);
+            }
+        });
 
         binding.viewEmptyState.textEmptyTitle.setText(R.string.admin_category_empty_title);
         binding.viewEmptyState.textEmptyMessage.setText(R.string.admin_category_empty_subtitle);
@@ -254,8 +325,20 @@ public class AdminCategoryFragment extends Fragment {
             activeDialog = null;
             activeDialogBinding = null;
         }
-        int messageId = lastActionWasDelete ? R.string.admin_category_delete_success
-                : R.string.admin_category_save_success;
+        if (activeFieldsDialog != null) {
+            activeFieldsDialog.dismiss();
+            activeFieldsDialog = null;
+            activeFieldsDialogBinding = null;
+            activeFieldsCategoryId = null;
+        }
+        int messageId;
+        if (lastActionWasDelete) {
+            messageId = R.string.admin_category_delete_success;
+        } else if (lastActionWasFields) {
+            messageId = R.string.admin_category_fields_save_success;
+        } else {
+            messageId = R.string.admin_category_save_success;
+        }
         Snackbar.make(binding.getRoot(), messageId, Snackbar.LENGTH_SHORT).show();
         viewModel.clearDone();
     }
@@ -430,5 +513,204 @@ public class AdminCategoryFragment extends Fragment {
             }
         });
         activeDialog.show();
+    }
+
+    private void restoreFieldsDialog(@Nullable String id, @Nullable ArrayList<String> list,
+            @Nullable String input) {
+        List<Category> all = viewModel.getCategories().getValue();
+        Category existing = null;
+        if (id != null && all != null) {
+            for (Category c : all) {
+                if (id.equals(c.getId())) {
+                    existing = c;
+                    break;
+                }
+            }
+        }
+        if (existing != null) {
+            showConditionFieldsDialog(existing, list, input);
+        }
+    }
+
+    private void showConditionFieldsDialog(@NonNull final Category category,
+            @Nullable ArrayList<String> overrideList,
+            @Nullable String overrideInput) {
+        if (activeFieldsDialog != null) {
+            activeFieldsDialog.dismiss();
+            activeFieldsDialog = null;
+        }
+        activeFieldsCategoryId = category.getId();
+        activeFieldsList.clear();
+        if (overrideList != null) {
+            activeFieldsList.addAll(overrideList);
+        } else if (category.getConditionFields() != null) {
+            activeFieldsList.addAll(category.getConditionFields());
+        }
+
+        final DialogAdminCategoryFieldsBinding dialogBinding =
+                DialogAdminCategoryFieldsBinding.inflate(getLayoutInflater());
+        activeFieldsDialogBinding = dialogBinding;
+
+        String catName = category.getName() != null ? category.getName() : "";
+        dialogBinding.textFieldsTitle.setText(getString(R.string.admin_category_fields_dialog_title, catName));
+
+        if (overrideInput != null) {
+            dialogBinding.editNewField.setText(overrideInput);
+        }
+
+        renderFieldsList(dialogBinding);
+
+        dialogBinding.buttonAddField.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Editable text = dialogBinding.editNewField.getText();
+                String name = text != null ? text.toString().trim() : "";
+                if (name.isEmpty()) {
+                    dialogBinding.layoutNewField.setError(getString(R.string.admin_category_fields_name_empty));
+                    return;
+                }
+                if (name.length() > 50) {
+                    dialogBinding.layoutNewField.setError(getString(R.string.admin_category_fields_name_too_long));
+                    return;
+                }
+                if (activeFieldsList.size() >= 30) {
+                    dialogBinding.layoutNewField.setError(getString(R.string.admin_category_fields_limit_reached));
+                    return;
+                }
+                for (String existing : activeFieldsList) {
+                    if (name.equalsIgnoreCase(existing.trim())) {
+                        dialogBinding.layoutNewField.setError(getString(R.string.admin_category_fields_name_duplicate));
+                        return;
+                    }
+                }
+                dialogBinding.layoutNewField.setError(null);
+                activeFieldsList.add(name);
+                dialogBinding.editNewField.setText("");
+                renderFieldsList(dialogBinding);
+            }
+        });
+
+        dialogBinding.buttonCancelFields.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (activeFieldsDialog != null) {
+                    activeFieldsDialog.dismiss();
+                }
+            }
+        });
+
+        dialogBinding.buttonSaveFields.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!NetworkMonitor.getInstance().isOnline()) {
+                    Snackbar.make(binding != null ? binding.getRoot() : dialogBinding.getRoot(),
+                            R.string.admin_category_fields_offline_warning, Snackbar.LENGTH_LONG).show();
+                    return;
+                }
+                lastActionWasDelete = false;
+                lastActionWasFields = true;
+                viewModel.setConditionFields(category.getId(), new ArrayList<String>(activeFieldsList));
+            }
+        });
+
+        activeFieldsDialog = new MaterialAlertDialogBuilder(requireContext())
+                .setView(dialogBinding.getRoot())
+                .create();
+        activeFieldsDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                activeFieldsDialog = null;
+                activeFieldsDialogBinding = null;
+                activeFieldsCategoryId = null;
+            }
+        });
+        activeFieldsDialog.show();
+    }
+
+    private void renderFieldsList(final DialogAdminCategoryFieldsBinding dialogBinding) {
+        if (getContext() == null) {
+            return;
+        }
+        dialogBinding.layoutFieldsContainer.removeAllViews();
+        int count = activeFieldsList.size();
+        dialogBinding.textFieldsCount.setText(getString(R.string.admin_category_fields_count, count));
+
+        boolean online = NetworkMonitor.getInstance().isOnline();
+        dialogBinding.buttonAddField.setEnabled(online && count < 30);
+        dialogBinding.buttonSaveFields.setEnabled(online);
+
+        if (count == 0) {
+            dialogBinding.textFieldsEmpty.setVisibility(View.VISIBLE);
+            dialogBinding.scrollFields.setVisibility(View.GONE);
+            return;
+        }
+
+        dialogBinding.textFieldsEmpty.setVisibility(View.GONE);
+        dialogBinding.scrollFields.setVisibility(View.VISIBLE);
+
+        int padV = getResources().getDimensionPixelSize(R.dimen.space_xs);
+        int padH = getResources().getDimensionPixelSize(R.dimen.space_xs);
+        int touchMin = getResources().getDimensionPixelSize(R.dimen.touch_min);
+
+        for (int i = 0; i < activeFieldsList.size(); i++) {
+            final int index = i;
+            final String fieldName = activeFieldsList.get(i);
+
+            LinearLayout row = new LinearLayout(requireContext());
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(padH, padV, padH, padV);
+
+            TextView text = new TextView(requireContext());
+            LinearLayout.LayoutParams textLp = new LinearLayout.LayoutParams(
+                    0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+            text.setLayoutParams(textLp);
+            text.setText(fieldName);
+            text.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
+            row.addView(text);
+
+            MaterialButton btnUp = new MaterialButton(requireContext(), null,
+                    android.R.attr.borderlessButtonStyle);
+            btnUp.setText(R.string.admin_category_fields_item_up);
+            btnUp.setMinimumHeight(touchMin);
+            btnUp.setEnabled(index > 0);
+            btnUp.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Collections.swap(activeFieldsList, index, index - 1);
+                    renderFieldsList(dialogBinding);
+                }
+            });
+            row.addView(btnUp);
+
+            MaterialButton btnDown = new MaterialButton(requireContext(), null,
+                    android.R.attr.borderlessButtonStyle);
+            btnDown.setText(R.string.admin_category_fields_item_down);
+            btnDown.setMinimumHeight(touchMin);
+            btnDown.setEnabled(index < activeFieldsList.size() - 1);
+            btnDown.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Collections.swap(activeFieldsList, index, index + 1);
+                    renderFieldsList(dialogBinding);
+                }
+            });
+            row.addView(btnDown);
+
+            MaterialButton btnDelete = new MaterialButton(requireContext(), null,
+                    android.R.attr.borderlessButtonStyle);
+            btnDelete.setText(R.string.admin_category_fields_item_delete);
+            btnDelete.setMinimumHeight(touchMin);
+            btnDelete.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    activeFieldsList.remove(index);
+                    renderFieldsList(dialogBinding);
+                }
+            });
+            row.addView(btnDelete);
+
+            dialogBinding.layoutFieldsContainer.addView(row);
+        }
     }
 }
