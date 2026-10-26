@@ -327,7 +327,8 @@ public class AdminUserViewModel extends ViewModel {
         });
     }
 
-    public static boolean isSelfAdminAction(String targetUserId, String currentUserId) {
+    // An admin cannot grant or revoke their own admin status (R12).
+    static boolean isSelfAdminAction(String targetUserId, String currentUserId) {
         if (targetUserId == null || currentUserId == null) {
             return false;
         }
