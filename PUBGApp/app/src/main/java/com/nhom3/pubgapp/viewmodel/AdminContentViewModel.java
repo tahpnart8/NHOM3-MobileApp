@@ -36,8 +36,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 // State for admin moderation, banned keywords and categories. Methods not yet filled report NOT_READY.
 public class AdminContentViewModel extends ViewModel {
@@ -524,8 +527,72 @@ public class AdminContentViewModel extends ViewModel {
         categoryRepository.delete(id, plainWrite(token));
     }
 
+    // Validates condition fields: non-empty, unique case-insensitive, max 30 items, max 50 chars each.
+    public static String validateConditionFields(List<String> fields) {
+        if (fields == null) {
+            return null;
+        }
+        if (fields.size() > 30) {
+            return "Danh mục tối đa 30 thuộc tính tình trạng.";
+        }
+        Set<String> seen = new HashSet<String>();
+        for (String field : fields) {
+            if (field == null || field.trim().isEmpty()) {
+                return "Tên thuộc tính không được để trống.";
+            }
+            String trimmed = field.trim();
+            if (trimmed.length() > 50) {
+                return "Tên thuộc tính tối đa 50 ký tự.";
+            }
+            String lower = trimmed.toLowerCase(Locale.ROOT);
+            if (seen.contains(lower)) {
+                return "Tên thuộc tính không được trùng lặp.";
+            }
+            seen.add(lower);
+        }
+        return null;
+    }
+
     public void setConditionFields(String id, List<String> fields) {
-        error.setValue(DataCallback.NOT_READY);
+        if (isBlank(id)) {
+            error.setValue(MESSAGE_ID_REQUIRED);
+            return;
+        }
+        String validationError = validateConditionFields(fields);
+        if (validationError != null) {
+            error.setValue(validationError);
+            return;
+        }
+        List<Category> all = categories.getValue();
+        Category target = null;
+        if (all != null) {
+            for (Category c : all) {
+                if (id.equals(c.getId())) {
+                    target = c;
+                    break;
+                }
+            }
+        }
+        if (target == null) {
+            error.setValue("Không tìm thấy danh mục.");
+            return;
+        }
+        List<String> cleaned = new ArrayList<String>();
+        if (fields != null) {
+            for (String field : fields) {
+                cleaned.add(field.trim());
+            }
+        }
+        Category updated = new Category();
+        updated.setId(target.getId());
+        updated.setName(target.getName());
+        updated.setParentId(target.getParentId());
+        updated.setActive(target.isActive());
+        updated.setConditionFields(cleaned);
+
+        final int token = writeGuard.begin();
+        refreshLoading();
+        categoryRepository.update(updated, plainWrite(token));
     }
 
     public void clearError() {
