@@ -8,6 +8,9 @@ import com.nhom3.pubgapp.model.enums.VerificationStatus;
 
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class ProfileViewModelTest {
 
     private static final String VALID_ID = "079201001234";
@@ -212,5 +215,53 @@ public class ProfileViewModelTest {
     public void nullOrEmptyProvinceReturnsNull() {
         org.junit.Assert.assertNull(ProfileViewModel.findCoordinatesByProvince(null));
         org.junit.Assert.assertNull(ProfileViewModel.findCoordinatesByProvince("   "));
+    }
+
+    @Test
+    public void notificationDefaultsToTrueWhenPrefsNull() {
+        assertTrue(ProfileViewModel.isNotificationTypeEnabled(null, "NEW_MESSAGE"));
+    }
+
+    @Test
+    public void notificationDefaultsToTrueWhenKeyAbsent() {
+        Map<String, Boolean> prefs = new HashMap<String, Boolean>();
+        prefs.put("NEW_OFFER", Boolean.FALSE);
+        assertTrue(ProfileViewModel.isNotificationTypeEnabled(prefs, "NEW_MESSAGE"));
+    }
+
+    @Test
+    public void notificationRespectsExplicitFalse() {
+        Map<String, Boolean> prefs = new HashMap<String, Boolean>();
+        prefs.put("NEW_MESSAGE", Boolean.FALSE);
+        assertFalse(ProfileViewModel.isNotificationTypeEnabled(prefs, "NEW_MESSAGE"));
+    }
+
+    @Test
+    public void notificationRespectsExplicitTrue() {
+        Map<String, Boolean> prefs = new HashMap<String, Boolean>();
+        prefs.put("NEW_MESSAGE", Boolean.TRUE);
+        assertTrue(ProfileViewModel.isNotificationTypeEnabled(prefs, "NEW_MESSAGE"));
+    }
+
+    @Test
+    public void buildUpdatedNotificationPrefsPreservesOthersAndUpdatesKey() {
+        Map<String, Boolean> current = new HashMap<String, Boolean>();
+        current.put("NEW_MESSAGE", Boolean.TRUE);
+        current.put("NEW_OFFER", Boolean.TRUE);
+
+        Map<String, Boolean> updated = ProfileViewModel.buildUpdatedNotificationPrefs(
+                current, "NEW_OFFER", false);
+
+        assertTrue(updated.get("NEW_MESSAGE").booleanValue());
+        assertFalse(updated.get("NEW_OFFER").booleanValue());
+    }
+
+    @Test
+    public void buildUpdatedNotificationPrefsWorksWhenCurrentNull() {
+        Map<String, Boolean> updated = ProfileViewModel.buildUpdatedNotificationPrefs(
+                null, "DEAL_UPDATE", false);
+
+        assertEquals(1, updated.size());
+        assertFalse(updated.get("DEAL_UPDATE").booleanValue());
     }
 }
