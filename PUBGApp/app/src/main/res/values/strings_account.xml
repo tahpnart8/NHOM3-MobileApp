@@ -131,6 +131,15 @@
 
     <string name="account_settings_section_notifications">Cài đặt thông báo</string>
     <string name="account_settings_notifications_placeholder">Cài đặt nhận thông báo từ ứng dụng</string>
+    <string name="account_settings_notifications_subtitle">Bật hoặc tắt các loại thông báo bạn muốn nhận</string>
+    <string name="account_settings_notify_messages_title">Tin nhắn mới</string>
+    <string name="account_settings_notify_messages_desc">Thông báo khi có người gửi tin nhắn cho bạn</string>
+    <string name="account_settings_notify_offers_title">Đề nghị giá mới</string>
+    <string name="account_settings_notify_offers_desc">Thông báo khi nhận hoặc có phản hồi về đề nghị giá</string>
+    <string name="account_settings_notify_deals_title">Cập nhật giao dịch</string>
+    <string name="account_settings_notify_deals_desc">Thông báo thay đổi trạng thái đơn hàng và thanh toán</string>
+    <string name="account_settings_notifications_update_success">Đã lưu cài đặt thông báo</string>
+    <string name="account_settings_notifications_update_failed">Không thể lưu cài đặt thông báo. Vui lòng thử lại.</string>
 
     <string name="account_settings_section_delete">Xóa tài khoản</string>
     <string name="account_settings_delete_placeholder">Vô hiệu hóa tài khoản và xóa dữ liệu cá nhân</string>
