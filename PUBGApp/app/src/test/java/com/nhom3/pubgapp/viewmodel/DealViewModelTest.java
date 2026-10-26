@@ -5,12 +5,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.firebase.Timestamp;
+import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Payment;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.DeliveryMethod;
+import com.nhom3.pubgapp.model.enums.PaymentMethod;
 import com.nhom3.pubgapp.model.enums.PaymentStatus;
 import com.nhom3.pubgapp.ui.trade.DealHistoryAdapter;
+import com.nhom3.pubgapp.ui.trade.PaymentHistoryAdapter;
 
 import org.junit.Test;
 
@@ -308,6 +311,36 @@ public class DealViewModelTest {
 
         List<Deal> cancelled = DealHistoryAdapter.filterDeals(list, DealHistoryAdapter.FILTER_CANCELLED);
         assertEquals(1, cancelled.size());
+    }
+
+    @Test
+    public void getRoleStringRes_distinguishesPayerAndPayee() {
+        Payment payment = new Payment();
+        payment.setPayerId("user_buyer");
+        payment.setPayeeId("user_seller");
+
+        assertEquals(R.string.trade_payment_role_payer,
+                PaymentHistoryAdapter.getRoleStringRes(payment, "user_buyer"));
+        assertEquals(R.string.trade_payment_role_payee,
+                PaymentHistoryAdapter.getRoleStringRes(payment, "user_seller"));
+        assertEquals(0,
+                PaymentHistoryAdapter.getRoleStringRes(payment, "other_user"));
+        assertEquals(0,
+                PaymentHistoryAdapter.getRoleStringRes(null, "user_buyer"));
+        assertEquals(0,
+                PaymentHistoryAdapter.getRoleStringRes(payment, null));
+    }
+
+    @Test
+    public void getMethodStringRes_mapsAllPaymentMethods() {
+        assertEquals(R.string.trade_payment_method_card,
+                PaymentHistoryAdapter.getMethodStringRes(PaymentMethod.CARD));
+        assertEquals(R.string.trade_payment_method_e_wallet,
+                PaymentHistoryAdapter.getMethodStringRes(PaymentMethod.E_WALLET));
+        assertEquals(R.string.trade_payment_method_bank_transfer,
+                PaymentHistoryAdapter.getMethodStringRes(PaymentMethod.BANK_TRANSFER));
+        assertEquals(0,
+                PaymentHistoryAdapter.getMethodStringRes(null));
     }
 
     private Deal createSampleDeal(DealStatus status) {
