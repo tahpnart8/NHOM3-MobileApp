@@ -1,25 +1,40 @@
 package com.nhom3.pubgapp.ui.trust;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.nhom3.pubgapp.R;
+import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.databinding.ItemTrustReviewBinding;
 import com.nhom3.pubgapp.model.Review;
+import com.nhom3.pubgapp.model.User;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /** Rows of reviews on D02 (received and given) and D03 (recent). */
 public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewViewHolder> {
 
+    private static final String TAG = "ReviewAdapter";
+
     private final List<Review> reviews = new ArrayList<Review>();
+    // users/{reviewerId}.displayName, filled as rows are bound.
+    private final Map<String, String> reviewerNames = new HashMap<String, String>();
+    private final Set<String> requestedIds = new HashSet<String>();
+    private final UserRepository userRepository = new UserRepository();
 
     public void submitList(List<Review> newReviews) {
         reviews.clear();
@@ -41,13 +56,55 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
     public void onBindViewHolder(@NonNull ReviewViewHolder holder, int position) {
         Review review = reviews.get(position);
         Context context = holder.itemView.getContext();
-        String name = context.getString(R.string.profile_review_item_reviewer);
+        String fallback = context.getString(R.string.profile_review_item_reviewer);
+        String reviewerId = review.getReviewerId();
+        String name = resolveName(reviewerNames.get(reviewerId), fallback);
         holder.bind(review, name);
+        loadReviewerName(reviewerId);
     }
 
     @Override
     public int getItemCount() {
         return reviews.size();
+    }
+
+    /** The reviewer's display name, or the neutral fallback while it is unknown or blank. */
+    static String resolveName(@Nullable String displayName, String fallback) {
+        if (displayName == null || displayName.trim().isEmpty()) {
+            return fallback;
+        }
+        return displayName.trim();
+    }
+
+    // Each reviewer is read once per adapter; a failed read keeps the neutral name instead of retrying on every bind.
+    private void loadReviewerName(@Nullable final String reviewerId) {
+        if (reviewerId == null || reviewerId.isEmpty() || requestedIds.contains(reviewerId)) {
+            return;
+        }
+        requestedIds.add(reviewerId);
+        userRepository.getProfile(reviewerId, new DataCallback<User>() {
+            @Override
+            public void onSuccess(User user) {
+                if (user == null) {
+                    return;
+                }
+                reviewerNames.put(reviewerId, user.getDisplayName());
+                refreshRowsOf(reviewerId);
+            }
+
+            @Override
+            public void onError(String message) {
+                Log.w(TAG, "Reviewer name not loaded: " + message);
+            }
+        });
+    }
+
+    private void refreshRowsOf(String reviewerId) {
+        for (int i = 0; i < reviews.size(); i++) {
+            if (reviewerId.equals(reviews.get(i).getReviewerId())) {
+                notifyItemChanged(i);
+            }
+        }
     }
 
     static final class ReviewViewHolder extends RecyclerView.ViewHolder {
