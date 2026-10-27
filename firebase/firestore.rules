@@ -891,7 +891,15 @@ service cloud.firestore {
           && (resource.data.buyerId == me() || resource.data.sellerId == me());
       }
 
-      allow read: if signedIn()
+      // Đọc một cuộc trò chuyện. Người mua kiểm tra xem cuộc trò chuyện của mình đã có chưa trước
+      // khi tạo (mã luôn có dạng listingId_buyerId), nên tài liệu chưa tồn tại phải đọc được
+      // thay vì làm rule lỗi vì resource là null.
+      allow get: if signedIn()
+        && ((resource == null && id.matches('.*_' + me()))
+            || resource.data.buyerId == me() || resource.data.sellerId == me() || isAdmin());
+
+      // Liệt kê: truy vấn phải tự mang điều kiện buyerId hoặc sellerId bằng mình.
+      allow list: if signedIn()
         && (resource.data.buyerId == me() || resource.data.sellerId == me() || isAdmin());
 
       // Người mua mở cuộc trò chuyện với tin còn AVAILABLE hoặc RESERVED.
