@@ -123,6 +123,11 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/conversations/$(conversationId)).data;
     }
 
+    // Cuộc trò chuyện sau lô ghi đang chạy: offer đầu tiên tạo cuộc trò chuyện cùng lô với tin nhắn.
+    function conversationAfter(conversationId) {
+      return getAfter(/databases/$(database)/documents/conversations/$(conversationId)).data;
+    }
+
     function offerAfter(offerId) {
       return getAfter(/databases/$(database)/documents/offers/$(offerId)).data;
     }
@@ -931,7 +936,7 @@ service cloud.firestore {
       match /messages/{messageId} {
         function inConversation() {
           return signedIn()
-            && (conversationBefore(id).buyerId == me() || conversationBefore(id).sellerId == me());
+            && (conversationAfter(id).buyerId == me() || conversationAfter(id).sellerId == me());
         }
 
         // Phần chung của mọi loại tin nhắn: người gửi là mình và thuộc cuộc trò chuyện.
@@ -968,7 +973,7 @@ service cloud.firestore {
         // Tin nhắn offer: chỉ người mua, đi cùng tài liệu offer PENDING ghi trong cùng lô.
         allow create: if messageBase()
           && request.resource.data.type == 'OFFER'
-          && conversationBefore(id).buyerId == me()
+          && conversationAfter(id).buyerId == me()
           && reqString(request.resource.data, 'offerId', 200)
           && emptyString(request.resource.data, 'imageId')
           && optString(request.resource.data, 'text', 2000)
