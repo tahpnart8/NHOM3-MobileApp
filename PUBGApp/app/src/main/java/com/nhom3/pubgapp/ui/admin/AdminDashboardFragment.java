@@ -24,7 +24,7 @@ import com.nhom3.pubgapp.viewmodel.AdminUserViewModel;
 
 import java.util.List;
 
-// Screen E01: the "Cần xử lý" list and the shortcuts. Read only, nothing is written here.
+// Screen E01: the "Cần xử lý" list and the shortcuts. Read only, except the debug demo data block (DemoDataPanel).
 public class AdminDashboardFragment extends Fragment {
 
     private static final String STATE_LOADED = "loaded";
@@ -38,6 +38,7 @@ public class AdminDashboardFragment extends Fragment {
     private AdminContentViewModel contentViewModel;
     private AdminUserViewModel userViewModel;
     private AdminTaskAdapter adapter;
+    private DemoDataPanel demoDataPanel;
 
     private boolean hasLoaded;
     // True after the admin went to another screen, so coming back reloads the tasks.
@@ -75,6 +76,8 @@ public class AdminDashboardFragment extends Fragment {
 
         setupTaskList();
         setupButtons();
+        demoDataPanel = new DemoDataPanel(this, binding.includeDemoData);
+        demoDataPanel.attach();
         observeViewModels();
 
         if (!hasLoaded || leftScreen) {
@@ -104,6 +107,10 @@ public class AdminDashboardFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (demoDataPanel != null) {
+            demoDataPanel.detach();
+            demoDataPanel = null;
+        }
         // Views are gone after this call, so the binding must not outlive them.
         binding = null;
     }
