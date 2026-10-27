@@ -16,7 +16,7 @@ import androidx.credentials.exceptions.GetCredentialException;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -122,8 +122,12 @@ public class AuthRepository extends BaseRepository {
     // because Chrome can lose the redirect state ("missing initial state").
     public void signInWithGoogleBrowser(final Activity activity, final DataCallback<User> cb) {
         String serverClientId = activity.getString(R.string.default_web_client_id);
-        GetSignInWithGoogleOption googleOption =
-                new GetSignInWithGoogleOption.Builder(serverClientId).build();
+        // GetGoogleIdOption only lists accounts already on the device; with none it fails fast
+        // and the browser page opens, instead of Android's long add-account flow.
+        GetGoogleIdOption googleOption = new GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId(serverClientId)
+                .build();
         GetCredentialRequest request = new GetCredentialRequest.Builder()
                 .addCredentialOption(googleOption)
                 .build();
