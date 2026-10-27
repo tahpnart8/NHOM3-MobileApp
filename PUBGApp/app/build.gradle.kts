@@ -45,6 +45,9 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services.auth)
+    implementation(libs.googleid)
     // Offline cache. Java project, so the Room processor runs through annotationProcessor, not ksp.
     implementation(libs.room.runtime)
     annotationProcessor(libs.room.compiler)
