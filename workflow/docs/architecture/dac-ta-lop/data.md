@@ -519,3 +519,49 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 **Dùng tới:** [`ActivityLog`](model.md#activitylog), [`BannedKeyword`](model.md#bannedkeyword), [`DataCallback`](data.md#datacallback), [`Listing`](model.md#listing), [`SellerVerification`](model.md#sellerverification), [`User`](model.md#user), [`UserStatus`](enums.md#userstatus), [`Warning`](model.md#warning)
 
 **Được dùng bởi:** [`AdminContentViewModel`](viewmodel.md#admincontentviewmodel), [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel), [`AuthViewModel`](viewmodel.md#authviewmodel)
+
+### DemoDataBuilder
+
+| Mục | Nội dung |
+| --- | --- |
+| Định danh | `com.nhom3.pubgapp.data.DemoDataBuilder` |
+| Loại | lớp (phạm vi gói, chỉ có phương thức tĩnh) |
+| Kế thừa | Không |
+| Lưu trữ | Không lưu |
+| Trách nhiệm | Dựng dữ liệu mẫu cho bản demo, không gọi Firebase nên kiểm bằng test JVM được: 6 danh mục gốc, 12 danh mục con và 72 tin đăng (6 tin mỗi danh mục con) đủ yêu cầu ở `goi-y.md`, mục "Yêu cầu với dữ liệu mẫu". Mọi mã tài liệu bắt đầu bằng `demo_`. |
+| Chức năng liên quan (STT) | 35, 36, 37, 38 (kết quả gợi ý), 27 (lọc bán kính) |
+
+**Phương thức**
+
+| Chữ ký | Mô tả | STT |
+| --- | --- | --- |
+| `static List<Category> buildRootCategories()` | Sáu danh mục gốc, mã `demo_cat_r1` đến `demo_cat_r6`. |  |
+| `static List<Category> buildChildCategories()` | Mười hai danh mục con, mỗi danh mục gốc hai con, có `conditionFields`. |  |
+| `static List<Listing> buildListings(List<String> imageIds, List<String> thumbs)` | 72 tin AVAILABLE mã `demo_listing_01` đến `demo_listing_72`; bốn danh mục con đầu cùng tình trạng USED để dùng tập giá P1, các con còn lại hỗn hợp để dùng tập P2; giá trải rộng; ba tỉnh; tin ở TP.HCM cách tâm Quận 1 khoảng 0,5, 2, 4 và 8 km. | 36, 37, 38, 27 |
+
+**Dùng tới:** [`Category`](model.md#category), [`Listing`](model.md#listing)
+
+**Được dùng bởi:** [`DemoDataSeeder`](data.md#demodataseeder)
+
+### DemoDataSeeder
+
+| Mục | Nội dung |
+| --- | --- |
+| Định danh | `com.nhom3.pubgapp.data.DemoDataSeeder` |
+| Loại | lớp |
+| Kế thừa | Không |
+| Lưu trữ | `categories`, `listings`, `images` (Firestore) |
+| Trách nhiệm | Chỉ dùng ở bản debug, chỉ cho tài khoản admin: tạo hoặc xóa dữ liệu mẫu do `DemoDataBuilder` dựng. Tin đăng ghi qua `ListingRepository.create`, ảnh mẫu vẽ trên máy rồi lưu qua `MediaRepository`. Tạo lại thì bỏ qua cái đã có và hiện lại tin đã ẩn. |
+| Chức năng liên quan (STT) | 36, 37, 38 |
+
+**Phương thức**
+
+| Chữ ký | Mô tả | STT |
+| --- | --- | --- |
+| `public static boolean isRunning()` | Đang có một lượt tạo hoặc xóa chạy. |  |
+| `public void seed(ProgressListener progress, DataCallback<Integer> cb)` | Tạo danh mục còn thiếu (gốc trước, con sau), tạo tin còn thiếu, hiện lại tin `demo_` đã ẩn; trả số tin đã tạo hoặc hiện lại. |  |
+| `public void clear(ProgressListener progress, DataCallback<Integer> cb)` | Ẩn mọi tin `demo_` đang bán bằng `ListingRepository.setHidden` (luật chỉ cho xóa tin nháp) rồi xóa danh mục `demo_cat_`; trả số tin đã ẩn. |  |
+
+**Dùng tới:** [`DataCallback`](data.md#datacallback), [`ListingRepository`](data.md#listingrepository), [`MediaRepository`](data.md#mediarepository), [`DemoDataBuilder`](data.md#demodatabuilder)
+
+**Được dùng bởi:** màn E01 `AdminDashboardFragment` (khối `DemoDataPanel`)

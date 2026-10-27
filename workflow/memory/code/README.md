@@ -7,6 +7,7 @@ What people and AI tools learn about the code and the platform **that the code i
 | `firebase.md` | Facts and traps of Firebase Authentication and Firestore, the Spark plan (no Cloud Storage), and the Firestore mapper rules |
 | `ui.md` | The shared view code: which `ImageLoader` overload to call for which image source, and why the recycle guard matters |
 | `admin.md` | Admin screens: how E03 counts reads in flight and avoids reading again after a rotation, and the `NetworkMonitor` skeleton |
+| `demo-data.md` | The debug demo data (issue #269): why clear hides listings instead of deleting, the two-commit category order, and the limits of the sample data |
 
 Create a new file per area when you have the first entry for it (`android.md`, `room.md`, `ui.md`, `testing.md`). One file per area keeps five people from editing the same file.
 

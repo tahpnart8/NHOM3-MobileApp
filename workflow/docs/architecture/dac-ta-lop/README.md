@@ -62,6 +62,8 @@ Cách mô tả mỗi lớp theo khung "thực thể thiết kế" của IEEE 101
 | [`DealDao`](data-local.md#dealdao) | `data.local` | interface |
 | [`DealEntity`](data-local.md#dealentity) | `data.local` | lớp (entity) |
 | [`DealRepository`](data.md#dealrepository) | `data` | lớp (repository) |
+| [`DemoDataBuilder`](data.md#demodatabuilder) | `data` | lớp |
+| [`DemoDataSeeder`](data.md#demodataseeder) | `data` | lớp |
 | [`DealStatus`](enums.md#dealstatus) | `model.enums` | enum |
 | [`DealViewModel`](viewmodel.md#dealviewmodel) | `viewmodel` | lớp (ViewModel) |
 | [`DeliveryMethod`](enums.md#deliverymethod) | `model.enums` | enum |
