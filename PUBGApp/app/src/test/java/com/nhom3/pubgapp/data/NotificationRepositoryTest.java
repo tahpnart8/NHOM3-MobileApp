@@ -10,6 +10,9 @@ import com.nhom3.pubgapp.model.enums.NotificationType;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 // Unit tests for notification data truncation, default texts and validation rules.
@@ -156,5 +159,36 @@ public class NotificationRepositoryTest {
         valid.setType(NotificationType.NEW_MESSAGE);
 
         org.junit.Assert.assertNull(NotificationRepository.validateNotification(valid));
+    }
+
+    @Test
+    public void withoutDisabledTypes_hidesOnlyTheSwitchedOffTypes() {
+        List<AppNotification> list = new ArrayList<AppNotification>();
+        AppNotification message = new AppNotification();
+        message.setType(NotificationType.NEW_MESSAGE);
+        AppNotification offer = new AppNotification();
+        offer.setType(NotificationType.NEW_OFFER);
+        list.add(message);
+        list.add(offer);
+
+        Map<String, Object> prefs = new HashMap<String, Object>();
+        prefs.put("NEW_MESSAGE", Boolean.FALSE);
+        prefs.put("NEW_OFFER", Boolean.TRUE);
+
+        List<AppNotification> kept = NotificationRepository.withoutDisabledTypes(list, prefs);
+        assertEquals(1, kept.size());
+        assertEquals(NotificationType.NEW_OFFER, kept.get(0).getType());
+    }
+
+    @Test
+    public void withoutDisabledTypes_keepsEverythingWithoutPreferences() {
+        List<AppNotification> list = new ArrayList<AppNotification>();
+        AppNotification message = new AppNotification();
+        message.setType(NotificationType.NEW_MESSAGE);
+        list.add(message);
+
+        assertEquals(1, NotificationRepository.withoutDisabledTypes(list, null).size());
+        assertEquals(1, NotificationRepository.withoutDisabledTypes(list,
+                new HashMap<String, Object>()).size());
     }
 }

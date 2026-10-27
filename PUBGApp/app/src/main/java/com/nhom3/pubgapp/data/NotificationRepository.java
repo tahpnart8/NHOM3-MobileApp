@@ -125,7 +125,7 @@ public class NotificationRepository extends BaseRepository {
         return data;
     }
 
-    public void getForUser(String uid, final DataCallback<List<AppNotification>> cb) {
+    public void getForUser(final String uid, final DataCallback<List<AppNotification>> cb) {
         db.collection(COLLECTION_NOTIFICATIONS)
                 .whereEqualTo("recipientId", uid)
                 .orderBy("createdAt", Query.Direction.DESCENDING)
@@ -148,9 +148,41 @@ public class NotificationRepository extends BaseRepository {
                                 }
                             }
                         }
-                        cb.onSuccess(list);
+                        hideDisabledTypes(uid, list, cb);
                     }
                 });
+    }
+
+    // Drops the notices whose type the user switched off in the notification settings.
+    private void hideDisabledTypes(String uid, final List<AppNotification> list,
+                                   final DataCallback<List<AppNotification>> cb) {
+        db.collection(COLLECTION_USERS).document(uid).get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        Map<String, Object> prefs = null;
+                        if (task.isSuccessful() && task.getResult() != null) {
+                            prefs = (Map<String, Object>) task.getResult().get("notificationPrefs");
+                        }
+                        cb.onSuccess(withoutDisabledTypes(list, prefs));
+                    }
+                });
+    }
+
+    static List<AppNotification> withoutDisabledTypes(List<AppNotification> list, Map<String, Object> prefs) {
+        if (list == null || prefs == null || prefs.isEmpty()) {
+            return list;
+        }
+        List<AppNotification> kept = new ArrayList<AppNotification>();
+        for (int i = 0; i < list.size(); i++) {
+            AppNotification notification = list.get(i);
+            NotificationType type = notification.getType();
+            if (type != null && Boolean.FALSE.equals(prefs.get(type.name()))) {
+                continue;
+            }
+            kept.add(notification);
+        }
+        return kept;
     }
 
     public void markRead(String id, final DataCallback<Void> cb) {
@@ -185,6 +217,13 @@ public class NotificationRepository extends BaseRepository {
             if (cb != null) {
                 cb.onError(validationError);
             }
+            return;
+        }
+
+        // The caller commits the batch right after this call, so add the notice now; getForUser
+        // hides the types the user switched off.
+        if (batch != null) {
+            insertNotification(notification, batch, cb);
             return;
         }
 
