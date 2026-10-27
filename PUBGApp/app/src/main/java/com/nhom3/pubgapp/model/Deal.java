@@ -1,7 +1,6 @@
 package com.nhom3.pubgapp.model;
 
 import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.ServerTimestamp;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.TradeType;
@@ -201,7 +200,6 @@ public class Deal extends BaseDocument {
         this.trackingImageId = trackingImageId != null ? trackingImageId : "";
     }
 
-    @ServerTimestamp
     public Timestamp getShippedAt() {
         return shippedAt;
     }
@@ -218,7 +216,6 @@ public class Deal extends BaseDocument {
         this.autoReleaseAt = autoReleaseAt;
     }
 
-    @ServerTimestamp
     public Timestamp getReceivedAt() {
         return receivedAt;
     }
