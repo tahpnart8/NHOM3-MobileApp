@@ -410,7 +410,7 @@ erDiagram
 | `email` | string |  | Email đăng nhập, lấy từ Firebase Authentication. |  |
 | `displayName` | string |  | Họ tên hiển thị. |  |
 | `phone` | string |  | Số điện thoại liên hệ. Không dùng để đăng nhập. |  |
-| `avatarBase64` | string |  | Ảnh đại diện 256 px, JPEG dạng Base64, tối đa 20 KB. Nằm luôn trong tài liệu người dùng để danh sách và chat hiện ngay. |  |
+| `avatarBase64` | string |  | Ảnh đại diện 256 px, JPEG dạng Base64, tối đa 20 KB. Nằm luôn trong tài liệu người dùng để danh sách và chat hiện ngay. Tài khoản Google chưa có ảnh thì lấy ảnh Google khi bắt đầu phiên đăng nhập; không ghi đè ảnh người dùng đã đặt. |  |
 | `bio` | string |  | Đoạn giới thiệu ngắn trên trang cá nhân. |  |
 | `status` | string |  | Trạng thái tài khoản. Admin đổi giữa ACTIVE và hai mức khóa; chính chủ chỉ được đổi sang DELETED khi vô hiệu hóa. | một trong: ACTIVE, TEMP_LOCKED, PERM_LOCKED, DELETED |
 | `lockedUntil` | timestamp |  | Hạn khóa tạm. Rỗng khi không khóa hoặc khóa vĩnh viễn. |  |
