@@ -1364,7 +1364,15 @@ service cloud.firestore {
           && serverStamp('updatedAt');
       }
 
-      allow read: if signedIn()
+      // Đọc một khoản thanh toán. Màn giao dịch nghe tài liệu payments/{dealId} ngay cả khi chưa thanh toán,
+      // nên người trong giao dịch phải đọc được tài liệu chưa tồn tại thay vì bị lỗi vì resource là null.
+      allow get: if signedIn()
+        && ((resource == null
+             && (dealBefore(dealId).buyerId == me() || dealBefore(dealId).sellerId == me()))
+            || resource.data.payerId == me() || resource.data.payeeId == me() || isAdmin());
+
+      // Liệt kê: truy vấn phải tự mang điều kiện payerId hoặc payeeId bằng mình.
+      allow list: if signedIn()
         && (resource.data.payerId == me() || resource.data.payeeId == me() || isAdmin());
 
       // Giữ tiền: người mua, giao dịch đã CONFIRMED, đúng số tiền thỏa thuận.
