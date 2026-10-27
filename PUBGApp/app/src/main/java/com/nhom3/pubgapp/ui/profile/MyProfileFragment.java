@@ -679,6 +679,8 @@ public class MyProfileFragment extends Fragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         authViewModel.logout();
+                        // logout() is synchronous and never sets done, so leave the screen now.
+                        goHomeAsGuest();
                     }
                 })
                 .show();
