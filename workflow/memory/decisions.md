@@ -893,3 +893,23 @@ A full run on a device on 2026-10-25 showed the shortened scope was met at the c
 
 ### Owner
 tahpnart8
+
+## 2026-10-28 - Google sign-in goes through Credential Manager first, the browser page only as a fallback
+
+### Decision
+`AuthRepository.signInWithGoogleBrowser` now asks the system Google account picker through AndroidX Credential Manager (`GetSignInWithGoogleOption` with `default_web_client_id`) and exchanges the Google ID token with `signInWithGoogle`. Only when Credential Manager fails for a reason other than the user cancelling does it open Firebase's browser page as before. The method name and signature stay, so no screen or view model changes. New dependencies: `androidx.credentials:credentials` and `credentials-play-services-auth` 1.6.0, `com.google.android.libraries.identity.googleid:googleid` 1.2.1 (latest stable on Google Maven on 2026-10-28).
+
+### Context
+The browser flow (`startActivityForSignInWithProvider`) failed repeatedly on the emulator with "Unable to process request due to missing initial state": Chrome loses the redirect state between leaving and returning. The leader could not sign in as admin, which blocked the admin use cases of test pass #305. `google-services.json` already holds Android OAuth clients for the SHA-1 of all five members, so Credential Manager needs no Firebase change.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep only the browser flow and clear Chrome data when it fails | Not a fix; users cannot be asked to clear Chrome |
+| Credential Manager only, no fallback | A device without Google Play services could not sign in with Google at all |
+
+### Impact
+`libs.versions.toml`, `app/build.gradle.kts`, `AuthRepository.java`, `dac-ta-lop/data.md`, `luong-xu-ly.md`.
+
+### Owner
+tahpnart8
