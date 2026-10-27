@@ -2,6 +2,7 @@ package com.nhom3.pubgapp.viewmodel;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -44,6 +45,8 @@ import java.util.Set;
 
 // State for admin moderation, banned keywords and categories. Methods not yet filled report NOT_READY.
 public class AdminContentViewModel extends ViewModel {
+
+    private static final String TAG = "AdminContentViewModel";
 
     private static final long REQUEST_TIMEOUT_MS = 15000L;
     private static final String MESSAGE_TIMEOUT =
@@ -415,7 +418,8 @@ public class AdminContentViewModel extends ViewModel {
                 }
                 categories.postValue(result);
                 refreshLoading();
-                loadCategoryCounts();
+                // postValue lands later, so getValue() would still be empty here; count the fresh list.
+                countListingsPerCategory(result);
             }
 
             @Override
@@ -426,7 +430,10 @@ public class AdminContentViewModel extends ViewModel {
     }
 
     public void loadCategoryCounts() {
-        final List<Category> list = categories.getValue();
+        countListingsPerCategory(categories.getValue());
+    }
+
+    private void countListingsPerCategory(final List<Category> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
@@ -449,6 +456,7 @@ public class AdminContentViewModel extends ViewModel {
                             if (task.isSuccessful() && task.getResult() != null) {
                                 counts.put(catId, (int) task.getResult().getCount());
                             } else {
+                                Log.w(TAG, "Cannot count listings of category " + catId, task.getException());
                                 counts.put(catId, 0);
                             }
                             if (completed[0] == total) {
