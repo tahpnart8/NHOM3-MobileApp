@@ -39,7 +39,10 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
 
     @Override
     public void onBindViewHolder(@NonNull ReviewViewHolder holder, int position) {
-        holder.bind(reviews.get(position));
+        Review review = reviews.get(position);
+        Context context = holder.itemView.getContext();
+        String name = context.getString(R.string.profile_review_item_reviewer);
+        holder.bind(review, name);
     }
 
     @Override
@@ -56,10 +59,7 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
             this.binding = binding;
         }
 
-        // Review keeps only reviewerId, so the row shows a neutral name until the spec gives a source for it.
-        void bind(Review review) {
-            Context context = binding.getRoot().getContext();
-            String name = context.getString(R.string.profile_review_item_reviewer);
+        void bind(Review review, String name) {
             binding.textReviewerName.setText(name);
             binding.includeAvatar.textInitial.setText(name.substring(0, 1).toUpperCase(Locale.ROOT));
             binding.includeAvatar.textInitial.setVisibility(View.VISIBLE);
