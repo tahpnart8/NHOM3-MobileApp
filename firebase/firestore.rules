@@ -283,14 +283,14 @@ service cloud.firestore {
         || isAdmin();
 
       // Tạo bản nháp.
-      allow create: if listingCreateBase()
-        && request.resource.data.status == 'DRAFT';
+      allow create: if request.resource.data.status == 'DRAFT'
+        && listingCreateBase();
 
       // Tạo và đăng: chỉ người đã được admin duyệt xác thực (verified đọc từ users trên máy chủ).
-      allow create: if listingCreateBase()
+      allow create: if request.resource.data.status == 'AVAILABLE'
+        && listingCreateBase()
         && verified()
         && emailVerified()
-        && request.resource.data.status == 'AVAILABLE'
         && listingPublishOk(request.resource.data);
 
       // Đăng bản nháp: DRAFT sang AVAILABLE, cùng điều kiện như tạo và đăng.
