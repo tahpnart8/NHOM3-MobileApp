@@ -499,10 +499,11 @@ public class ComplaintRepository extends BaseRepository {
         Map<String, Object> changes = new HashMap<>();
         if (deal.getStatus() == DealStatus.RECEIVED) {
             payment.release();
-            changes.put(FIELD_RELEASED_AT, FieldValue.serverTimestamp());
         } else {
             payment.refund();
         }
+        // releasedAt marks both a release and a refund; the payments rule requires it either way.
+        changes.put(FIELD_RELEASED_AT, FieldValue.serverTimestamp());
         changes.put(FIELD_STATUS, payment.getStatus().name());
         changes.put(FIELD_UPDATED_AT, FieldValue.serverTimestamp());
         return changes;

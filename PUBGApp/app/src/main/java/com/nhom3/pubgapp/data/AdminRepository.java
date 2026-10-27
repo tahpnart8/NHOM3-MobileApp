@@ -1044,6 +1044,11 @@ public class AdminRepository extends BaseRepository {
             commit(write);
             return;
         }
+        // The rules forbid notifying yourself, and the demo listings belong to the admin, so skip that notice.
+        if (isNoticeForMe(write.notices.get(index))) {
+            addNotice(write, index + 1);
+            return;
+        }
         notificationRepository.create(write.notices.get(index), write.batch,
                 new StepCallback<Void>(write.cb) {
                     @Override
@@ -1051,6 +1056,11 @@ public class AdminRepository extends BaseRepository {
                         addNotice(write, index + 1);
                     }
                 });
+    }
+
+    private boolean isNoticeForMe(AppNotification notice) {
+        String myUid = currentUserId();
+        return !myUid.isEmpty() && myUid.equals(notice.getRecipientId());
     }
 
     private void commit(final PendingWrite write) {
