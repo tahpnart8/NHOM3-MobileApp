@@ -112,7 +112,7 @@
     <string name="profile_review_item_reviewer">Người dùng</string>
 
     <!-- D03 SellerTrustFragment -->
-    <string name="profile_seller_trust_joined">tham gia tháng %1$s</string>
+    <string name="profile_seller_trust_joined">tham gia %1$s</string>
     <string name="profile_seller_trust_completion_label">Tỉ lệ hoàn tất</string>
     <string name="profile_seller_trust_deal_label">Giao dịch</string>
     <string name="profile_seller_trust_criteria_title">Điểm theo tiêu chí</string>
