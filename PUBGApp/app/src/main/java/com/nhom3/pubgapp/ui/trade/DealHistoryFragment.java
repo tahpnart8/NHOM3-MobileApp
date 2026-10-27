@@ -287,7 +287,8 @@ public class DealHistoryFragment extends Fragment {
         if (isDeals) {
             List<Deal> deals = viewModel.getDeals().getValue();
             hasData = deals != null;
-            empty = hasData && adapter.getDisplayedItemCount() == 0;
+            // Coming back from C03 the ViewModel still holds deals before setUpList creates the adapter.
+            empty = hasData && adapter != null && adapter.getDisplayedItemCount() == 0;
         } else {
             List<Payment> payments = viewModel.getPayments().getValue();
             hasData = payments != null;
