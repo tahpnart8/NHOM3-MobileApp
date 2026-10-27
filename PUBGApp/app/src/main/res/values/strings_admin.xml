@@ -17,6 +17,18 @@
     <string name="admin_dashboard_shortcut_categories">Danh mục</string>
     <string name="admin_dashboard_shortcut_admin_accounts">Tài khoản quản trị</string>
     <string name="admin_dashboard_back_to_app">Về ứng dụng</string>
+    <!-- E01 demo data block, shown in a debug build only -->
+    <string name="admin_demo_heading">Dữ liệu mẫu (chỉ bản debug)</string>
+    <string name="admin_demo_hint">Tạo danh mục, tin đăng và ảnh mẫu để thử gợi ý, tìm kiếm và giao dịch. Tài khoản admin cần đã được duyệt xác thực mới đăng được tin.</string>
+    <string name="admin_demo_seed">Tạo dữ liệu mẫu</string>
+    <string name="admin_demo_clear">Xóa dữ liệu mẫu</string>
+    <string name="admin_demo_starting">Đang bắt đầu…</string>
+    <string name="admin_demo_busy">Đang xử lý dữ liệu mẫu ở lượt trước, hãy đợi xong rồi bấm lại.</string>
+    <string name="admin_demo_running">Đang xử lý %1$d/%2$d…</string>
+    <string name="admin_demo_seed_done">Đã tạo hoặc hiện lại %1$d tin mẫu.</string>
+    <string name="admin_demo_clear_done">Đã ẩn %1$d tin mẫu và xóa danh mục mẫu.</string>
+    <string name="admin_demo_nothing_to_do">Dữ liệu mẫu đã có đủ, không cần làm gì thêm.</string>
+    <string name="admin_demo_error">Lỗi: %1$s</string>
     <string name="admin_dashboard_label_new">Mới</string>
     <string name="admin_dashboard_label_waiting">Chờ</string>
     <string name="admin_dashboard_task_report_listing">Tin đăng bị báo cáo</string>

@@ -195,6 +195,14 @@
                     app:cornerRadius="@dimen/radius_md" />
             </LinearLayout>
 
+            <include
+                android:id="@+id/includeDemoData"
+                layout="@layout/view_admin_demo_data"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_lg"
+                android:visibility="gone" />
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonBackToApp"
                 style="@style/Widget.Material3.Button.TextButton"
