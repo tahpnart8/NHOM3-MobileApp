@@ -12,6 +12,8 @@ import java.util.Date;
 
 public class AuthViewModelTest {
 
+    private static final String GOOGLE_PHOTO = "https://lh3.googleusercontent.com/a/abc=s96-c";
+
     @Test
     public void evaluateUserStatus_activeUser_returnsAllow() {
         User user = new User();
@@ -169,5 +171,33 @@ public class AuthViewModelTest {
     @Test
     public void changePassword_confirmationMismatch_isRejected() {
         assertEquals(false, AuthViewModel.isPasswordConfirmationMatching("NewPass456", "OtherPass789"));
+    }
+
+    @Test
+    public void needsGoogleAvatar_googleWithoutAvatar_isTrue() {
+        assertEquals(true, AuthViewModel.needsGoogleAvatar(true, "", GOOGLE_PHOTO));
+    }
+
+    @Test
+    public void needsGoogleAvatar_avatarAlreadySet_isFalse() {
+        assertEquals(false, AuthViewModel.needsGoogleAvatar(true, "/9j/4AAQ", GOOGLE_PHOTO));
+    }
+
+    @Test
+    public void needsGoogleAvatar_emailAccountOrNoPhoto_isFalse() {
+        assertEquals(false, AuthViewModel.needsGoogleAvatar(false, null, GOOGLE_PHOTO));
+        assertEquals(false, AuthViewModel.needsGoogleAvatar(true, null, null));
+    }
+
+    @Test
+    public void sizeGooglePhotoUrl_replacesSizeSuffix() {
+        String sized = AuthViewModel.sizeGooglePhotoUrl(GOOGLE_PHOTO, 256);
+        assertEquals("https://lh3.googleusercontent.com/a/abc=s256-c", sized);
+    }
+
+    @Test
+    public void sizeGooglePhotoUrl_withoutSuffix_isUnchanged() {
+        String url = "https://lh3.googleusercontent.com/a=s/photo.jpg";
+        assertEquals(url, AuthViewModel.sizeGooglePhotoUrl(url, 256));
     }
 }
