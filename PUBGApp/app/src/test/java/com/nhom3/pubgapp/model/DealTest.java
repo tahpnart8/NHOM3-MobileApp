@@ -1,14 +1,17 @@
 package com.nhom3.pubgapp.model;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.util.CustomClassMapper;
 import com.nhom3.pubgapp.model.enums.DealStatus;
 
 import org.junit.Test;
 
 import java.util.Date;
+import java.util.Map;
 
 public class DealTest {
 
@@ -169,5 +172,14 @@ public class DealTest {
         deal2.setStatus(DealStatus.CONFIRMED);
         deal2.complete();
         org.junit.Assert.assertEquals(DealStatus.CONFIRMED, deal2.getStatus());
+    }
+
+    // The Rules need shippedAt and receivedAt empty when a deal is created, so Firestore must not stamp them.
+    @Test
+    public void newDeal_isWrittenWithEmptyShippedAndReceivedAt() {
+        Deal deal = new Deal();
+        Map<String, Object> fields = (Map<String, Object>) CustomClassMapper.convertToPlainJavaTypes(deal);
+        assertNull(fields.get("shippedAt"));
+        assertNull(fields.get("receivedAt"));
     }
 }
