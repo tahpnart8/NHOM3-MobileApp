@@ -1,11 +1,23 @@
 package com.nhom3.pubgapp.data;
 
 import android.app.Activity;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.credentials.Credential;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.CredentialManagerCallback;
+import androidx.credentials.CustomCredential;
+import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.GetCredentialResponse;
+import androidx.credentials.exceptions.GetCredentialCancellationException;
+import androidx.credentials.exceptions.GetCredentialException;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.EmailAuthProvider;
@@ -16,12 +28,14 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.OAuthProvider;
 import com.google.firebase.auth.UserInfo;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.model.User;
 
 import java.util.List;
 
 public class AuthRepository extends BaseRepository {
 
+    private static final String TAG = "AuthRepository";
     private static final String COLLECTION_USERS = "users";
     // Shown when the browser page is closed or the sign-in cannot finish there.
     private static final String MESSAGE_GOOGLE_BROWSER_STOPPED =
@@ -104,8 +118,55 @@ public class AuthRepository extends BaseRepository {
                 });
     }
 
+    // Tries the system Google account picker first; the browser page is only the fallback,
+    // because Chrome can lose the redirect state ("missing initial state").
+    public void signInWithGoogleBrowser(final Activity activity, final DataCallback<User> cb) {
+        String serverClientId = activity.getString(R.string.default_web_client_id);
+        GetSignInWithGoogleOption googleOption =
+                new GetSignInWithGoogleOption.Builder(serverClientId).build();
+        GetCredentialRequest request = new GetCredentialRequest.Builder()
+                .addCredentialOption(googleOption)
+                .build();
+        CredentialManager credentialManager = CredentialManager.create(activity);
+        credentialManager.getCredentialAsync(activity, request, null,
+                ContextCompat.getMainExecutor(activity),
+                new CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
+                    @Override
+                    public void onResult(GetCredentialResponse response) {
+                        String idToken = readGoogleIdToken(response.getCredential());
+                        if (idToken == null) {
+                            signInWithGoogleInBrowser(activity, cb);
+                            return;
+                        }
+                        signInWithGoogle(idToken, cb);
+                    }
+
+                    @Override
+                    public void onError(@NonNull GetCredentialException e) {
+                        if (e instanceof GetCredentialCancellationException) {
+                            cb.onError(MESSAGE_GOOGLE_BROWSER_STOPPED);
+                            return;
+                        }
+                        Log.w(TAG, "Credential Manager failed, using the browser page", e);
+                        signInWithGoogleInBrowser(activity, cb);
+                    }
+                });
+    }
+
+    private String readGoogleIdToken(Credential credential) {
+        if (!(credential instanceof CustomCredential)) {
+            return null;
+        }
+        if (!GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(credential.getType())) {
+            return null;
+        }
+        GoogleIdTokenCredential googleCredential =
+                GoogleIdTokenCredential.createFrom(((CustomCredential) credential).getData());
+        return googleCredential.getIdToken();
+    }
+
     // Opens Google's own sign-in page in the browser, so the device needs no Google account of its own.
-    public void signInWithGoogleBrowser(Activity activity, final DataCallback<User> cb) {
+    private void signInWithGoogleInBrowser(Activity activity, final DataCallback<User> cb) {
         OAuthProvider.Builder provider = OAuthProvider.newBuilder("google.com");
         // Always show the account chooser, even when the browser already knows an account.
         provider.addCustomParameter("prompt", "select_account");
