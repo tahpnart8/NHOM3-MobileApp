@@ -105,13 +105,11 @@
         app:layout_constraintTop_toBottomOf="@id/layoutSearchRow">
 
         <com.google.android.material.tabs.TabItem
-            android:id="@+id/tabListings"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/listing_search_tab_listings" />
 
         <com.google.android.material.tabs.TabItem
-            android:id="@+id/tabUsers"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/listing_search_tab_users" />
