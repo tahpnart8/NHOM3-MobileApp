@@ -553,14 +553,7 @@ public class DealRepository extends BaseRepository {
             batch.update(payRef, payUpdates);
         }
 
-        if (deal.getListingId() != null) {
-            DocumentReference listingRef = db.collection(COLLECTION_LISTINGS).document(deal.getListingId());
-            Map<String, Object> listUpdates = new HashMap<String, Object>();
-            listUpdates.put("status", ListingStatus.SOLD.name());
-            listUpdates.put("updatedAt", FieldValue.serverTimestamp());
-            batch.update(listingRef, listUpdates);
-        }
-
+        // The listing becomes SOLD only in completeDeal; the Rules refuse RESERVED to SOLD before COMPLETED.
         sendNotification(deal.getSellerId(), NotificationType.PAYMENT_UPDATE,
                 "Người mua đã nhận hàng",
                 "Người mua đã xác nhận nhận hàng. Tiền ký quỹ đã được giải ngân.",
