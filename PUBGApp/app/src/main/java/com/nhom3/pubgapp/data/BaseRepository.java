@@ -3,6 +3,7 @@ package com.nhom3.pubgapp.data;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.FirebaseNetworkException;
@@ -15,11 +16,21 @@ import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.nhom3.pubgapp.model.BaseDocument;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public abstract class BaseRepository {
@@ -101,6 +112,63 @@ public abstract class BaseRepository {
         cb.onError(describeError(error));
     }
 
+    // Calls cb on the first snapshot and again on every change, until the caller removes the registration.
+    // A missing document arrives as null so the screen can show its empty state.
+    protected <T> ListenerRegistration listenDocument(DocumentReference ref, final Class<T> type,
+            final DataCallback<T> cb) {
+        return ref.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot snapshot,
+                    @Nullable FirebaseFirestoreException error) {
+                if (error != null) {
+                    fail(cb, error);
+                    return;
+                }
+                if (snapshot == null || !snapshot.exists()) {
+                    cb.onSuccess(null);
+                    return;
+                }
+                cb.onSuccess(snapshot.toObject(type));
+            }
+        });
+    }
+
+    // Same as listenDocument for a query: every change delivers the whole current list.
+    protected <T> ListenerRegistration listenQuery(Query query, final Class<T> type,
+            final DataCallback<List<T>> cb) {
+        return query.addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@Nullable QuerySnapshot snapshot,
+                    @Nullable FirebaseFirestoreException error) {
+                if (error != null) {
+                    fail(cb, error);
+                    return;
+                }
+                if (snapshot == null) {
+                    cb.onSuccess(new ArrayList<T>());
+                    return;
+                }
+                cb.onSuccess(snapshot.toObjects(type));
+            }
+        });
+    }
+
+    // For "mine as buyer or as seller": listens to both queries and delivers their union by document id,
+    // once each side has answered. Removing the returned registration removes both listeners.
+    protected <T extends BaseDocument> ListenerRegistration listenEitherQuery(Query first, Query second,
+            Class<T> type, DataCallback<List<T>> cb) {
+        UnionOfTwo<T> union = new UnionOfTwo<T>(cb);
+        final ListenerRegistration firstRegistration = listenQuery(first, type, union.side(true));
+        final ListenerRegistration secondRegistration = listenQuery(second, type, union.side(false));
+        return new ListenerRegistration() {
+            @Override
+            public void remove() {
+                firstRegistration.remove();
+                secondRegistration.remove();
+            }
+        };
+    }
+
     private String describeError(Exception error) {
         if (error instanceof FirebaseFirestoreException) {
             return describeFirestoreError((FirebaseFirestoreException) error);
@@ -154,5 +222,54 @@ public abstract class BaseRepository {
             return MESSAGE_AUTH_RECENT_LOGIN;
         }
         return MESSAGE_AUTH_GENERIC;
+    }
+
+    // Keeps the latest answer of each side; a document in both lists appears once.
+    private static final class UnionOfTwo<T extends BaseDocument> {
+
+        private final DataCallback<List<T>> cb;
+        private List<T> firstList;
+        private List<T> secondList;
+
+        UnionOfTwo(DataCallback<List<T>> cb) {
+            this.cb = cb;
+        }
+
+        DataCallback<List<T>> side(final boolean isFirst) {
+            return new DataCallback<List<T>>() {
+                @Override
+                public void onSuccess(List<T> result) {
+                    deliver(isFirst, result);
+                }
+
+                @Override
+                public void onError(String message) {
+                    cb.onError(message);
+                }
+            };
+        }
+
+        private void deliver(boolean isFirst, List<T> result) {
+            List<T> union;
+            synchronized (this) {
+                if (isFirst) {
+                    firstList = result;
+                } else {
+                    secondList = result;
+                }
+                if (firstList == null || secondList == null) {
+                    return;
+                }
+                Map<String, T> byId = new LinkedHashMap<String, T>();
+                for (T item : firstList) {
+                    byId.put(item.getId(), item);
+                }
+                for (T item : secondList) {
+                    byId.put(item.getId(), item);
+                }
+                union = new ArrayList<T>(byId.values());
+            }
+            cb.onSuccess(union);
+        }
     }
 }

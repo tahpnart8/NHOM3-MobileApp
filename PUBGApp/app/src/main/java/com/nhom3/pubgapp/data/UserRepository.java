@@ -16,6 +16,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
@@ -158,6 +159,11 @@ public class UserRepository extends BaseRepository {
                         }
                     }
                 });
+    }
+
+    // Live version of getProfile for screens: a change made anywhere, the Console included, shows at once.
+    public ListenerRegistration observeProfile(String uid, final DataCallback<User> cb) {
+        return listenDocument(db.collection(COLLECTION_USERS).document(uid), User.class, cb);
     }
 
     public void updateProfile(User user, final DataCallback<Void> cb) {
@@ -689,6 +695,12 @@ public class UserRepository extends BaseRepository {
                         }
                     }
                 });
+    }
+
+    // Live version of getVerification: null while the user has never sent a request.
+    public ListenerRegistration observeVerification(String uid, final DataCallback<SellerVerification> cb) {
+        return listenDocument(db.collection(COLLECTION_SELLER_VERIFICATIONS).document(uid),
+                SellerVerification.class, cb);
     }
 
     public void saveIdentity(final String uid, final UserIdentity identity, final DataCallback<Void> cb) {
