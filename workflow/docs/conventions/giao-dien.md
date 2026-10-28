@@ -105,7 +105,7 @@ Cả 15 text appearance của Material 3 đều được ghi đè trong `themes.
 | `textAppearanceLabelMedium` | 12sp | 500 | Chữ thanh điều hướng dưới |
 | `textAppearanceLabelSmall` | 11sp | 500 | Chữ huy hiệu, nhãn nhỏ |
 
-Giá cả luôn dùng `textAppearanceTitleMedium` kèm `colorPrimary`, để mắt bắt được giá ở mọi màn hình. Độ đậm 700 của `TitleMedium` là để giá nổi nhất trên thẻ.
+Giá cả luôn dùng `textAppearanceTitleMedium` kèm `colorPrimary`, để mắt bắt được giá ở mọi màn hình. Độ đậm 700 của `TitleMedium` là để giá nổi nhất trên thẻ. Hai ngoại lệ có chủ ý (issue #353): tên món đồ trên `item_listing_card` dùng `TitleSmall` để giá đứng trên nó một bậc; màn Chi tiết tin cho giá `HeadlineSmall` và tên `TitleLarge`, vì đó là màn hình của một món đồ. Nhãn loại tin (bán, trao đổi, tặng) dùng màu nhấn `colorTertiary`. Ô tìm kiếm luôn là viên thuốc không viền: trắng trên nền xanh ở Trang chủ, `colorSurfaceContainer` ở màn Tìm kiếm.
 
 ## 4. Màu theo trạng thái
 

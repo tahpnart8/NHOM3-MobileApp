@@ -20,6 +20,7 @@
         android:id="@+id/layoutTopHeader"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_top_bar"
         android:gravity="end|center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="@dimen/space_md"
@@ -36,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="@dimen/touch_min"
             android:text="@string/listing_home_guest_sign_in"
-            android:textColor="?attr/colorPrimary"
+            android:textColor="?attr/colorOnPrimary"
             android:visibility="gone" />
     </LinearLayout>
 
@@ -45,10 +46,12 @@
         android:id="@+id/layoutSearchRow"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_top_bar"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="@dimen/space_md"
-        android:paddingVertical="@dimen/space_xs"
+        android:paddingTop="@dimen/space_xs"
+        android:paddingBottom="@dimen/space_md"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layoutTopHeader">
@@ -64,8 +67,7 @@
             android:focusable="true"
             app:cardBackgroundColor="?attr/colorSurface"
             app:cardElevation="0dp"
-            app:strokeColor="?attr/colorOutline"
-            app:strokeWidth="1dp">
+            app:shapeAppearance="@style/ShapeAppearance.PUBGApp.Full">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -101,7 +103,7 @@
             android:layout_marginStart="@dimen/space_xs"
             android:contentDescription="@string/listing_home_refresh"
             app:icon="@drawable/ic_inbox"
-            app:iconTint="?attr/colorPrimary" />
+            app:iconTint="?attr/colorOnPrimary" />
     </LinearLayout>
 
     <!-- Feed below the search row. The channel selector and For You sit in an app bar so they scroll
