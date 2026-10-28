@@ -248,11 +248,20 @@
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonResendLink"
+                android:id="@+id/buttonCheckVerified"
                 style="@style/Widget.PUBGApp.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
+                android:minHeight="@dimen/touch_min"
+                android:text="@string/account_register_check_verified" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonResendLink"
+                style="@style/Widget.PUBGApp.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/account_register_resend_link" />
 
