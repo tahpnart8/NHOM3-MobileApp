@@ -97,7 +97,7 @@ Không ai sửa đồ thị điều hướng của người khác. Mọi lối �
 | `action_global_my_shop` | B05 | | D01 |
 | `action_global_saved_listings` | B06 | | D01 |
 | `action_global_deal_history` | C04 `DealHistoryFragment` (khôi phục 2026-10-25) | | D01 |
-| `action_global_my_reports` | D07 `MyReportsFragment` (khôi phục 2026-10-25) | | D01 |
+| `action_global_my_reports` | D07 `MyReportsFragment` (khôi phục 2026-10-25) | `initialTab` (số nguyên, mặc định 0, chọn tab mở đầu) | D01 |
 | `action_global_edit_profile` | A05 `EditProfileFragment` trong `ui.profile` | | D01 |
 | `action_global_account_settings` | A05 `AccountSettingsFragment` (khôi phục 2026-10-25) | | D01 |
 | `action_global_address_list` | A06 `AddressListFragment` (khôi phục 2026-10-25) | | D01, `AccountSettingsFragment` |
