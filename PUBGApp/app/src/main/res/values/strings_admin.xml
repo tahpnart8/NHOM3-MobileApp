@@ -396,6 +396,7 @@
     <string name="admin_account_grant_success">Đã cấp quyền quản trị viên thành công.</string>
     <string name="admin_account_revoke_success">Đã gỡ quyền quản trị viên thành công.</string>
     <string name="admin_account_email_invalid">Vui lòng nhập email hợp lệ.</string>
+    <string name="admin_account_candidate_not_found">Không tìm thấy tài khoản đang hoạt động với email này</string>
     <string name="admin_account_self_revoke_denied">Bạn không thể tự gỡ quyền quản trị của chính mình.</string>
     <string name="admin_account_self_grant_denied">Bạn không thể tự cấp quyền cho chính mình.</string>
     <string name="admin_account_offline_warning">Không có kết nối mạng. Vui lòng thử lại sau.</string>
