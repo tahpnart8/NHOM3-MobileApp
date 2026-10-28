@@ -25,8 +25,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_sm"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="?attr/colorError"
+            android:background="@drawable/bg_error_banner"
+            android:padding="@dimen/space_md"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnErrorContainer"
             android:visibility="gone" />
 
         <ProgressBar
@@ -50,8 +52,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_md"
                 android:text="@string/account_register_title"
-                android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                android:textColor="?attr/colorOnSurface" />
+                android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                android:textColor="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/textStep1Subtitle"
@@ -205,8 +207,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_md"
                 android:text="@string/account_register_waiting_title"
-                android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                android:textColor="?attr/colorOnSurface" />
+                android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                android:textColor="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/textWaitingSub"
@@ -270,8 +272,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_md"
                 android:text="@string/account_register_profile_title"
-                android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                android:textColor="?attr/colorOnSurface" />
+                android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                android:textColor="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/textProfileInstruction"

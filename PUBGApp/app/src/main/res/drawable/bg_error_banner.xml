@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pale red block behind an inline error sentence, so a failed sign-in is hard to miss. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorErrorContainer" />
+    <corners android:radius="@dimen/radius_md" />
+</shape>
