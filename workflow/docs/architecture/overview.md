@@ -66,7 +66,7 @@ flowchart LR
 | --- | --- | --- |
 | Google Sign-In | Lấy mã đăng nhập Google | `idToken` |
 | Firebase Authentication | Đăng ký, đăng nhập, xác thực email, đặt lại và đổi mật khẩu | `uid`, email |
-| Cloud Firestore | Nguồn dữ liệu chính, cập nhật theo thời gian thực cho chat; cũng chứa ảnh Base64 (collection `images`) | 23 collection, xem `data/firestore-schema.md` |
+| Cloud Firestore | Nguồn dữ liệu chính, cập nhật theo thời gian thực bằng snapshot listener cho chat, hồ sơ, giao dịch, thông báo và các hàng chờ của admin (bảng tin và tìm kiếm vẫn đọc theo trang); cũng chứa ảnh Base64 (collection `images`) | 23 collection, xem `data/firestore-schema.md` |
 | Room (SQLite) | Bộ nhớ đệm trên máy để xem lại khi mất mạng | 6 bảng, xem `data/room-schema.md` |
 
 Ngoài phạm vi: thông báo đẩy khi ứng dụng đóng, cổng thanh toán, bản đồ, đăng nhập bằng số điện thoại, bản web, gửi video, các chức năng **Phát triển sau**.

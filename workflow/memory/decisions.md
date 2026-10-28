@@ -913,3 +913,24 @@ The browser flow (`startActivityForSignInWithProvider`) failed repeatedly on the
 
 ### Owner
 tahpnart8
+
+## 2026-10-28 - Screens whose data other people change listen with snapshot listeners
+
+### Decision
+Every repository read that a screen shows and that another party can change gets a live twin named `observe...` that returns a `ListenerRegistration` (built on `BaseRepository.listenDocument`, `listenQuery` and `listenEitherQuery`). The old `get...` methods stay for write flows and one-off checks. ViewModels keep their listeners in a `ListenerSet` and clear it in `onCleared`. Live now: own and admin-viewed profile, own verification, listing detail, deal detail and payment, deal and payment history, conversation list, notifications and badge, my reports and complaints, and the admin queues (verification requests, open reports, complaints, deal monitor and deal detail).
+
+### Context
+The leader changed a verification status in the Firebase Console during test pass #305 and the app did not follow until the screen was reopened. Only chat messages and offers were live; nothing re-read on resume (issue #340).
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Re-read every screen in `onResume` | Still stale while the screen is open, and it reads the whole list again each time |
+| Turn the existing `get...` methods into listeners | Write flows and one-off checks call them too and would leak listeners |
+| Make the feed and search live too | They page with a cursor; a listener per page costs reads for little gain. They keep pull to refresh |
+
+### Impact
+`BaseRepository` and nine repositories, `ListenerSet` and ten ViewModels, `dac-ta-lop/data.md`, `viewmodel.md`, `overview.md`, `luong-xu-ly.md`. Counts (`count()`) stay one-shot because Firestore has no listener for aggregates.
+
+### Owner
+tahpnart8

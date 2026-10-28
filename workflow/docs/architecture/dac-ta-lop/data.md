@@ -74,6 +74,9 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `protected String currentUserId()` | Trả `uid` của người đang đăng nhập; rỗng khi chưa đăng nhập. |  |
 | `protected void logActivity(String action, String targetType, String targetId)` | Ghi một `ActivityLog`. `action` là chuỗi hằng viết hoa có gạch dưới, ví dụ `LISTING_CREATED`, `USER_LOCKED`, `USER_WARNED`, `LISTING_HIDDEN`, `LISTING_REMOVED`, `CATEGORY_CREATED`, `KEYWORD_ADDED`, `ADMIN_GRANTED`, `ADMIN_REVOKED`. `targetType` là chuỗi tự do (`listing`, `user`, `message`, `category`, `keyword`, `admin`, `deal`, `complaint`, `report`), không phải enum, vì nhật ký trỏ tới nhiều loại hơn `ReportTarget`. | 74 |
 | `protected void fail(DataCallback, Exception)` | Dịch ngoại lệ Firebase thành câu báo lỗi và gọi `onError`. |  |
+| `protected <T> ListenerRegistration listenDocument(DocumentReference ref, Class<T> type, DataCallback<T> cb)` | Bọc `addSnapshotListener` của một tài liệu: gọi `cb` lúc gắn và mỗi lần tài liệu đổi; tài liệu không có thì trả null; lỗi đi qua `fail`. Người gọi gỡ `ListenerRegistration` khi rời màn. |  |
+| `protected <T> ListenerRegistration listenQuery(Query query, Class<T> type, DataCallback<List<T>> cb)` | Như `listenDocument` cho một truy vấn: mỗi lần đổi trả cả danh sách hiện tại. |  |
+| `protected <T extends BaseDocument> ListenerRegistration listenEitherQuery(Query first, Query second, Class<T> type, DataCallback<List<T>> cb)` | Nghe hai truy vấn (ví dụ "tôi là người mua" và "tôi là người bán") và trả hợp của hai danh sách theo mã tài liệu, sau khi cả hai đã trả lời; gỡ registration trả về là gỡ cả hai. |  |
 
 **Quan hệ trên sơ đồ lớp**
 
@@ -149,6 +152,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | --- | --- | --- |
 | `public void createProfile(User user, UserIdentity identity, DataCallback<Void> cb)` | Tạo `users/{uid}` (ACTIVE, `verificationStatus` NONE, `ratingSum` và `ratingCount` bằng 0, `termsAcceptedAt`, `searchKeywords` từ `User.buildSearchKeywords`) và `users/{uid}/private/identity` trong một lô ghi. |  |
 | `public void getProfile(String uid, DataCallback<User> cb)` | Đọc `users/{uid}`. |  |
+| `public ListenerRegistration observeProfile(String uid, DataCallback<User> cb)` | Nghe `users/{uid}` theo thời gian thực cho màn hồ sơ (D01, D02, E03): trạng thái tài khoản, xác thực, ảnh đổi ở nơi khác (kể cả Console) hiện ngay. |  |
 | `public void updateProfile(User user, DataCallback<Void> cb)` | Ghi các trường hồ sơ mà chính chủ được sửa (tên, điện thoại, khu vực, giới thiệu, ảnh, danh mục quan tâm); gọi `User.buildSearchKeywords` lại khi `displayName` đổi. | 4 |
 | `public void searchUsers(String keyword, DataCallback<List<User>> cb)` | Tìm người dùng theo tên: `searchKeywords array-contains` từ dài nhất trong ô tìm kiếm (đã bỏ dấu), `status == ACTIVE`, sắp `ratingCount` giảm, tối đa 20 người, không phân trang. Chỉ khớp nguyên từ. | 103 |
 | `public void getStats(String uid, DataCallback<ProfileStats> cb)` | Đếm bằng truy vấn tổng hợp `count()`: giao dịch đã bán, người theo dõi, giao dịch tham gia, giao dịch hoàn tất. Trả `ProfileStats`. | 8 |
@@ -165,6 +169,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void getSavedIds(String uid, DataCallback<List<String>> cb)` | Mã các tin đã lưu, mới lưu trước. | 40 đến 42 |
 | `public void requestVerification(String uid, SellerVerification verification, DataCallback<Void> cb)` | Tạo hoặc gửi lại `sellerVerifications/{uid}` với trạng thái PENDING, kèm số CCCD và hai mã ảnh; lần gửi lại tăng `resubmitCount` và bị chặn khi `canResubmit()` false. | 73 |
 | `public void getVerification(String uid, DataCallback<SellerVerification> cb)` | Đọc `sellerVerifications/{uid}` của chính người dùng, để D01 hiện trạng thái và lý do từ chối. |  |
+| `public ListenerRegistration observeVerification(String uid, DataCallback<SellerVerification> cb)` | Nghe `sellerVerifications/{uid}` của chính người dùng; null khi chưa gửi yêu cầu. |  |
 | `public void saveIdentity(String uid, UserIdentity identity, DataCallback<Void> cb)` | Ghi `users/{uid}/private/identity`. | 9 |
 | `public void getIdentity(String uid, DataCallback<UserIdentity> cb)` | Đọc `users/{uid}/private/identity`; chỉ chính chủ và admin đọc được. | 9 |
 | `public void updateNotificationPrefs(String uid, Map<String,Boolean> prefs, DataCallback<Void> cb)` | Ghi `notificationPrefs`. | 10 |
@@ -232,6 +237,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void setStatus(String id, ListingStatus from, ListingStatus to, DataCallback<Void> cb)` | Đổi trạng thái theo cặp người bán được phép (AVAILABLE sang SOLD khi bán ngoài ứng dụng, SOLD sang AVAILABLE khi chưa có giao dịch COMPLETED); từ chối cặp khác. Rời AVAILABLE thì từ chối offer PENDING cùng lô. |  |
 | `public void delete(String id, DataCallback<Void> cb)` | Chỉ xóa hẳn tin DRAFT. Tin khác muốn bỏ thì ẩn (`setHidden`). | 13 |
 | `public void getById(String id, DataCallback<Listing> cb)` | Đọc một tin; offline thì đọc `listing_cache`. |  |
+| `public ListenerRegistration observeListing(String id, DataCallback<Listing> cb)` | Nghe một tin cho B03 sau lần đọc đầu: giá, trạng thái, ẩn tin do người bán hoặc admin đổi hiện ngay; mỗi bản mới ghi vào `listing_cache`. |  |
 | `public void getBySeller(String sellerId, DataCallback<List<Listing>> cb)` | Tin của một người bán, mới trước. Người xem khác thêm điều kiện `status in [AVAILABLE, RESERVED, SOLD]`; chính chủ thấy mọi trạng thái. | 14 |
 | `public void getFeed(SearchFilter filter, Timestamp after, DataCallback<List<Listing>> cb)` | Tin AVAILABLE, 20 tin một trang, con trỏ là `createdAt` của tin cuối trang trước (`after`, rỗng ở trang đầu). Lọc phía máy chủ tối đa một điều kiện bằng (danh mục hoặc tỉnh); bộ lọc còn lại lọc trên máy, ViewModel tải tiếp tới khi đủ 20 hoặc hết. Có mạng thì ghi trang mới vào Room. | 29 |
 | `public void search(SearchFilter filter, Timestamp after, DataCallback<List<Listing>> cb)` | Truy vấn `searchKeywords array-contains` từ dài nhất trong ô tìm kiếm (đã bỏ dấu), `status == AVAILABLE`, con trỏ như `getFeed`; phần còn lại lọc trên máy. Chỉ khớp nguyên từ. | 23 |
@@ -296,6 +302,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void getOrCreateConversation(String listingId, String buyerId, DataCallback<Conversation> cb)` | Đọc hoặc tạo `conversations/{listingId_buyerId}`. |  |
 | `public void getConversation(String id, DataCallback<Conversation> cb)` | Đọc một cuộc trò chuyện theo mã, cho trường hợp mở C02 từ thông báo hoặc từ danh sách mà chưa có đối tượng trong tay. |  |
 | `public void getConversations(String uid, DataCallback<List<Conversation>> cb)` | Cuộc trò chuyện mà người dùng là người mua hoặc người bán, mới nhất trước; ghi vào Room. |  |
+| `public ListenerRegistration observeConversations(String uid, DataCallback<List<Conversation>> cb)` | Như `getConversations` nhưng nghe theo thời gian thực (`listenEitherQuery` trên `buyerId` và `sellerId`); trả bản Room trước, ghi lại Room mỗi lần đổi. |  |
 | `public ListenerRegistration observeMessages(String id, DataCallback<List<ChatMessage>> cb)` | Lắng nghe 50 tin nhắn mới nhất theo thời gian thực, trả `ListenerRegistration`; ViewModel gỡ ở `onCleared`. Ghi tin mới vào Room. |  |
 | `public void loadOlder(String id, Timestamp before, DataCallback<List<ChatMessage>> cb)` | Tải thêm 50 tin nhắn cũ hơn mốc truyền vào. |  |
 | `public void getMessagesOnce(String id, DataCallback<List<ChatMessage>> cb)` | Đọc một lần toàn bộ tin nhắn của một cuộc trò chuyện (admin xem khi xử lý khiếu nại). |  |
@@ -332,6 +339,8 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public Deal buildFromOffer(Offer offer, Listing listing)` | Dựng một `Deal` từ đề nghị đã được chấp nhận, chụp `itemTitle` và `itemThumb` từ `Listing` truyền vào; chưa ghi lên Firestore. | 50 |
 | `public void getById(String dealId, DataCallback<Deal> cb)` | Đọc một giao dịch. |  |
 | `public void getPayment(String dealId, DataCallback<Payment> cb)` | Đọc `payments/{dealId}`; rỗng khi chưa thanh toán. |  |
+| `public ListenerRegistration observeDeal(String dealId, DataCallback<Deal> cb)` | Nghe một giao dịch cho C03: bước của bên kia (xác nhận, gửi hàng, nhận hàng, hủy) hiện ngay. |  |
+| `public ListenerRegistration observePayment(String dealId, DataCallback<Payment> cb)` | Nghe `payments/{dealId}`; null khi chưa thanh toán. |  |
 | `public void updateTerms(Deal deal, DataCallback<Void> cb)` | Sửa điều khoản khi còn PENDING_CONFIRM; xóa cả hai cờ xác nhận để hai bên xác nhận lại. | 51 |
 | `public void confirm(String dealId, DataCallback<Void> cb)` | Gọi `Deal.confirmBy`. Từ chối nếu chưa chọn phương thức giao nhận, hoặc giao qua vận chuyển mà chưa có địa chỉ. | 52 |
 | `public void pay(String dealId, PaymentMethod method, DataCallback<Void> cb)` | Tạo `payments/{dealId}` HELD; chỉ người mua, chỉ khi CONFIRMED và `needsPayment`. | 56 |
@@ -345,6 +354,9 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void getMyDeals(String uid, DataCallback<List<Deal>> cb)` | Giao dịch mà người dùng là người mua hoặc người bán, mới cập nhật trước; ghi vào Room. | 57 |
 | `public void getPayments(String uid, DataCallback<List<Payment>> cb)` | Khoản ký quỹ mà người dùng trả hoặc nhận. | 58 |
 | `public void listAll(DealStatus status, DataCallback<List<Deal>> cb)` | Admin: giao dịch theo trạng thái, rỗng là mọi trạng thái. | 81 |
+| `public ListenerRegistration observeMyDeals(String uid, DataCallback<List<Deal>> cb)` | Như `getMyDeals` nhưng nghe theo thời gian thực; trả bản Room trước, ghi lại Room mỗi lần đổi. | 57 |
+| `public ListenerRegistration observePayments(String uid, DataCallback<List<Payment>> cb)` | Như `getPayments` nhưng nghe theo thời gian thực. | 58 |
+| `public ListenerRegistration observeAll(DealStatus status, DataCallback<List<Deal>> cb)` | Như `listAll` nhưng nghe theo thời gian thực cho E06. | 81 |
 
 **Quan hệ trên sơ đồ lớp**
 
@@ -401,8 +413,10 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void create(Report report, DataCallback<Void> cb)` | Ghi báo cáo OPEN. | 61 |
 | `public void cancel(String reportId, DataCallback<Void> cb)` | Người báo cáo hủy báo cáo còn OPEN. | 62 |
 | `public void getMyReports(String uid, DataCallback<List<Report>> cb)` | Báo cáo người dùng đã gửi. | 63 |
+| `public ListenerRegistration observeMyReports(String uid, DataCallback<List<Report>> cb)` | Như `getMyReports` nhưng nghe theo thời gian thực: quyết định của admin hiện ngay ở F02. | 63 |
 | `public File exportCsv(List<Report> reports)` | Ghi danh sách báo cáo ra tệp CSV trong bộ nhớ của ứng dụng; chạy ngoài luồng chính. | 63 |
 | `public void getByStatus(ReportStatus status, ReportTarget targetType, DataCallback<List<Report>> cb)` | Admin: báo cáo theo trạng thái. | 75 |
+| `public ListenerRegistration observeByStatus(ReportStatus status, ReportTarget targetType, DataCallback<List<Report>> cb)` | Như `getByStatus` nhưng nghe theo thời gian thực cho E01 và E04. | 75 |
 | `public void countByTarget(String targetId, DataCallback<Integer> cb)` | Số báo cáo OPEN của một đối tượng. | 75 |
 | `public void closeByTarget(String targetId, boolean dismissed, String adminId, DataCallback<Void> cb)` | Đóng mọi báo cáo OPEN của một đối tượng: RESOLVED hoặc DISMISSED. | 75 |
 
@@ -431,8 +445,10 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | --- | --- | --- |
 | `public void create(Complaint complaint, DataCallback<Void> cb)` | Ghi `complaints/{dealId}` (mỗi giao dịch tối đa một khiếu nại) khi giao dịch SHIPPED và chưa qua `autoReleaseAt`, hoặc CONFIRMED khi gặp trực tiếp. Giao dịch sang DISPUTED; thông báo DEAL_UPDATE cho bên kia. | 64 |
 | `public void getMyComplaints(String uid, DataCallback<List<Complaint>> cb)` | Khiếu nại người dùng đã gửi. | 65 |
+| `public ListenerRegistration observeMyComplaints(String uid, DataCallback<List<Complaint>> cb)` | Như `getMyComplaints` nhưng nghe theo thời gian thực. | 65 |
 | `public void withdraw(String id, DataCallback<Void> cb)` | Rút đơn; giao dịch về `Deal.statusBeforeDispute()`, hạn đếm ngược giữ nguyên. Không mở lại được. | 66 |
 | `public void getByStatus(ComplaintStatus status, Priority priority, DataCallback<List<Complaint>> cb)` | Admin: khiếu nại theo trạng thái và mức ưu tiên. | 87 |
+| `public ListenerRegistration observeByStatus(ComplaintStatus status, Priority priority, DataCallback<List<Complaint>> cb)` | Như `getByStatus` nhưng nghe theo thời gian thực cho E05. | 87 |
 | `public void getDetail(String id, DataCallback<Complaint> cb)` | Admin: một khiếu nại kèm giao dịch; lịch sử chat đọc qua `ChatRepository`. | 88 |
 | `public void decide(String id, ComplaintDecision decision, String message, DataCallback<Void> cb)` | Ghi quyết định, áp hệ quả lên giao dịch và khoản ký quỹ theo `trang-thai.md` trong một lô ghi, ghi thông báo COMPLAINT_RESULT cho hai bên. | 89, 91 |
 | `public void saveAdminNote(String id, String note, DataCallback<Void> cb)` | Ghi `complaints/{id}/adminNote/note`. | 90 |
@@ -463,6 +479,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
 | `public void getForUser(String uid, DataCallback<List<AppNotification>> cb)` | Thông báo của người dùng, mới nhất trước. | 67, 91 |
+| `public ListenerRegistration observeForUser(String uid, DataCallback<List<AppNotification>> cb)` | Như `getForUser` nhưng nghe theo thời gian thực: thông báo mới và số chưa đọc trên chuông đổi ngay. | 67, 91 |
 | `public void markRead(String id, DataCallback<Void> cb)` | Đánh dấu đã đọc. | 67, 91 |
 | `public void create(AppNotification notification, WriteBatch batch, DataCallback<Void> cb)` | Ghi một thông báo cho người nhận, bỏ qua nếu người nhận đã tắt loại này. Chỉ repository gọi, ngay trong thao tác làm đổi trạng thái; ViewModel không gọi. Tham số `batch`: khác null thì phương thức **chỉ thêm lệnh ghi vào lô đó rồi gọi lại ngay**, bên gọi mới commit, nên thông báo và việc đổi trạng thái cùng thành công hoặc cùng thất bại (`trang-thai.md` mục 9); bằng null thì phương thức tự ghi và tự commit. Gửi cho nhiều người thì gọi nhiều lần vào cùng một lô rồi commit một lần. | 91 |
 
@@ -496,6 +513,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void warnUser(String id, Warning warning, Timestamp until, DataCallback<Void> cb)` | Tăng `warningCount`, ghi `Warning`, áp `Warning.resultingStatus` (bậc 2 dùng hạn `until` admin chọn), ghi `lockReason`, thông báo WARNING. | 72 |
 | `public void getWarnings(String id, DataCallback<List<Warning>> cb)` | Các lần cảnh báo của một người dùng. | 69 |
 | `public void getVerificationRequests(DataCallback<List<SellerVerification>> cb)` | Yêu cầu xác thực tài khoản đang PENDING. | 73 |
+| `public ListenerRegistration observeVerificationRequests(DataCallback<List<SellerVerification>> cb)` | Như `getVerificationRequests` nhưng nghe theo thời gian thực cho E01 và E03. Cả hai hàm lấy mã tài liệu bù cho `userId` bị trống. | 73 |
 | `public void reviewVerification(String id, boolean approve, String note, DataCallback<Void> cb)` | Duyệt hoặc từ chối kèm ghi chú, cập nhật `User.verificationStatus`, thông báo VERIFICATION_RESULT. | 73 |
 | `public void getActivityLogs(String id, DataCallback<List<ActivityLog>> cb)` | Nhật ký hoạt động của một tài khoản. | 74 |
 | `public void hideListing(String id, String reason, DataCallback<Void> cb)` | Đặt tin HIDDEN kèm lý do bắt buộc, từ chối offer PENDING của tin, thông báo LISTING_MODERATED cho người đăng. | 76 |

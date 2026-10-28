@@ -129,7 +129,7 @@ sequenceDiagram
 2. **Phân trang theo con trỏ.** Trang đầu có `after` rỗng; trang kế tiếp dùng `createdAt` của tin cuối trang trước. Mỗi trang lấy 20 tin. Chỉ một điều kiện bằng (danh mục hoặc tỉnh) được lọc ở máy chủ; giá, tình trạng, hình thức, bán kính lọc trên máy. Vì lọc trên máy làm trang thiếu, ViewModel tiếp tục gọi `getFeed` với con trỏ mới tới khi đủ 20 tin hoặc hết dữ liệu.
 3. Sắp theo giá (PRICE_ASC, PRICE_DESC) làm ở máy chủ nhờ chỉ mục theo `price`. Sắp theo người bán đánh giá tốt (TOP_RATED) làm trên máy, trong phạm vi các tin đã tải, sau khi đọc hồ sơ những người bán đó. Kênh đang theo dõi chỉ dùng 30 người theo dõi đầu tiên (`sellerId in`).
 4. Mất mạng: màn hình hiện dải "Đang offline, đây là dữ liệu đã xem"; các nút ghi (đăng tin, gửi offer, thanh toán) bị khóa. Room chỉ đệm ảnh bìa thu nhỏ, nên bảng tin offline vẫn có ảnh.
-5. Chi tiết tin, danh sách chat, tin nhắn đã xem và lịch sử giao dịch dùng cùng cách: đọc Room, gọi mạng, ghi lại Room. Ảnh đầy đủ ở chi tiết tin đọc bằng `MediaRepository.getImage` (có bộ nhớ đệm RAM), chỉ khi có mạng.
+5. Chi tiết tin, danh sách chat, tin nhắn đã xem và lịch sử giao dịch dùng cùng cách: đọc Room, gọi mạng, ghi lại Room. Từ 2026-10-28 phần "gọi mạng" của các màn này là snapshot listener (`observeConversations`, `observeMyDeals`, `observeListing`), nên thay đổi về sau hiện ngay mà vẫn ghi lại Room. Ảnh đầy đủ ở chi tiết tin đọc bằng `MediaRepository.getImage` (có bộ nhớ đệm RAM), chỉ khi có mạng.
 6. Ghi dữ liệu khi offline không được hỗ trợ trong đợt này.
 7. Tin đã lưu được tải từng tin một bằng `getById`; tin nào không còn (hoặc Rules từ chối vì đã bị ẩn) thì bỏ qua và hiện "Tin không còn".
 
