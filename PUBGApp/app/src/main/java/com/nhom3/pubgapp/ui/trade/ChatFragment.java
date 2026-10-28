@@ -30,6 +30,7 @@ import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.ui.common.AvatarBinder;
 import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.util.FormatUtils;
 import com.nhom3.pubgapp.util.NetworkMonitor;
@@ -310,20 +311,11 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
                 if (partnerUser != null) {
                     currentPartnerId = partnerUser.getId();
                     String name = partnerUser.getDisplayName();
-                    binding.textPartnerName.setText(name != null && !name.isEmpty() ? name : "Người dùng");
-
-                    if (partnerUser.getAvatarBase64() != null && !partnerUser.getAvatarBase64().isEmpty()) {
-                        ImageLoader.load(
-                                partnerUser.getAvatarBase64(),
-                                binding.includeAvatar.imageAvatar,
-                                R.drawable.bg_avatar,
-                                R.drawable.bg_avatar
-                        );
-                        binding.includeAvatar.imageAvatar.setVisibility(View.VISIBLE);
-                    } else {
-                        binding.includeAvatar.imageAvatar.setImageResource(R.drawable.bg_avatar);
-                        binding.includeAvatar.imageAvatar.setVisibility(View.VISIBLE);
+                    if (name == null || name.trim().isEmpty()) {
+                        name = getString(R.string.trade_conversation_list_partner_fallback);
                     }
+                    binding.textPartnerName.setText(name);
+                    AvatarBinder.bind(binding.includeAvatar, name, partnerUser.getAvatarBase64());
 
                     Timestamp lastActive = partnerUser.getLastActiveAt();
                     if (lastActive != null) {

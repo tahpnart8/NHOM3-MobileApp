@@ -26,7 +26,7 @@ import com.nhom3.pubgapp.model.enums.ItemCondition;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.TradeType;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
-import com.nhom3.pubgapp.ui.common.ImageLoader;
+import com.nhom3.pubgapp.ui.common.AvatarBinder;
 import com.nhom3.pubgapp.ui.common.StatusChips;
 import com.nhom3.pubgapp.util.FormatUtils;
 import com.nhom3.pubgapp.util.NetworkMonitor;
@@ -524,20 +524,7 @@ public class ListingDetailFragment extends Fragment {
 
         binding.textSellerName.setText(seller.getDisplayName());
 
-        String initial = "";
-        if (seller.getDisplayName() != null && !seller.getDisplayName().isEmpty()) {
-            initial = seller.getDisplayName().substring(0, 1).toUpperCase(Locale.getDefault());
-        }
-        binding.avatarSeller.textInitial.setText(initial);
-
-        if (seller.getAvatarBase64() != null && !seller.getAvatarBase64().isEmpty()) {
-            ImageLoader.load(seller.getAvatarBase64(), binding.avatarSeller.imageAvatar, 0, 0);
-            binding.avatarSeller.imageAvatar.setVisibility(View.VISIBLE);
-            binding.avatarSeller.textInitial.setVisibility(View.GONE);
-        } else {
-            binding.avatarSeller.imageAvatar.setVisibility(View.GONE);
-            binding.avatarSeller.textInitial.setVisibility(View.VISIBLE);
-        }
+        AvatarBinder.bind(binding.avatarSeller, seller.getDisplayName(), seller.getAvatarBase64());
 
         float rating = (float) seller.ratingAverage();
         binding.ratingSeller.ratingStars.setRating(rating);
