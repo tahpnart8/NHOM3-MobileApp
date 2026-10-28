@@ -39,6 +39,9 @@ public class MyReportsFragment extends Fragment {
 
     private static final String STATE_SELECTED_TAB = "selected_tab";
     private static final int TAB_REPORTS = 0;
+    private static final int TAB_COMPLAINTS = 1;
+    // Argument name of action_global_my_reports in nav_main.xml.
+    private static final String ARG_INITIAL_TAB = "initialTab";
     private static final String STATE_OPEN_COMPLAINT = "open_complaint";
     // Argument name of the deal detail destination in nav_main.xml.
     private static final String ARG_DEAL_ID = "dealId";
@@ -62,6 +65,15 @@ public class MyReportsFragment extends Fragment {
     private boolean complaintsFailed;
     @Nullable
     private AlertDialog complaintDialog;
+
+    // Read once per fragment, so coming back from a deal keeps the tab the user picked.
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (savedInstanceState == null && getArguments() != null) {
+            selectedTab = tabFromArgument(getArguments().getInt(ARG_INITIAL_TAB, TAB_REPORTS));
+        }
+    }
 
     @Nullable
     @Override
@@ -393,6 +405,14 @@ public class MyReportsFragment extends Fragment {
             Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_LONG).show();
         }
         trustViewModel.clearError();
+    }
+
+    // An unknown value opens the reports tab, the same as a caller that passes nothing.
+    static int tabFromArgument(int value) {
+        if (value == TAB_COMPLAINTS) {
+            return TAB_COMPLAINTS;
+        }
+        return TAB_REPORTS;
     }
 
     private void showTab(int position) {
