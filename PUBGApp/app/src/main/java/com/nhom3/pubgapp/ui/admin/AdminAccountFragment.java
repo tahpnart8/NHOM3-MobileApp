@@ -3,6 +3,8 @@ package com.nhom3.pubgapp.ui.admin;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,11 +37,13 @@ import java.util.List;
 public class AdminAccountFragment extends Fragment {
 
     private static final String KEY_TYPED_EMAIL = "key_typed_email";
+    private static final String KEY_CANDIDATE_NOT_FOUND = "key_candidate_not_found";
 
     @Nullable
     private FragmentAdminAccountBinding binding;
     private AdminUserViewModel viewModel;
     private AdminAccountAdapter adapter;
+    private boolean searchingCandidate;
 
     @Nullable
     @Override
@@ -64,6 +68,10 @@ public class AdminAccountFragment extends Fragment {
             if (binding != null && !savedEmail.isEmpty()) {
                 binding.editEmailCandidate.setText(savedEmail);
             }
+            boolean notFound = savedInstanceState.getBoolean(KEY_CANDIDATE_NOT_FOUND, false);
+            if (binding != null && notFound) {
+                binding.textCandidateNotFound.setVisibility(View.VISIBLE);
+            }
         }
 
         updateOfflineBanner();
@@ -73,9 +81,13 @@ public class AdminAccountFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (binding != null && binding.editEmailCandidate.getText() != null) {
-            outState.putString(KEY_TYPED_EMAIL,
-                    binding.editEmailCandidate.getText().toString());
+        if (binding != null) {
+            if (binding.editEmailCandidate.getText() != null) {
+                outState.putString(KEY_TYPED_EMAIL,
+                        binding.editEmailCandidate.getText().toString());
+            }
+            outState.putBoolean(KEY_CANDIDATE_NOT_FOUND,
+                    binding.textCandidateNotFound.getVisibility() == View.VISIBLE);
         }
     }
 
@@ -125,6 +137,24 @@ public class AdminAccountFragment extends Fragment {
             }
         });
 
+        binding.editEmailCandidate.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (binding != null) {
+                    binding.inputEmailLayout.setError(null);
+                    binding.textCandidateNotFound.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+
         binding.editEmailCandidate.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -152,7 +182,10 @@ public class AdminAccountFragment extends Fragment {
             return;
         }
         binding.inputEmailLayout.setError(null);
+        binding.layoutCandidateResult.setVisibility(View.GONE);
+        binding.textCandidateNotFound.setVisibility(View.GONE);
         hideKeyboard();
+        searchingCandidate = true;
         viewModel.findAdminCandidate(email);
     }
 
@@ -186,7 +219,15 @@ public class AdminAccountFragment extends Fragment {
             @Override
             public void onChanged(String err) {
                 if (err != null && !err.isEmpty()) {
-                    Toast.makeText(getContext(), err, Toast.LENGTH_LONG).show();
+                    if (searchingCandidate) {
+                        searchingCandidate = false;
+                        if (binding != null) {
+                            binding.layoutCandidateResult.setVisibility(View.GONE);
+                            binding.textCandidateNotFound.setVisibility(View.VISIBLE);
+                        }
+                    } else {
+                        Toast.makeText(getContext(), err, Toast.LENGTH_LONG).show();
+                    }
                     viewModel.clearError();
                 }
             }
@@ -199,6 +240,8 @@ public class AdminAccountFragment extends Fragment {
                     if (binding != null) {
                         binding.editEmailCandidate.setText("");
                         binding.inputEmailLayout.setError(null);
+                        binding.textCandidateNotFound.setVisibility(View.GONE);
+                        binding.layoutCandidateResult.setVisibility(View.GONE);
                     }
                     viewModel.clearDone();
                 }
@@ -212,8 +255,14 @@ public class AdminAccountFragment extends Fragment {
         }
         if (user == null) {
             binding.layoutCandidateResult.setVisibility(View.GONE);
+            if (searchingCandidate) {
+                searchingCandidate = false;
+                binding.textCandidateNotFound.setVisibility(View.VISIBLE);
+            }
             return;
         }
+        searchingCandidate = false;
+        binding.textCandidateNotFound.setVisibility(View.GONE);
         binding.layoutCandidateResult.setVisibility(View.VISIBLE);
 
         String name = user.getDisplayName();

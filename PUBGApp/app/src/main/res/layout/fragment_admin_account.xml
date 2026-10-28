@@ -160,6 +160,16 @@
                             android:minHeight="@dimen/touch_min"
                             android:text="@string/admin_account_grant_button" />
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/textCandidateNotFound"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_md"
+                        android:text="@string/admin_account_candidate_not_found"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorError"
+                        android:visibility="gone" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
