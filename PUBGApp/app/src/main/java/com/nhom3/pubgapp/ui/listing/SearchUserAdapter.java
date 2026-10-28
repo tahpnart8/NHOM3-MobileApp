@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.ItemSearchUserBinding;
 import com.nhom3.pubgapp.model.User;
-import com.nhom3.pubgapp.ui.common.ImageLoader;
+import com.nhom3.pubgapp.ui.common.AvatarBinder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,8 +68,7 @@ public class SearchUserAdapter extends RecyclerView.Adapter<SearchUserAdapter.Us
             String displayName = user.getDisplayName();
             binding.textDisplayName.setText(displayName != null ? displayName : "");
 
-            ImageLoader.load(user.getAvatarBase64(), binding.imageAvatar,
-                    R.drawable.bg_avatar, R.drawable.bg_avatar);
+            AvatarBinder.bind(binding.includeAvatar, displayName, user.getAvatarBase64());
 
             int ratingCount = user.getRatingCount();
             if (ratingCount > 0) {

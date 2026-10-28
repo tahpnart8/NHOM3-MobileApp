@@ -11,14 +11,9 @@
     android:paddingHorizontal="@dimen/space_md"
     android:paddingVertical="@dimen/space_sm">
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/imageAvatar"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:contentDescription="@null"
-        android:scaleType="centerCrop"
-        android:src="@drawable/bg_avatar"
-        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+    <include
+        android:id="@+id/includeAvatar"
+        layout="@layout/view_avatar" />
 
     <LinearLayout
         android:layout_width="0dp"
