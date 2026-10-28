@@ -15,33 +15,189 @@
         <!-- Keeps text on the screen background the same dark colour as text on cards. -->
         <item name="colorOnBackground">@color/on_surface</item>
 
+        <!-- Every other Material role, so no component falls back to the default purple. -->
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
+        <item name="colorPrimaryInverse">@color/inverse_primary</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+        <item name="colorSecondaryContainer">@color/secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/on_secondary_container</item>
+        <item name="colorTertiary">@color/accent</item>
+        <item name="colorOnTertiary">@color/on_accent</item>
+        <item name="colorTertiaryContainer">@color/accent_container</item>
+        <item name="colorOnTertiaryContainer">@color/on_accent_container</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorSurfaceBright">@color/surface</item>
+        <item name="colorSurfaceDim">@color/surface_dim</item>
+        <item name="colorSurfaceContainerLowest">@color/surface_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/surface_container_highest</item>
+        <item name="colorSurfaceInverse">@color/inverse_surface</item>
+        <item name="colorOnSurfaceInverse">@color/inverse_on_surface</item>
+        <item name="colorOutlineVariant">@color/outline_variant</item>
+        <item name="colorOnError">@color/on_error</item>
+        <item name="colorErrorContainer">@color/error_container</item>
+        <item name="colorOnErrorContainer">@color/on_error_container</item>
+
+        <!-- Dark status bar icons on the light screens. -->
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+
+        <!-- Be Vietnam Pro for every TextView; the text appearances below pick the weight. -->
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+
+        <item name="textAppearanceDisplayLarge">@style/TextAppearance.PUBGApp.DisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/TextAppearance.PUBGApp.DisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/TextAppearance.PUBGApp.DisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.PUBGApp.HeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.PUBGApp.HeadlineMedium</item>
         <item name="textAppearanceHeadlineSmall">@style/TextAppearance.PUBGApp.HeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.PUBGApp.TitleLarge</item>
         <item name="textAppearanceTitleMedium">@style/TextAppearance.PUBGApp.TitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.PUBGApp.TitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.PUBGApp.BodyLarge</item>
         <item name="textAppearanceBodyMedium">@style/TextAppearance.PUBGApp.BodyMedium</item>
         <item name="textAppearanceBodySmall">@style/TextAppearance.PUBGApp.BodySmall</item>
         <item name="textAppearanceLabelLarge">@style/TextAppearance.PUBGApp.LabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.PUBGApp.LabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.PUBGApp.LabelSmall</item>
+
+        <!-- Shape scale, giao-dien.md section 2. -->
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.PUBGApp.Small</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.PUBGApp.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.PUBGApp.Large</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/ShapeAppearance.PUBGApp.ExtraLarge</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.PUBGApp.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.PUBGApp.Large</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.PUBGApp.ExtraLarge</item>
+
+        <!-- Default component styles, defined in styles.xml. -->
+        <item name="materialButtonStyle">@style/Widget.PUBGApp.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.PUBGApp.Button.OutlinedButton</item>
+        <item name="materialButtonTonalStyle">@style/Widget.PUBGApp.Button.TonalButton</item>
+        <item name="borderlessButtonStyle">@style/Widget.PUBGApp.Button.TextButton</item>
+        <item name="materialCardViewStyle">@style/Widget.PUBGApp.CardView</item>
+        <item name="chipStyle">@style/Widget.PUBGApp.Chip.Assist</item>
+        <item name="textInputStyle">@style/Widget.PUBGApp.TextInputLayout.OutlinedBox</item>
+        <item name="textInputOutlinedStyle">@style/Widget.PUBGApp.TextInputLayout.OutlinedBox</item>
+        <item name="textInputOutlinedExposedDropdownMenuStyle">@style/Widget.PUBGApp.TextInputLayout.OutlinedBox.ExposedDropdownMenu</item>
+        <item name="bottomNavigationStyle">@style/Widget.PUBGApp.BottomNavigationView</item>
+        <item name="tabStyle">@style/Widget.PUBGApp.TabLayout</item>
+        <item name="toolbarStyle">@style/Widget.PUBGApp.Toolbar</item>
+        <item name="snackbarStyle">@style/Widget.PUBGApp.Snackbar</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.PUBGApp.MaterialAlertDialog</item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.PUBGApp.BottomSheetDialog</item>
     </style>
 
-    <!-- Type scale, giao-dien.md section 3. -->
+    <!-- Type scale, giao-dien.md section 3. Sizes are the Material 3 ones; the font and the weights are ours.
+         textStyle bold stays as a fallback for components that ignore textFontWeight. -->
+    <style name="TextAppearance.PUBGApp.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.PUBGApp.DisplayMedium" parent="TextAppearance.Material3.DisplayMedium">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.PUBGApp.DisplaySmall" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.PUBGApp.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.PUBGApp.HeadlineMedium" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <style name="TextAppearance.PUBGApp.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
         <item name="android:textSize">24sp</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
+    <style name="TextAppearance.PUBGApp.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Card titles and every price: the boldest weight, so the price is the first thing the eye finds. -->
     <style name="TextAppearance.PUBGApp.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
         <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">700</item>
         <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.PUBGApp.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.PUBGApp.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">400</item>
     </style>
 
     <style name="TextAppearance.PUBGApp.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
         <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">400</item>
     </style>
 
     <style name="TextAppearance.PUBGApp.BodySmall" parent="TextAppearance.Material3.BodySmall">
         <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">400</item>
     </style>
 
     <style name="TextAppearance.PUBGApp.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
         <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">600</item>
         <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.PUBGApp.LabelMedium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">500</item>
+    </style>
+
+    <style name="TextAppearance.PUBGApp.LabelSmall" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="android:textFontWeight">500</item>
     </style>
 </resources>

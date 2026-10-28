@@ -13,6 +13,38 @@
     <color name="outline">#E7E2D6</color>
     <color name="error">#B2412F</color>
 
+    <!-- The other Material roles, derived from the palette above so nothing falls back to the
+         Material purple. Contrast pairs are listed in giao-dien.md section 1. -->
+    <color name="primary_container">#CDEBDD</color>
+    <color name="on_primary_container">#0B3B2B</color>
+    <color name="inverse_primary">#8FD3B4</color>
+    <color name="secondary">#3F5A4D</color>
+    <color name="on_secondary">#FFFFFF</color>
+    <color name="secondary_container">#D9EDE3</color>
+    <color name="on_secondary_container">#0B3B2B</color>
+    <color name="surface_variant">#F3EFE8</color>
+    <color name="surface_container_lowest">#FFFFFF</color>
+    <color name="surface_container_low">#F7F4EE</color>
+    <color name="surface_container">#F3EFE8</color>
+    <color name="surface_container_high">#EFEBE3</color>
+    <color name="surface_container_highest">#EBE6DD</color>
+    <color name="surface_dim">#E2DDD3</color>
+    <color name="inverse_surface">#2F2E2B</color>
+    <color name="inverse_on_surface">#F4F1EA</color>
+    <color name="outline_variant">#EFEBE2</color>
+    <!-- Idle border of text fields: dark enough for the 3:1 that a control's edge needs. -->
+    <color name="outline_strong">#8F8A7E</color>
+    <color name="on_error">#FFFFFF</color>
+    <color name="error_container">#F9DED8</color>
+    <color name="on_error_container">#5C1A10</color>
+
+    <!-- The one accent, as colorTertiary: count badges and "Mới" or sale-type labels only.
+         Prices and main buttons stay green. -->
+    <color name="accent">#C2410C</color>
+    <color name="on_accent">#FFFFFF</color>
+    <color name="accent_container">#FFE3D3</color>
+    <color name="on_accent_container">#6B2A07</color>
+
     <!-- Not in the Material set. success equals primary on purpose (one green in the mockups). -->
     <color name="warning">#9E5223</color>
     <color name="success">#1F6F54</color>
