@@ -24,12 +24,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.nhom3.pubgapp.R;
+import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.DealRepository;
 import com.nhom3.pubgapp.databinding.FragmentChatBinding;
 import com.nhom3.pubgapp.model.ChatMessage;
+import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.ui.common.AvatarBinder;
 import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.util.FormatUtils;
@@ -38,7 +43,9 @@ import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.ChatViewModel;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 // Screen C02: Real-time chat with text, image, partner status, and listing banner.
 public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLongClickListener {
@@ -54,6 +61,8 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
     private String currentConversationId;
     private String currentPartnerId;
     private boolean isOnline = true;
+    private final DealRepository dealRepository = new DealRepository();
+    private ListenerRegistration dealsListener;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -103,6 +112,11 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         }
 
         checkNetwork();
+
+        String myUid = SessionManager.getInstance().getCurrentUserId();
+        if (!myUid.isEmpty()) {
+            observeDeals(myUid);
+        }
 
         if (currentConversationId != null && !currentConversationId.isEmpty()) {
             viewModel.openConversationById(currentConversationId);
@@ -437,9 +451,40 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         }
     }
 
+    private void observeDeals(String uid) {
+        if (dealsListener != null) {
+            dealsListener.remove();
+            dealsListener = null;
+        }
+        dealsListener = dealRepository.observeMyDeals(uid, new DataCallback<List<Deal>>() {
+            @Override
+            public void onSuccess(List<Deal> deals) {
+                if (deals == null || adapter == null) {
+                    return;
+                }
+                Map<String, DealStatus> dealStatusByOffer = new HashMap<String, DealStatus>();
+                for (int i = 0; i < deals.size(); i++) {
+                    Deal d = deals.get(i);
+                    if (d != null && d.getOfferId() != null) {
+                        dealStatusByOffer.put(d.getOfferId(), d.getStatus());
+                    }
+                }
+                adapter.setDealStatusByOffer(dealStatusByOffer);
+            }
+
+            @Override
+            public void onError(String message) {
+            }
+        });
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (dealsListener != null) {
+            dealsListener.remove();
+            dealsListener = null;
+        }
         binding = null;
     }
 }

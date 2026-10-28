@@ -16,6 +16,7 @@ import com.nhom3.pubgapp.databinding.ItemTradeMessageOfferBinding;
 import com.nhom3.pubgapp.databinding.ItemTradeMessageTextBinding;
 import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Offer;
+import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.model.enums.MessageType;
 import com.nhom3.pubgapp.model.enums.OfferStatus;
 import com.nhom3.pubgapp.model.enums.OfferType;
@@ -46,6 +47,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private final List<ChatMessage> messages = new ArrayList<ChatMessage>();
     private final Map<String, Offer> offerMap = new HashMap<String, Offer>();
+    private final Map<String, DealStatus> dealStatusByOffer = new HashMap<String, DealStatus>();
     private final FormatUtils formatUtils = new FormatUtils();
     private final MediaRepository mediaRepository = new MediaRepository();
     private String currentUserId = "";
@@ -84,6 +86,14 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     offerMap.put(offer.getId(), offer);
                 }
             }
+        }
+        notifyDataSetChanged();
+    }
+
+    public void setDealStatusByOffer(Map<String, DealStatus> map) {
+        dealStatusByOffer.clear();
+        if (map != null) {
+            dealStatusByOffer.putAll(map);
         }
         notifyDataSetChanged();
     }
@@ -260,6 +270,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 binding.textOfferType.setText(message.getText() != null ? message.getText() : "");
                 binding.textOfferAmount.setVisibility(View.GONE);
                 binding.textOfferExchangeItem.setVisibility(View.GONE);
+                binding.textOfferDealCancelled.setVisibility(View.GONE);
                 binding.textOfferWaitingBuyer.setVisibility(View.GONE);
                 binding.layoutSellerActions.setVisibility(View.GONE);
                 StatusChips.bind(binding.chipOfferStatus.textStatusChip, OfferStatus.PENDING);
@@ -298,6 +309,14 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
 
             StatusChips.bind(binding.chipOfferStatus.textStatusChip, offer.getStatus());
+
+            DealStatus dealStatus = offer.getId() != null
+                    ? dealStatusByOffer.get(offer.getId()) : null;
+            if (dealStatus == DealStatus.CANCELLED) {
+                binding.textOfferDealCancelled.setVisibility(View.VISIBLE);
+            } else {
+                binding.textOfferDealCancelled.setVisibility(View.GONE);
+            }
 
             OfferStatus status = offer.getStatus();
             boolean isSeller = currentUserId != null && currentUserId.equals(offer.getSellerId());
