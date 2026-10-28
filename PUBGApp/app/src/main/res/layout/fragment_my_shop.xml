@@ -31,7 +31,8 @@
                 android:layout_height="@dimen/touch_min"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/listing_shop_menu_desc"
-                android:src="@android:drawable/ic_menu_more" />
+                android:src="@drawable/ic_more_vert"
+                app:tint="?attr/colorOnSurface" />
         </LinearLayout>
 
         <include
@@ -72,7 +73,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:tabIndicatorColor="?attr/colorPrimary"
-            app:tabMode="fixed"
+            app:tabMode="scrollable"
+            app:tabPaddingEnd="@dimen/space_sm"
+            app:tabPaddingStart="@dimen/space_sm"
             app:tabSelectedTextColor="?attr/colorPrimary"
             app:tabTextColor="?attr/colorOnSurfaceVariant" />
 
