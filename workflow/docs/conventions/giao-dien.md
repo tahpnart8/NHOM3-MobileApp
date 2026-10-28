@@ -212,6 +212,8 @@ Mọi style thành phần nằm trong `res/values/styles.xml`, và `Theme.PUBGAp
 | Hộp thoại | `MaterialAlertDialog.PUBGApp` | `materialAlertDialogTheme` | Nền trắng, bo 24dp |
 | Bảng trượt từ dưới lên | `Widget.PUBGApp.BottomSheet` | `bottomSheetDialogTheme` | Nền trắng, bo 24dp hai góc trên |
 
+Ô lối tắt của bảng điều khiển admin (E01, issue #362) là nút `Widget.PUBGApp.Button.TonalButton` bo `ShapeAppearance.PUBGApp.Large` (16dp, không phải viên thuốc) cao tối thiểu `tile_min_height` (72dp), xếp hai cột. Đây là ngoại lệ duy nhất của quy tắc nút viên thuốc: một ô lớn đọc như thẻ, không như nút.
+
 Câu báo lỗi nằm trong màn hình (ví dụ `textError` ở A01 đến A03, issue #360) là khối `bg_error_banner`: nền `colorErrorContainer`, bo `radius_md`, đệm `space_md`, chữ `BodyMedium` màu `colorOnErrorContainer` (10.23). Tiêu đề lớn của các màn đăng nhập, đăng ký, quên mật khẩu dùng `HeadlineMedium` màu `colorPrimary`.
 
 Ô nhập trần (không có `TextInputLayout`), ví dụ ô nhập tin nhắn ở C02, dùng nền viên thuốc `bg_input_pill` (`colorSurfaceContainer`, bo `radius_xl`) với đệm `space_md` ngang, `space_sm` dọc. Bong bóng tin nhắn nhận là thẻ trắng có bóng, không viền; bong bóng gửi tô `colorPrimary` (issue #355).
