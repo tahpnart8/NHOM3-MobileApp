@@ -25,7 +25,7 @@ import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
-import com.nhom3.pubgapp.ui.common.ImageLoader;
+import com.nhom3.pubgapp.ui.common.AvatarBinder;
 import com.nhom3.pubgapp.ui.common.StatusChips;
 import com.nhom3.pubgapp.ui.profile.ProfileListingAdapter;
 import com.nhom3.pubgapp.util.NetworkMonitor;
@@ -407,20 +407,7 @@ public class SellerTrustFragment extends Fragment {
     }
 
     private void showAvatar(User user) {
-        String name = user.getDisplayName();
-        String initial = "";
-        if (name != null && !name.trim().isEmpty()) {
-            initial = name.trim().substring(0, 1).toUpperCase(Locale.ROOT);
-        }
-        binding.includeAvatar.textInitial.setText(initial);
-        String avatarBase64 = user.getAvatarBase64();
-        boolean hasPhoto = avatarBase64 != null && !avatarBase64.isEmpty();
-        binding.includeAvatar.imageAvatar.setVisibility(hasPhoto ? View.VISIBLE : View.GONE);
-        binding.includeAvatar.textInitial.setVisibility(hasPhoto ? View.GONE : View.VISIBLE);
-        if (hasPhoto) {
-            ImageLoader.load(avatarBase64, binding.includeAvatar.imageAvatar,
-                    R.drawable.bg_avatar, R.drawable.bg_avatar);
-        }
+        AvatarBinder.bind(binding.includeAvatar, user.getDisplayName(), user.getAvatarBase64());
     }
 
     private void showStats(ProfileStats stats) {
