@@ -16,7 +16,7 @@ Mã màu rút ra từ 30 ảnh mockup ngày 2026-10-22 bằng cách đếm đi�
 | `colorOnSurface` | `?attr/colorOnSurface` | Chữ chính | `#1E1E1C` |
 | `colorOnSurfaceVariant` | `?attr/colorOnSurfaceVariant` | Chữ phụ, nhãn, chú thích | `#6E6B62` |
 | `colorBackground` | `?android:attr/colorBackground` | Nền màn hình | `#FAF8F4` |
-| `colorOutline` | `?attr/colorOutline` | Viền ô nhập, đường kẻ phân cách | `#E7E2D6` |
+| `colorOutline` | `?attr/colorOutline` | Đường kẻ phân cách, viền thẻ phẳng và chip (viền ô nhập dùng `outline_strong`, mục 1a) | `#E7E2D6` |
 | `colorError` | `?attr/colorError` | Lỗi, nút nguy hiểm, nhãn khóa tài khoản | `#B2412F` |
 | `colorWarning` | `@color/warning` | Cảnh báo, nhãn chờ xử lý | `#9E5223` |
 | `colorSuccess` | `@color/success` | Thành công, nhãn hoàn tất | `#1F6F54` |
@@ -33,6 +33,32 @@ Ba điều cần biết khi đọc bảng trên:
 
 Mọi cặp chữ và nền trong bảng trên đã được kiểm tỉ lệ tương phản theo WCAG AA (chữ nhỏ cần 4.5). Thấp nhất là chip be `#9E5223` trên `#F5E4D8` với 4.61; cao nhất là chữ chính trên thẻ với 16.70. Thêm màu mới thì kiểm lại, đừng đoán bằng mắt.
 
+### 1a. Các vai màu còn lại của Material 3
+
+Từ đợt làm mới giao diện (issue #349), theme khai đủ mọi vai màu của Material 3, suy ra từ bảng trên, để không thành phần nào rơi về màu tím mặc định. Layout vẫn dùng dạng `?attr/...`.
+
+| Thuộc tính theme | Giá trị | Dùng cho | Cặp chữ trên nền, tỉ lệ |
+| --- | --- | --- | --- |
+| `colorPrimaryContainer` / `colorOnPrimaryContainer` | `#CDEBDD` / `#0B3B2B` | Chip lọc đang chọn, nền viên thuốc của tab đang chọn ở thanh dưới | 9.87; `colorPrimary` trên nền này 4.78 |
+| `colorSecondary` / `colorOnSecondary` | `#3F5A4D` / `#FFFFFF` | Thành phần Material cần màu phụ | 7.55 |
+| `colorSecondaryContainer` / `colorOnSecondaryContainer` | `#D9EDE3` / `#0B3B2B` | Nút tonal | 10.25 |
+| `colorTertiary` / `colorOnTertiary` | `#C2410C` / `#FFFFFF` | **Màu nhấn duy nhất**: huy hiệu đếm số, nhãn "Mới" và nhãn loại tin. Không dùng cho giá, không dùng cho nút | 5.18; chữ `colorTertiary` trên nền màn hình 4.88 |
+| `colorTertiaryContainer` / `colorOnTertiaryContainer` | `#FFE3D3` / `#6B2A07` | Nền nhãn nhấn nhạt | 8.77 |
+| `colorSurfaceContainerLowest` | `#FFFFFF` | Như `colorSurface` | |
+| `colorSurfaceContainerLow` | `#F7F4EE` | Nền nhóm nhẹ | `colorOnSurfaceVariant` 4.85 |
+| `colorSurfaceContainer`, `colorSurfaceVariant` | `#F3EFE8` | Nền ô tìm kiếm, khối phụ trong thẻ | `colorOnSurfaceVariant` 4.65 |
+| `colorSurfaceContainerHigh` | `#EFEBE3` | Nền khối nổi hơn | chỉ dùng `colorOnSurface` (`colorOnSurfaceVariant` chỉ 4.48) |
+| `colorSurfaceContainerHighest` | `#EBE6DD` | Nền khối nổi nhất | chỉ dùng `colorOnSurface` (13.43) |
+| `colorSurfaceDim` | `#E2DDD3` | Nền mờ | |
+| `colorSurfaceInverse` / `colorOnSurfaceInverse` / `colorPrimaryInverse` | `#2F2E2B` / `#F4F1EA` / `#8FD3B4` | Snackbar và nút hành động của nó | 12.04; nút 7.85 |
+| `colorOutlineVariant` | `#EFEBE2` | Đường kẻ phân cách rất nhạt | không mang chữ |
+| `colorOnError` | `#FFFFFF` | Chữ trên nền `colorError` | 5.69 |
+| `colorErrorContainer` / `colorOnErrorContainer` | `#F9DED8` / `#5C1A10` | Khối báo lỗi nhạt | 10.23; chữ `colorError` trên nền này 4.46, không dùng cho chữ nhỏ |
+
+Một màu không phải vai Material, khai trong `colors.xml`:
+
+- `outline_strong` `#8F8A7E`: viền ô nhập lúc chưa chọn. Viền của một điều khiển cần 3:1 so với nền; `colorOutline` `#E7E2D6` chỉ 1.2 nên chỉ dùng cho đường kẻ và viền thẻ. Đạt 3.44 trên nền trắng.
+
 ## 2. Khoảng cách, bo góc, độ nổi
 
 Thang khoảng cách là bội của 4. Không dùng giá trị ngoài thang.
@@ -44,25 +70,41 @@ Thang khoảng cách là bội của 4. Không dùng giá trị ngoài thang.
 | `space_md` | 16dp | Lề trái phải của màn hình, lề trong thẻ |
 | `space_lg` | 24dp | Khe giữa hai nhóm nội dung |
 | `space_xl` | 32dp | Khe trên dưới của một mục lớn |
-| `radius_sm` | 8dp | Chip, ô nhập |
-| `radius_md` | 12dp | Thẻ, nút |
-| `radius_lg` | 16dp | Hộp thoại, bảng trượt từ dưới lên |
+| `radius_sm` | 8dp | Khối nhỏ (`shapeAppearanceCornerSmall`) |
+| `radius_md` | 12dp | Ô nhập, snackbar |
+| `radius_lg` | 16dp | Thẻ |
+| `radius_xl` | 24dp | Hộp thoại, bảng trượt từ dưới lên (chỉ hai góc trên) |
 | `elevation_card` | 2dp | Thẻ |
 | `touch_min` | 48dp | Cạnh nhỏ nhất của mọi thứ bấm được |
+
+Nút và chip luôn **bo tròn hẳn** (hình viên thuốc, `ShapeAppearance.PUBGApp.Full`), không có token cỡ.
+
+**Bo góc và độ nổi do theme lo, layout không tự đặt.** Không viết `app:cornerRadius`, `app:cardCornerRadius` hay `app:cardElevation` trong layout; style ở mục 5a đã đặt sẵn. Ngoại lệ duy nhất là thẻ phẳng có viền (`app:cardElevation="0dp"` kèm `app:strokeWidth`), ví dụ bong bóng tin nhắn.
 
 ## 3. Thang chữ
 
 Dùng text appearance của theme, không đặt `textSize` tay.
 
-| Token | Cỡ gợi ý | Dùng cho |
-| --- | --- | --- |
-| `textAppearanceHeadlineSmall` | 24sp | Tiêu đề màn hình trống, tên người dùng trên trang cá nhân |
-| `textAppearanceTitleMedium` | 16sp đậm | Tiêu đề thẻ, tên món đồ |
-| `textAppearanceBodyMedium` | 14sp | Chữ thường |
-| `textAppearanceBodySmall` | 12sp | Chữ phụ, thời gian, khu vực |
-| `textAppearanceLabelLarge` | 14sp đậm | Chữ trên nút |
+Font của cả app là **Be Vietnam Pro** (giấy phép SIL Open Font License 1.1, văn bản ở `PUBGApp/licenses/be-vietnam-pro-OFL.txt`), đóng gói trong `res/font/` với 4 độ đậm 400, 500, 600, 700 qua họ `@font/be_vietnam_pro`. Font này vẽ dấu tiếng Việt cân và rõ hơn font hệ thống, và giống nhau trên mọi máy. Theme đặt nó cho mọi `TextView`; đừng đặt `fontFamily` trong layout.
 
-Giá cả luôn dùng `textAppearanceTitleMedium` kèm `colorPrimary`, để mắt bắt được giá ở mọi màn hình.
+Cả 15 text appearance của Material 3 đều được ghi đè trong `themes.xml` (cỡ giữ theo Material 3, font và độ đậm là của dự án):
+
+| Token | Cỡ | Độ đậm | Dùng cho |
+| --- | --- | --- | --- |
+| `textAppearanceDisplayLarge`, `Medium`, `Small` | 57, 45, 36sp | 600 | Số lớn (thẻ thống kê admin) |
+| `textAppearanceHeadlineLarge`, `Medium` | 32, 28sp | 600 | Tiêu đề lớn |
+| `textAppearanceHeadlineSmall` | 24sp | 600 | Tiêu đề màn hình trống, tên người dùng trên trang cá nhân |
+| `textAppearanceTitleLarge` | 22sp | 600 | Tiêu đề thanh trên |
+| `textAppearanceTitleMedium` | 16sp | 700 | Tiêu đề thẻ, tên món đồ, **giá** |
+| `textAppearanceTitleSmall` | 14sp | 600 | Tiêu đề nhóm nhỏ |
+| `textAppearanceBodyLarge` | 16sp | 400 | Chữ thường cỡ lớn |
+| `textAppearanceBodyMedium` | 14sp | 400 | Chữ thường |
+| `textAppearanceBodySmall` | 12sp | 400 | Chữ phụ, thời gian, khu vực |
+| `textAppearanceLabelLarge` | 14sp | 600 | Chữ trên nút, chữ tab |
+| `textAppearanceLabelMedium` | 12sp | 500 | Chữ thanh điều hướng dưới |
+| `textAppearanceLabelSmall` | 11sp | 500 | Chữ huy hiệu, nhãn nhỏ |
+
+Giá cả luôn dùng `textAppearanceTitleMedium` kèm `colorPrimary`, để mắt bắt được giá ở mọi màn hình. Độ đậm 700 của `TitleMedium` là để giá nổi nhất trên thẻ.
 
 ## 4. Màu theo trạng thái
 
@@ -133,6 +175,30 @@ Cái nào xuất hiện ở hai màn hình trở lên thì làm một layout dù
 **Hai lớp Java ở cuối bảng là bắt buộc dùng, không ai tự viết lại.** Giải mã ảnh Base64 trên luồng chính đã xảy ra ba lần (các Pull Request #129, #133 và #135, xem issue #140): giao diện giật, ảnh 1024 px có thể làm tràn bộ nhớ, và `ViewHolder` bị dùng lại thì ảnh gán nhầm sang dòng khác. `ImageLoader.load` giải mã ngoài luồng chính, thu nhỏ khi giải mã, có ảnh giữ chỗ và ảnh dự phòng, và chỉ gán ảnh khi `ImageView` vẫn còn cần đúng ảnh đó. **Có ba bản nạp chồng, chọn theo chỗ bạn đang giữ ảnh:** chuỗi Base64 đọc từ tài liệu Firestore thì `load(String, ...)`; `byte[]` do `MediaRepository.getImage` trả thì `load(byte[], imageId, ...)` và `imageId` chính là chốt chống gán nhầm nên phải truyền đúng mã của ảnh đó; `Uri` người dùng vừa chọn từ bộ chọn ảnh thì `load(Uri, ...)`. Thiếu một trong ba cửa vào này là lý do hai adapter đã phải tự viết và tự viết sai, nên nguồn ảnh mới thì thêm bản nạp chồng thứ tư, đừng giải mã trong adapter. `StatusChips.bind` đặt chữ và màu cho `view_status_chip` đúng bảng ở mục 4, với một phương thức nạp chồng cho mỗi enum trạng thái; chữ lấy từ khóa `common_status_<đối tượng>_<trạng thái>` trong `strings_common.xml`. Màn hình nào cần giải mã ảnh hoặc tô nhãn thì gọi hai lớp này; cần thêm hành vi thì mở issue `area:ui`, đừng sao chép sang module mình.
 
 `item_listing_card.xml` có chiều rộng `match_parent`, nên dùng được cả trong lưới hai cột (B01) lẫn danh sách một cột (B05, B06, D02). Chiều cao ảnh bìa lấy từ token `listing_card_image_height`; ảnh đại diện lớn lấy từ `avatar_size_lg`.
+
+## 5a. Style thành phần
+
+Mọi style thành phần nằm trong `res/values/styles.xml`, và `Theme.PUBGApp` đặt chúng làm mặc định. Một view không ghi `style` thì đã có style mặc định; chỉ ghi `style` để chọn biến thể, và **luôn chọn `Widget.PUBGApp.*`, không trỏ thẳng vào `Widget.Material3.*`**, nếu không màu, font và hình khối của dự án không áp được.
+
+| Thành phần | Style | Mặc định qua thuộc tính theme | Trông thế nào |
+| --- | --- | --- | --- |
+| Nút chính (tô xanh) | `Widget.PUBGApp.Button` | `materialButtonStyle` | Viên thuốc, nền `colorPrimary`. Mỗi màn hình một nút chính |
+| Nút viền | `Widget.PUBGApp.Button.OutlinedButton` | `materialButtonOutlinedStyle` | Viên thuốc, viền và chữ xanh (`res/color/button_outlined_stroke.xml`). Nút nguy hiểm đặt thêm `app:strokeColor="?attr/colorError"` |
+| Nút chữ | `Widget.PUBGApp.Button.TextButton` | `borderlessButtonStyle` | Chữ xanh, không nền |
+| Nút tonal | `Widget.PUBGApp.Button.TonalButton` | `materialButtonTonalStyle` | Viên thuốc, nền `colorSecondaryContainer` |
+| Thẻ | `Widget.PUBGApp.CardView` | `materialCardViewStyle` | Nền trắng, bo 16dp, bóng `elevation_card`, không viền |
+| Chip lọc | `Widget.PUBGApp.Chip.Filter` | (không có, phải ghi `style`) | Viên thuốc; khi chọn: nền `colorPrimaryContainer`, viền và chữ xanh đậm |
+| Chip thường | `Widget.PUBGApp.Chip.Assist` | `chipStyle` | Viên thuốc, viền `colorOutline` |
+| Ô nhập | `Widget.PUBGApp.TextInputLayout.OutlinedBox` | `textInputStyle`, `textInputOutlinedStyle` | Nền trắng, bo 12dp, viền `outline_strong`, xanh khi đang gõ |
+| Ô chọn thả xuống | `Widget.PUBGApp.TextInputLayout.OutlinedBox.ExposedDropdownMenu` | `textInputOutlinedExposedDropdownMenuStyle` | Như ô nhập |
+| Thanh điều hướng dưới | `Widget.PUBGApp.BottomNavigationView` | `bottomNavigationStyle` | Nền trắng; tab đang chọn có nền viên thuốc `colorPrimaryContainer`, biểu tượng và chữ xanh |
+| Tab | `Widget.PUBGApp.TabLayout` | `tabStyle` | Chữ `LabelLarge`, tab chọn và gạch chỉ báo màu xanh |
+| Toolbar | `Widget.PUBGApp.Toolbar` | `toolbarStyle` | Tiêu đề `TitleLarge` |
+| Snackbar | `Widget.PUBGApp.Snackbar` | `snackbarStyle` | Bo 12dp, nền `colorSurfaceInverse` |
+| Hộp thoại | `MaterialAlertDialog.PUBGApp` | `materialAlertDialogTheme` | Nền trắng, bo 24dp |
+| Bảng trượt từ dưới lên | `Widget.PUBGApp.BottomSheet` | `bottomSheetDialogTheme` | Nền trắng, bo 24dp hai góc trên |
+
+Thanh nút cố định ở đáy màn hình (ví dụ Chi tiết tin, ô nhập tin nhắn) có khoảng đệm dưới lớn hơn khoảng đệm trên một bậc (`space_md` dưới, `space_sm` trên), để nút không nằm sát thanh cử chỉ của hệ thống. Activity đã chừa chỗ cho thanh hệ thống bằng window insets.
 
 ## 6. Bốn trạng thái mà màn hình nào cũng phải có
 
