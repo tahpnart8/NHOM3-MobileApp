@@ -433,8 +433,7 @@
         android:minHeight="@dimen/touch_min"
         android:orientation="horizontal"
         android:paddingHorizontal="@dimen/space_md"
-        android:paddingTop="@dimen/space_sm"
-        android:paddingBottom="@dimen/space_md"
+        android:paddingVertical="@dimen/space_sm"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <!-- Buyer actions -->
