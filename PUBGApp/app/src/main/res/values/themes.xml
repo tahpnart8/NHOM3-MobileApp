@@ -49,9 +49,8 @@
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar">true</item>
 
-        <!-- Be Vietnam Pro for every TextView; the text appearances below pick the weight. -->
-        <item name="android:fontFamily">@font/be_vietnam_pro</item>
-        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <!-- Be Vietnam Pro comes from the text appearances below. A fontFamily here would count as a
+             view attribute, reload the font at weight 400 and undo every bold appearance. -->
 
         <item name="textAppearanceDisplayLarge">@style/TextAppearance.PUBGApp.DisplayLarge</item>
         <item name="textAppearanceDisplayMedium">@style/TextAppearance.PUBGApp.DisplayMedium</item>
