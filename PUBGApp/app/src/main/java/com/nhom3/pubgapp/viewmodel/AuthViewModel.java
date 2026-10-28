@@ -410,9 +410,10 @@ public class AuthViewModel extends ViewModel {
 
             @Override
             public void onError(String message) {
-                authRepository.signOut();
+                // Keep regular user session if admin check fails (e.g. offline) rather than signing out.
+                sessionManager.start(user, false);
                 loading.postValue(false);
-                error.postValue(message != null ? message : "Không thể xác thực quyền người dùng.");
+                loggedIn.postValue(true);
             }
         });
     }
@@ -534,6 +535,19 @@ public class AuthViewModel extends ViewModel {
         };
     }
 
+    static boolean isInvalidAccountError(String message) {
+        if (message == null) {
+            return false;
+        }
+        if (message.contains("không tồn tại hoặc đã bị vô hiệu hóa")) {
+            return true;
+        }
+        if (message.contains("Chưa đăng nhập")) {
+            return true;
+        }
+        return false;
+    }
+
     public void restoreSession() {
         if (sessionManager.isLoggedIn()) {
             return;
@@ -550,22 +564,35 @@ public class AuthViewModel extends ViewModel {
                     loading.postValue(false);
                     return;
                 }
-                userRepository.getProfile(uid, new DataCallback<User>() {
-                    @Override
-                    public void onSuccess(User user) {
-                        if (user == null) {
-                            loading.postValue(false);
-                            needsProfile.postValue(true);
-                            return;
-                        }
-                        processUserSession(user);
-                    }
+                loadProfileForSession(uid);
+            }
 
-                    @Override
-                    public void onError(String message) {
-                        loading.postValue(false);
-                    }
-                });
+            @Override
+            public void onError(String message) {
+                if (isInvalidAccountError(message)) {
+                    authRepository.signOut();
+                    loading.postValue(false);
+                    return;
+                }
+                if (!authRepository.isGoogleAccount() && !authRepository.isEmailVerified()) {
+                    loading.postValue(false);
+                    return;
+                }
+                loadProfileForSession(uid);
+            }
+        });
+    }
+
+    private void loadProfileForSession(final String uid) {
+        userRepository.getProfile(uid, new DataCallback<User>() {
+            @Override
+            public void onSuccess(User user) {
+                if (user == null) {
+                    loading.postValue(false);
+                    needsProfile.postValue(true);
+                    return;
+                }
+                processUserSession(user);
             }
 
             @Override
