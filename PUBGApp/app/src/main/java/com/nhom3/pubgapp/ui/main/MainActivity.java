@@ -202,14 +202,20 @@ public class MainActivity extends AppCompatActivity {
         return current.getId();
     }
 
-    // The bottom bar pads itself for the navigation bar, so only the keyboard is handled at the bottom.
+    // The bottom bar pads itself for the navigation bar; without it the root must, or a screen's own
+    // bottom buttons sit on the gesture bar.
     private void applyWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), new OnApplyWindowInsetsListener() {
             @Override
             public WindowInsetsCompat onApplyWindowInsets(View view, WindowInsetsCompat insets) {
                 Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
                 Insets keyboard = insets.getInsets(WindowInsetsCompat.Type.ime());
-                view.setPadding(bars.left, bars.top, bars.right, keyboard.bottom);
+                int bottom = keyboard.bottom;
+                boolean isBottomBarShown = binding.bottomNavigation.getVisibility() == View.VISIBLE;
+                if (!isBottomBarShown) {
+                    bottom = Math.max(bars.bottom, keyboard.bottom);
+                }
+                view.setPadding(bars.left, bars.top, bars.right, bottom);
                 return insets;
             }
         });
@@ -281,6 +287,8 @@ public class MainActivity extends AppCompatActivity {
                 || destinationId == R.id.conversationListFragment
                 || destinationId == R.id.myProfileFragment;
         binding.bottomNavigation.setVisibility(isTab ? View.VISIBLE : View.GONE);
+        // The bottom padding depends on whether the bottom bar shows, so ask for it again.
+        ViewCompat.requestApplyInsets(binding.getRoot());
         binding.layoutTopBar.setVisibility(destinationId == R.id.homeFragment ? View.VISIBLE : View.GONE);
         updateTopBarForSession();
         refreshUnreadCount(destinationId);
