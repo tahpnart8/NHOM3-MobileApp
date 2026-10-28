@@ -16,12 +16,12 @@ import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.databinding.ItemTrustReviewBinding;
 import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.ui.common.AvatarBinder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,8 +31,8 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
     private static final String TAG = "ReviewAdapter";
 
     private final List<Review> reviews = new ArrayList<Review>();
-    // users/{reviewerId}.displayName, filled as rows are bound.
-    private final Map<String, String> reviewerNames = new HashMap<String, String>();
+    // users/{reviewerId}, for the name and avatar, filled as rows are bound.
+    private final Map<String, User> reviewers = new HashMap<String, User>();
     private final Set<String> requestedIds = new HashSet<String>();
     private final UserRepository userRepository = new UserRepository();
 
@@ -58,8 +58,10 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
         Context context = holder.itemView.getContext();
         String fallback = context.getString(R.string.profile_review_item_reviewer);
         String reviewerId = review.getReviewerId();
-        String name = resolveName(reviewerNames.get(reviewerId), fallback);
-        holder.bind(review, name);
+        User reviewer = reviewers.get(reviewerId);
+        String displayName = reviewer == null ? null : reviewer.getDisplayName();
+        String avatarBase64 = reviewer == null ? null : reviewer.getAvatarBase64();
+        holder.bind(review, resolveName(displayName, fallback), avatarBase64);
         loadReviewerName(reviewerId);
     }
 
@@ -88,7 +90,7 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
                 if (user == null) {
                     return;
                 }
-                reviewerNames.put(reviewerId, user.getDisplayName());
+                reviewers.put(reviewerId, user);
                 refreshRowsOf(reviewerId);
             }
 
@@ -116,11 +118,9 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
             this.binding = binding;
         }
 
-        void bind(Review review, String name) {
+        void bind(Review review, String name, @Nullable String avatarBase64) {
             binding.textReviewerName.setText(name);
-            binding.includeAvatar.textInitial.setText(name.substring(0, 1).toUpperCase(Locale.ROOT));
-            binding.includeAvatar.textInitial.setVisibility(View.VISIBLE);
-            binding.includeAvatar.imageAvatar.setVisibility(View.GONE);
+            AvatarBinder.bind(binding.includeAvatar, name, avatarBase64);
             binding.includeRating.ratingStars.setRating(review.getRating());
             binding.includeRating.textRatingValue.setText(String.valueOf(review.getRating()));
             binding.includeRating.textRatingCount.setVisibility(View.GONE);
