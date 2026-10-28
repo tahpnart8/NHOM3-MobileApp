@@ -138,92 +138,104 @@
             android:textAppearance="?attr/textAppearanceBodyMedium" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
-    <!-- For You horizontal section -->
-    <LinearLayout
-        android:id="@+id/layoutForYou"
+    <!-- Feed below the channel selector. For You sits in an app bar so it scrolls away with the grid
+         instead of holding half the screen. -->
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/coordinatorFeed"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="gone"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toggleChannels">
 
-        <TextView
-            android:id="@+id/textForYouTitle"
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBarForYou"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="@dimen/space_md"
-            android:paddingTop="@dimen/space_xs"
-            android:paddingBottom="@dimen/space_xs"
-            android:text="@string/listing_home_for_you_title"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="?attr/colorOnSurface" />
+            android:background="@android:color/transparent"
+            app:elevation="0dp"
+            app:liftOnScroll="false">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerForYou"
+            <!-- For You horizontal section -->
+            <LinearLayout
+                android:id="@+id/layoutForYou"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                app:layout_scrollFlags="scroll">
+
+                <TextView
+                    android:id="@+id/textForYouTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/space_md"
+                    android:paddingTop="@dimen/space_xs"
+                    android:paddingBottom="@dimen/space_xs"
+                    android:text="@string/listing_home_for_you_title"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerForYou"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="@dimen/space_xs"
+                    android:paddingBottom="@dimen/space_xs" />
+            </LinearLayout>
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <FrameLayout
+            android:id="@+id/frameFeed"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clipToPadding="false"
-            android:orientation="horizontal"
-            android:paddingHorizontal="@dimen/space_xs"
-            android:paddingBottom="@dimen/space_xs" />
-    </LinearLayout>
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-    <!-- 2-column listing grid -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerListings"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="@dimen/space_xs"
-        android:clipToPadding="false"
-        android:paddingHorizontal="@dimen/space_xs"
-        android:paddingBottom="@dimen/space_lg"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutForYou" />
+            <!-- 2-column listing grid -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerListings"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/space_xs"
+                android:clipToPadding="false"
+                android:paddingHorizontal="@dimen/space_xs"
+                android:paddingBottom="@dimen/space_lg" />
 
-    <!-- Loading indicator -->
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutForYou" />
+            <!-- Loading indicator -->
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
 
-    <!-- Empty state -->
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/scrollEmptyState"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:fillViewport="true"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutForYou">
+            <!-- Empty state -->
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/scrollEmptyState"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true"
+                android:visibility="gone">
 
-        <include
-            android:id="@+id/includeEmptyState"
-            layout="@layout/view_empty_state"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </androidx.core.widget.NestedScrollView>
+                <include
+                    android:id="@+id/includeEmptyState"
+                    layout="@layout/view_empty_state"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </androidx.core.widget.NestedScrollView>
 
-    <!-- Error state -->
-    <include
-        android:id="@+id/includeErrorState"
-        layout="@layout/view_error_state"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutForYou" />
+            <!-- Error state -->
+            <include
+                android:id="@+id/includeErrorState"
+                layout="@layout/view_error_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+        </FrameLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
