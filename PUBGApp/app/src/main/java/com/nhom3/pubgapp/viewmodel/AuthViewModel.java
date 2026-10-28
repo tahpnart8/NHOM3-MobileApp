@@ -157,12 +157,14 @@ public class AuthViewModel extends ViewModel {
                 if (verified != null && verified) {
                     emailVerified.postValue(true);
                     signUpStep.postValue(3);
+                } else {
+                    emailVerified.postValue(false);
                 }
             }
 
             @Override
             public void onError(String message) {
-                // Keep waiting on screen 2 without error
+                emailVerified.postValue(false);
             }
         });
     }
