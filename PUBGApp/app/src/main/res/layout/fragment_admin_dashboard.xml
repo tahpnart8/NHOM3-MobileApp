@@ -29,7 +29,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/admin_dashboard_title"
                 android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                android:textColor="?attr/colorOnSurface" />
+                android:textColor="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/textDashboardGreeting"
@@ -108,25 +108,27 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonShortcutUsers"
-                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.TonalButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/space_xs"
                     android:layout_weight="1"
-                    android:minHeight="@dimen/touch_min"
+                    android:minHeight="@dimen/tile_min_height"
                     android:paddingHorizontal="@dimen/space_xs"
-                    android:text="@string/admin_dashboard_shortcut_users" />
+                    android:text="@string/admin_dashboard_shortcut_users"
+                    app:shapeAppearance="@style/ShapeAppearance.PUBGApp.Large" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonShortcutReports"
-                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.TonalButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/space_xs"
                     android:layout_weight="1"
-                    android:minHeight="@dimen/touch_min"
+                    android:minHeight="@dimen/tile_min_height"
                     android:paddingHorizontal="@dimen/space_xs"
-                    android:text="@string/admin_dashboard_shortcut_reports" />
+                    android:text="@string/admin_dashboard_shortcut_reports"
+                    app:shapeAppearance="@style/ShapeAppearance.PUBGApp.Large" />
             </LinearLayout>
 
             <LinearLayout
@@ -137,25 +139,27 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonShortcutComplaints"
-                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.TonalButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/space_xs"
                     android:layout_weight="1"
-                    android:minHeight="@dimen/touch_min"
+                    android:minHeight="@dimen/tile_min_height"
                     android:paddingHorizontal="@dimen/space_xs"
-                    android:text="@string/admin_dashboard_shortcut_complaints" />
+                    android:text="@string/admin_dashboard_shortcut_complaints"
+                    app:shapeAppearance="@style/ShapeAppearance.PUBGApp.Large" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonShortcutDeals"
-                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.TonalButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/space_xs"
                     android:layout_weight="1"
-                    android:minHeight="@dimen/touch_min"
+                    android:minHeight="@dimen/tile_min_height"
                     android:paddingHorizontal="@dimen/space_xs"
-                    android:text="@string/admin_dashboard_shortcut_deals" />
+                    android:text="@string/admin_dashboard_shortcut_deals"
+                    app:shapeAppearance="@style/ShapeAppearance.PUBGApp.Large" />
             </LinearLayout>
 
             <LinearLayout
@@ -166,25 +170,27 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonShortcutCategories"
-                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.TonalButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/space_xs"
                     android:layout_weight="1"
-                    android:minHeight="@dimen/touch_min"
+                    android:minHeight="@dimen/tile_min_height"
                     android:paddingHorizontal="@dimen/space_xs"
-                    android:text="@string/admin_dashboard_shortcut_categories" />
+                    android:text="@string/admin_dashboard_shortcut_categories"
+                    app:shapeAppearance="@style/ShapeAppearance.PUBGApp.Large" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonShortcutAdminAccounts"
-                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.TonalButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/space_xs"
                     android:layout_weight="1"
-                    android:minHeight="@dimen/touch_min"
+                    android:minHeight="@dimen/tile_min_height"
                     android:paddingHorizontal="@dimen/space_xs"
-                    android:text="@string/admin_dashboard_shortcut_admin_accounts" />
+                    android:text="@string/admin_dashboard_shortcut_admin_accounts"
+                    app:shapeAppearance="@style/ShapeAppearance.PUBGApp.Large" />
             </LinearLayout>
 
             <include

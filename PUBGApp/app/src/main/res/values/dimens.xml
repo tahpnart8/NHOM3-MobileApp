@@ -26,6 +26,9 @@
     <!-- White edge of the count badge and of the avatar ring on the green header. -->
     <dimen name="badge_stroke">2dp</dimen>
 
+    <!-- Shortcut tiles of the admin dashboard (E01). -->
+    <dimen name="tile_min_height">72dp</dimen>
+
     <!-- Large avatar, for profile headers (view_avatar defaults to touch_min). -->
     <dimen name="avatar_size_lg">96dp</dimen>
 </resources>
