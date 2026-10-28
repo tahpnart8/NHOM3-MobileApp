@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Green block behind the name and avatar at the top of D01, same gradient as the Home top bar. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="0"
+        android:endColor="?attr/colorPrimary"
+        android:startColor="@color/primary_dark" />
+    <corners android:radius="@dimen/radius_lg" />
+</shape>
