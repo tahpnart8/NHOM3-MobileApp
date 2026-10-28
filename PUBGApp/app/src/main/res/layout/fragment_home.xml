@@ -104,42 +104,8 @@
             app:iconTint="?attr/colorPrimary" />
     </LinearLayout>
 
-    <!-- Channel selector (Kênh chung / Đang theo dõi) -->
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/toggleChannels"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/space_md"
-        android:layout_marginTop="@dimen/space_xs"
-        android:layout_marginBottom="@dimen/space_xs"
-        app:checkedButton="@id/buttonChannelGeneral"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutSearchRow"
-        app:selectionRequired="true"
-        app:singleSelection="true">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonChannelGeneral"
-            style="@style/Widget.PUBGApp.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/touch_min"
-            android:layout_weight="1"
-            android:text="@string/listing_home_channel_general"
-            android:textAppearance="?attr/textAppearanceBodyMedium" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonChannelFollowing"
-            style="@style/Widget.PUBGApp.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/touch_min"
-            android:layout_weight="1"
-            android:text="@string/listing_home_channel_following"
-            android:textAppearance="?attr/textAppearanceBodyMedium" />
-    </com.google.android.material.button.MaterialButtonToggleGroup>
-
-    <!-- Feed below the channel selector. For You sits in an app bar so it scrolls away with the grid
-         instead of holding half the screen. -->
+    <!-- Feed below the search row. The channel selector and For You sit in an app bar so they scroll
+         away with the grid instead of holding half the screen, above all in landscape. -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/coordinatorFeed"
         android:layout_width="0dp"
@@ -147,7 +113,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toggleChannels">
+        app:layout_constraintTop_toBottomOf="@id/layoutSearchRow">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBarForYou"
@@ -156,6 +122,38 @@
             android:background="@android:color/transparent"
             app:elevation="0dp"
             app:liftOnScroll="false">
+
+            <!-- Channel selector (Kênh chung / Đang theo dõi) -->
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/toggleChannels"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/space_md"
+                android:layout_marginTop="@dimen/space_xs"
+                android:layout_marginBottom="@dimen/space_xs"
+                app:checkedButton="@id/buttonChannelGeneral"
+                app:layout_scrollFlags="scroll"
+                app:selectionRequired="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonChannelGeneral"
+                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/touch_min"
+                    android:layout_weight="1"
+                    android:text="@string/listing_home_channel_general"
+                    android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonChannelFollowing"
+                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/touch_min"
+                    android:layout_weight="1"
+                    android:text="@string/listing_home_channel_following"
+                    android:textAppearance="?attr/textAppearanceBodyMedium" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
 
             <!-- For You horizontal section -->
             <LinearLayout
