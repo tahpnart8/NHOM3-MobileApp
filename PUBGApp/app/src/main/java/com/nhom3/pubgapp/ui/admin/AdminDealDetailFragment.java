@@ -22,6 +22,7 @@ import com.nhom3.pubgapp.model.StatusChange;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.PaymentMethod;
+import com.nhom3.pubgapp.model.enums.PaymentStatus;
 import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.ui.common.StatusChips;
 import com.nhom3.pubgapp.util.FormatUtils;
@@ -340,17 +341,21 @@ public class AdminDealDetailFragment extends Fragment {
             binding.textPaymentHeldAt.setVisibility(View.GONE);
         }
 
+        boolean isRefunded = payment.getStatus() == PaymentStatus.REFUNDED;
         if (payment.getReleasedAt() != null) {
             binding.textPaymentReleasedAt.setVisibility(View.VISIBLE);
+            int labelRes = isRefunded
+                    ? R.string.admin_deal_detail_payment_refunded_at
+                    : R.string.admin_deal_detail_payment_released_at;
             binding.textPaymentReleasedAt.setText(getString(
-                    R.string.admin_deal_detail_payment_released_at,
+                    labelRes,
                     formatUtils.formatTime(payment.getReleasedAt())));
         } else {
             binding.textPaymentReleasedAt.setVisibility(View.GONE);
         }
 
         Deal deal = viewModel.getSelected().getValue();
-        if (deal != null && deal.getAutoReleaseAt() != null) {
+        if (deal != null && deal.getAutoReleaseAt() != null && !isRefunded) {
             binding.textAutoReleaseAt.setVisibility(View.VISIBLE);
             binding.textAutoReleaseAt.setText(getString(
                     R.string.admin_deal_detail_auto_release_at,
