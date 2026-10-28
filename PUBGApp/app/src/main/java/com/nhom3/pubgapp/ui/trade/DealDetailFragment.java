@@ -1211,8 +1211,11 @@ public class DealDetailFragment extends Fragment {
         binding.buttonViewComplaint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // initialTab 1 opens the complaints tab of D07.
+                Bundle args = new Bundle();
+                args.putInt("initialTab", 1);
                 NavHostFragment.findNavController(DealDetailFragment.this)
-                        .navigate(R.id.action_global_my_reports);
+                        .navigate(R.id.action_global_my_reports, args);
             }
         });
     }
