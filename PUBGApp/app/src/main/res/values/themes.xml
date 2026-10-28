@@ -42,6 +42,9 @@
         <item name="colorErrorContainer">@color/error_container</item>
         <item name="colorOnErrorContainer">@color/on_error_container</item>
 
+        <!-- Cards and bars stay pure white: Material 3 would tint every raised surface with colorPrimary. -->
+        <item name="elevationOverlayEnabled">false</item>
+
         <!-- Dark status bar icons on the light screens. -->
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar">true</item>

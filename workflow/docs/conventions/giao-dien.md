@@ -212,6 +212,8 @@ Mọi style thành phần nằm trong `res/values/styles.xml`, và `Theme.PUBGAp
 | Hộp thoại | `MaterialAlertDialog.PUBGApp` | `materialAlertDialogTheme` | Nền trắng, bo 24dp |
 | Bảng trượt từ dưới lên | `Widget.PUBGApp.BottomSheet` | `bottomSheetDialogTheme` | Nền trắng, bo 24dp hai góc trên |
 
+Theme tắt `elevationOverlayEnabled`: Material 3 mặc định phủ một lớp `colorPrimary` mờ lên mọi bề mặt có bóng, làm thẻ và thanh dưới ngả xanh xám (thấy trên emulator). Bề mặt của PUBGApp luôn là `colorSurface` trắng; độ nổi chỉ thể hiện bằng bóng.
+
 Thanh nút cố định ở đáy màn hình (ví dụ Chi tiết tin, ô nhập tin nhắn) dùng khoảng đệm đều hai đầu. Việc chừa chỗ cho thanh cử chỉ của hệ thống do Activity lo bằng window insets: ở các tab, `BottomNavigationView` tự đệm; ở màn không phải tab, root của `MainActivity` đệm đáy bằng chiều cao thanh hệ thống (issue #366). Layout không tự cộng thêm khoảng đệm cho việc này.
 
 ## 6. Bốn trạng thái mà màn hình nào cũng phải có
