@@ -59,6 +59,8 @@ public class AdminUserViewModel extends ViewModel {
     private int latestFilterRequest;
 
     private static final int PROFILE_READ_COUNT = 8;
+    private static final String KEY_PROFILE = "profile";
+    private static final String KEY_REQUESTS = "requests";
     private static final int IMAGE_COUNT = 2;
     private static final String MESSAGE_USER_REQUIRED = "Thiếu mã người dùng cần xem.";
     private static final String MESSAGE_REASON_REQUIRED = "Hãy nhập lý do từ chối.";
@@ -83,6 +85,8 @@ public class AdminUserViewModel extends ViewModel {
     private final ReviewRepository reviewRepository = new ReviewRepository();
     private final ReportRepository reportRepository = new ReportRepository();
     private final MediaRepository mediaRepository = new MediaRepository();
+    // The selected profile and the pending requests are live, so a change made elsewhere shows at once.
+    private final ListenerSet listeners = new ListenerSet();
 
     // Reads still running; loading stays true until this is back to zero. Callbacks run on other threads.
     private final AtomicInteger pendingReads = new AtomicInteger(0);
@@ -436,7 +440,7 @@ public class AdminUserViewModel extends ViewModel {
     private void startProfileLoad(String userId) {
         loadedProfileUserId = userId;
         beginReads(PROFILE_READ_COUNT);
-        userRepository.getProfile(userId, new ReadCallback<User>(selectedUser));
+        listeners.put(KEY_PROFILE, userRepository.observeProfile(userId, new ReadCallback<User>(selectedUser)));
         userRepository.getIdentity(userId, new ReadCallback<UserIdentity>(identity));
         userRepository.getStats(userId, new ReadCallback<ProfileStats>(stats));
         adminRepository.getWarnings(userId, new ReadCallback<List<Warning>>(warnings));
@@ -449,7 +453,8 @@ public class AdminUserViewModel extends ViewModel {
     private void startRequestsLoad() {
         requestsAsked = true;
         beginReads(1);
-        adminRepository.getVerificationRequests(new ReadCallback<List<SellerVerification>>(verifications));
+        listeners.put(KEY_REQUESTS, adminRepository.observeVerificationRequests(
+                new ReadCallback<List<SellerVerification>>(verifications)));
     }
 
     private void refreshAfterReview(String userId) {
@@ -592,5 +597,11 @@ public class AdminUserViewModel extends ViewModel {
             error.postValue(message);
             endRead();
         }
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        listeners.clear();
     }
 }

@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 // State for the profile, address, saved-listing and verification screens. Action bodies report NOT_READY until the repositories are filled.
 public class ProfileViewModel extends ViewModel {
@@ -88,10 +89,15 @@ public class ProfileViewModel extends ViewModel {
     private static final String MESSAGE_NO_RESUBMIT_LEFT = "Đã hết số lần gửi lại, hãy liên hệ admin.";
     private static final String MESSAGE_CANNOT_FOLLOW_SELF = "Bạn không thể tự theo dõi chính mình.";
     private static final String MESSAGE_STATS_FAILED = "Không tải được thống kê, bấm Thử lại.";
+    private static final String MESSAGE_USER_NOT_FOUND = "Không tìm thấy người dùng.";
+
+    private static final String KEY_PROFILE = "profile";
+    private static final String KEY_VERIFICATION = "verification";
 
     private final UserRepository userRepository = new UserRepository();
     private final AuthRepository authRepository = new AuthRepository();
     private final MediaRepository mediaRepository = new MediaRepository();
+    private final ListenerSet listeners = new ListenerSet();
     private final ListingRepository listingRepository = new ListingRepository();
 
     // The uid whose profile is in profile, so a rotation does not read users/{uid} again.
@@ -661,17 +667,20 @@ public class ProfileViewModel extends ViewModel {
             error.setValue(MESSAGE_NOT_SIGNED_IN);
             return;
         }
-        userRepository.getVerification(uid, new DataCallback<SellerVerification>() {
-            @Override
-            public void onSuccess(SellerVerification result) {
-                verification.postValue(result);
-            }
+        listeners.put(KEY_VERIFICATION, userRepository.observeVerification(uid,
+                new DataCallback<SellerVerification>() {
+                    @Override
+                    public void onSuccess(SellerVerification result) {
+                        verification.postValue(result);
+                    }
 
-            @Override
-            public void onError(String message) {
-                error.postValue(message);
-            }
-        });
+                    // Firestore stops a listener after an error, so forget it and the next open listens again.
+                    @Override
+                    public void onError(String message) {
+                        listeners.remove(KEY_VERIFICATION);
+                        error.postValue(message);
+                    }
+                }));
     }
 
     public void loadIdentity() {
@@ -784,6 +793,8 @@ public class ProfileViewModel extends ViewModel {
 
     // The ViewModel outlives a sign out, so another account must never see the previous one's data.
     private void clearPreviousUser() {
+        listeners.remove(KEY_PROFILE);
+        listeners.remove(KEY_VERIFICATION);
         loadedUid = null;
         profile.setValue(null);
         stats.setValue(null);
@@ -791,17 +802,29 @@ public class ProfileViewModel extends ViewModel {
         following.setValue(null);
     }
 
-    private void fetchProfile(String uid) {
+    // Listens to the profile, so a status or verification change made elsewhere shows at once.
+    // Only the first snapshot reads the follow state and the counts; later ones just replace the profile.
+    private void fetchProfile(final String uid) {
         requestedUid = uid;
         loading.setValue(true);
-        userRepository.getProfile(uid, new DataCallback<User>() {
+        final AtomicBoolean first = new AtomicBoolean(true);
+        listeners.put(KEY_PROFILE, userRepository.observeProfile(uid, new DataCallback<User>() {
             @Override
             public void onSuccess(User result) {
                 if (!uid.equals(requestedUid)) {
                     return;
                 }
+                boolean isFirst = first.getAndSet(false);
+                if (result == null) {
+                    loading.postValue(false);
+                    error.postValue(MESSAGE_USER_NOT_FOUND);
+                    return;
+                }
                 loadedUid = uid;
                 profile.postValue(result);
+                if (!isFirst) {
+                    return;
+                }
                 fetchFollowing(uid);
                 if (isOwnPage(uid)) {
                     fetchStats(uid);
@@ -812,10 +835,11 @@ public class ProfileViewModel extends ViewModel {
 
             @Override
             public void onError(String message) {
+                listeners.remove(KEY_PROFILE);
                 loading.postValue(false);
                 error.postValue(message);
             }
-        });
+        }));
     }
 
     // Counted on every open (trang-thai.md, common rules), never read from a stored field.
@@ -1411,5 +1435,11 @@ public class ProfileViewModel extends ViewModel {
 
     public void clearDone() {
         done.setValue(false);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        listeners.clear();
     }
 }

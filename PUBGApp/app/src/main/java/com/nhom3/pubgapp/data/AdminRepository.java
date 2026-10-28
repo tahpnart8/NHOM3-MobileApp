@@ -8,6 +8,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
@@ -286,10 +287,39 @@ public class AdminRepository extends BaseRepository {
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot snapshot) {
-                        cb.onSuccess(snapshot.toObjects(SellerVerification.class));
+                        cb.onSuccess(withRequesterIds(snapshot.toObjects(SellerVerification.class)));
                     }
                 })
                 .addOnFailureListener(failureListener(cb));
+    }
+
+    // Live version of getVerificationRequests for E01 and E03: a new or decided request shows at once.
+    public ListenerRegistration observeVerificationRequests(final DataCallback<List<SellerVerification>> cb) {
+        Query query = db.collection(COLLECTION_VERIFICATIONS)
+                .whereEqualTo(FIELD_STATUS, VerificationStatus.PENDING.name())
+                .orderBy(FIELD_CREATED_AT, Query.Direction.ASCENDING);
+        return listenQuery(query, SellerVerification.class, new DataCallback<List<SellerVerification>>() {
+            @Override
+            public void onSuccess(List<SellerVerification> result) {
+                cb.onSuccess(withRequesterIds(result));
+            }
+
+            @Override
+            public void onError(String message) {
+                cb.onError(message);
+            }
+        });
+    }
+
+    // The document id is the requester's uid, so it fills a userId field left empty (for example by a Console edit).
+    private static List<SellerVerification> withRequesterIds(List<SellerVerification> requests) {
+        for (SellerVerification request : requests) {
+            String userId = request.getUserId();
+            if (userId == null || userId.isEmpty()) {
+                request.setUserId(request.getId());
+            }
+        }
+        return requests;
     }
 
     public void reviewVerification(final String id, final boolean approve, final String note,
