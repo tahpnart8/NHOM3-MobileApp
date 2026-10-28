@@ -22,6 +22,23 @@ an adapter.
 The `byte[]` overload needs the id because the bytes carry no identity. Passing a wrong or shared id is worse
 than passing none: two images would answer to one tag and race. If you have no id, you have the wrong overload.
 
+## Avatars go through `AvatarBinder`, which layers the photo over the initial
+
+`view_avatar.xml` stacks `imageAvatar` above `textInitial` in a clipped `FrameLayout`. `AvatarBinder.bind`
+always sets and shows the initial, then loads the photo with no placeholder and no fallback (resource 0). While
+the photo decodes, and if it fails, the image view is transparent and the initial shows through; once it
+decodes it covers the letter. So no callback from `ImageLoader` is needed to swap the two views. The earlier
+pattern (hide the initial as soon as a photo string exists) left an empty green circle whenever the decode
+failed, and passing `bg_avatar` as placeholder drew a circle over the letter. Pass the name and photo of the
+user the row is about; for a partner or reviewer whose `User` is not loaded yet, pass the fallback name and a
+null photo, then bind again when the profile arrives. Binding the same photo twice is free: `ImageLoader` tags
+the view with the Base64 string, and `bind` skips the reload when the tag already matches, so a rebind on every
+navigation or `notifyItemChanged` does not blink the photo back to the letter.
+
+The home top bar avatar is in `MainActivity`, which observes the activity-scoped `ProfileViewModel` (the same
+instance `MyProfileFragment` uses) so the Google photo written after sign-in arrives through the profile
+listener without a restart.
+
 ## Decoding a `Uri` opens it twice
 
 `BitmapFactory` needs the bounds before it can choose `inSampleSize`, and an `InputStream` from a
