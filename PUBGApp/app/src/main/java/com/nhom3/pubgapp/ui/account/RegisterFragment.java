@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,12 +51,24 @@ public class RegisterFragment extends Fragment {
 
     private static final String KEY_DOB_MILLIS = "key_dob_millis";
     private static final String KEY_SELECTED_CATEGORIES = "key_selected_categories";
+    private static final long EMAIL_VERIFY_POLL_INTERVAL_MS = 3000L;
 
     private FragmentRegisterBinding binding;
     private AuthViewModel viewModel;
     private CategoryChoiceAdapter categoryChoiceAdapter;
     private Timestamp selectedDob;
     private ArrayList<String> savedCategoryIds = new ArrayList<String>();
+    private final Handler verifyPollHandler = new Handler(Looper.getMainLooper());
+    private final Runnable verifyPollRunnable = new Runnable() {
+        @Override
+        public void run() {
+            Integer step = viewModel.getSignUpStep().getValue();
+            if (isResumed() && step != null && step == 2) {
+                viewModel.checkEmailVerified();
+                verifyPollHandler.postDelayed(this, EMAIL_VERIFY_POLL_INTERVAL_MS);
+            }
+        }
+    };
 
     @Nullable
     @Override
@@ -99,7 +113,14 @@ public class RegisterFragment extends Fragment {
         Integer step = viewModel.getSignUpStep().getValue();
         if (step != null && step == 2) {
             viewModel.checkEmailVerified();
+            startVerifyPolling();
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopVerifyPolling();
     }
 
     @Override
@@ -117,7 +138,17 @@ public class RegisterFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        stopVerifyPolling();
         binding = null;
+    }
+
+    private void startVerifyPolling() {
+        verifyPollHandler.removeCallbacks(verifyPollRunnable);
+        verifyPollHandler.postDelayed(verifyPollRunnable, EMAIL_VERIFY_POLL_INTERVAL_MS);
+    }
+
+    private void stopVerifyPolling() {
+        verifyPollHandler.removeCallbacks(verifyPollRunnable);
     }
 
     private void setupObservers() {
@@ -206,6 +237,7 @@ public class RegisterFragment extends Fragment {
     private void updateStepVisibility(Integer step) {
         Boolean needsProfile = viewModel.getNeedsProfile().getValue();
         if (needsProfile != null && needsProfile) {
+            stopVerifyPolling();
             showStep3();
             return;
         }
@@ -222,9 +254,12 @@ public class RegisterFragment extends Fragment {
                 }
             }
             binding.textTargetEmail.setText(targetEmail);
+            startVerifyPolling();
         } else if (step != null && step == 3) {
+            stopVerifyPolling();
             showStep3();
         } else {
+            stopVerifyPolling();
             binding.layoutStep1.setVisibility(View.VISIBLE);
             binding.layoutStep2.setVisibility(View.GONE);
             binding.layoutStep3.setVisibility(View.GONE);
@@ -272,6 +307,18 @@ public class RegisterFragment extends Fragment {
             public void onClick(View v) {
                 NavHostFragment.findNavController(RegisterFragment.this)
                         .navigate(R.id.action_register_to_login);
+            }
+        });
+
+        binding.buttonCheckVerified.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!isNetworkAvailable()) {
+                    showOfflineError();
+                    return;
+                }
+                viewModel.checkEmailVerified();
+                Toast.makeText(requireContext(), R.string.account_register_not_verified, Toast.LENGTH_SHORT).show();
             }
         });
 
