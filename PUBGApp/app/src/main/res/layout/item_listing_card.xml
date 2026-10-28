@@ -55,7 +55,7 @@
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:minLines="2"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textAppearance="?attr/textAppearanceTitleSmall"
                 android:textColor="?attr/colorOnSurface"
                 tools:text="@tools:sample/lorem" />
 

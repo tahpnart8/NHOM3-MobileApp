@@ -161,7 +161,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/space_sm"
                         android:textAppearance="?attr/textAppearanceLabelMedium"
-                        android:textColor="?attr/colorPrimary"
+                        android:textColor="?attr/colorTertiary"
                         android:textStyle="bold" />
 
                     <TextView
@@ -179,7 +179,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
-                    android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                    android:textAppearance="?attr/textAppearanceTitleLarge"
                     android:textColor="?attr/colorOnSurface" />
 
                 <!-- Price -->
@@ -188,7 +188,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_xs"
-                    android:textAppearance="?attr/textAppearanceTitleLarge"
+                    android:textAppearance="?attr/textAppearanceHeadlineSmall"
                     android:textColor="?attr/colorPrimary"
                     android:textStyle="bold" />
 
