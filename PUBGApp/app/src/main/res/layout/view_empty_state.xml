@@ -16,18 +16,22 @@
 
     <ImageView
         android:id="@+id/imageEmpty"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/state_icon_circle"
+        android:layout_height="@dimen/state_icon_circle"
+        android:background="@drawable/bg_icon_circle"
         android:importantForAccessibility="no"
-        android:src="@drawable/ic_inbox" />
+        android:padding="@dimen/space_lg"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_inbox"
+        app:tint="?attr/colorPrimary" />
 
     <TextView
         android:id="@+id/textEmptyTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_md"
+        android:layout_marginTop="@dimen/space_lg"
         android:gravity="center"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall"
+        android:textAppearance="?attr/textAppearanceTitleLarge"
         android:textColor="?attr/colorOnSurface" />
 
     <TextView

@@ -13,5 +13,5 @@
     android:paddingHorizontal="@dimen/space_sm"
     android:paddingVertical="@dimen/space_xs"
     android:singleLine="true"
-    android:textAppearance="?attr/textAppearanceBodySmall"
+    android:textAppearance="?attr/textAppearanceLabelMedium"
     android:textColor="?attr/colorOnSurfaceVariant" />

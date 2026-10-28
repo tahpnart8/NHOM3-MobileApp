@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Green header of the Home top bar: darker on the left, brand green on the right. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="0"
+        android:endColor="?attr/colorPrimary"
+        android:startColor="@color/primary_dark" />
+</shape>

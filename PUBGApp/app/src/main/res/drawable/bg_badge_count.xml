@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pill behind the unread count on the bell; it stretches to fit one to three characters. -->
+<!-- Pill behind the unread count on the bell, in the accent colour with a white edge so it
+     stands out on the green header. It stretches to fit one to three characters. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="?attr/colorError" />
+    <solid android:color="?attr/colorTertiary" />
+    <stroke
+        android:width="@dimen/badge_stroke"
+        android:color="?attr/colorOnPrimary" />
     <corners android:radius="@dimen/radius_lg" />
 </shape>

@@ -29,6 +29,6 @@
         android:layout_marginStart="@dimen/space_sm"
         android:layout_weight="1"
         android:text="@string/common_offline_banner"
-        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textAppearance="?attr/textAppearanceLabelLarge"
         android:textColor="?attr/colorOnPrimary" />
 </LinearLayout>
