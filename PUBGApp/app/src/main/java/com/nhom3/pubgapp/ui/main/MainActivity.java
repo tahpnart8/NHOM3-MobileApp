@@ -24,10 +24,13 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.snackbar.Snackbar;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.ActivityMainBinding;
+import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.ui.common.AvatarBinder;
 import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.AuthViewModel;
 import com.nhom3.pubgapp.viewmodel.DealViewModel;
 import com.nhom3.pubgapp.viewmodel.NotificationViewModel;
+import com.nhom3.pubgapp.viewmodel.ProfileViewModel;
 
 /** Hosts nav_main with the five-tab bottom bar. */
 public class MainActivity extends AppCompatActivity {
@@ -44,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private AuthViewModel restoreViewModel;
     private NotificationViewModel notificationViewModel;
     private DealViewModel dealViewModel;
+    private ProfileViewModel profileViewModel;
     private boolean autoReleaseChecked;
     private int pendingTabId;
 
@@ -119,6 +123,8 @@ public class MainActivity extends AppCompatActivity {
         restoreViewModel = provider.get(RESTORE_VIEW_MODEL_KEY, AuthViewModel.class);
         notificationViewModel = provider.get(NotificationViewModel.class);
         dealViewModel = provider.get(DealViewModel.class);
+        // Activity scope: the same instance MyProfileFragment uses, so both read one profile listener.
+        profileViewModel = provider.get(ProfileViewModel.class);
         restoreViewModel.getLoggedIn().observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean loggedIn) {
@@ -145,6 +151,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(Integer unreadCount) {
                 showUnreadCount(unreadCount);
+            }
+        });
+        // The profile is a live listener, so the Google photo saved just after sign in shows without a restart.
+        profileViewModel.getProfile().observe(this, new Observer<User>() {
+            @Override
+            public void onChanged(User profile) {
+                showTopBarAvatar();
             }
         });
     }
@@ -279,6 +292,26 @@ public class MainActivity extends AppCompatActivity {
         int visibility = loggedIn ? View.VISIBLE : View.GONE;
         binding.frameNotifications.setVisibility(visibility);
         binding.frameTopBarAvatar.setVisibility(visibility);
+        showTopBarAvatar();
+        if (loggedIn) {
+            // Does nothing when this account's profile is already loaded or loading.
+            profileViewModel.loadProfile(SessionManager.getInstance().getCurrentUserId());
+        }
+    }
+
+    // Until the first snapshot arrives, the session's copy of the user gives the initial; a guest's is cleared.
+    private void showTopBarAvatar() {
+        SessionManager session = SessionManager.getInstance();
+        User user = session.getCurrentUser();
+        if (user == null) {
+            AvatarBinder.bind(binding.includeAvatar, null, null);
+            return;
+        }
+        User profile = profileViewModel.getProfile().getValue();
+        if (profile != null && session.getCurrentUserId().equals(profile.getId())) {
+            user = profile;
+        }
+        AvatarBinder.bind(binding.includeAvatar, user.getDisplayName(), user.getAvatarBase64());
     }
 
     // The bell is on Home only, so the count is read each time Home comes forward.
