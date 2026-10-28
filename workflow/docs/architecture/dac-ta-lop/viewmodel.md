@@ -1,12 +1,14 @@
 # Đặc tả lớp: gói `com.nhom3.pubgapp.viewmodel`
 
-Bản chữ của sơ đồ lớp cho gói này: 14 lớp. Mục lục và cách đọc ở [README.md](README.md).
+Bản chữ của sơ đồ lớp cho gói này: 14 ViewModel và lớp phụ `ListenerSet`. Mục lục và cách đọc ở [README.md](README.md).
 
 Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng LiveData để sống qua lần xoay màn hình, chỉ gọi repository và tiện ích. Không giữ tham chiếu tới Activity, Fragment hay View.
 
 **Quy ước getter (quyết định 2026-10-22).** Mọi thuộc tính LiveData dưới đây là `private` và có đúng một getter công khai tên `get<TênThuộcTính>()` viết hoa chữ đầu, trả `LiveData<...>` chứ không trả `MutableLiveData`. Ví dụ `error` có `getError()`, `loading` có `getLoading()`, `myListings` có `getMyListings()`. Bảng dưới đây không liệt kê từng getter vì chúng suy ra được từ quy ước này; luật R16 coi quy ước này là dòng tài liệu định nghĩa chúng. Cùng quy ước áp cho `NetworkMonitor.online`, tức `getOnline()`.
 
 **Ba thuộc tính mọi ViewModel đều có.** `loading` để màn hình hiện trạng thái đang tải và khóa nút gửi; `error` là câu lỗi tiếng Việt, màn hình xóa sau khi đã hiện để xoay màn hình không hiện lại; `done` bật lên đúng một lần khi một thao tác ghi xong rồi màn hình đặt lại false. Bốn trạng thái mà [`conventions/giao-dien.md`](../../conventions/giao-dien.md) mục 6 đòi (đang tải, có dữ liệu, rỗng, lỗi) đọc từ ba thuộc tính này, không phải từ cờ riêng trong Fragment.
+
+**Dữ liệu theo thời gian thực (quyết định 2026-10-28).** Các hàm `load...` của màn có dữ liệu do người khác đổi (hồ sơ, xác thực, chi tiết tin, chi tiết và lịch sử giao dịch, danh sách chat, thông báo, báo cáo và khiếu nại của tôi, và các hàng chờ của admin) gắn listener qua hàm `observe...` của repository thay vì đọc một lần. Listener nằm trong `ListenerSet` của ViewModel: gọi lại `load...` với cùng đối tượng thì không gắn thêm, đổi đối tượng thì thay listener cũ, `onCleared` gỡ hết. Callback của listener có thể chạy nhiều lần; `loading` chỉ tắt ở lần trả lời đầu. Listener bị lỗi thì Firestore dừng nó, ViewModel quên nó để lần mở sau (hoặc nút Thử lại) gắn lại.
 
 | Lớp | Loại | Trách nhiệm |
 | --- | --- | --- |
@@ -24,6 +26,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | [`AdminContentViewModel`](#admincontentviewmodel) | lớp (ViewModel) | Admin: tin bị báo cáo, ẩn và gỡ, từ khóa cấm, danh mục. |
 | [`AdminDealViewModel`](#admindealviewmodel) | lớp (ViewModel) | Admin: theo dõi danh sách và chi tiết giao dịch. |
 | [`AdminComplaintViewModel`](#admincomplaintviewmodel) | lớp (ViewModel) | Admin: xử lý khiếu nại, ra quyết định, ghi chú nội bộ, thông báo. |
+| [`ListenerSet`](#listenerset) | lớp (tiện ích) | Giữ các `ListenerRegistration` của một ViewModel theo khóa; gỡ hết ở `onCleared`. |
 
 ### AuthViewModel
 
@@ -692,3 +695,21 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 - `AdminComplaintViewModel` kế thừa `ViewModel`. Trang 7. ViewModel và tiện ích.
 
 **Dùng tới:** [`ChatMessage`](model.md#chatmessage), [`ChatRepository`](data.md#chatrepository), [`Complaint`](model.md#complaint), [`ComplaintDecision`](enums.md#complaintdecision), [`ComplaintRepository`](data.md#complaintrepository), [`ComplaintStatus`](enums.md#complaintstatus), [`Deal`](model.md#deal), [`DealRepository`](data.md#dealrepository), [`Priority`](enums.md#priority)
+
+### ListenerSet
+
+| Mục | Nội dung |
+| --- | --- |
+| Định danh | `com.nhom3.pubgapp.viewmodel.ListenerSet` |
+| Loại | lớp (tiện ích) |
+| Lưu trữ | Không lưu |
+| Trách nhiệm | Giữ các `ListenerRegistration` đang chạy của một ViewModel, mỗi khóa một listener, để mở lại màn không chồng listener và rời màn không để listener đọc ngầm. |
+
+**Phương thức**
+
+| Chữ ký | Mô tả | STT |
+| --- | --- | --- |
+| `public void put(String key, ListenerRegistration registration)` | Gỡ listener cũ cùng khóa (nếu có) rồi giữ listener mới. |  |
+| `public boolean has(String key)` | True khi khóa đang có listener chạy; ViewModel dùng để không gắn lại. |  |
+| `public void remove(String key)` | Gỡ và quên listener của khóa, ví dụ khi listener báo lỗi. |  |
+| `public void clear()` | Gỡ mọi listener; gọi ở `onCleared`. |  |
