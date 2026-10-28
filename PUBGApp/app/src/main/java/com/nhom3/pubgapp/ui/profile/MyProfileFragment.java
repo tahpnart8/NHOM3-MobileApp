@@ -167,7 +167,6 @@ public class MyProfileFragment extends Fragment {
             }
         };
         binding.buttonEditProfile.setOnClickListener(openEditProfile);
-        binding.textRowEditProfile.setOnClickListener(openEditProfile);
         setUpShortcutRows();
         setUpAccountRows();
         setUpAccountButtons();
