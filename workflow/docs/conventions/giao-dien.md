@@ -86,7 +86,7 @@ Nút và chip luôn **bo tròn hẳn** (hình viên thuốc, `ShapeAppearance.PU
 
 Dùng text appearance của theme, không đặt `textSize` tay.
 
-Font của cả app là **Be Vietnam Pro** (giấy phép SIL Open Font License 1.1, văn bản ở `PUBGApp/licenses/be-vietnam-pro-OFL.txt`), đóng gói trong `res/font/` với 4 độ đậm 400, 500, 600, 700 qua họ `@font/be_vietnam_pro`. Font này vẽ dấu tiếng Việt cân và rõ hơn font hệ thống, và giống nhau trên mọi máy. Theme đặt nó cho mọi `TextView`; đừng đặt `fontFamily` trong layout.
+Font của cả app là **Be Vietnam Pro** (giấy phép SIL Open Font License 1.1, văn bản ở `PUBGApp/licenses/be-vietnam-pro-OFL.txt`), đóng gói trong `res/font/` với 4 độ đậm 400, 500, 600, 700 qua họ `@font/be_vietnam_pro`. Font này vẽ dấu tiếng Việt cân và rõ hơn font hệ thống, và giống nhau trên mọi máy. Font đi vào view qua text appearance: mỗi text appearance bên dưới khai `fontFamily` và độ đậm, nên view nào có `android:textAppearance` (mọi chữ theo luật mục 3, nút, chip, ô nhập, tab) đều dùng Be Vietnam Pro. Đừng đặt `fontFamily` ở theme hay trong layout: AppCompat coi nó là thuộc tính của view, nạp lại font ở độ đậm 400 và làm mất mọi chữ đậm (thấy trên emulator, issue #351).
 
 Cả 15 text appearance của Material 3 đều được ghi đè trong `themes.xml` (cỡ giữ theo Material 3, font và độ đậm là của dự án):
 
