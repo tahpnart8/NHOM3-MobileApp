@@ -111,6 +111,8 @@ public class NotificationListFragment extends Fragment {
 
     private void setupEmptyAndErrorStates() {
         binding.viewEmptyState.textEmptyTitle.setText(R.string.notification_list_empty);
+        binding.viewEmptyState.textEmptyMessage.setText(R.string.notification_list_empty_message);
+        binding.viewEmptyState.textEmptyMessage.setVisibility(View.VISIBLE);
         binding.viewErrorState.buttonRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
