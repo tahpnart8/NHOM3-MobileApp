@@ -13,6 +13,7 @@
         android:background="?attr/colorSurface">
 
         <LinearLayout
+            android:background="@drawable/bg_toolbar_divider"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
