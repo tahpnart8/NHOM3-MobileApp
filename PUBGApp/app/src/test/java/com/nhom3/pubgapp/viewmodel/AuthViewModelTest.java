@@ -200,4 +200,24 @@ public class AuthViewModelTest {
         String url = "https://lh3.googleusercontent.com/a=s/photo.jpg";
         assertEquals(url, AuthViewModel.sizeGooglePhotoUrl(url, 256));
     }
+
+    @Test
+    public void isInvalidAccountError_nullOrNetworkError_returnsFalse() {
+        assertEquals(false, AuthViewModel.isInvalidAccountError(null));
+        assertEquals(false, AuthViewModel.isInvalidAccountError("Không có kết nối mạng."));
+        assertEquals(false, AuthViewModel.isInvalidAccountError("Connection reset"));
+        assertEquals(false, AuthViewModel.isInvalidAccountError("Dịch vụ tạm thời gián đoạn."));
+    }
+
+    @Test
+    public void isInvalidAccountError_disabledOrNotFoundUser_returnsTrue() {
+        String errorMsg = "Tài khoản không tồn tại hoặc đã bị vô hiệu hóa."
+                + " Hãy liên hệ quản trị viên.";
+        assertEquals(true, AuthViewModel.isInvalidAccountError(errorMsg));
+    }
+
+    @Test
+    public void isInvalidAccountError_notSignedIn_returnsTrue() {
+        assertEquals(true, AuthViewModel.isInvalidAccountError("Chưa đăng nhập."));
+    }
 }
