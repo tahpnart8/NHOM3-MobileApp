@@ -934,3 +934,22 @@ The leader changed a verification status in the Firebase Console during test pas
 
 ### Owner
 tahpnart8
+
+## 2026-10-28 - UI refresh: full Material 3 roles, Be Vietnam Pro, theme-owned shapes
+
+### Decision
+The app gets a new coat of paint without any behaviour change. `Theme.PUBGApp` declares every Material 3 colour role derived from the existing palette, with one warm orange accent (`#C2410C`, `colorTertiary`) reserved for count badges and "Mới" or sale-type labels; prices and main buttons stay green. The bundled font is Be Vietnam Pro (SIL OFL 1.1, four weights, licence in `PUBGApp/licenses/`), applied through all 15 text appearances. Shapes and elevation are owned by the component styles in `res/values/styles.xml` (pill buttons and chips, 16dp cards, 12dp text fields, 24dp dialogs and sheets); layouts no longer set `cornerRadius`, `cardCornerRadius` or `cardElevation`, and name `Widget.PUBGApp.*` styles instead of `Widget.Material3.*`.
+
+### Context
+Leader-approved refresh towards a modern marketplace look (issue #349). Before it, unset roles fell back to the Material purple, per-view radius and elevation attributes blocked any theme change, and there was no font.
+
+### Alternatives rejected
+- Overriding only the global `shapeAppearanceCorner*` tokens and keeping `Widget.Material3.*` in layouts: chips and text fields share those tokens with other components, so a pill chip would have leaked into menus and fields.
+- Downloadable Google Fonts: needs Play services at runtime and gives no font offline on first launch; bundling costs about 550 KB.
+- A second accent colour for prices: the mockups make the green price the anchor of every card.
+
+### Impact
+`colors.xml`, `themes.xml`, `styles.xml`, `dimens.xml` (`radius_xl`), `res/color/`, `res/font/`, every layout (attribute removal and style names only), `giao-dien.md` sections 1a, 2, 3 and 5a.
+
+### Owner
+tahpnart8
