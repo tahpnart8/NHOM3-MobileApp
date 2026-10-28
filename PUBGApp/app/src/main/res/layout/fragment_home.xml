@@ -107,11 +107,12 @@
     </LinearLayout>
 
     <!-- Feed below the search row. The channel selector and For You sit in an app bar so they scroll
-         away with the grid instead of holding half the screen, above all in landscape. -->
+         away with the grid. saveEnabled false: coming back to Home always opens the app bar again. -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/coordinatorFeed"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:saveEnabled="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

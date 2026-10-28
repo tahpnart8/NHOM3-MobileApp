@@ -87,3 +87,8 @@ To prevent premature guest-blocking:
 4. **Touch targets on RadioGroup and action buttons**:
    - In multi-step or bottom sheet forms like `MakeOfferFragment` and `DealPaymentFragment`, each `RadioButton` and action `MaterialButton` must have `android:minHeight="@dimen/touch_min"` (48dp).
 
+
+### A collapsible app bar comes back collapsed after navigation
+- **Fact:** `CoordinatorLayout` saves each child behavior's state, so an `AppBarLayout` with `layout_scrollFlags="scroll"` is restored at its saved offset when a Fragment view is recreated (back from a detail screen, switching tabs). If the list below reloads to its top meanwhile, whatever sits in the app bar stays hidden until the user drags down. `android:saveEnabled="false"` on the `CoordinatorLayout` drops only its own state; its children (the `RecyclerView`) still save theirs, because `ViewGroup.dispatchSaveInstanceState` still visits them.
+- **Why it matters here:** `fragment_home.xml` (`coordinatorFeed`, issue #372): "Dành cho bạn" and the channel selector live in `appBarForYou`, and `HomeFragment.onResume` calls `refresh()`, so the grid can come back at the top.
+- **Source:** Android `View.dispatchSaveInstanceState` and `ViewGroup.dispatchSaveInstanceState`; Material `CoordinatorLayout.onSaveInstanceState`. **Unverified** on a device (the emulator was off); verify by scrolling Home down, opening a listing and going back.
