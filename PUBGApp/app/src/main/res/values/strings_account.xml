@@ -40,6 +40,8 @@
     <string name="account_register_waiting_instruction">Vui lòng mở thư và nhấn vào liên kết xác thực để kích hoạt tài khoản.</string>
     <string name="account_register_waiting_fixed_prompt">Chưa thấy email được xác thực. Nếu liên kết báo hết hạn, hãy bấm Gửi lại liên kết.</string>
     <string name="account_register_resend_link">Gửi lại liên kết</string>
+    <string name="account_register_check_verified">Tôi đã xác thực</string>
+    <string name="account_register_not_verified">Chưa thấy email được xác thực. Hãy nhấn vào liên kết trong hộp thư rồi thử lại.</string>
     <string name="account_register_resend_success">Đã gửi lại liên kết xác thực. Vui lòng kiểm tra hộp thư.</string>
     <string name="account_register_resend_too_many">Bạn đã gửi quá nhiều lần, hãy thử lại sau ít phút</string>
     <string name="account_register_back_to_step1">Quay lại</string>
