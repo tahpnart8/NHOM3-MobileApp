@@ -50,6 +50,10 @@ public class ChatViewModel extends ViewModel {
     private ListenerRegistration messageListener;
     private ListenerRegistration offersListener;
     private boolean isLoadingOlder = false;
+    // The conversation list is live too, so a new message or offer reorders it at once.
+    private final ListenerSet listeners = new ListenerSet();
+    private String liveConversationsUid;
+    private static final String KEY_CONVERSATIONS = "conversations";
 
     public LiveData<List<Conversation>> getConversations() {
         return conversations;
@@ -115,19 +119,26 @@ public class ChatViewModel extends ViewModel {
                     "Vui lòng đăng nhập để xem tin nhắn."));
             return;
         }
-        chatRepository.getConversations(uid, new DataCallback<List<Conversation>>() {
-            @Override
-            public void onSuccess(List<Conversation> result) {
-                loading.postValue(false);
-                conversations.postValue(result);
-            }
+        if (uid.equals(liveConversationsUid) && listeners.has(KEY_CONVERSATIONS)) {
+            loading.setValue(false);
+            return;
+        }
+        liveConversationsUid = uid;
+        listeners.put(KEY_CONVERSATIONS, chatRepository.observeConversations(uid,
+                new DataCallback<List<Conversation>>() {
+                    @Override
+                    public void onSuccess(List<Conversation> result) {
+                        loading.postValue(false);
+                        conversations.postValue(result);
+                    }
 
-            @Override
-            public void onError(String message) {
-                loading.postValue(false);
-                error.postValue(message);
-            }
-        });
+                    @Override
+                    public void onError(String message) {
+                        listeners.remove(KEY_CONVERSATIONS);
+                        loading.postValue(false);
+                        error.postValue(message);
+                    }
+                }));
     }
 
     public void openConversation(String listingId) {
@@ -533,6 +544,7 @@ public class ChatViewModel extends ViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
+        listeners.clear();
         if (messageListener != null) {
             messageListener.remove();
             messageListener = null;

@@ -9,6 +9,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
@@ -115,6 +116,14 @@ public class ComplaintRepository extends BaseRepository {
         runListQuery(query, cb);
     }
 
+    // Live version of getMyComplaints for F02: the admin's decision on a complaint shows at once.
+    public ListenerRegistration observeMyComplaints(String uid, DataCallback<List<Complaint>> cb) {
+        Query query = db.collection(COLLECTION)
+                .whereEqualTo(FIELD_COMPLAINANT_ID, uid)
+                .orderBy(FIELD_CREATED_AT, Query.Direction.DESCENDING);
+        return listenQuery(query, Complaint.class, cb);
+    }
+
     public void withdraw(String id, DataCallback<Void> cb) {
         final String uid = currentUserId();
         if (uid.isEmpty()) {
@@ -154,6 +163,17 @@ public class ComplaintRepository extends BaseRepository {
         }
         query = query.orderBy(FIELD_CREATED_AT, Query.Direction.ASCENDING);
         runListQuery(query, cb);
+    }
+
+    // Live version of getByStatus for E05: a new complaint or one decided by another admin shows at once.
+    public ListenerRegistration observeByStatus(ComplaintStatus status, Priority priority,
+            DataCallback<List<Complaint>> cb) {
+        Query query = db.collection(COLLECTION).whereEqualTo(FIELD_STATUS, status.name());
+        if (priority != null) {
+            query = query.whereEqualTo(FIELD_PRIORITY, priority.name());
+        }
+        query = query.orderBy(FIELD_CREATED_AT, Query.Direction.ASCENDING);
+        return listenQuery(query, Complaint.class, cb);
     }
 
     // Admin only: the internal note lives in a sub-document users cannot read.

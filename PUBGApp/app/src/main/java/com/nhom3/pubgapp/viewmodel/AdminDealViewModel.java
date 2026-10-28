@@ -15,11 +15,17 @@ import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 // State for the admin deal list and detail screens. Action bodies report NOT_READY until the repositories are filled.
 public class AdminDealViewModel extends ViewModel {
 
     private final DealRepository dealRepository = new DealRepository();
+    // The monitor list and the open deal are live, so a step taken by buyer or seller shows at once.
+    private final ListenerSet listeners = new ListenerSet();
+    private static final String KEY_DEALS = "deals";
+    private static final String KEY_DEAL = "deal";
+    private static final String KEY_PAYMENT = "payment";
     private final MutableLiveData<List<Deal>> deals = new MutableLiveData<>();
     private final MutableLiveData<Deal> selected = new MutableLiveData<>();
     private final MutableLiveData<Payment> payment = new MutableLiveData<>();
@@ -67,7 +73,7 @@ public class AdminDealViewModel extends ViewModel {
             return;
         }
         loading.setValue(true);
-        dealRepository.listAll(status, new DataCallback<List<Deal>>() {
+        listeners.put(KEY_DEALS, dealRepository.observeAll(status, new DataCallback<List<Deal>>() {
             @Override
             public void onSuccess(List<Deal> result) {
                 loading.postValue(false);
@@ -76,10 +82,11 @@ public class AdminDealViewModel extends ViewModel {
 
             @Override
             public void onError(String message) {
+                listeners.remove(KEY_DEALS);
                 loading.postValue(false);
                 error.postValue(message);
             }
-        });
+        }));
     }
 
     public void loadDetail(final String dealId) {
@@ -99,6 +106,7 @@ public class AdminDealViewModel extends ViewModel {
                     loading.postValue(false);
                     return;
                 }
+                listenForChanges(dealId);
                 if (result.getBuyerId() != null && !result.getBuyerId().isEmpty()) {
                     new UserRepository().getProfile(result.getBuyerId(), new DataCallback<User>() {
                         @Override
@@ -149,11 +157,49 @@ public class AdminDealViewModel extends ViewModel {
         });
     }
 
+    // After the first full read, only later changes of the deal and its payment are posted.
+    private void listenForChanges(String dealId) {
+        final AtomicBoolean firstDeal = new AtomicBoolean(true);
+        listeners.put(KEY_DEAL, dealRepository.observeDeal(dealId, new DataCallback<Deal>() {
+            @Override
+            public void onSuccess(Deal result) {
+                if (!firstDeal.getAndSet(false) && result != null) {
+                    selected.postValue(result);
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                listeners.remove(KEY_DEAL);
+            }
+        }));
+        final AtomicBoolean firstPayment = new AtomicBoolean(true);
+        listeners.put(KEY_PAYMENT, dealRepository.observePayment(dealId, new DataCallback<Payment>() {
+            @Override
+            public void onSuccess(Payment result) {
+                if (!firstPayment.getAndSet(false)) {
+                    payment.postValue(result);
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                listeners.remove(KEY_PAYMENT);
+            }
+        }));
+    }
+
     public void clearError() {
         error.setValue(null);
     }
 
     public void clearDone() {
         done.setValue(false);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        listeners.clear();
     }
 }

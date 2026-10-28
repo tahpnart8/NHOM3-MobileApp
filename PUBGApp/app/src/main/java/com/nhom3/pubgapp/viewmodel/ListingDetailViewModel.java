@@ -17,6 +17,7 @@ import com.nhom3.pubgapp.util.SessionManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 // State for the listing detail screen. Action bodies report NOT_READY until the repositories are filled.
 public class ListingDetailViewModel extends ViewModel {
@@ -72,6 +73,8 @@ public class ListingDetailViewModel extends ViewModel {
     private final ListingRepository listingRepository = new ListingRepository();
     private final UserRepository userRepository = new UserRepository();
     private final MediaRepository mediaRepository = new MediaRepository();
+    private final ListenerSet listeners = new ListenerSet();
+    private static final String KEY_LISTING = "listing";
     private final RecommendationEngine recommendationEngine = new RecommendationEngine();
 
     private final MutableLiveData<Listing> listing = new MutableLiveData<>();
@@ -142,6 +145,7 @@ public class ListingDetailViewModel extends ViewModel {
                 loading.postValue(false);
                 listing.postValue(result);
                 if (result != null) {
+                    listenForChanges(listingId);
                     listingRepository.recordView(result);
                     if (SessionManager.getInstance().isLoggedIn()) {
                         String currentUid = SessionManager.getInstance().getCurrentUserId();
@@ -206,6 +210,28 @@ public class ListingDetailViewModel extends ViewModel {
                 error.postValue(errorMessage);
             }
         });
+    }
+
+
+    // The first read keeps the Room fallback for offline; after it, a listener brings later changes.
+    // Its first snapshot repeats what was just shown, so only the ones after it are posted.
+    private void listenForChanges(String listingId) {
+        final AtomicBoolean first = new AtomicBoolean(true);
+        listeners.put(KEY_LISTING, listingRepository.observeListing(listingId, new DataCallback<Listing>() {
+            @Override
+            public void onSuccess(Listing result) {
+                if (first.getAndSet(false) || result == null) {
+                    return;
+                }
+                listing.postValue(result);
+            }
+
+            // Offline or denied: the page keeps what it already shows.
+            @Override
+            public void onError(String message) {
+                listeners.remove(KEY_LISTING);
+            }
+        }));
     }
 
     public void loadImages() {
@@ -398,5 +424,11 @@ public class ListingDetailViewModel extends ViewModel {
 
     public void clearDone() {
         done.setValue(false);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        listeners.clear();
     }
 }

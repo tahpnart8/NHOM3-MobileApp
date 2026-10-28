@@ -22,6 +22,10 @@ public class NotificationViewModel extends ViewModel {
 
     private final java.util.Set<String> pendingMarks = new java.util.HashSet<String>();
     private final NotificationRepository notificationRepository;
+    // One live list per signed-in user; MainActivity keeps it, so the badge follows new notices.
+    private final ListenerSet listeners = new ListenerSet();
+    private String liveUid;
+    private static final String KEY_NOTIFICATIONS = "notifications";
 
     public NotificationViewModel() {
         this.notificationRepository = new NotificationRepository();
@@ -53,30 +57,36 @@ public class NotificationViewModel extends ViewModel {
             error.setValue("Chưa đăng nhập.");
             return;
         }
+        if (uid.equals(liveUid) && listeners.has(KEY_NOTIFICATIONS)) {
+            return;
+        }
+        liveUid = uid;
         loading.setValue(true);
         error.setValue(null);
-        notificationRepository.getForUser(uid, new DataCallback<List<AppNotification>>() {
-            @Override
-            public void onSuccess(List<AppNotification> list) {
-                loading.postValue(false);
-                notifications.postValue(list);
-                int count = 0;
-                if (list != null) {
-                    for (AppNotification item : list) {
-                        if (!item.isRead()) {
-                            count++;
+        listeners.put(KEY_NOTIFICATIONS, notificationRepository.observeForUser(uid,
+                new DataCallback<List<AppNotification>>() {
+                    @Override
+                    public void onSuccess(List<AppNotification> list) {
+                        loading.postValue(false);
+                        notifications.postValue(list);
+                        int count = 0;
+                        if (list != null) {
+                            for (AppNotification item : list) {
+                                if (!item.isRead()) {
+                                    count++;
+                                }
+                            }
                         }
+                        unreadCount.postValue(Integer.valueOf(count));
                     }
-                }
-                unreadCount.postValue(Integer.valueOf(count));
-            }
 
-            @Override
-            public void onError(String message) {
-                loading.postValue(false);
-                error.postValue(message != null ? message : "Không thể tải danh sách thông báo.");
-            }
-        });
+                    @Override
+                    public void onError(String message) {
+                        listeners.remove(KEY_NOTIFICATIONS);
+                        loading.postValue(false);
+                        error.postValue(message != null ? message : "Không thể tải danh sách thông báo.");
+                    }
+                }));
     }
 
     public void markRead(final String id) {
@@ -123,5 +133,11 @@ public class NotificationViewModel extends ViewModel {
 
     public void clearDone() {
         done.setValue(false);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        listeners.clear();
     }
 }

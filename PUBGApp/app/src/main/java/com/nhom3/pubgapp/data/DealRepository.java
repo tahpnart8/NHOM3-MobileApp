@@ -12,6 +12,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -135,6 +136,16 @@ public class DealRepository extends BaseRepository {
                         cb.onSuccess(deal);
                     }
                 });
+    }
+
+    // Live version of getById for C03: a step taken by the other party shows at once. Null when deleted.
+    public ListenerRegistration observeDeal(String dealId, DataCallback<Deal> cb) {
+        return listenDocument(db.collection(COLLECTION_DEALS).document(dealId), Deal.class, cb);
+    }
+
+    // Live version of getPayment: null until the buyer pays.
+    public ListenerRegistration observePayment(String dealId, DataCallback<Payment> cb) {
+        return listenDocument(db.collection(COLLECTION_PAYMENTS).document(dealId), Payment.class, cb);
     }
 
     public void getPayment(String dealId, DataCallback<Payment> cb) {
@@ -1088,6 +1099,81 @@ public class DealRepository extends BaseRepository {
                 });
     }
 
+    // Live version of getMyDeals: shows the Room copy first, then every change of a deal I buy or sell.
+    public ListenerRegistration observeMyDeals(final String uid, final DataCallback<List<Deal>> cb) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                DealDao dao = getDealDao();
+                if (dao == null) {
+                    return;
+                }
+                List<DealEntity> cached = dao.getMyDeals(uid);
+                if (cached == null || cached.isEmpty()) {
+                    return;
+                }
+                List<Deal> cachedList = new ArrayList<Deal>();
+                for (int i = 0; i < cached.size(); i++) {
+                    cachedList.add(cached.get(i).toModel());
+                }
+                cb.onSuccess(cachedList);
+            }
+        });
+        Query asBuyer = db.collection(COLLECTION_DEALS).whereEqualTo("buyerId", uid);
+        Query asSeller = db.collection(COLLECTION_DEALS).whereEqualTo("sellerId", uid);
+        return listenEitherQuery(asBuyer, asSeller, Deal.class, new DataCallback<List<Deal>>() {
+            @Override
+            public void onSuccess(List<Deal> result) {
+                sortDealsByDate(result);
+                cb.onSuccess(result);
+                cacheDeals(result);
+            }
+
+            @Override
+            public void onError(String message) {
+                cb.onError(message);
+            }
+        });
+    }
+
+    // Live version of getPayments for the payments tab of C04.
+    public ListenerRegistration observePayments(String uid, final DataCallback<List<Payment>> cb) {
+        Query asPayer = db.collection(COLLECTION_PAYMENTS).whereEqualTo("payerId", uid);
+        Query asPayee = db.collection(COLLECTION_PAYMENTS).whereEqualTo("payeeId", uid);
+        return listenEitherQuery(asPayer, asPayee, Payment.class, new DataCallback<List<Payment>>() {
+            @Override
+            public void onSuccess(List<Payment> result) {
+                sortPaymentsByDate(result);
+                cb.onSuccess(result);
+            }
+
+            @Override
+            public void onError(String message) {
+                cb.onError(message);
+            }
+        });
+    }
+
+    private void cacheDeals(final List<Deal> list) {
+        if (list.isEmpty()) {
+            return;
+        }
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                DealDao dao = getDealDao();
+                if (dao == null) {
+                    return;
+                }
+                List<DealEntity> entities = new ArrayList<DealEntity>();
+                for (int i = 0; i < list.size(); i++) {
+                    entities.add(new DealEntity().fromModel(list.get(i)));
+                }
+                dao.upsertAll(entities);
+            }
+        });
+    }
+
     private void addDealsToMap(QuerySnapshot snapshot, Map<String, Deal> map) {
         if (snapshot == null) {
             return;
@@ -1208,6 +1294,16 @@ public class DealRepository extends BaseRepository {
                 cb.onSuccess(list);
             }
         });
+    }
+
+    // Live version of listAll for E06; a null status means every deal.
+    public ListenerRegistration observeAll(DealStatus status, DataCallback<List<Deal>> cb) {
+        Query query = db.collection(COLLECTION_DEALS);
+        if (status != null) {
+            query = query.whereEqualTo("status", status.name());
+        }
+        query = query.orderBy("updatedAt", Query.Direction.DESCENDING);
+        return listenQuery(query, Deal.class, cb);
     }
 
     private void addStatusHistory(Deal deal, DealStatus from, DealStatus to,

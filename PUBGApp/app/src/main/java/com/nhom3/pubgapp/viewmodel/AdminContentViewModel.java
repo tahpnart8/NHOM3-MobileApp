@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 // State for admin moderation, banned keywords and categories. Methods not yet filled report NOT_READY.
 public class AdminContentViewModel extends ViewModel {
@@ -69,6 +70,9 @@ public class AdminContentViewModel extends ViewModel {
     private final ChatRepository chatRepository = new ChatRepository();
     private final CategoryRepository categoryRepository = new CategoryRepository();
     private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    // The report queue is live: a new report or one closed elsewhere appears without a reload.
+    private final ListenerSet listeners = new ListenerSet();
+    private static final String KEY_REPORTS = "reports";
     // One guard per kind of work, so loading a listing never cancels loading its reports.
     private final RequestGuard reportsGuard = new RequestGuard();
     private final RequestGuard listingGuard = new RequestGuard();
@@ -159,17 +163,29 @@ public class AdminContentViewModel extends ViewModel {
         lastTargetType = targetType;
         final int token = reportsGuard.begin();
         refreshLoading();
-        reportRepository.getByStatus(status, targetType, new DataCallback<List<Report>>() {
-            @Override
-            public void onSuccess(List<Report> result) {
-                publishWithListings(result, token, true);
-            }
+        final AtomicBoolean first = new AtomicBoolean(true);
+        listeners.put(KEY_REPORTS, reportRepository.observeByStatus(status, targetType,
+                new DataCallback<List<Report>>() {
+                    @Override
+                    public void onSuccess(List<Report> result) {
+                        if (first.getAndSet(false)) {
+                            publishWithListings(result, token, true);
+                            return;
+                        }
+                        // A later change gets its own request, so the titles are read for it too.
+                        publishWithListings(result, reportsGuard.begin(), true);
+                    }
 
-            @Override
-            public void onError(String message) {
-                failRequest(reportsGuard, token, message);
-            }
-        });
+                    @Override
+                    public void onError(String message) {
+                        listeners.remove(KEY_REPORTS);
+                        if (first.getAndSet(false)) {
+                            failRequest(reportsGuard, token, message);
+                        } else {
+                            error.postValue(message);
+                        }
+                    }
+                }));
     }
 
     public void loadReportedListings() {
@@ -881,5 +897,11 @@ public class AdminContentViewModel extends ViewModel {
         synchronized boolean isActive() {
             return active;
         }
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        listeners.clear();
     }
 }

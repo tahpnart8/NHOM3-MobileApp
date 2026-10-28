@@ -59,6 +59,9 @@ public class AdminComplaintViewModel extends ViewModel {
 
     // The filter whose answer is in complaints, so a rotation or a chip restore does not query again.
     private String loadedFilterKey;
+    // The complaint queue is live, so a new or decided complaint shows without a reload.
+    private final ListenerSet listeners = new ListenerSet();
+    private static final String KEY_COMPLAINTS = "complaints";
 
     public LiveData<List<Complaint>> getComplaints() {
         return complaints;
@@ -101,25 +104,27 @@ public class AdminComplaintViewModel extends ViewModel {
         loadedFilterKey = key;
         complaints.setValue(null);
         loading.setValue(true);
-        complaintRepository.getByStatus(status, priority, new DataCallback<List<Complaint>>() {
-            @Override
-            public void onSuccess(List<Complaint> result) {
-                if (!key.equals(loadedFilterKey)) {
-                    return;
-                }
-                complaints.postValue(sortForAdmin(result));
-                loading.postValue(false);
-            }
+        listeners.put(KEY_COMPLAINTS, complaintRepository.observeByStatus(status, priority,
+                new DataCallback<List<Complaint>>() {
+                    @Override
+                    public void onSuccess(List<Complaint> result) {
+                        if (!key.equals(loadedFilterKey)) {
+                            return;
+                        }
+                        complaints.postValue(sortForAdmin(result));
+                        loading.postValue(false);
+                    }
 
-            @Override
-            public void onError(String message) {
-                if (key.equals(loadedFilterKey)) {
-                    loadedFilterKey = null;
-                }
-                loading.postValue(false);
-                error.postValue(message);
-            }
-        });
+                    @Override
+                    public void onError(String message) {
+                        listeners.remove(KEY_COMPLAINTS);
+                        if (key.equals(loadedFilterKey)) {
+                            loadedFilterKey = null;
+                        }
+                        loading.postValue(false);
+                        error.postValue(message);
+                    }
+                }));
     }
 
     public void loadDetail(String id) {
@@ -389,5 +394,11 @@ public class AdminComplaintViewModel extends ViewModel {
 
     public void clearDone() {
         done.setValue(false);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        listeners.clear();
     }
 }
