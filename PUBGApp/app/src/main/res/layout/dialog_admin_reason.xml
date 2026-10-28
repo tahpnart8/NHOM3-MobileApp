@@ -52,7 +52,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonCancel"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.PUBGApp.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:minHeight="@dimen/touch_min"
@@ -64,7 +64,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_sm"
             android:minHeight="@dimen/touch_min"
-            android:text="@string/common_confirm"
-            app:cornerRadius="@dimen/radius_md" />
+            android:text="@string/common_confirm" />
     </LinearLayout>
 </LinearLayout>

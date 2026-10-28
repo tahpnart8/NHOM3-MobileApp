@@ -45,6 +45,5 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_lg"
         android:minHeight="@dimen/touch_min"
-        android:visibility="gone"
-        app:cornerRadius="@dimen/radius_md" />
+        android:visibility="gone" />
 </LinearLayout>

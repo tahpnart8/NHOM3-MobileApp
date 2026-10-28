@@ -353,14 +353,13 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonReject"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.PUBGApp.Button.OutlinedButton"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/space_sm"
                         android:layout_weight="1"
                         android:minHeight="@dimen/touch_min"
-                        android:text="@string/admin_verification_reject"
-                        app:cornerRadius="@dimen/radius_md" />
+                        android:text="@string/admin_verification_reject" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonApprove"
@@ -369,8 +368,7 @@
                         android:layout_marginStart="@dimen/space_sm"
                         android:layout_weight="1"
                         android:minHeight="@dimen/touch_min"
-                        android:text="@string/admin_verification_approve"
-                        app:cornerRadius="@dimen/radius_md" />
+                        android:text="@string/admin_verification_approve" />
                 </LinearLayout>
 
                 <TextView
@@ -506,14 +504,13 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/buttonWarn"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            style="@style/Widget.PUBGApp.Button.OutlinedButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="@dimen/space_sm"
                             android:layout_weight="1"
                             android:minHeight="@dimen/touch_min"
-                            android:text="@string/admin_user_action_warn"
-                            app:cornerRadius="@dimen/radius_md" />
+                            android:text="@string/admin_user_action_warn" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/buttonLock"
@@ -523,8 +520,7 @@
                             android:layout_weight="1"
                             android:minHeight="@dimen/touch_min"
                             android:text="@string/admin_user_action_lock"
-                            app:backgroundTint="?attr/colorError"
-                            app:cornerRadius="@dimen/radius_md" />
+                            app:backgroundTint="?attr/colorError" />
                     </LinearLayout>
 
                     <com.google.android.material.button.MaterialButton
@@ -533,19 +529,17 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_md"
                         android:minHeight="@dimen/touch_min"
-                        android:text="@string/admin_user_action_unlock"
-                        app:cornerRadius="@dimen/radius_md" />
+                        android:text="@string/admin_user_action_unlock" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonRemoveListings"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.PUBGApp.Button.OutlinedButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_sm"
                         android:minHeight="@dimen/touch_min"
                         android:text="@string/admin_user_action_remove_listings"
-                        android:textColor="?attr/colorError"
-                        app:cornerRadius="@dimen/radius_md" />
+                        android:textColor="?attr/colorError" />
                 </LinearLayout>
             </FrameLayout>
 

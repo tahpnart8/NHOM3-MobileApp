@@ -62,8 +62,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_md"
                 android:visibility="gone"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="@dimen/elevation_card"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -95,8 +93,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_md"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="@dimen/elevation_card"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -253,8 +249,7 @@
                 android:layout_marginTop="@dimen/space_sm"
                 android:enabled="false"
                 android:minHeight="@dimen/touch_min"
-                android:text="@string/trade_write_review_submit"
-                app:cornerRadius="@dimen/radius_md" />
+                android:text="@string/trade_write_review_submit" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

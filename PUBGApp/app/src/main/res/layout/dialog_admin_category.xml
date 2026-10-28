@@ -18,7 +18,7 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layoutCategoryName"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_md"
@@ -36,7 +36,7 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layoutParentCategory"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_md"
@@ -68,7 +68,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonCancel"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.PUBGApp.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:minHeight="@dimen/touch_min"
@@ -76,12 +76,11 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonSave"
-            style="@style/Widget.Material3.Button"
+            style="@style/Widget.PUBGApp.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_sm"
             android:minHeight="@dimen/touch_min"
-            android:text="@string/common_save"
-            app:cornerRadius="@dimen/radius_md" />
+            android:text="@string/common_save" />
     </LinearLayout>
 </LinearLayout>

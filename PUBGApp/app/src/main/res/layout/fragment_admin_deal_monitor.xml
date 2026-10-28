@@ -33,7 +33,7 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusAll"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
@@ -41,49 +41,49 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusPendingConfirm"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_deal_pending_confirm" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusConfirmed"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_deal_confirmed" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusShipped"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_deal_shipped" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusReceived"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_deal_received" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusCompleted"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_deal_completed" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusCancelled"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_deal_cancelled" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusDisputed"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_deal_disputed" />

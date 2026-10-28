@@ -72,7 +72,7 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layoutDisplayName"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_md"
@@ -88,7 +88,7 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layoutEmail"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
@@ -104,7 +104,7 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layoutPassword"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
@@ -121,7 +121,7 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layoutConfirmPassword"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
@@ -138,7 +138,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonContinue"
-                    style="@style/Widget.Material3.Button"
+                    style="@style/Widget.PUBGApp.Button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_md"
@@ -175,7 +175,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonGoogle"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
@@ -254,7 +254,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonResendLink"
-                    style="@style/Widget.Material3.Button"
+                    style="@style/Widget.PUBGApp.Button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_md"
@@ -263,7 +263,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonBackToStep1"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="@style/Widget.PUBGApp.Button.TextButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_xs"
@@ -299,7 +299,7 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layoutPhone"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
@@ -315,7 +315,7 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layoutProvince"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
@@ -331,7 +331,7 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layoutDistrict"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
@@ -366,7 +366,7 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layoutNationalId"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
@@ -383,7 +383,7 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layoutDob"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
@@ -438,7 +438,7 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layoutAddress"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
@@ -524,7 +524,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonCompleteProfile"
-                    style="@style/Widget.Material3.Button"
+                    style="@style/Widget.PUBGApp.Button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_md"

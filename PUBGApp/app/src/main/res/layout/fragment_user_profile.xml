@@ -73,18 +73,16 @@
                     android:layout_height="wrap_content"
                     android:minHeight="@dimen/touch_min"
                     android:text="@string/profile_user_profile_follow"
-                    android:visibility="gone"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonEditProfile"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:minHeight="@dimen/touch_min"
                     android:text="@string/profile_user_profile_edit"
-                    android:visibility="gone"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:visibility="gone" />
             </LinearLayout>
 
             <LinearLayout
@@ -240,7 +238,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonRetryStats"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="@style/Widget.PUBGApp.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
@@ -250,7 +248,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonReportUser"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="@style/Widget.PUBGApp.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
@@ -309,7 +307,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonReviewsReceived"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.PUBGApp.Button.OutlinedButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:minHeight="@dimen/touch_min"
@@ -317,7 +315,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonReviewsGiven"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.PUBGApp.Button.OutlinedButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:minHeight="@dimen/touch_min"

@@ -29,7 +29,7 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layoutSearch"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/admin_user_list_search_hint">
@@ -59,7 +59,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipStatusAll"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.PUBGApp.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:checked="true"
@@ -67,28 +67,28 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipStatusActive"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.PUBGApp.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/common_status_account_active" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipStatusTempLocked"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.PUBGApp.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/common_status_account_temp_locked" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipStatusPermLocked"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.PUBGApp.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/common_status_account_perm_locked" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipStatusDeleted"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.PUBGApp.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/common_status_account_deleted" />
@@ -104,39 +104,36 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonFromDate"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/admin_user_list_from_date"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/admin_user_list_from_date" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonToDate"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/space_sm"
                     android:layout_weight="1"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/admin_user_list_to_date"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/admin_user_list_to_date" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonClearDates"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="@style/Widget.PUBGApp.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/space_xs"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/admin_user_list_clear_dates"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/admin_user_list_clear_dates" />
             </LinearLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layoutProvince"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"

@@ -32,7 +32,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonSignIn"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.PUBGApp.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/touch_min"
             android:text="@string/listing_home_guest_sign_in"
@@ -63,7 +63,6 @@
             android:contentDescription="@string/listing_home_search_bar_desc"
             android:focusable="true"
             app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="@dimen/radius_lg"
             app:cardElevation="0dp"
             app:strokeColor="?attr/colorOutline"
             app:strokeWidth="1dp">
@@ -122,7 +121,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonChannelGeneral"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.PUBGApp.Button.OutlinedButton"
             android:layout_width="0dp"
             android:layout_height="@dimen/touch_min"
             android:layout_weight="1"
@@ -131,7 +130,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonChannelFollowing"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.PUBGApp.Button.OutlinedButton"
             android:layout_width="0dp"
             android:layout_height="@dimen/touch_min"
             android:layout_weight="1"

@@ -33,7 +33,7 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusOpen"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
@@ -41,21 +41,21 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusNeedsEvidence"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_complaint_needs_evidence" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusResolved"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_complaint_resolved" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusWithdrawn"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_complaint_withdrawn" />
@@ -78,7 +78,7 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPriorityAll"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
@@ -86,21 +86,21 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPriorityHigh"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_priority_high" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPriorityMedium"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_priority_medium" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPriorityLow"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_status_priority_low" />

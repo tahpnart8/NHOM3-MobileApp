@@ -51,7 +51,7 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusAll"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
@@ -59,21 +59,21 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusInProgress"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/trade_deal_history_filter_in_progress" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusCompleted"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/trade_deal_history_filter_completed" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusCancelled"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/trade_deal_history_filter_cancelled" />

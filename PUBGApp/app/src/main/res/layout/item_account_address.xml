@@ -5,7 +5,6 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="8dp"
-    app:cardCornerRadius="12dp"
     app:cardElevation="0dp"
     app:strokeColor="?attr/colorOutlineVariant"
     app:strokeWidth="1dp">
@@ -74,14 +73,14 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEditAddress"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.PUBGApp.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/account_address_edit" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDeleteAddress"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.PUBGApp.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"

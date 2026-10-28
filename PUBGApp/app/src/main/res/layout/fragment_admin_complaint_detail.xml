@@ -50,9 +50,7 @@
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardBackgroundColor="?attr/colorSurface"
-                    app:cardCornerRadius="@dimen/radius_md"
-                    app:cardElevation="@dimen/elevation_card">
+                    app:cardBackgroundColor="?attr/colorSurface">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -154,21 +152,21 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipPriorityLow"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.PUBGApp.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/common_status_priority_low" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipPriorityMedium"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.PUBGApp.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/common_status_priority_medium" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipPriorityHigh"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.PUBGApp.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/common_status_priority_high" />
@@ -225,12 +223,11 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonChatHistory"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_xs"
-                    android:minHeight="@dimen/touch_min"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:minHeight="@dimen/touch_min" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -278,8 +275,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_xs"
                         android:minHeight="@dimen/touch_min"
-                        android:text="@string/admin_complaint_decision_refund"
-                        app:cornerRadius="@dimen/radius_md" />
+                        android:text="@string/admin_complaint_decision_refund" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonDecideReturnItem"
@@ -287,8 +283,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_xs"
                         android:minHeight="@dimen/touch_min"
-                        android:text="@string/admin_complaint_decision_return_item"
-                        app:cornerRadius="@dimen/radius_md" />
+                        android:text="@string/admin_complaint_decision_return_item" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonDecideCancelDeal"
@@ -296,8 +291,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_xs"
                         android:minHeight="@dimen/touch_min"
-                        android:text="@string/admin_complaint_decision_cancel_deal"
-                        app:cornerRadius="@dimen/radius_md" />
+                        android:text="@string/admin_complaint_decision_cancel_deal" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonDecideReject"
@@ -307,18 +301,16 @@
                         android:backgroundTint="?attr/colorError"
                         android:minHeight="@dimen/touch_min"
                         android:text="@string/admin_complaint_decision_reject"
-                        android:textColor="?attr/colorOnPrimary"
-                        app:cornerRadius="@dimen/radius_md" />
+                        android:textColor="?attr/colorOnPrimary" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonRequestEvidence"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.PUBGApp.Button.OutlinedButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_xs"
                         android:minHeight="@dimen/touch_min"
-                        android:text="@string/admin_complaint_decision_request_evidence"
-                        app:cornerRadius="@dimen/radius_md" />
+                        android:text="@string/admin_complaint_decision_request_evidence" />
                 </LinearLayout>
 
                 <TextView
@@ -359,14 +351,13 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonSaveNote"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
                     android:layout_marginTop="@dimen/space_xs"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/admin_complaint_note_save"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/admin_complaint_note_save" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </FrameLayout>
