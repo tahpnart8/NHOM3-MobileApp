@@ -212,7 +212,7 @@ Mọi style thành phần nằm trong `res/values/styles.xml`, và `Theme.PUBGAp
 | Hộp thoại | `MaterialAlertDialog.PUBGApp` | `materialAlertDialogTheme` | Nền trắng, bo 24dp |
 | Bảng trượt từ dưới lên | `Widget.PUBGApp.BottomSheet` | `bottomSheetDialogTheme` | Nền trắng, bo 24dp hai góc trên |
 
-Ô nhập trần (không có `TextInputLayout`), ví dụ ô nhập tin nhắn ở C03, dùng nền viên thuốc `bg_input_pill` (`colorSurfaceContainer`, bo `radius_xl`) với đệm `space_md` ngang, `space_sm` dọc. Bong bóng tin nhắn nhận là thẻ trắng có bóng, không viền; bong bóng gửi tô `colorPrimary` (issue #355).
+Ô nhập trần (không có `TextInputLayout`), ví dụ ô nhập tin nhắn ở C02, dùng nền viên thuốc `bg_input_pill` (`colorSurfaceContainer`, bo `radius_xl`) với đệm `space_md` ngang, `space_sm` dọc. Bong bóng tin nhắn nhận là thẻ trắng có bóng, không viền; bong bóng gửi tô `colorPrimary` (issue #355).
 
 Theme tắt `elevationOverlayEnabled`: Material 3 mặc định phủ một lớp `colorPrimary` mờ lên mọi bề mặt có bóng, làm thẻ và thanh dưới ngả xanh xám (thấy trên emulator). Bề mặt của PUBGApp luôn là `colorSurface` trắng; độ nổi chỉ thể hiện bằng bóng.
 
