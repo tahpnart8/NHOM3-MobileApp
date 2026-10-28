@@ -11,12 +11,14 @@
         android:id="@+id/layoutTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurface"
+        android:background="@drawable/bg_top_bar"
         android:gravity="center_vertical"
         android:minHeight="@dimen/touch_min"
         android:orientation="horizontal"
         android:paddingStart="@dimen/space_md"
-        android:paddingEnd="@dimen/space_sm">
+        android:paddingTop="@dimen/space_sm"
+        android:paddingEnd="@dimen/space_sm"
+        android:paddingBottom="@dimen/space_sm">
 
         <TextView
             android:id="@+id/textAppName"
@@ -25,7 +27,7 @@
             android:layout_weight="1"
             android:text="@string/app_name"
             android:textAppearance="?attr/textAppearanceHeadlineSmall"
-            android:textColor="?attr/colorPrimary" />
+            android:textColor="?attr/colorOnPrimary" />
 
         <FrameLayout
             android:id="@+id/frameNotifications"
@@ -38,7 +40,8 @@
                 android:layout_height="match_parent"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/common_top_bar_notifications"
-                android:src="@drawable/ic_bell" />
+                android:src="@drawable/ic_bell"
+                app:tint="?attr/colorOnPrimary" />
 
             <!-- The unread count; the button's content description already says it, so this is hidden from TalkBack. -->
             <TextView
@@ -55,7 +58,7 @@
                 android:minHeight="@dimen/space_md"
                 android:paddingHorizontal="@dimen/space_xs"
                 android:textAppearance="?attr/textAppearanceLabelSmall"
-                android:textColor="?attr/colorOnError"
+                android:textColor="?attr/colorOnTertiary"
                 android:visibility="gone" />
         </FrameLayout>
 
@@ -64,16 +67,18 @@
             android:layout_width="@dimen/touch_min"
             android:layout_height="@dimen/touch_min"
             android:layout_marginStart="@dimen/space_xs"
+            android:background="@drawable/bg_avatar_ring"
             android:clickable="true"
             android:contentDescription="@string/common_top_bar_profile"
             android:focusable="true"
-            android:foreground="?attr/selectableItemBackgroundBorderless">
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:padding="@dimen/badge_stroke">
 
             <include
                 android:id="@+id/includeAvatar"
                 layout="@layout/view_avatar"
-                android:layout_width="@dimen/touch_min"
-                android:layout_height="@dimen/touch_min" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
         </FrameLayout>
     </LinearLayout>
 

@@ -15,16 +15,21 @@
 
     <ImageView
         android:id="@+id/imageError"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/state_icon_circle"
+        android:layout_height="@dimen/state_icon_circle"
+        android:background="@drawable/bg_icon_circle"
+        android:backgroundTint="?attr/colorErrorContainer"
         android:importantForAccessibility="no"
-        android:src="@drawable/ic_error" />
+        android:padding="@dimen/space_lg"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_error"
+        app:tint="?attr/colorError" />
 
     <TextView
         android:id="@+id/textErrorMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_md"
+        android:layout_marginTop="@dimen/space_lg"
         android:gravity="center"
         android:text="@string/common_error_generic"
         android:textAppearance="?attr/textAppearanceBodyMedium"

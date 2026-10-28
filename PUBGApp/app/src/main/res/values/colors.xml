@@ -45,6 +45,9 @@
     <color name="accent_container">#FFE3D3</color>
     <color name="on_accent_container">#6B2A07</color>
 
+    <!-- Darker end of the green header gradient (Home top bar, profile header). -->
+    <color name="primary_dark">#17593F</color>
+
     <!-- Not in the Material set. success equals primary on purpose (one green in the mockups). -->
     <color name="warning">#9E5223</color>
     <color name="success">#1F6F54</color>
