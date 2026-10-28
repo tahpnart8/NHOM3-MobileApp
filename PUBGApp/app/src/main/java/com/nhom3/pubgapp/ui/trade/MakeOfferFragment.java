@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,11 +18,15 @@ import com.google.android.material.snackbar.Snackbar;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.ListingRepository;
+import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.databinding.FragmentMakeOfferBinding;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Offer;
+import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.OfferType;
+import com.nhom3.pubgapp.model.enums.VerificationStatus;
 import com.nhom3.pubgapp.util.FormatUtils;
+import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.ChatViewModel;
 
 import java.util.List;
@@ -33,6 +38,7 @@ public class MakeOfferFragment extends BottomSheetDialogFragment {
     private ChatViewModel viewModel;
     private String listingId;
     private Listing currentListing;
+    private boolean isUserVerified = true;
     private final FormatUtils formatUtils = new FormatUtils();
 
     @Nullable
@@ -55,9 +61,44 @@ public class MakeOfferFragment extends BottomSheetDialogFragment {
         setupRadioGroup();
         setupSubmitButton();
         observeViewModel();
+        checkUserVerification();
 
         if (listingId != null && !listingId.isEmpty()) {
             loadListingDetails(listingId);
+        }
+    }
+
+    private void checkUserVerification() {
+        String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid.isEmpty()) {
+            isUserVerified = false;
+            updateVerificationUI();
+            return;
+        }
+        new UserRepository().getProfile(uid, new DataCallback<User>() {
+            @Override
+            public void onSuccess(User user) {
+                isUserVerified = user != null
+                        && user.getVerificationStatus() == VerificationStatus.APPROVED;
+                updateVerificationUI();
+            }
+
+            @Override
+            public void onError(String message) {
+            }
+        });
+    }
+
+    private void updateVerificationUI() {
+        if (binding == null) {
+            return;
+        }
+        if (!isUserVerified) {
+            binding.buttonSendOffer.setEnabled(false);
+            if (getContext() != null) {
+                Toast.makeText(getContext(), R.string.trade_make_offer_need_verification,
+                        Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -131,6 +172,14 @@ public class MakeOfferFragment extends BottomSheetDialogFragment {
     }
 
     private void submitOffer() {
+        if (!isUserVerified) {
+            if (getContext() != null) {
+                Toast.makeText(getContext(), R.string.trade_make_offer_need_verification,
+                        Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+
         if (listingId == null || listingId.isEmpty()) {
             return;
         }
@@ -212,7 +261,7 @@ public class MakeOfferFragment extends BottomSheetDialogFragment {
             public void onChanged(Boolean isLoading) {
                 boolean loading = Boolean.TRUE.equals(isLoading);
                 binding.progressLoading.setVisibility(loading ? View.VISIBLE : View.GONE);
-                binding.buttonSendOffer.setEnabled(!loading);
+                binding.buttonSendOffer.setEnabled(!loading && isUserVerified);
             }
         });
 
@@ -220,6 +269,9 @@ public class MakeOfferFragment extends BottomSheetDialogFragment {
             @Override
             public void onChanged(String err) {
                 if (err != null && !err.isEmpty() && binding != null) {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), err, Toast.LENGTH_LONG).show();
+                    }
                     if (err.contains("xác thực")) {
                         Snackbar.make(binding.getRoot(), err, Snackbar.LENGTH_LONG)
                                 .setAction(R.string.trade_chat_offer_register_verification,
