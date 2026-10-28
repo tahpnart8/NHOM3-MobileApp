@@ -55,9 +55,10 @@ Từ đợt làm mới giao diện (issue #349), theme khai đủ mọi vai màu
 | `colorOnError` | `#FFFFFF` | Chữ trên nền `colorError` | 5.69 |
 | `colorErrorContainer` / `colorOnErrorContainer` | `#F9DED8` / `#5C1A10` | Khối báo lỗi nhạt | 10.23; chữ `colorError` trên nền này 4.46, không dùng cho chữ nhỏ |
 
-Một màu không phải vai Material, khai trong `colors.xml`:
+Hai màu không phải vai Material, khai trong `colors.xml`:
 
 - `outline_strong` `#8F8A7E`: viền ô nhập lúc chưa chọn. Viền của một điều khiển cần 3:1 so với nền; `colorOutline` `#E7E2D6` chỉ 1.2 nên chỉ dùng cho đường kẻ và viền thẻ. Đạt 3.44 trên nền trắng.
+- `primary_dark` `#17593F`: đầu đậm của dải chuyển màu xanh (`bg_top_bar`, thanh trên của Trang chủ). Chữ trắng trên đó 8.28, trên đầu nhạt `colorPrimary` 6.07.
 
 ## 2. Khoảng cách, bo góc, độ nổi
 
@@ -176,6 +177,16 @@ Cái nào xuất hiện ở hai màn hình trở lên thì làm một layout dù
 **Các lớp Java ở cuối bảng là bắt buộc dùng, không ai tự viết lại.** Giải mã ảnh Base64 trên luồng chính đã xảy ra ba lần (các Pull Request #129, #133 và #135, xem issue #140): giao diện giật, ảnh 1024 px có thể làm tràn bộ nhớ, và `ViewHolder` bị dùng lại thì ảnh gán nhầm sang dòng khác. `ImageLoader.load` giải mã ngoài luồng chính, thu nhỏ khi giải mã, có ảnh giữ chỗ và ảnh dự phòng, và chỉ gán ảnh khi `ImageView` vẫn còn cần đúng ảnh đó. **Có ba bản nạp chồng, chọn theo chỗ bạn đang giữ ảnh:** chuỗi Base64 đọc từ tài liệu Firestore thì `load(String, ...)`; `byte[]` do `MediaRepository.getImage` trả thì `load(byte[], imageId, ...)` và `imageId` chính là chốt chống gán nhầm nên phải truyền đúng mã của ảnh đó; `Uri` người dùng vừa chọn từ bộ chọn ảnh thì `load(Uri, ...)`. Thiếu một trong ba cửa vào này là lý do hai adapter đã phải tự viết và tự viết sai, nên nguồn ảnh mới thì thêm bản nạp chồng thứ tư, đừng giải mã trong adapter. `StatusChips.bind` đặt chữ và màu cho `view_status_chip` đúng bảng ở mục 4, với một phương thức nạp chồng cho mỗi enum trạng thái; chữ lấy từ khóa `common_status_<đối tượng>_<trạng thái>` trong `strings_common.xml`. Màn hình nào cần giải mã ảnh hoặc tô nhãn thì gọi hai lớp này; cần thêm hành vi thì mở issue `area:ui`, đừng sao chép sang module mình.
 
 **Ảnh đại diện:** gọi `AvatarBinder.bind(ViewAvatarBinding avatar, String displayName, String avatarBase64)`, không tự đặt `textInitial` hay ẩn hiện `imageAvatar`. Lớp này luôn đặt chữ cái đầu của tên, rồi nạp ảnh qua `ImageLoader` đè lên chữ; chưa có ảnh, đang giải mã hoặc ảnh lỗi thì chữ cái vẫn hiện, không bao giờ còn vòng tròn trống.
+
+Kiểu của các thành phần trên (issue #351):
+
+- **Thanh trên của Trang chủ** (`layoutTopBar` trong `activity_main.xml`): nền `bg_top_bar` chuyển từ `primary_dark` sang `colorPrimary`, tên app và chuông màu `colorOnPrimary`, ảnh đại diện có vòng trắng `bg_avatar_ring` dày `badge_stroke`.
+- **Huy hiệu đếm số** (`bg_badge_count`): nền `colorTertiary` (màu nhấn), viền trắng `badge_stroke`, chữ `colorOnTertiary` cỡ `LabelSmall`.
+- **Thanh chi tiết** (`view_detail_toolbar`): nền trắng có đường kẻ `colorOutline` ở đáy (`bg_toolbar_divider`), tiêu đề `TitleLarge`. Màn admin dùng cùng thanh này.
+- **Ô trống và ô lỗi**: biểu tượng trong vòng tròn `state_icon_circle` (`bg_icon_circle`), ô trống nền `colorPrimaryContainer` với biểu tượng `colorPrimary`, ô lỗi nền `colorErrorContainer` với biểu tượng `colorError`; tiêu đề `TitleLarge`, lời giải thích `BodyMedium` màu `colorOnSurfaceVariant`; nút viên thuốc.
+- **Nhãn trạng thái** (`view_status_chip`): viên thuốc, chữ `LabelMedium`; màu vẫn do `StatusChips` đặt theo mục 4.
+- **Dải ngoại tuyến**: chữ `LabelLarge` trắng trên `colorInfo` (6.54).
+- **Hàng sao**: số điểm `LabelLarge` màu `colorOnSurface`, số lượt `BodySmall` màu `colorOnSurfaceVariant`.
 
 `item_listing_card.xml` có chiều rộng `match_parent`, nên dùng được cả trong lưới hai cột (B01) lẫn danh sách một cột (B05, B06, D02). Chiều cao ảnh bìa lấy từ token `listing_card_image_height`; ảnh đại diện lớn lấy từ `avatar_size_lg`.
 
