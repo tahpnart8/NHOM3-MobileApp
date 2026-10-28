@@ -58,6 +58,7 @@ public class RegisterFragment extends Fragment {
     private CategoryChoiceAdapter categoryChoiceAdapter;
     private Timestamp selectedDob;
     private ArrayList<String> savedCategoryIds = new ArrayList<String>();
+    private boolean manualCheckVerified;
     private final Handler verifyPollHandler = new Handler(Looper.getMainLooper());
     private final Runnable verifyPollRunnable = new Runnable() {
         @Override
@@ -152,6 +153,19 @@ public class RegisterFragment extends Fragment {
     }
 
     private void setupObservers() {
+        viewModel.getEmailVerified().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean verified) {
+                if (manualCheckVerified) {
+                    manualCheckVerified = false;
+                    if (Boolean.FALSE.equals(verified)) {
+                        Toast.makeText(requireContext(),
+                                R.string.account_register_not_verified, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
+
         viewModel.getSignUpStep().observe(getViewLifecycleOwner(), new Observer<Integer>() {
             @Override
             public void onChanged(Integer step) {
@@ -317,8 +331,8 @@ public class RegisterFragment extends Fragment {
                     showOfflineError();
                     return;
                 }
+                manualCheckVerified = true;
                 viewModel.checkEmailVerified();
-                Toast.makeText(requireContext(), R.string.account_register_not_verified, Toast.LENGTH_SHORT).show();
             }
         });
 
