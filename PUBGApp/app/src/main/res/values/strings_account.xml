@@ -94,6 +94,7 @@
 
     <string name="account_notification_title">Thông báo</string>
     <string name="notification_list_empty">Bạn chưa có thông báo mới</string>
+    <string name="notification_list_empty_message">Thông báo về tin nhắn, đề nghị giá và đơn hàng sẽ xuất hiện ở đây.</string>
     <string name="notification_list_error">Không có kết nối. Vui lòng thử lại.</string>
     <string name="notification_list_account_inactive">Tài khoản của bạn hiện không thể thực hiện thao tác này.</string>
 
@@ -127,6 +128,7 @@
     <string name="account_settings_change_password_button">Đổi mật khẩu</string>
     <string name="account_settings_change_password_success">Đổi mật khẩu thành công. Vui lòng đăng nhập lại.</string>
     <string name="account_settings_change_password_reauth_required">Phiên làm việc đã hết hạn an toàn, vui lòng đăng nhập lại để đổi mật khẩu.</string>
+    <string name="account_settings_current_password_incorrect">Mật khẩu hiện tại không đúng.</string>
     <string name="account_settings_offline">Mất kết nối mạng, vui lòng kiểm tra lại đường truyền</string>
 
     <string name="account_settings_section_notifications">Cài đặt thông báo</string>
