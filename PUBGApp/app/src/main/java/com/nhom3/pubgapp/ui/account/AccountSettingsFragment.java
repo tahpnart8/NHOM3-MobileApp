@@ -408,6 +408,10 @@ public class AccountSettingsFragment extends Fragment {
                 if (message.contains("recent-login") || message.contains("CREDENTIAL_TOO_OLD")
                         || message.contains("xác thực lại")) {
                     displayMessage = getString(R.string.account_settings_change_password_reauth_required);
+                } else if (message.contains("Email hoặc mật khẩu không đúng")
+                        || message.contains("invalid-credential")
+                        || message.contains("INVALID_LOGIN_CREDENTIALS")) {
+                    displayMessage = getString(R.string.account_settings_current_password_incorrect);
                 }
                 binding.includePassword.textPasswordError.setText(displayMessage);
                 binding.includePassword.textPasswordError.setVisibility(View.VISIBLE);

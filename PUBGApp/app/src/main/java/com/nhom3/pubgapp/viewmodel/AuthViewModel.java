@@ -654,6 +654,9 @@ public class AuthViewModel extends ViewModel {
             public void onError(String message) {
                 loading.postValue(false);
                 String errMsg = message != null ? message : "Không thể đổi mật khẩu.";
+                if (errMsg.contains("Email hoặc mật khẩu không đúng")) {
+                    errMsg = "Mật khẩu hiện tại không đúng.";
+                }
                 error.postValue(errMsg);
             }
         });
