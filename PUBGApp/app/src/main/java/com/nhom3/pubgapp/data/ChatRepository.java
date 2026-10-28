@@ -297,6 +297,70 @@ public class ChatRepository extends BaseRepository {
                 });
     }
 
+    // Live version of getConversations for D01: a new message moves its conversation to the top at once.
+    // Like getConversations it answers from Room first, so the list opens offline.
+    public ListenerRegistration observeConversations(final String uid, final DataCallback<List<Conversation>> cb) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                List<Conversation> cachedList = cachedConversations(uid);
+                if (!cachedList.isEmpty()) {
+                    cb.onSuccess(cachedList);
+                }
+            }
+        });
+        Query asBuyer = db.collection(COLLECTION_CONVERSATIONS).whereEqualTo("buyerId", uid);
+        Query asSeller = db.collection(COLLECTION_CONVERSATIONS).whereEqualTo("sellerId", uid);
+        return listenEitherQuery(asBuyer, asSeller, Conversation.class, new DataCallback<List<Conversation>>() {
+            @Override
+            public void onSuccess(final List<Conversation> list) {
+                sortConversationsByDate(list);
+                cb.onSuccess(list);
+                if (list.isEmpty()) {
+                    return;
+                }
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        ChatDao dao = getChatDao();
+                        if (dao == null) {
+                            return;
+                        }
+                        List<ConversationEntity> entities = new ArrayList<ConversationEntity>();
+                        for (int i = 0; i < list.size(); i++) {
+                            entities.add(new ConversationEntity().fromModel(list.get(i)));
+                        }
+                        dao.upsertConversations(entities);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                cb.onError(message);
+            }
+        });
+    }
+
+    private List<Conversation> cachedConversations(String uid) {
+        List<Conversation> cachedList = new ArrayList<Conversation>();
+        ChatDao dao = getChatDao();
+        if (dao == null) {
+            return cachedList;
+        }
+        List<ConversationEntity> cached = dao.getConversations();
+        if (cached == null) {
+            return cachedList;
+        }
+        for (int i = 0; i < cached.size(); i++) {
+            Conversation conv = cached.get(i).toModel();
+            if (conv != null && conv.isParticipant(uid)) {
+                cachedList.add(conv);
+            }
+        }
+        return cachedList;
+    }
+
     private void addConversationsToMap(QuerySnapshot snapshot, Map<String, Conversation> map) {
         if (snapshot == null) {
             return;

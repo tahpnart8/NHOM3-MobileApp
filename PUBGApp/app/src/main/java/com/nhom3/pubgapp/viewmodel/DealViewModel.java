@@ -22,6 +22,8 @@ import com.nhom3.pubgapp.model.enums.PaymentMethod;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 // State for the deal screens, from creation to completion. Action bodies report NOT_READY until the repositories are filled.
 public class DealViewModel extends ViewModel {
@@ -39,6 +41,14 @@ public class DealViewModel extends ViewModel {
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>();
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
+    // The open deal, its payment and the history lists are live, so the other party's step shows at once.
+    private final ListenerSet listeners = new ListenerSet();
+    private String liveDealId;
+
+    private static final String KEY_DEAL = "deal";
+    private static final String KEY_PAYMENT = "payment";
+    private static final String KEY_HISTORY = "history";
+    private static final String KEY_PAYMENTS = "payments";
 
     public DealViewModel() {
         this(new DealRepository(), new MediaRepository());
@@ -85,41 +95,44 @@ public class DealViewModel extends ViewModel {
         return done;
     }
 
+    // Starts listening once per deal; the reloads after confirm, pay and the other actions then cost nothing.
     public void loadDeal(String id) {
         if (id == null || id.trim().isEmpty()) {
             return;
         }
+        if (id.equals(liveDealId) && listeners.has(KEY_DEAL)) {
+            return;
+        }
+        liveDealId = id;
         loading.setValue(true);
-        dealRepository.getById(id, new DataCallback<Deal>() {
+        // Loading ends when both the deal and its payment have answered once.
+        final AtomicInteger firstAnswers = new AtomicInteger(2);
+        listeners.put(KEY_DEAL, dealRepository.observeDeal(id, new FirstAnswerCallback<Deal>(firstAnswers) {
             @Override
-            public void onSuccess(Deal result) {
+            void onValue(Deal result) {
                 deal.postValue(result);
-                if (result != null && result.needsPayment()) {
-                    dealRepository.getPayment(id, new DataCallback<Payment>() {
-                        @Override
-                        public void onSuccess(Payment paymentResult) {
-                            payment.postValue(paymentResult);
-                            loading.postValue(false);
-                        }
-
-                        @Override
-                        public void onError(String message) {
-                            payment.postValue(null);
-                            loading.postValue(false);
-                        }
-                    });
-                } else {
-                    payment.postValue(null);
-                    loading.postValue(false);
-                }
             }
 
             @Override
-            public void onError(String message) {
-                loading.postValue(false);
+            void onFailure(String message) {
+                listeners.remove(KEY_DEAL);
                 error.postValue(message);
             }
-        });
+        }));
+        // A payment that cannot be read is shown as no payment, as before.
+        listeners.put(KEY_PAYMENT, dealRepository.observePayment(id,
+                new FirstAnswerCallback<Payment>(firstAnswers) {
+                    @Override
+                    void onValue(Payment result) {
+                        payment.postValue(result);
+                    }
+
+                    @Override
+                    void onFailure(String message) {
+                        listeners.remove(KEY_PAYMENT);
+                        payment.postValue(null);
+                    }
+                }));
     }
 
     public void updateTerms(Deal dealToUpdate) {
@@ -465,8 +478,11 @@ public class DealViewModel extends ViewModel {
             error.setValue("Chưa đăng nhập");
             return;
         }
+        if (listeners.has(KEY_HISTORY)) {
+            return;
+        }
         loading.setValue(true);
-        dealRepository.getMyDeals(user.getUid(), new DataCallback<List<Deal>>() {
+        listeners.put(KEY_HISTORY, dealRepository.observeMyDeals(user.getUid(), new DataCallback<List<Deal>>() {
             @Override
             public void onSuccess(List<Deal> result) {
                 loading.postValue(false);
@@ -475,10 +491,11 @@ public class DealViewModel extends ViewModel {
 
             @Override
             public void onError(String message) {
+                listeners.remove(KEY_HISTORY);
                 loading.postValue(false);
                 error.postValue(message);
             }
-        });
+        }));
     }
 
     public void loadPayments() {
@@ -487,20 +504,25 @@ public class DealViewModel extends ViewModel {
             error.setValue("Chưa đăng nhập");
             return;
         }
+        if (listeners.has(KEY_PAYMENTS)) {
+            return;
+        }
         loading.setValue(true);
-        dealRepository.getPayments(user.getUid(), new DataCallback<List<Payment>>() {
-            @Override
-            public void onSuccess(List<Payment> result) {
-                loading.postValue(false);
-                payments.postValue(result != null ? result : new ArrayList<Payment>());
-            }
+        listeners.put(KEY_PAYMENTS, dealRepository.observePayments(user.getUid(),
+                new DataCallback<List<Payment>>() {
+                    @Override
+                    public void onSuccess(List<Payment> result) {
+                        loading.postValue(false);
+                        payments.postValue(result != null ? result : new ArrayList<Payment>());
+                    }
 
-            @Override
-            public void onError(String message) {
-                loading.postValue(false);
-                error.postValue(message);
-            }
-        });
+                    @Override
+                    public void onError(String message) {
+                        listeners.remove(KEY_PAYMENTS);
+                        loading.postValue(false);
+                        error.postValue(message);
+                    }
+                }));
     }
 
     public void clearError() {
@@ -575,5 +597,44 @@ public class DealViewModel extends ViewModel {
             }
         }
         return null;
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        listeners.clear();
+    }
+
+    // Ends the shared loading state on the first answer of each listener; later answers only update data.
+    private abstract class FirstAnswerCallback<T> implements DataCallback<T> {
+
+        private final AtomicInteger firstAnswers;
+        private final AtomicBoolean answered = new AtomicBoolean(false);
+
+        FirstAnswerCallback(AtomicInteger firstAnswers) {
+            this.firstAnswers = firstAnswers;
+        }
+
+        abstract void onValue(T result);
+
+        abstract void onFailure(String message);
+
+        @Override
+        public void onSuccess(T result) {
+            onValue(result);
+            countAnswer();
+        }
+
+        @Override
+        public void onError(String message) {
+            onFailure(message);
+            countAnswer();
+        }
+
+        private void countAnswer() {
+            if (answered.compareAndSet(false, true) && firstAnswers.decrementAndGet() <= 0) {
+                loading.postValue(false);
+            }
+        }
     }
 }

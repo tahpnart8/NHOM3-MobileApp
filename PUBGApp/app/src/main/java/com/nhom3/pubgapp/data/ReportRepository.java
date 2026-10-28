@@ -13,6 +13,7 @@ import com.google.firebase.firestore.AggregateSource;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -99,6 +100,14 @@ public class ReportRepository extends BaseRepository {
         runListQuery(query, cb);
     }
 
+    // Live version of getMyReports for F02: the admin's decision on a report shows at once.
+    public ListenerRegistration observeMyReports(String uid, DataCallback<List<Report>> cb) {
+        Query query = db.collection(COLLECTION)
+                .whereEqualTo(FIELD_REPORTER_ID, uid)
+                .orderBy(FIELD_CREATED_AT, Query.Direction.DESCENDING);
+        return listenQuery(query, Report.class, cb);
+    }
+
     // Runs on a background thread; returns null when the file could not be written.
     @Nullable
     public File exportCsv(List<Report> reports) {
@@ -129,6 +138,17 @@ public class ReportRepository extends BaseRepository {
         }
         query = query.orderBy(FIELD_CREATED_AT, Query.Direction.ASCENDING);
         runListQuery(query, cb);
+    }
+
+    // Live version of getByStatus for E01 and E04: a new report or one closed by another admin shows at once.
+    public ListenerRegistration observeByStatus(ReportStatus status, ReportTarget targetType,
+            DataCallback<List<Report>> cb) {
+        Query query = db.collection(COLLECTION).whereEqualTo(FIELD_STATUS, status.name());
+        if (targetType != null) {
+            query = query.whereEqualTo(FIELD_TARGET_TYPE, targetType.name());
+        }
+        query = query.orderBy(FIELD_CREATED_AT, Query.Direction.ASCENDING);
+        return listenQuery(query, Report.class, cb);
     }
 
     public void countByTarget(String targetId, DataCallback<Integer> cb) {

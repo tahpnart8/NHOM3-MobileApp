@@ -105,6 +105,10 @@ public class TrustViewModel extends ViewModel {
     private final MediaRepository mediaRepository = new MediaRepository();
     private final ExecutorService exportExecutor = Executors.newSingleThreadExecutor();
     private final ComplaintRepository complaintRepository = new ComplaintRepository();
+    // My reports and complaints are live, so the admin's decision shows without a reload.
+    private final ListenerSet listeners = new ListenerSet();
+    private static final String KEY_MY_REPORTS = "myReports";
+    private static final String KEY_MY_COMPLAINTS = "myComplaints";
     private final DealRepository dealRepository = new DealRepository();
 
     // Which list is in reviews ("uid:received"), so a rotation does not read it again.
@@ -438,7 +442,7 @@ public class TrustViewModel extends ViewModel {
     private void fetchMyReports(final String uid) {
         loadedReportsUid = uid;
         loading.setValue(true);
-        reportRepository.getMyReports(uid, new DataCallback<List<Report>>() {
+        listeners.put(KEY_MY_REPORTS, reportRepository.observeMyReports(uid, new DataCallback<List<Report>>() {
             @Override
             public void onSuccess(List<Report> result) {
                 if (!uid.equals(loadedReportsUid)) {
@@ -450,11 +454,12 @@ public class TrustViewModel extends ViewModel {
 
             @Override
             public void onError(String message) {
+                listeners.remove(KEY_MY_REPORTS);
                 loadedReportsUid = null;
                 loading.postValue(false);
                 error.postValue(message);
             }
-        });
+        }));
     }
 
     // Mirrors the Rules and Complaint.withdraw: only the complainant, and only while the complaint is open (STT 66).
@@ -491,25 +496,27 @@ public class TrustViewModel extends ViewModel {
     private void fetchMyComplaints(final String uid) {
         loadedComplaintsUid = uid;
         loading.setValue(true);
-        complaintRepository.getMyComplaints(uid, new DataCallback<List<Complaint>>() {
-            @Override
-            public void onSuccess(List<Complaint> result) {
-                if (!uid.equals(loadedComplaintsUid)) {
-                    return;
-                }
-                List<Complaint> list = result != null ? result : new ArrayList<Complaint>();
-                complaints.postValue(list);
-                refreshSelectedComplaint(list);
-                loading.postValue(false);
-            }
+        listeners.put(KEY_MY_COMPLAINTS, complaintRepository.observeMyComplaints(uid,
+                new DataCallback<List<Complaint>>() {
+                    @Override
+                    public void onSuccess(List<Complaint> result) {
+                        if (!uid.equals(loadedComplaintsUid)) {
+                            return;
+                        }
+                        List<Complaint> list = result != null ? result : new ArrayList<Complaint>();
+                        complaints.postValue(list);
+                        refreshSelectedComplaint(list);
+                        loading.postValue(false);
+                    }
 
-            @Override
-            public void onError(String message) {
-                loadedComplaintsUid = null;
-                loading.postValue(false);
-                error.postValue(message);
-            }
-        });
+                    @Override
+                    public void onError(String message) {
+                        listeners.remove(KEY_MY_COMPLAINTS);
+                        loadedComplaintsUid = null;
+                        loading.postValue(false);
+                        error.postValue(message);
+                    }
+                }));
     }
 
     // An open detail follows the list, so it shows the status the server holds after a reload.
@@ -798,6 +805,7 @@ public class TrustViewModel extends ViewModel {
     protected void onCleared() {
         super.onCleared();
         exportExecutor.shutdown();
+        listeners.clear();
     }
 
     public void clearError() {

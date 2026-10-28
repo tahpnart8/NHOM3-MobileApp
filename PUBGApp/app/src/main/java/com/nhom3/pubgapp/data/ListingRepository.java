@@ -11,6 +11,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
@@ -682,6 +683,26 @@ public class ListingRepository extends BaseRepository {
                             }
                         }
                         loadFromCache(id, cb);
+                    }
+                });
+    }
+
+    // Live version of getById for B03: price, status or hiding changed by the seller or an admin shows at once.
+    // Each version is cached so the page still opens offline.
+    public ListenerRegistration observeListing(String id, final DataCallback<Listing> cb) {
+        return listenDocument(db.collection(COLLECTION_LISTINGS).document(id), Listing.class,
+                new DataCallback<Listing>() {
+                    @Override
+                    public void onSuccess(Listing result) {
+                        if (result != null) {
+                            cacheListing(result);
+                        }
+                        cb.onSuccess(result);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        cb.onError(message);
                     }
                 });
     }

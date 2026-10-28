@@ -7,6 +7,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
@@ -151,6 +152,25 @@ public class NotificationRepository extends BaseRepository {
                         hideDisabledTypes(uid, list, cb);
                     }
                 });
+    }
+
+    // Live version of getForUser: a new notice or a read mark shows at once, and the badge follows it.
+    public ListenerRegistration observeForUser(final String uid, final DataCallback<List<AppNotification>> cb) {
+        Query query = db.collection(COLLECTION_NOTIFICATIONS)
+                .whereEqualTo("recipientId", uid)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .limit(50);
+        return listenQuery(query, AppNotification.class, new DataCallback<List<AppNotification>>() {
+            @Override
+            public void onSuccess(List<AppNotification> list) {
+                hideDisabledTypes(uid, list, cb);
+            }
+
+            @Override
+            public void onError(String message) {
+                cb.onError(message);
+            }
+        });
     }
 
     // Drops the notices whose type the user switched off in the notification settings.
