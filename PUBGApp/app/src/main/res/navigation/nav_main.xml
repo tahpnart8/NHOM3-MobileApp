@@ -28,7 +28,12 @@
         app:destination="@id/createComplaintFragment" />
     <action
         android:id="@+id/action_global_my_reports"
-        app:destination="@id/myReportsFragment" />
+        app:destination="@id/myReportsFragment">
+        <argument
+            android:name="initialTab"
+            android:defaultValue="0"
+            app:argType="integer" />
+    </action>
     <action
         android:id="@+id/action_global_listing_detail"
         app:destination="@id/listingDetailFragment" />
