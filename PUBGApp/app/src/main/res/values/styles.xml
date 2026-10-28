@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Component styles of the PUBGApp theme, giao-dien.md section 5a. Theme.PUBGApp makes them the
+     defaults; a layout names one only to pick a variant (outlined, text, tonal, filter chip). -->
+<resources>
+    <!-- Shapes. -->
+    <style name="ShapeAppearance.PUBGApp.Small" parent="ShapeAppearance.Material3.Corner.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_sm</item>
+    </style>
+
+    <style name="ShapeAppearance.PUBGApp.Medium" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_md</item>
+    </style>
+
+    <style name="ShapeAppearance.PUBGApp.Large" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_lg</item>
+    </style>
+
+    <style name="ShapeAppearance.PUBGApp.ExtraLarge" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_xl</item>
+    </style>
+
+    <style name="ShapeAppearance.PUBGApp.Full" parent="ShapeAppearance.Material3.Corner.Full">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- Only the top corners are round, for sheets that rise from the bottom edge. -->
+    <style name="ShapeAppearance.PUBGApp.Sheet" parent="ShapeAppearance.PUBGApp.ExtraLarge">
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+    <!-- Buttons: pill shaped, 48dp tall touch area. Filled green is the one main action of a screen. -->
+    <style name="Widget.PUBGApp.Button" parent="Widget.Material3.Button">
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.Full</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+    </style>
+
+    <style name="Widget.PUBGApp.Button.OutlinedButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.Full</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="strokeColor">@color/button_outlined_stroke</item>
+    </style>
+
+    <style name="Widget.PUBGApp.Button.TextButton" parent="Widget.Material3.Button.TextButton">
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.Full</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+    </style>
+
+    <style name="Widget.PUBGApp.Button.TonalButton" parent="Widget.Material3.Button.TonalButton">
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.Full</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+    </style>
+
+    <!-- Cards: white, 16dp corners, a soft shadow and no border. -->
+    <style name="Widget.PUBGApp.CardView" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardBackgroundColor">?attr/colorSurface</item>
+        <item name="cardElevation">@dimen/elevation_card</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.Large</item>
+    </style>
+
+    <!-- Chips: full pill. A filter chip turns light green with a green border when chosen. -->
+    <style name="Widget.PUBGApp.Chip.Assist" parent="Widget.Material3.Chip.Assist">
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.Full</item>
+        <item name="chipStrokeColor">?attr/colorOutline</item>
+    </style>
+
+    <style name="Widget.PUBGApp.Chip.Filter" parent="Widget.Material3.Chip.Filter">
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.Full</item>
+        <item name="chipBackgroundColor">@color/chip_filter_background</item>
+        <item name="chipStrokeColor">@color/chip_filter_stroke</item>
+        <item name="android:textColor">@color/chip_filter_text</item>
+        <item name="checkedIconTint">?attr/colorOnPrimaryContainer</item>
+    </style>
+
+    <!-- Text fields: white fill so they stand out on the beige screen, 12dp corners. -->
+    <style name="Widget.PUBGApp.TextInputLayout.OutlinedBox" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.Medium</item>
+        <item name="boxBackgroundColor">?attr/colorSurface</item>
+        <item name="boxStrokeColor">@color/text_field_stroke</item>
+    </style>
+
+    <style name="Widget.PUBGApp.TextInputLayout.OutlinedBox.ExposedDropdownMenu" parent="Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.Medium</item>
+        <item name="boxBackgroundColor">?attr/colorSurface</item>
+        <item name="boxStrokeColor">@color/text_field_stroke</item>
+    </style>
+
+    <!-- Bottom bar: white, light green pill behind the selected tab, green icon and label. -->
+    <style name="Widget.PUBGApp.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.PUBGApp.BottomNavigationView.ActiveIndicator</item>
+        <item name="itemIconTint">@color/bottom_nav_item</item>
+        <item name="itemTextColor">@color/bottom_nav_item</item>
+        <item name="itemTextAppearanceInactive">?attr/textAppearanceLabelMedium</item>
+        <item name="itemTextAppearanceActive">?attr/textAppearanceLabelMedium</item>
+        <item name="itemTextAppearanceActiveBoldEnabled">true</item>
+    </style>
+
+    <style name="Widget.PUBGApp.BottomNavigationView.ActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">?attr/colorPrimaryContainer</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.Full</item>
+    </style>
+
+    <!-- Tabs: green label and rounded indicator, semibold label. -->
+    <style name="Widget.PUBGApp.TabLayout" parent="Widget.Material3.TabLayout">
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="tabTextAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="tabSelectedTextColor">?attr/colorPrimary</item>
+        <item name="tabIndicatorColor">?attr/colorPrimary</item>
+    </style>
+
+    <style name="Widget.PUBGApp.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="titleTextAppearance">?attr/textAppearanceTitleLarge</item>
+    </style>
+
+    <style name="Widget.PUBGApp.Snackbar" parent="Widget.Material3.Snackbar">
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.Medium</item>
+    </style>
+
+    <!-- Dialogs: white, 24dp corners. -->
+    <style name="ThemeOverlay.PUBGApp.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="alertDialogStyle">@style/MaterialAlertDialog.PUBGApp</item>
+    </style>
+
+    <style name="MaterialAlertDialog.PUBGApp" parent="MaterialAlertDialog.Material3">
+        <item name="backgroundTint">?attr/colorSurface</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.ExtraLarge</item>
+    </style>
+
+    <!-- Bottom sheets: white, 24dp top corners. -->
+    <style name="ThemeOverlay.PUBGApp.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.PUBGApp.BottomSheet</item>
+    </style>
+
+    <style name="Widget.PUBGApp.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">?attr/colorSurface</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.PUBGApp.Sheet</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+    </style>
+</resources>
