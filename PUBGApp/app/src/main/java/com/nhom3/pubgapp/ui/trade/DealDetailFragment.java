@@ -666,14 +666,36 @@ public class DealDetailFragment extends Fragment {
 
     private void renderDealInfo(Deal deal, String currentUid) {
         boolean isBuyer = currentUid.equals(deal.getBuyerId());
-        int roleRes = isBuyer ? R.string.trade_deal_detail_role_seller
-                : R.string.trade_deal_detail_role_buyer;
-        String roleName = getString(roleRes);
-        String partnerId = isBuyer ? deal.getSellerId() : deal.getBuyerId();
+        final boolean finalIsBuyer = isBuyer;
+        final String partnerId = isBuyer ? deal.getSellerId() : deal.getBuyerId();
+        String fallbackName = getString(R.string.trade_conversation_list_partner_fallback);
 
         binding.textPartnerRole.setText(getString(
-                isBuyer ? R.string.trade_deal_detail_partner_seller : R.string.trade_deal_detail_partner_buyer,
-                roleName));
+                finalIsBuyer ? R.string.trade_deal_detail_partner_seller : R.string.trade_deal_detail_partner_buyer,
+                fallbackName));
+
+        if (partnerId != null && !partnerId.isEmpty()) {
+            new UserRepository().getProfile(partnerId, new DataCallback<User>() {
+                @Override
+                public void onSuccess(User user) {
+                    if (binding == null || getContext() == null) {
+                        return;
+                    }
+                    String name = user != null && user.getDisplayName() != null
+                            && !user.getDisplayName().trim().isEmpty()
+                            ? user.getDisplayName().trim()
+                            : getString(R.string.trade_conversation_list_partner_fallback);
+                    binding.textPartnerRole.setText(getString(
+                            finalIsBuyer ? R.string.trade_deal_detail_partner_seller
+                                    : R.string.trade_deal_detail_partner_buyer,
+                            name));
+                }
+
+                @Override
+                public void onError(String message) {
+                }
+            });
+        }
 
         binding.layoutPartnerLink.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -731,7 +753,9 @@ public class DealDetailFragment extends Fragment {
         if (binding == null) {
             return;
         }
-        if (deal.getCarrierName() != null && deal.getTrackingCode() != null) {
+        if (deal.getDeliveryMethod() == DeliveryMethod.SHIPPING
+                && deal.getCarrierName() != null && !deal.getCarrierName().trim().isEmpty()
+                && deal.getTrackingCode() != null && !deal.getTrackingCode().trim().isEmpty()) {
             binding.cardWaybillInfo.setVisibility(View.VISIBLE);
             binding.textCarrierName.setText(getString(R.string.trade_deal_detail_carrier_label,
                     deal.getCarrierName()));
@@ -841,7 +865,7 @@ public class DealDetailFragment extends Fragment {
         }
         binding.cardCountdown.setVisibility(View.VISIBLE);
         Timestamp now = Timestamp.now();
-        String remainingText = formatRemainingTime(autoReleaseAt, now);
+        String remainingText = formatRemainingTime(autoReleaseAt, now, getContext());
         binding.textCountdown.setText(remainingText);
 
         boolean canComplain = canComplain(currentDeal, getCurrentUserId(), now);
@@ -849,20 +873,31 @@ public class DealDetailFragment extends Fragment {
     }
 
     static String formatRemainingTime(Timestamp autoReleaseAt, Timestamp now) {
+        return formatRemainingTime(autoReleaseAt, now, null);
+    }
+
+    static String formatRemainingTime(Timestamp autoReleaseAt, Timestamp now, android.content.Context context) {
         if (autoReleaseAt == null || now == null) {
             return "";
         }
         long diffMillis = autoReleaseAt.toDate().getTime() - now.toDate().getTime();
         if (diffMillis <= 0) {
-            return "Đã hết đếm ngược, hệ thống sẽ tự chuyển sang Đã nhận";
+            return context != null
+                    ? context.getString(R.string.trade_deal_detail_countdown_expired)
+                    : "Đã hết đếm ngược, hệ thống sẽ tự chuyển sang Đã nhận";
         }
         if (diffMillis < 24L * 60 * 60 * 1000) {
             long hours = diffMillis / (60L * 60 * 1000);
             long minutes = (diffMillis % (60L * 60 * 1000)) / (60L * 1000);
-            return "Còn " + hours + " giờ " + minutes + " phút để xác nhận";
+            return context != null
+                    ? context.getString(R.string.trade_deal_detail_countdown_hours_minutes, hours, minutes)
+                    : "Còn " + hours + " giờ " + minutes + " phút để xác nhận";
         }
-        long days = diffMillis / (24L * 60 * 60 * 1000);
-        return "Còn " + days + " ngày để xác nhận";
+        long oneDayMillis = 24L * 60 * 60 * 1000;
+        long days = (diffMillis + oneDayMillis - 1) / oneDayMillis;
+        return context != null
+                ? context.getString(R.string.trade_deal_detail_countdown_days, days)
+                : "Còn " + days + " ngày để xác nhận";
     }
 
     static boolean canComplain(Deal deal, String currentUid, Timestamp now) {
@@ -890,6 +925,7 @@ public class DealDetailFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 binding.cardShippingForm.setVisibility(View.VISIBLE);
+                binding.buttonShipDeal.setVisibility(View.GONE);
                 binding.cardReceivingForm.setVisibility(View.GONE);
                 binding.cardCancelDeal.setVisibility(View.GONE);
                 binding.cardEditTerms.setVisibility(View.GONE);
@@ -900,6 +936,7 @@ public class DealDetailFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 binding.cardShippingForm.setVisibility(View.GONE);
+                binding.buttonShipDeal.setVisibility(View.VISIBLE);
             }
         });
 
@@ -942,6 +979,7 @@ public class DealDetailFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 binding.cardReceivingForm.setVisibility(View.VISIBLE);
+                binding.buttonReceiveDeal.setVisibility(View.GONE);
                 binding.cardShippingForm.setVisibility(View.GONE);
                 binding.cardCancelDeal.setVisibility(View.GONE);
                 binding.cardEditTerms.setVisibility(View.GONE);
@@ -952,6 +990,7 @@ public class DealDetailFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 binding.cardReceivingForm.setVisibility(View.GONE);
+                binding.buttonReceiveDeal.setVisibility(View.VISIBLE);
             }
         });
 
@@ -1072,7 +1111,8 @@ public class DealDetailFragment extends Fragment {
                         binding.textWaitingStatus.setVisibility(View.VISIBLE);
                         binding.textWaitingStatus.setText(R.string.trade_deal_detail_waiting_buyer_pay);
                     } else {
-                        binding.buttonShipDeal.setVisibility(View.VISIBLE);
+                        boolean shippingOpen = binding.cardShippingForm.getVisibility() == View.VISIBLE;
+                        binding.buttonShipDeal.setVisibility(shippingOpen ? View.GONE : View.VISIBLE);
                         binding.buttonShipDeal.setEnabled(online && isUserVerified);
                     }
                 } else if (isBuyer) {
@@ -1114,7 +1154,8 @@ public class DealDetailFragment extends Fragment {
                         binding.textWaitingStatus.setText(R.string.trade_deal_detail_please_pay_first);
                     } else {
                         binding.buttonPay.setVisibility(View.GONE);
-                        binding.buttonReceiveDeal.setVisibility(View.VISIBLE);
+                        boolean receivingOpen = binding.cardReceivingForm.getVisibility() == View.VISIBLE;
+                        binding.buttonReceiveDeal.setVisibility(receivingOpen ? View.GONE : View.VISIBLE);
                         binding.buttonReceiveDeal.setEnabled(online && isUserVerified);
                         binding.buttonComplain.setVisibility(View.VISIBLE);
                         binding.buttonComplain.setEnabled(online);
@@ -1134,7 +1175,8 @@ public class DealDetailFragment extends Fragment {
             binding.textConfirmationStatus.setVisibility(View.GONE);
 
             if (isBuyer) {
-                binding.buttonReceiveDeal.setVisibility(View.VISIBLE);
+                boolean receivingOpen = binding.cardReceivingForm.getVisibility() == View.VISIBLE;
+                binding.buttonReceiveDeal.setVisibility(receivingOpen ? View.GONE : View.VISIBLE);
                 binding.buttonReceiveDeal.setEnabled(online && isUserVerified);
             }
 
@@ -1244,9 +1286,11 @@ public class DealDetailFragment extends Fragment {
         }
         if (shippingOpen && binding != null) {
             binding.cardShippingForm.setVisibility(View.VISIBLE);
+            binding.buttonShipDeal.setVisibility(View.GONE);
         }
         if (receivingOpen && binding != null) {
             binding.cardReceivingForm.setVisibility(View.VISIBLE);
+            binding.buttonReceiveDeal.setVisibility(View.GONE);
         }
         if (scheduleMillis > 0) {
             selectedScheduleTimestamp = new Timestamp(new Date(scheduleMillis));
