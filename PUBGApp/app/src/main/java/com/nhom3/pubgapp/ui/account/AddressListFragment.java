@@ -151,6 +151,7 @@ public class AddressListFragment extends Fragment implements AddressAdapter.Addr
         binding.recyclerAddresses.setVisibility(View.GONE);
         binding.layoutEmpty.setVisibility(View.GONE);
         binding.layoutError.setVisibility(View.GONE);
+        binding.bottomBar.setVisibility(View.GONE);
     }
 
     private void showData(List<UserAddress> addresses) {
@@ -161,6 +162,7 @@ public class AddressListFragment extends Fragment implements AddressAdapter.Addr
         binding.recyclerAddresses.setVisibility(View.VISIBLE);
         binding.layoutEmpty.setVisibility(View.GONE);
         binding.layoutError.setVisibility(View.GONE);
+        binding.bottomBar.setVisibility(View.VISIBLE);
         adapter.setItems(addresses);
     }
 
@@ -172,6 +174,7 @@ public class AddressListFragment extends Fragment implements AddressAdapter.Addr
         binding.recyclerAddresses.setVisibility(View.GONE);
         binding.layoutEmpty.setVisibility(View.VISIBLE);
         binding.layoutError.setVisibility(View.GONE);
+        binding.bottomBar.setVisibility(View.GONE);
         adapter.setItems(null);
     }
 
@@ -183,6 +186,7 @@ public class AddressListFragment extends Fragment implements AddressAdapter.Addr
         binding.recyclerAddresses.setVisibility(View.GONE);
         binding.layoutEmpty.setVisibility(View.GONE);
         binding.layoutError.setVisibility(View.VISIBLE);
+        binding.bottomBar.setVisibility(View.GONE);
         binding.textError.setText(message);
     }
 

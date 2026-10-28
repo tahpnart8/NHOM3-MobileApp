@@ -11,11 +11,13 @@
         android:id="@+id/layoutTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_toolbar_divider"
         android:gravity="center_vertical"
         android:minHeight="@dimen/touch_min"
         android:orientation="horizontal"
-        android:paddingHorizontal="@dimen/space_sm"
-        android:paddingVertical="@dimen/space_xs">
+        android:paddingStart="@dimen/space_xs"
+        android:paddingTop="@dimen/space_xs"
+        android:paddingBottom="@dimen/space_xs">
 
         <ImageButton
             android:id="@+id/buttonBack"
@@ -30,11 +32,15 @@
             android:id="@+id/textTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_sm"
             android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:paddingStart="@dimen/space_xs"
+            android:paddingEnd="@dimen/space_md"
             android:text="@string/account_settings_title"
-            android:textAppearance="?attr/textAppearanceTitleLarge"
-            android:textColor="?attr/colorOnSurface" />
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <!-- Offline Banner -->
