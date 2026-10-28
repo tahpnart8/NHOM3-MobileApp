@@ -432,6 +432,7 @@
     <string name="admin_deal_detail_payment_method">Phương thức: %1$s</string>
     <string name="admin_deal_detail_payment_held_at">Thời điểm giữ: %1$s</string>
     <string name="admin_deal_detail_payment_released_at">Thời điểm giải ngân: %1$s</string>
+    <string name="admin_deal_detail_payment_refunded_at">Thời điểm hoàn tiền: %1$s</string>
     <string name="admin_deal_detail_auto_release_at">Tự động giải ngân sau: %1$s</string>
     <string name="admin_deal_detail_history_empty">Chưa có lịch sử chuyển trạng thái</string>
     <string name="admin_deal_detail_history_by">Bởi: %1$s</string>
