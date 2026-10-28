@@ -1,7 +1,7 @@
 package com.nhom3.pubgapp.ui.listing;
 
-import android.app.AlertDialog;
 import android.content.DialogInterface;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -330,7 +330,7 @@ public class MyShopFragment extends Fragment {
         }
 
         String[] nameArray = names.toArray(new String[0]);
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
         builder.setTitle(R.string.listing_shop_menu_filter);
         builder.setSingleChoiceItems(nameArray, checkedIndex, new DialogInterface.OnClickListener() {
             @Override
@@ -340,7 +340,7 @@ public class MyShopFragment extends Fragment {
                 viewModel.loadMyListings(currentSortOrder, selectedCategoryId);
             }
         });
-        builder.setNegativeButton(R.string.listing_post_btn_close, null);
+        builder.setNegativeButton(R.string.common_cancel, null);
         builder.show();
     }
 
@@ -435,7 +435,7 @@ public class MyShopFragment extends Fragment {
     }
 
     private void confirmHideListing(final Listing listing) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
         builder.setMessage(R.string.listing_shop_hide_confirm);
         builder.setPositiveButton(R.string.listing_shop_action_hide, new DialogInterface.OnClickListener() {
             @Override
@@ -444,12 +444,12 @@ public class MyShopFragment extends Fragment {
                 viewModel.setHidden(listing.getId(), true);
             }
         });
-        builder.setNegativeButton(R.string.listing_post_btn_close, null);
+        builder.setNegativeButton(R.string.common_cancel, null);
         builder.show();
     }
 
     private void confirmMarkSold(final Listing listing) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
         builder.setMessage(R.string.listing_shop_mark_sold_confirm);
         builder.setPositiveButton(R.string.listing_shop_action_mark_sold,
                 new DialogInterface.OnClickListener() {
@@ -459,12 +459,12 @@ public class MyShopFragment extends Fragment {
                         viewModel.changeStatus(listing.getId(), ListingStatus.SOLD);
                     }
                 });
-        builder.setNegativeButton(R.string.listing_post_btn_close, null);
+        builder.setNegativeButton(R.string.common_cancel, null);
         builder.show();
     }
 
     private void confirmDeleteDraft(final Listing listing) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
         builder.setTitle(R.string.listing_shop_dialog_delete_title);
         builder.setMessage(R.string.listing_shop_dialog_delete_msg);
         builder.setPositiveButton(R.string.listing_shop_action_delete, new DialogInterface.OnClickListener() {
@@ -474,13 +474,13 @@ public class MyShopFragment extends Fragment {
                 viewModel.deleteListing(listing.getId());
             }
         });
-        builder.setNegativeButton(R.string.listing_post_btn_close, null);
+        builder.setNegativeButton(R.string.common_cancel, null);
         builder.show();
     }
 
     private void publishDraftListing(Listing listing) {
         if (userVerification != VerificationStatus.APPROVED) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
             builder.setTitle(R.string.listing_post_unverified_dialog_title);
             if (userVerification == VerificationStatus.PENDING) {
                 builder.setMessage(R.string.listing_post_pending_dialog_msg);
@@ -495,7 +495,7 @@ public class MyShopFragment extends Fragment {
                                          .navigate(R.id.action_global_my_profile);
                             }
                         });
-                builder.setNegativeButton(R.string.listing_post_btn_close, null);
+                builder.setNegativeButton(R.string.common_cancel, null);
             }
             builder.show();
             return;
@@ -571,7 +571,7 @@ public class MyShopFragment extends Fragment {
         if (reason == null || reason.trim().isEmpty()) {
             reason = getString(R.string.listing_shop_reason_empty);
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
         builder.setTitle(R.string.listing_shop_reason_title);
         builder.setMessage(reason);
         builder.setPositiveButton(R.string.listing_post_btn_close, null);

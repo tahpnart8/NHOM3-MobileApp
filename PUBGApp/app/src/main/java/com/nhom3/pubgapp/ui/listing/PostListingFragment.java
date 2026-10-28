@@ -94,6 +94,7 @@ public class PostListingFragment extends Fragment {
     private String selectedCategoryId;
     private final Map<String, EditText> conditionEditTexts = new LinkedHashMap<String, EditText>();
     private Map<String, String> pendingConditionValues;
+    private boolean isFormEnabled = true;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -187,6 +188,9 @@ public class PostListingFragment extends Fragment {
         if (savedInstanceState != null) {
             restoreInstanceState(savedInstanceState);
         }
+
+        binding.spinnerCategory.setEnabled(false);
+        binding.layoutCategory.setHelperText(getString(R.string.listing_post_category_loading));
 
         viewModel.loadCategories();
     }
@@ -382,9 +386,43 @@ public class PostListingFragment extends Fragment {
                     currentVerification = user.getVerificationStatus();
                     boolean approved = currentVerification == VerificationStatus.APPROVED;
                     binding.textVerificationWarning.setVisibility(approved ? View.GONE : View.VISIBLE);
+                    setFormEnabled(approved);
                 }
             }
         });
+    }
+
+    private void setFormEnabled(boolean enabled) {
+        isFormEnabled = enabled;
+        if (binding == null) {
+            return;
+        }
+        binding.editTitle.setEnabled(enabled);
+        binding.spinnerCategory.setEnabled(enabled && !loadedCategories.isEmpty());
+        binding.editDescription.setEnabled(enabled);
+        binding.radioConditionNew.setEnabled(enabled);
+        binding.radioConditionLikeNew.setEnabled(enabled);
+        binding.radioConditionUsed.setEnabled(enabled);
+        binding.radioConditionRepaired.setEnabled(enabled);
+        binding.radioConditionDefective.setEnabled(enabled);
+        binding.checkTradeSell.setEnabled(enabled);
+        binding.checkTradeExchange.setEnabled(enabled);
+        binding.checkTradeGiveaway.setEnabled(enabled);
+        binding.editPrice.setEnabled(enabled);
+        binding.radioOfferMoney.setEnabled(enabled);
+        binding.radioOfferItem.setEnabled(enabled);
+        binding.radioOfferBoth.setEnabled(enabled);
+        binding.editMinOfferPrice.setEnabled(enabled);
+        binding.spinnerProvince.setEnabled(enabled);
+        binding.buttonAddImage.setEnabled(enabled);
+        binding.buttonCaptureImage.setEnabled(enabled);
+        binding.buttonPost.setEnabled(enabled && isNetworkAvailable());
+        binding.buttonSaveDraft.setEnabled(enabled && isNetworkAvailable());
+        for (Map.Entry<String, EditText> entry : conditionEditTexts.entrySet()) {
+            if (entry.getValue() != null) {
+                entry.getValue().setEnabled(enabled);
+            }
+        }
     }
 
     private void observeViewModel() {
@@ -403,12 +441,16 @@ public class PostListingFragment extends Fragment {
                 }
                 if (loadedCategories.isEmpty()) {
                     binding.layoutCategory.setHelperText(getString(R.string.listing_post_category_empty));
+                    binding.spinnerCategory.setEnabled(false);
                     binding.spinnerCategory.setAdapter(null);
                     binding.spinnerCategory.setText("", false);
                     selectedCategoryId = null;
                     clearCategoryConditionFields();
                 } else {
                     binding.layoutCategory.setHelperText(null);
+                    if (isFormEnabled) {
+                        binding.spinnerCategory.setEnabled(true);
+                    }
                     ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                             requireContext(),
                             android.R.layout.simple_spinner_dropdown_item,
@@ -429,7 +471,7 @@ public class PostListingFragment extends Fragment {
             public void onChanged(Boolean isLoading) {
                 boolean loading = isLoading != null && isLoading;
                 binding.progressLoading.setVisibility(loading ? View.VISIBLE : View.GONE);
-                boolean canInteract = !loading && isNetworkAvailable();
+                boolean canInteract = !loading && isNetworkAvailable() && isFormEnabled;
                 binding.buttonPost.setEnabled(canInteract);
                 binding.buttonSaveDraft.setEnabled(canInteract);
             }
@@ -502,6 +544,10 @@ public class PostListingFragment extends Fragment {
             updateOfflineBanner();
             return;
         }
+        if (!isEditMode() && currentVerification != VerificationStatus.APPROVED) {
+            showUnverifiedDialog();
+            return;
+        }
         binding.layoutOfflineBanner.getRoot().setVisibility(View.GONE);
         binding.layoutErrorState.getRoot().setVisibility(View.GONE);
         viewModel.clearError();
@@ -509,18 +555,18 @@ public class PostListingFragment extends Fragment {
         binding.layoutTitle.setError(null);
         binding.layoutPrice.setError(null);
 
+        if (imageAdapter.getAllImageCount() < 1) {
+            Toast.makeText(requireContext(),
+                    R.string.listing_post_missing_image, Toast.LENGTH_SHORT).show();
+            binding.nestedScrollView.smoothScrollTo(0, 0);
+            return;
+        }
+
         String title = binding.editTitle.getText() != null
                 ? binding.editTitle.getText().toString().trim() : "";
         if (title.isEmpty()) {
             binding.layoutTitle.setError(getString(R.string.listing_post_missing_fields));
             binding.nestedScrollView.smoothScrollTo(0, binding.layoutTitle.getTop());
-            return;
-        }
-
-        if (imageAdapter.getAllImageCount() < 1) {
-            Toast.makeText(requireContext(),
-                    R.string.listing_post_missing_fields, Toast.LENGTH_SHORT).show();
-            binding.nestedScrollView.smoothScrollTo(0, binding.textImagesLabel.getTop());
             return;
         }
 
@@ -560,11 +606,6 @@ public class PostListingFragment extends Fragment {
         if (binding.checkTradeSell.isChecked() && typedPrice <= 0L) {
             binding.layoutPrice.setError(getString(R.string.listing_post_price_error));
             binding.nestedScrollView.smoothScrollTo(0, binding.layoutPrice.getTop());
-            return;
-        }
-
-        if (!isEditMode() && currentVerification != VerificationStatus.APPROVED) {
-            showUnverifiedDialog();
             return;
         }
 

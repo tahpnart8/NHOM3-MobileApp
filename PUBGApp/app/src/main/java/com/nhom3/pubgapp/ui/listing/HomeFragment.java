@@ -41,6 +41,7 @@ public class HomeFragment extends Fragment {
     private ListingCardAdapter adapter;
     private ListingCardAdapter forYouAdapter;
     private boolean isFollowingChannel = false;
+    private boolean isInitialResume = true;
 
     /** Only displays guest sign-in header when definitely not logged in and not restoring session. */
     public static boolean shouldShowGuestSignIn(boolean loggedIn, boolean isRestoring) {
@@ -68,6 +69,9 @@ public class HomeFragment extends Fragment {
 
         if (savedInstanceState != null) {
             isFollowingChannel = savedInstanceState.getBoolean(KEY_FOLLOWING_CHANNEL, false);
+            isInitialResume = false;
+        } else {
+            isInitialResume = true;
         }
 
         setupRecyclerView();
@@ -95,6 +99,12 @@ public class HomeFragment extends Fragment {
         super.onResume();
         setupTopHeader();
         updateOfflineBanner();
+        if (isInitialResume) {
+            isInitialResume = false;
+        } else {
+            viewModel.refresh();
+            viewModel.loadForYou();
+        }
     }
 
     @Override
@@ -303,6 +313,7 @@ public class HomeFragment extends Fragment {
 
                 if (list == null || list.isEmpty()) {
                     binding.recyclerListings.setVisibility(View.GONE);
+                    binding.scrollEmptyState.setVisibility(View.VISIBLE);
                     binding.includeEmptyState.getRoot().setVisibility(View.VISIBLE);
                     binding.includeErrorState.getRoot().setVisibility(View.GONE);
 
@@ -323,6 +334,7 @@ public class HomeFragment extends Fragment {
                     }
                 } else {
                     binding.recyclerListings.setVisibility(View.VISIBLE);
+                    binding.scrollEmptyState.setVisibility(View.GONE);
                     binding.includeEmptyState.getRoot().setVisibility(View.GONE);
                     binding.includeErrorState.getRoot().setVisibility(View.GONE);
                 }
@@ -336,6 +348,7 @@ public class HomeFragment extends Fragment {
                 if (isLoading && adapter.getItemCount() == 0) {
                     binding.progressBar.setVisibility(View.VISIBLE);
                     binding.includeErrorState.getRoot().setVisibility(View.GONE);
+                    binding.scrollEmptyState.setVisibility(View.GONE);
                     binding.includeEmptyState.getRoot().setVisibility(View.GONE);
                 } else {
                     binding.progressBar.setVisibility(View.GONE);
@@ -351,6 +364,7 @@ public class HomeFragment extends Fragment {
                         binding.includeErrorState.getRoot().setVisibility(View.VISIBLE);
                         binding.includeErrorState.textErrorMessage.setText(err);
                         binding.recyclerListings.setVisibility(View.GONE);
+                        binding.scrollEmptyState.setVisibility(View.GONE);
                         binding.includeEmptyState.getRoot().setVisibility(View.GONE);
                     }
                     viewModel.clearError();

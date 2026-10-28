@@ -197,16 +197,23 @@
         app:layout_constraintTop_toBottomOf="@id/layoutForYou" />
 
     <!-- Empty state -->
-    <include
-        android:id="@+id/includeEmptyState"
-        layout="@layout/view_empty_state"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollEmptyState"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:fillViewport="true"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutForYou" />
+        app:layout_constraintTop_toBottomOf="@id/layoutForYou">
+
+        <include
+            android:id="@+id/includeEmptyState"
+            layout="@layout/view_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </androidx.core.widget.NestedScrollView>
 
     <!-- Error state -->
     <include

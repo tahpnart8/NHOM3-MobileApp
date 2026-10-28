@@ -61,7 +61,11 @@ public class ShopListingAdapter extends RecyclerView.Adapter<ShopListingAdapter.
         final Listing listing = listings.get(position);
 
         holder.binding.textTitle.setText(listing.getTitle());
-        holder.binding.textPrice.setText(formatUtils.formatPrice(listing.getPrice()));
+        if (listing.getStatus() == ListingStatus.DRAFT && listing.getPrice() <= 0) {
+            holder.binding.textPrice.setText(R.string.listing_shop_price_draft_none);
+        } else {
+            holder.binding.textPrice.setText(formatUtils.formatPrice(listing.getPrice()));
+        }
 
         ImageLoader.load(listing.getCoverThumb(), holder.binding.imageThumb,
                 R.drawable.ic_inbox, R.drawable.ic_error);

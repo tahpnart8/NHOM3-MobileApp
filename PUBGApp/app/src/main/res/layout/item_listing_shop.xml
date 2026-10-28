@@ -70,7 +70,8 @@
             android:layout_height="@dimen/touch_min"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/listing_shop_menu_desc"
-            android:src="@android:drawable/ic_menu_more"
+            android:src="@drawable/ic_more_vert"
+            app:tint="?attr/colorOnSurfaceVariant"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 

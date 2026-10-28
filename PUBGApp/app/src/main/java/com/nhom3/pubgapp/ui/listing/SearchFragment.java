@@ -290,6 +290,9 @@ public class SearchFragment extends Fragment {
         if (currentTab == TAB_USERS) {
             viewModel.searchUsers(keyword);
         } else {
+            if (keyword.length() == 1) {
+                return;
+            }
             viewModel.setKeyword(keyword);
             viewModel.search();
         }
@@ -495,9 +498,11 @@ public class SearchFragment extends Fragment {
         viewModel.getUserResults().observe(getViewLifecycleOwner(), new Observer<List<User>>() {
             @Override
             public void onChanged(List<User> users) {
-                userAdapter.setItems(users);
+                String currentUid = SessionManager.getInstance().getCurrentUserId();
+                List<User> filtered = filterOutCurrentUser(users, currentUid);
+                userAdapter.setItems(filtered);
                 if (currentTab == TAB_USERS) {
-                    updateUserResultsVisibility(users);
+                    updateUserResultsVisibility(filtered);
                 }
             }
         });
@@ -544,7 +549,8 @@ public class SearchFragment extends Fragment {
         }
         binding.chipGroupRecent.removeAllViews();
 
-        if (searches == null || searches.isEmpty()) {
+        List<String> cleaned = cleanRecentSearches(searches);
+        if (cleaned.isEmpty()) {
             binding.layoutRecentSearches.setVisibility(View.GONE);
             return;
         }
@@ -552,8 +558,8 @@ public class SearchFragment extends Fragment {
         binding.layoutRecentSearches.setVisibility(View.VISIBLE);
         LayoutInflater inflater = LayoutInflater.from(getContext());
 
-        for (int i = 0; i < searches.size(); i++) {
-            final String query = searches.get(i);
+        for (int i = 0; i < cleaned.size(); i++) {
+            final String query = cleaned.get(i);
             Chip chip = new Chip(requireContext());
             chip.setText(query);
             chip.setCheckable(false);
@@ -818,7 +824,9 @@ public class SearchFragment extends Fragment {
             if (keyword.length() >= 2) {
                 viewModel.searchUsers(keyword);
             } else {
-                updateUserResultsVisibility(viewModel.getUserResults().getValue());
+                String currentUid = SessionManager.getInstance().getCurrentUserId();
+                List<User> filtered = filterOutCurrentUser(viewModel.getUserResults().getValue(), currentUid);
+                updateUserResultsVisibility(filtered);
             }
         } else {
             binding.editKeyword.setHint(R.string.listing_search_hint);
@@ -829,8 +837,8 @@ public class SearchFragment extends Fragment {
 
             List<Listing> list = viewModel.getResults().getValue();
             if (list == null || list.isEmpty()) {
-                List<String> recents = viewModel.getRecentSearches().getValue();
-                boolean hasRecent = recents != null && !recents.isEmpty();
+                List<String> recents = cleanRecentSearches(viewModel.getRecentSearches().getValue());
+                boolean hasRecent = !recents.isEmpty();
                 binding.layoutRecentSearches.setVisibility(hasRecent ? View.VISIBLE : View.GONE);
                 binding.textResultCount.setVisibility(View.GONE);
             } else {
@@ -878,5 +886,70 @@ public class SearchFragment extends Fragment {
         if (imm != null) {
             imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
         }
+    }
+
+    static List<String> cleanRecentSearches(List<String> raw) {
+        if (raw == null) {
+            return new ArrayList<String>();
+        }
+        List<String> valid = new ArrayList<String>();
+        for (int i = 0; i < raw.size(); i++) {
+            String item = raw.get(i);
+            if (item == null) {
+                continue;
+            }
+            String trimmed = item.trim();
+            if (trimmed.length() < 2) {
+                continue;
+            }
+            boolean exists = false;
+            for (int j = 0; j < valid.size(); j++) {
+                if (valid.get(j).equalsIgnoreCase(trimmed)) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                valid.add(trimmed);
+            }
+        }
+
+        List<String> result = new ArrayList<String>();
+        for (int i = 0; i < valid.size(); i++) {
+            String candidate = valid.get(i);
+            String candidateLower = candidate.toLowerCase();
+            boolean isPrefix = false;
+            for (int j = 0; j < valid.size(); j++) {
+                if (i != j) {
+                    String other = valid.get(j);
+                    String otherLower = other.toLowerCase();
+                    if (otherLower.startsWith(candidateLower) && otherLower.length() > candidateLower.length()) {
+                        isPrefix = true;
+                        break;
+                    }
+                }
+            }
+            if (!isPrefix) {
+                result.add(candidate);
+            }
+        }
+        return result;
+    }
+
+    static List<User> filterOutCurrentUser(List<User> users, String currentUid) {
+        if (users == null) {
+            return null;
+        }
+        if (currentUid == null || currentUid.isEmpty()) {
+            return users;
+        }
+        List<User> filtered = new ArrayList<User>();
+        for (int i = 0; i < users.size(); i++) {
+            User u = users.get(i);
+            if (u != null && !currentUid.equals(u.getId())) {
+                filtered.add(u);
+            }
+        }
+        return filtered;
     }
 }

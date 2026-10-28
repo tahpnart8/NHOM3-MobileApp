@@ -338,6 +338,10 @@ public class ListingDetailFragment extends Fragment {
         viewModel.getFollowingSeller().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean isFollowing) {
+                if (!SessionManager.getInstance().isLoggedIn()) {
+                    binding.buttonFollowSeller.setVisibility(View.GONE);
+                    return;
+                }
                 if (Boolean.TRUE.equals(isFollowing)) {
                     binding.buttonFollowSeller.setText(R.string.listing_detail_btn_following);
                 } else {
@@ -593,6 +597,9 @@ public class ListingDetailFragment extends Fragment {
     }
 
     private boolean canFollowSeller(String sellerId, String currentUid) {
+        if (!SessionManager.getInstance().isLoggedIn()) {
+            return false;
+        }
         if (sellerId == null || sellerId.trim().isEmpty()) {
             return false;
         }
@@ -608,6 +615,8 @@ public class ListingDetailFragment extends Fragment {
         if (isOwner) {
             binding.layoutBuyerActions.setVisibility(View.GONE);
             binding.layoutSellerActions.setVisibility(View.VISIBLE);
+            binding.buttonSave.setVisibility(View.GONE);
+            binding.buttonReport.setVisibility(View.GONE);
 
             boolean canMarkSold = (listing.getStatus() == ListingStatus.AVAILABLE);
             binding.buttonMarkSold.setEnabled(canMarkSold);
@@ -620,6 +629,8 @@ public class ListingDetailFragment extends Fragment {
         } else {
             binding.layoutSellerActions.setVisibility(View.GONE);
             binding.layoutBuyerActions.setVisibility(View.VISIBLE);
+            binding.buttonSave.setVisibility(View.VISIBLE);
+            binding.buttonReport.setVisibility(View.VISIBLE);
 
             boolean canChat = ListingDetailViewModel.canStartChat(listing, currentUid);
             boolean canOffer = ListingDetailViewModel.canSendOffer(listing, currentUid);
