@@ -131,7 +131,7 @@ Module A gồm 8 use case, từ UC01 đến UC08: đăng ký, đăng nhập, đ�
 | Mức ưu tiên | Cao |
 | Khởi phát | Khách chọn "Quên mật khẩu" trên form đăng nhập |
 | Tiền điều kiện | 1. Tài khoản đã được đăng ký xác thực từ trước<br>2. Nhập đúng địa chỉ email của tài khoản |
-| Hậu điều kiện | 1. Đổi được mật khẩu mới để sử dụng đăng nhập<br>2. Vào được ứng dụng<br>3. Lần sau đăng nhập vẫn vào được hệ thống bằng mật khẩu mới |
+| Hậu điều kiện | 1. Đổi được mật khẩu mới trên trang web của Firebase<br>2. Quay lại ứng dụng đăng nhập thành công bằng mật khẩu mới<br>3. Lần sau đăng nhập vẫn vào được hệ thống bằng mật khẩu mới |
 
 **Luồng cơ bản**
 
@@ -139,11 +139,11 @@ Module A gồm 8 use case, từ UC01 đến UC08: đăng ký, đăng nhập, đ�
 | --- | --- | --- |
 | 1 | Chọn "đăng nhập" tại trang chủ | Hiển thị form đăng nhập cho người dùng |
 | 2 | Chọn "quên mật khẩu" ở trên form | Hệ thống hiển thị màn hình "Quên mật khẩu" gồm ô nhập Email và nút "Gửi liên kết". |
-| 3 | Khách nhập email của tài khoản và nhấn "Gửi liên kết". | Hệ thống kiểm tra định dạng email và kiểm tra tài khoản này đã đăng ký chưa |
-| 4 |  | Hệ thống gửi đến Gmail của khách một email chứa liên kết đặt lại mật khẩu và hiển thị thông báo đã gửi, nhắc khách mở hộp thư. |
-| 5 | Khách kiểm tra hộp thư và bấm vào liên kết đặt lại mật khẩu trong thư. | Hệ thống kiểm tra liên kết còn hợp lệ, còn hiệu lực và chuyển sang màn hình "nhập lại mật khẩu mới cho tài khoản". |
-| 6 | Khách nhập đầy đủ thông tin: Mật khẩu mới, Xác nhận mật khẩu mới; sau đó nhấn "Hoàn tất". | Hệ thống kiểm tra tính hợp lệ của dữ liệu (mật khẩu tối thiểu 8 ký tự gồm chữ và số, khớp nhau giữa 2 lần nhập). |
-| 7 |  | Hệ thống cập nhật mật khẩu mới, tự động đăng nhập và chuyển người dùng đến Trang chủ kèm thông báo chào mừng. |
+| 3 | Khách nhập email của tài khoản và nhấn "Gửi liên kết". | Hệ thống kiểm tra định dạng email. |
+| 4 |  | Hệ thống hiển thị thông báo đã gửi liên kết đặt lại mật khẩu, nhắc khách kiểm tra hộp thư và quay về màn hình đăng nhập (A01). Nếu email đã được đăng ký, Firebase gửi email chứa liên kết đặt lại mật khẩu đến hộp thư của khách (do cơ chế chống dò tài khoản, hệ thống không báo email có tồn tại hay không). |
+| 5 | Khách kiểm tra hộp thư và bấm vào liên kết đặt lại mật khẩu trong thư. | Trình duyệt mở trang web đặt lại mật khẩu của Firebase. Firebase kiểm tra liên kết còn hợp lệ, còn hiệu lực và hiển thị form nhập mật khẩu mới. |
+| 6 | Khách nhập mật khẩu mới trên trang web của Firebase và nhấn xác nhận. | Trang web của Firebase kiểm tra tính hợp lệ của mật khẩu mới (theo chính sách mật khẩu của Firebase, mặc định tối thiểu 6 ký tự) và lưu mật khẩu mới. |
+| 7 | Khách quay lại ứng dụng PUBGApp và đăng nhập bằng mật khẩu mới. | Hệ thống xác thực thông tin đăng nhập mới và chuyển người dùng đến Trang chủ. |
 
 **Luồng thay thế**
 
@@ -156,16 +156,16 @@ Module A gồm 8 use case, từ UC01 đến UC08: đăng ký, đăng nhập, đ�
 
 | Bước | Hành động của tác nhân | Phản hồi của hệ thống |
 | --- | --- | --- |
-| 3b | Nhập email sai định dạng hoặc chưa được đăng ký | Hệ thống báo lỗi màu đỏ dưới ô nhập email, không gửi thư và giữ nguyên màn hình. |
+| 3b | Nhập email sai định dạng hoặc bỏ trống | Hệ thống báo lỗi màu đỏ dưới ô nhập email ("Email không đúng định dạng" hoặc "Vui lòng nhập email"), không gửi yêu cầu và giữ nguyên màn hình. Nếu nhập email chưa đăng ký, hệ thống vẫn hiện thông báo gửi thành công chung để chống dò tài khoản (email enumeration protection) nhưng Firebase không gửi thư. |
 | 3c | Gửi quá nhiều yêu cầu liên tiếp | Hệ thống thông báo tạm khóa chức năng này trong vài phút. |
-| 5a | Bấm liên kết không hợp lệ hoặc đã hết hiệu lực | Hệ thống từ chối đặt lại mật khẩu, thông báo liên kết không hợp lệ hoặc đã hết hạn và yêu cầu khách gửi lại liên kết. |
-| 6a | Mật khẩu mới không hợp lệ hoặc hai lần nhập không khớp | Hệ thống bôi đỏ ô dữ liệu lỗi kèm thông báo hướng dẫn cụ thể và giữ nguyên màn hình. |
+| 5a | Bấm liên kết không hợp lệ hoặc đã hết hiệu lực | Trang web của Firebase từ chối đặt lại mật khẩu, thông báo liên kết không hợp lệ hoặc đã hết hạn. Khách cần yêu cầu gửi lại liên kết mới từ ứng dụng. |
+| 6a | Mật khẩu mới không hợp lệ theo quy định của Firebase | Trang web của Firebase hiển thị thông báo lỗi và yêu cầu nhập lại mật khẩu hợp lệ. |
 
 **Quy tắc nghiệp vụ**
 
-- BR1. Chỉ tài khoản đã đăng ký mới được đặt lại mật khẩu.
-- BR2. Liên kết đặt lại mật khẩu chỉ được gửi tới email của tài khoản và chỉ có hiệu lực trong một thời hạn nhất định kể từ khi được gửi. Hệ thống không gửi mã qua tin nhắn SMS.
-- BR3. Mật khẩu mới phải có tối thiểu 8 ký tự, gồm cả chữ và số, mật khẩu xác nhận phải giống hoàn toàn mật khẩu mới.
+- BR1. Chỉ tài khoản đã đăng ký mới nhận được thư đặt lại mật khẩu. Ứng dụng không báo email có tồn tại trong hệ thống hay không để chống dò tài khoản (email enumeration protection).
+- BR2. Liên kết đặt lại mật khẩu chỉ được gửi tới email của tài khoản và chỉ có hiệu lực trong một thời hạn nhất định do Firebase quy định kể từ khi được gửi. Hệ thống không gửi mã qua tin nhắn SMS.
+- BR3. Mật khẩu mới được thiết lập trên trang web của Firebase theo chính sách mật khẩu của Firebase (mặc định tối thiểu 6 ký tự). Sau khi đặt lại mật khẩu thành công trên trang web, người dùng quay lại ứng dụng để đăng nhập.
 
 **Yêu cầu phi chức năng**
 
@@ -475,13 +475,13 @@ Mọi chỗ khác với bản nháp của nhóm, mỗi dòng một chỗ. Tiền
 
 ### UC03 Đặt lại mật khẩu
 
-- Lỗi. Luồng cơ bản bước 2 và 3 không có bước nhập email. Thêm bước 3 "nhập email và nhấn Gửi liên kết" (hệ thống kiểm tra định dạng và tài khoản đã đăng ký); bước 2 nay mở màn hình "Quên mật khẩu" có ô Email.
-- D1 (suy ra, cần leader xác nhận). Bản nháp UC03 cũng dùng mã OTP 6 chữ số, 60 giây và màn hình "Xác thực OTP". Lý do của D1 (Firebase không gửi OTP qua email) áp dụng như nhau, và STT 3 cùng màn hình A03 ghi rõ là gửi liên kết đặt lại mật khẩu qua email, không gửi mã. Nên hai bước OTP cũ thành bước 4 (gửi email chứa liên kết) và bước 5 (bấm liên kết); bước nhập mật khẩu mới và bước cập nhật thành 6, 7.
-- Lỗi. Ngoại lệ "Nhập sai OTP / OTP quá hạn ... từ chối đăng nhập" dùng nhầm cụm "từ chối đăng nhập" trong luồng đặt lại mật khẩu. Thay bằng ngoại lệ 5a (liên kết không hợp lệ hoặc hết hạn, "từ chối đặt lại mật khẩu"); thêm 3b (email sai hoặc chưa đăng ký), 3c (gửi quá nhiều yêu cầu) lấy từ A03, và 6a (mật khẩu mới không hợp lệ hoặc không khớp) lấy từ bước kiểm tra của bước 6.
+- Lỗi. Luồng cơ bản bước 2 và 3 không có bước nhập email. Thêm bước 3 "nhập email và nhấn Gửi liên kết" (hệ thống kiểm tra định dạng); bước 2 nay mở màn hình "Quên mật khẩu" có ô Email.
+- D1 (suy ra, cần leader xác nhận). Bản nháp UC03 cũng dùng mã OTP 6 chữ số, 60 giây và màn hình "Xác thực OTP". Lý do của D1 (Firebase không gửi OTP qua email) áp dụng như nhau, và STT 3 cùng màn hình A03 ghi rõ là gửi liên kết đặt lại mật khẩu qua email, không gửi mã. Nên hai bước OTP cũ thành bước 4 (gửi email chứa liên kết) và bước 5 (bấm liên kết mở trang web Firebase); bước nhập mật khẩu mới và bước đăng nhập lại thành 6, 7.
+- Lỗi. Ngoại lệ "Nhập sai OTP / OTP quá hạn ... từ chối đăng nhập" dùng nhầm cụm "từ chối đăng nhập" trong luồng đặt lại mật khẩu. Thay bằng ngoại lệ 5a (liên kết không hợp lệ hoặc hết hạn trên trang web Firebase); ngoại lệ 3b chỉ kiểm tra định dạng email hoặc bỏ trống (nhập email chưa đăng ký vẫn nhận thông báo chung để chống dò tài khoản theo cơ chế email enumeration protection của Firebase), 3c (gửi quá nhiều yêu cầu), và 6a (mật khẩu không hợp lệ trên trang web Firebase).
 - Lỗi. Khởi phát bản nháp trùng nguyên văn Tiền điều kiện (khác một cụm "xác thực"); viết lại thành hành động của khách ("chọn Quên mật khẩu trên form đăng nhập"). Tiền điều kiện mục 2 đổi "Nhập đúng tên tài khoản" thành "Nhập đúng địa chỉ email của tài khoản", vì hệ thống gửi thư theo email.
 - Điền. Luồng thay thế bản nháp chỉ có bước 1 rỗng: thêm 3a (quay lại) và 4a (gửi lại liên kết). Mô tả bỏ cụm "muốn thay đổi" và chỉ về UC05, vì đổi mật khẩu khi đang đăng nhập nay ở UC05 (D11).
-- Điền. BR1 đến BR3 và NFR1, NFR2 lấy từ nội dung use case, STT 3 và quy tắc mật khẩu của UC01.
-- Mật khẩu. Bước 6 và BR3 theo quy tắc "tối thiểu 8 ký tự, gồm chữ và số" (quyết định leader 2026-10-22).
+- Điền. BR1 đến BR3 và NFR1, NFR2 lấy từ nội dung use case, STT 3 và hành vi thực tế của Firebase Authentication (Issue #329).
+- Mật khẩu và đăng nhập. Bước 5-7 và BR3 mô tả đúng luồng của Firebase: đặt mật khẩu mới trên trang web của Firebase (mặc định tối thiểu 6 ký tự), sau đó quay lại ứng dụng đăng nhập tại A01, không tự động đăng nhập (Issue #329).
 
 ### UC04 Đăng xuất
 
@@ -539,6 +539,6 @@ Mọi chỗ khác với bản nháp của nhóm, mỗi dòng một chỗ. Tiền
 - UC01 bước 7: chưa rõ chọn danh mục quan tâm có bắt buộc, tối thiểu mấy danh mục. Chưa ghi giới hạn nào.
 - UC01 luồng 1a: tài khoản Google bỏ qua bước liên kết xác thực (email đã được Google xác thực). Đây là suy ra từ cách làm trong tài liệu A02, chưa có trong D1.
 - Thời hạn hiệu lực của liên kết xác thực và liên kết đặt lại mật khẩu, và việc liên kết cũ có bị vô hiệu khi gửi lại hay không, chưa kiểm chứng với Firebase Authentication; tệp chỉ ghi "một thời hạn nhất định".
-- UC03 bước 7 giữ lời của nhóm là tự đăng nhập sau khi đặt lại mật khẩu; A03 nói quay về A01 Đăng nhập. UC04 và UC08 giữ lời của nhóm là về trang chủ ở trạng thái khách; A04 và A05 nói về A01 Đăng nhập.
+- UC03: Đã giải quyết theo Issue #329 khớp hành vi của Firebase. Khách đặt lại mật khẩu trên trang web Firebase, sau đó quay lại ứng dụng để đăng nhập tại A01 (không tự động đăng nhập). UC04 và UC08 giữ lời của nhóm là về trang chủ ở trạng thái khách; A04 và A05 nói về A01 Đăng nhập.
 - UC06 1c.2a: chưa rõ có cho sửa (không chỉ xóa) địa chỉ đang gắn với giao dịch chưa kết thúc không.
 - Tài khoản đăng nhập bằng Google không có mật khẩu: luồng đổi mật khẩu ở UC05 chưa nói trường hợp này.
