@@ -130,13 +130,12 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonViewSeller"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/admin_listing_detail_view_seller"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/admin_listing_detail_view_seller" />
 
                 <TextView
                     android:id="@+id/textActionHint"
@@ -153,8 +152,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/admin_listing_detail_action_hide"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/admin_listing_detail_action_hide" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonRestore"
@@ -162,19 +160,17 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/admin_listing_detail_action_restore"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/admin_listing_detail_action_restore" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonRemove"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.PUBGApp.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
                     android:text="@string/admin_listing_detail_action_remove"
                     android:textColor="?attr/colorError"
-                    app:cornerRadius="@dimen/radius_md"
                     app:strokeColor="?attr/colorError" />
             </LinearLayout>
         </ScrollView>

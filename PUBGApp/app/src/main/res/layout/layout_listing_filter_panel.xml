@@ -33,7 +33,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonCloseFilter"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.PUBGApp.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="@dimen/touch_min"
                 android:text="@string/listing_search_filter_close"
@@ -80,28 +80,28 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPriceUnder100k"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_quick_price_under_100k" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPrice100kTo500k"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_quick_price_100k_500k" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPrice500kTo2m"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_quick_price_500k_2m" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPriceOver2m"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_quick_price_over_2m" />
@@ -116,7 +116,7 @@
             android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/space_xs"
@@ -132,7 +132,7 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/space_xs"
@@ -177,35 +177,35 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipConditionNew"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_condition_new" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipConditionLikeNew"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_condition_like_new" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipConditionUsed"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_condition_used" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipConditionRepaired"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_condition_repaired" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipConditionDefective"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_condition_defective" />
@@ -230,21 +230,21 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipTradeSell"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_trade_sell" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipTradeExchange"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_trade_exchange" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipTradeGiveaway"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_trade_giveaway" />
@@ -289,28 +289,28 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipRadiusNearMe"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_radius_near_me" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipRadius1km"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_radius_1km" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipRadius3km"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_radius_3km" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipRadius5km"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_radius_5km" />
@@ -337,7 +337,7 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipSortNewest"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
@@ -345,21 +345,21 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipSortPriceAsc"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_sort_price_asc" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipSortPriceDesc"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_sort_price_desc" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipSortTopRated"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_search_sort_top_rated" />
@@ -375,7 +375,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonResetFilter"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.PUBGApp.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/touch_min"
                 android:layout_marginEnd="@dimen/space_xs"
@@ -384,7 +384,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonApplyFilter"
-                style="@style/Widget.Material3.Button"
+                style="@style/Widget.PUBGApp.Button"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/touch_min"
                 android:layout_marginStart="@dimen/space_xs"

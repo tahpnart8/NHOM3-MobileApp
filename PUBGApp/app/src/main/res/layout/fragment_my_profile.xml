@@ -72,7 +72,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonEditProfile"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="@style/Widget.PUBGApp.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:minHeight="@dimen/touch_min"
@@ -156,7 +156,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonRetryStats"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.PUBGApp.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
@@ -169,9 +169,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
-                app:cardBackgroundColor="?attr/colorSurface"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="@dimen/elevation_card">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <LinearLayout
                     android:id="@+id/layoutVerification"
@@ -232,8 +230,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_md"
                         android:minHeight="@dimen/touch_min"
-                        android:visibility="gone"
-                        app:cornerRadius="@dimen/radius_md" />
+                        android:visibility="gone" />
 
                     <LinearLayout
                         android:id="@+id/layoutVerificationForm"
@@ -270,13 +267,12 @@
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/buttonPickIdImage"
-                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                style="@style/Widget.PUBGApp.Button.OutlinedButton"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:minHeight="@dimen/touch_min"
-                                android:text="@string/profile_my_profile_verify_pick_id_image"
-                                app:cornerRadius="@dimen/radius_md" />
+                                android:text="@string/profile_my_profile_verify_pick_id_image" />
 
                             <ImageView
                                 android:id="@+id/imageIdPreview"
@@ -306,13 +302,12 @@
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/buttonPickPortraitImage"
-                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                style="@style/Widget.PUBGApp.Button.OutlinedButton"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:minHeight="@dimen/touch_min"
-                                android:text="@string/profile_my_profile_verify_pick_portrait_image"
-                                app:cornerRadius="@dimen/radius_md" />
+                                android:text="@string/profile_my_profile_verify_pick_portrait_image" />
 
                             <ImageView
                                 android:id="@+id/imagePortraitPreview"
@@ -348,8 +343,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/space_md"
                             android:minHeight="@dimen/touch_min"
-                            android:text="@string/profile_my_profile_verify_submit"
-                            app:cornerRadius="@dimen/radius_md" />
+                            android:text="@string/profile_my_profile_verify_submit" />
 
                         <ProgressBar
                             android:id="@+id/progressSubmitVerification"
@@ -465,14 +459,13 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonAdminArea"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.PUBGApp.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/profile_my_profile_admin_area"
-                android:visibility="gone"
-                app:cornerRadius="@dimen/radius_md" />
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/textLogout"

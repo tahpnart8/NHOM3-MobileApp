@@ -64,21 +64,21 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipTypeListing"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/admin_moderation_type_listing" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipTypeUser"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/admin_moderation_type_user" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipTypeMessage"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/admin_moderation_type_message" />
@@ -101,7 +101,7 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusOpen"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
@@ -109,14 +109,14 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusResolved"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/admin_moderation_status_resolved" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatusDismissed"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.PUBGApp.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/admin_moderation_status_dismissed" />
@@ -239,8 +239,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/space_sm"
                 android:minHeight="@dimen/touch_min"
-                android:text="@string/admin_moderation_keyword_add"
-                app:cornerRadius="@dimen/radius_md" />
+                android:text="@string/admin_moderation_keyword_add" />
         </LinearLayout>
 
         <TextView

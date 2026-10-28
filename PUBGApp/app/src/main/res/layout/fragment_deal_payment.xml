@@ -76,8 +76,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/space_md"
-                    app:cardCornerRadius="@dimen/radius_md"
-                    app:cardElevation="1dp"
                     app:contentPadding="@dimen/space_md">
 
                     <LinearLayout
@@ -136,8 +134,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/space_md"
-                    app:cardCornerRadius="@dimen/radius_md"
-                    app:cardElevation="1dp"
                     app:contentPadding="@dimen/space_md">
 
                     <LinearLayout
@@ -187,8 +183,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/trade_deal_payment_continue"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/trade_deal_payment_continue" />
             </LinearLayout>
 
             <!-- Step 2: Confirmation -->
@@ -204,8 +199,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/space_md"
-                    app:cardCornerRadius="@dimen/radius_md"
-                    app:cardElevation="1dp"
                     app:contentPadding="@dimen/space_md">
 
                     <LinearLayout
@@ -257,8 +250,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/trade_deal_payment_confirm_button"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/trade_deal_payment_confirm_button" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonChangeMethod"
@@ -267,8 +259,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/trade_deal_payment_change_method"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/trade_deal_payment_change_method" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonCancelPayment"
@@ -278,7 +269,6 @@
                     android:minHeight="@dimen/touch_min"
                     android:text="@string/trade_deal_payment_cancel"
                     android:textColor="?attr/colorError"
-                    app:cornerRadius="@dimen/radius_md"
                     app:strokeColor="?attr/colorError" />
             </LinearLayout>
 
@@ -295,8 +285,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/space_md"
-                    app:cardCornerRadius="@dimen/radius_md"
-                    app:cardElevation="1dp"
                     app:contentPadding="@dimen/space_md">
 
                     <LinearLayout
@@ -365,8 +353,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/trade_deal_payment_return_button"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/trade_deal_payment_return_button" />
             </LinearLayout>
 
         </LinearLayout>

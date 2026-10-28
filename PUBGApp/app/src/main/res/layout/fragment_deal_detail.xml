@@ -69,8 +69,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_md"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="1dp"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -178,8 +176,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_md"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="1dp"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -237,8 +233,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_md"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="1dp"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -330,8 +324,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_md"
                 android:visibility="gone"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="1dp"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -375,7 +367,6 @@
                 android:layout_marginBottom="@dimen/space_md"
                 android:visibility="gone"
                 app:cardBackgroundColor="?attr/colorSurfaceVariant"
-                app:cardCornerRadius="@dimen/radius_md"
                 app:cardElevation="0dp"
                 app:contentPadding="@dimen/space_md">
 
@@ -398,8 +389,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_sm"
                         android:minHeight="@dimen/touch_min"
-                        android:text="@string/trade_deal_detail_register_verification"
-                        app:cornerRadius="@dimen/radius_md" />
+                        android:text="@string/trade_deal_detail_register_verification" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -410,8 +400,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_md"
                 android:visibility="gone"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="2dp"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -482,8 +470,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_edit_schedule_button"
-                            app:cornerRadius="@dimen/radius_md" />
+                            android:text="@string/trade_deal_detail_edit_schedule_button" />
 
                         <TextView
                             android:id="@+id/textSelectedSchedule"
@@ -538,16 +525,14 @@
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="@dimen/space_sm"
                             android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_close_edit"
-                            app:cornerRadius="@dimen/radius_md" />
+                            android:text="@string/trade_deal_detail_close_edit" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/buttonSaveTerms"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_save_terms"
-                            app:cornerRadius="@dimen/radius_md" />
+                            android:text="@string/trade_deal_detail_save_terms" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -559,8 +544,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_md"
                 android:visibility="gone"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="2dp"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -604,8 +587,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="@dimen/space_sm"
                             android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_cancel_dismiss"
-                            app:cornerRadius="@dimen/radius_md" />
+                            android:text="@string/trade_deal_detail_cancel_dismiss" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/buttonConfirmCancel"
@@ -613,8 +595,7 @@
                             android:layout_height="wrap_content"
                             android:backgroundTint="?attr/colorError"
                             android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_cancel_confirm"
-                            app:cornerRadius="@dimen/radius_md" />
+                            android:text="@string/trade_deal_detail_cancel_confirm" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -627,8 +608,6 @@
                 android:layout_marginBottom="@dimen/space_md"
                 android:visibility="gone"
                 app:cardBackgroundColor="?attr/colorSurfaceVariant"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="1dp"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -653,8 +632,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_md"
                 android:visibility="gone"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="1dp"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -711,8 +688,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_md"
                 android:visibility="gone"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="1dp"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -753,8 +728,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_md"
                 android:visibility="gone"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="2dp"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -805,7 +778,6 @@
                         android:layout_marginTop="@dimen/space_sm"
                         android:minHeight="@dimen/touch_min"
                         android:text="@string/trade_deal_detail_pick_waybill_photo"
-                        app:cornerRadius="@dimen/radius_md"
                         app:icon="@drawable/ic_inbox" />
 
                     <ImageView
@@ -831,8 +803,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="@dimen/space_sm"
                             android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_close_dialog"
-                            app:cornerRadius="@dimen/radius_md" />
+                            android:text="@string/trade_deal_detail_close_dialog" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/buttonConfirmShipped"
@@ -840,8 +811,7 @@
                             android:layout_height="wrap_content"
                             android:enabled="false"
                             android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_confirm_shipped"
-                            app:cornerRadius="@dimen/radius_md" />
+                            android:text="@string/trade_deal_detail_confirm_shipped" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -853,8 +823,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_md"
                 android:visibility="gone"
-                app:cardCornerRadius="@dimen/radius_md"
-                app:cardElevation="2dp"
                 app:contentPadding="@dimen/space_md">
 
                 <LinearLayout
@@ -886,7 +854,6 @@
                         android:layout_marginTop="@dimen/space_sm"
                         android:minHeight="@dimen/touch_min"
                         android:text="@string/trade_deal_detail_pick_received_photo"
-                        app:cornerRadius="@dimen/radius_md"
                         app:icon="@drawable/ic_inbox" />
 
                     <ImageView
@@ -912,8 +879,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="@dimen/space_sm"
                             android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_close_dialog"
-                            app:cornerRadius="@dimen/radius_md" />
+                            android:text="@string/trade_deal_detail_close_dialog" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/buttonConfirmReceived"
@@ -921,8 +887,7 @@
                             android:layout_height="wrap_content"
                             android:enabled="false"
                             android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_confirm_received"
-                            app:cornerRadius="@dimen/radius_md" />
+                            android:text="@string/trade_deal_detail_confirm_received" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -960,8 +925,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/trade_deal_detail_confirm"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/trade_deal_detail_confirm" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonEditTerms"
@@ -970,8 +934,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/trade_deal_detail_edit_terms"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:text="@string/trade_deal_detail_edit_terms" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonPay"
@@ -980,8 +943,7 @@
                     android:layout_marginBottom="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
                     android:text="@string/trade_deal_detail_pay"
-                    android:visibility="gone"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonShipDeal"
@@ -990,8 +952,7 @@
                     android:layout_marginBottom="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
                     android:text="@string/trade_deal_detail_ship_deal"
-                    android:visibility="gone"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonReceiveDeal"
@@ -1000,8 +961,7 @@
                     android:layout_marginBottom="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
                     android:text="@string/trade_deal_detail_receive_deal"
-                    android:visibility="gone"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonComplain"
@@ -1011,8 +971,7 @@
                     android:layout_marginBottom="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
                     android:text="@string/trade_deal_detail_complain"
-                    android:visibility="gone"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonViewComplaint"
@@ -1022,8 +981,7 @@
                     android:layout_marginBottom="@dimen/space_sm"
                     android:minHeight="@dimen/touch_min"
                     android:text="@string/trade_deal_detail_view_complaint"
-                    android:visibility="gone"
-                    app:cornerRadius="@dimen/radius_md" />
+                    android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonCancelDeal"
@@ -1033,7 +991,6 @@
                     android:minHeight="@dimen/touch_min"
                     android:text="@string/trade_deal_detail_cancel_deal"
                     android:textColor="?attr/colorError"
-                    app:cornerRadius="@dimen/radius_md"
                     app:strokeColor="?attr/colorError" />
             </LinearLayout>
 
@@ -1043,8 +1000,7 @@
                 android:layout_height="wrap_content"
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/trade_deal_detail_write_review"
-                android:visibility="gone"
-                app:cornerRadius="@dimen/radius_md" />
+                android:visibility="gone" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

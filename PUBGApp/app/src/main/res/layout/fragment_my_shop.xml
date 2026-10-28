@@ -60,7 +60,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonVerify"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.PUBGApp.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/listing_post_btn_verify"

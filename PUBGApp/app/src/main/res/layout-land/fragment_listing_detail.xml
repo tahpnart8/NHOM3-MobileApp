@@ -225,9 +225,7 @@
                     android:layout_margin="@dimen/space_md"
                     android:clickable="true"
                     android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
-                    app:cardCornerRadius="@dimen/radius_md"
-                    app:cardElevation="@dimen/elevation_card">
+                    android:foreground="?attr/selectableItemBackground">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -294,8 +292,7 @@
                                     android:layout_height="wrap_content"
                                     android:layout_marginStart="@dimen/space_xs"
                                     android:minHeight="@dimen/touch_min"
-                                    android:text="@string/listing_detail_btn_follow"
-                                    app:cornerRadius="@dimen/radius_md" />
+                                    android:text="@string/listing_detail_btn_follow" />
                             </LinearLayout>
 
                             <TextView
@@ -337,8 +334,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/space_sm"
                                 android:minHeight="@dimen/touch_min"
-                                android:text="@string/listing_detail_btn_sign_in"
-                                app:cornerRadius="@dimen/radius_md" />
+                                android:text="@string/listing_detail_btn_sign_in" />
                         </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -438,7 +434,8 @@
         android:minHeight="@dimen/touch_min"
         android:orientation="horizontal"
         android:paddingHorizontal="@dimen/space_md"
-        android:paddingVertical="@dimen/space_sm"
+        android:paddingTop="@dimen/space_sm"
+        android:paddingBottom="@dimen/space_md"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <!-- Buyer actions -->
@@ -456,8 +453,7 @@
                 android:layout_marginEnd="@dimen/space_xs"
                 android:layout_weight="1"
                 android:minHeight="@dimen/touch_min"
-                android:text="@string/listing_detail_btn_chat"
-                app:cornerRadius="@dimen/radius_md" />
+                android:text="@string/listing_detail_btn_chat" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonOffer"
@@ -466,8 +462,7 @@
                 android:layout_marginStart="@dimen/space_xs"
                 android:layout_weight="1"
                 android:minHeight="@dimen/touch_min"
-                android:text="@string/listing_detail_btn_offer"
-                app:cornerRadius="@dimen/radius_md" />
+                android:text="@string/listing_detail_btn_offer" />
         </LinearLayout>
 
         <!-- Seller actions -->
@@ -483,8 +478,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:minHeight="@dimen/touch_min"
-                android:text="@string/listing_detail_btn_mark_sold"
-                app:cornerRadius="@dimen/radius_md" />
+                android:text="@string/listing_detail_btn_mark_sold" />
         </LinearLayout>
     </LinearLayout>
 

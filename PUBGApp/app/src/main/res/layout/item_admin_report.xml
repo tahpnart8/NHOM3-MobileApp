@@ -6,9 +6,7 @@
     android:layout_marginHorizontal="@dimen/space_md"
     android:layout_marginVertical="@dimen/space_xs"
     android:clickable="true"
-    android:focusable="true"
-    app:cardCornerRadius="@dimen/radius_md"
-    app:cardElevation="@dimen/elevation_card">
+    android:focusable="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -89,7 +87,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonEvidence"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.PUBGApp.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_xs"
@@ -106,20 +104,18 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonDismiss"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.PUBGApp.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:minHeight="@dimen/touch_min"
-                android:text="@string/admin_moderation_action_dismiss"
-                app:cornerRadius="@dimen/radius_md" />
+                android:text="@string/admin_moderation_action_dismiss" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonAction"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/space_sm"
-                android:minHeight="@dimen/touch_min"
-                app:cornerRadius="@dimen/radius_md" />
+                android:minHeight="@dimen/touch_min" />
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -36,6 +36,5 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_lg"
         android:minHeight="@dimen/touch_min"
-        android:text="@string/common_retry"
-        app:cornerRadius="@dimen/radius_md" />
+        android:text="@string/common_retry" />
 </LinearLayout>

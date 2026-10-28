@@ -99,7 +99,7 @@
         <!-- Category Field -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layoutCategory"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_md"
@@ -388,8 +388,7 @@
                 android:layout_height="@dimen/touch_min"
                 android:layout_marginEnd="@dimen/space_sm"
                 android:layout_weight="1"
-                android:text="@string/listing_post_button_save_draft"
-                app:cornerRadius="@dimen/radius_md" />
+                android:text="@string/listing_post_button_save_draft" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonPost"
@@ -397,8 +396,7 @@
                 android:layout_height="@dimen/touch_min"
                 android:layout_marginStart="@dimen/space_sm"
                 android:layout_weight="1"
-                android:text="@string/listing_post_button_publish"
-                app:cornerRadius="@dimen/radius_md" />
+                android:text="@string/listing_post_button_publish" />
         </LinearLayout>
 
         <!-- Progress Indicator -->

@@ -54,7 +54,7 @@
             <!-- Label -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layoutLabel"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/account_address_label_hint">
@@ -70,7 +70,7 @@
             <!-- Receiver name -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layoutReceiverName"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_md"
@@ -87,7 +87,7 @@
             <!-- Phone -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layoutPhone"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_md"
@@ -104,7 +104,7 @@
             <!-- Province -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layoutProvince"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_md"
@@ -121,7 +121,7 @@
             <!-- District -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layoutDistrict"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_md"
@@ -138,7 +138,7 @@
             <!-- Detail -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layoutDetail"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_md"
