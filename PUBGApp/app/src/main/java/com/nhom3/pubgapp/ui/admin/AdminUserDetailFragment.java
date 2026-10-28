@@ -35,6 +35,7 @@ import com.nhom3.pubgapp.model.UserIdentity;
 import com.nhom3.pubgapp.model.enums.Gender;
 import com.nhom3.pubgapp.model.enums.UserStatus;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
+import com.nhom3.pubgapp.ui.common.AvatarBinder;
 import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.ui.common.StatusChips;
 import com.nhom3.pubgapp.util.NetworkMonitor;
@@ -788,7 +789,7 @@ public class AdminUserDetailFragment extends Fragment {
         }
         String name = user.getDisplayName() == null ? "" : user.getDisplayName();
         binding.textUserName.setText(name);
-        binding.includeAvatar.textInitial.setText(name.isEmpty() ? "" : name.substring(0, 1).toUpperCase(locale));
+        AvatarBinder.bind(binding.includeAvatar, name, user.getAvatarBase64());
         String joined = AdminHistoryAdapter.formatDate(user.getCreatedAt(), MONTH_PATTERN);
         binding.textPhoneJoined.setText(
                 getString(R.string.admin_user_detail_phone_joined, phoneText(user.getPhone()), joined));

@@ -24,7 +24,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentAdminAccountBinding;
 import com.nhom3.pubgapp.model.User;
-import com.nhom3.pubgapp.ui.common.ImageLoader;
+import com.nhom3.pubgapp.ui.common.AvatarBinder;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.AdminUserViewModel;
@@ -223,21 +223,7 @@ public class AdminAccountFragment extends Fragment {
         binding.textCandidateName.setText(name != null ? name : "");
         binding.textCandidateEmail.setText(user.getEmail() != null ? user.getEmail() : "");
 
-        String avatar = user.getAvatarBase64();
-        if (avatar != null && !avatar.trim().isEmpty()) {
-            binding.includeCandidateAvatar.imageAvatar.setVisibility(View.VISIBLE);
-            binding.includeCandidateAvatar.textInitial.setVisibility(View.GONE);
-            ImageLoader.load(avatar, binding.includeCandidateAvatar.imageAvatar,
-                    R.drawable.bg_avatar, R.drawable.bg_avatar);
-        } else {
-            binding.includeCandidateAvatar.imageAvatar.setVisibility(View.GONE);
-            binding.includeCandidateAvatar.textInitial.setVisibility(View.VISIBLE);
-            String initial = "";
-            if (name != null && !name.trim().isEmpty()) {
-                initial = name.trim().substring(0, 1).toUpperCase();
-            }
-            binding.includeCandidateAvatar.textInitial.setText(initial);
-        }
+        AvatarBinder.bind(binding.includeCandidateAvatar, name, user.getAvatarBase64());
 
         binding.buttonGrantAdmin.setOnClickListener(new View.OnClickListener() {
             @Override

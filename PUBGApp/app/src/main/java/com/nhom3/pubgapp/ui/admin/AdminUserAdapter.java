@@ -14,11 +14,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.ItemAdminUserBinding;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.ui.common.AvatarBinder;
 import com.nhom3.pubgapp.ui.common.StatusChips;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 // Rows of the user list on E02.
 public class AdminUserAdapter extends RecyclerView.Adapter<AdminUserAdapter.UserViewHolder> {
@@ -74,7 +74,7 @@ public class AdminUserAdapter extends RecyclerView.Adapter<AdminUserAdapter.User
             String name = user.getDisplayName();
             boolean hasName = name != null && !name.trim().isEmpty();
             binding.textUserName.setText(hasName ? name : context.getString(R.string.admin_user_list_no_name));
-            binding.includeAvatar.textInitial.setText(initialOf(name));
+            AvatarBinder.bind(binding.includeAvatar, name, user.getAvatarBase64());
             binding.textUserPhone.setText(AdminUserFilterRules.maskPhone(user.getPhone()));
             binding.textUserJoined.setText(context.getString(R.string.admin_user_list_joined,
                     joinedText(user)));
@@ -88,13 +88,6 @@ public class AdminUserAdapter extends RecyclerView.Adapter<AdminUserAdapter.User
                     clickListener.onUserClick(user);
                 }
             });
-        }
-
-        private String initialOf(String name) {
-            if (name == null || name.trim().isEmpty()) {
-                return "";
-            }
-            return name.trim().substring(0, 1).toUpperCase(Locale.ROOT);
         }
 
         private String joinedText(User user) {

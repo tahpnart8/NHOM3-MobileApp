@@ -7,10 +7,9 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.ItemAdminAccountBinding;
 import com.nhom3.pubgapp.model.User;
-import com.nhom3.pubgapp.ui.common.ImageLoader;
+import com.nhom3.pubgapp.ui.common.AvatarBinder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,21 +103,7 @@ public class AdminAccountAdapter extends RecyclerView.Adapter<AdminAccountAdapte
         }
 
         private void bindAvatar(User user, String displayName) {
-            String avatar = user.getAvatarBase64();
-            if (avatar != null && !avatar.trim().isEmpty()) {
-                binding.includeAvatar.imageAvatar.setVisibility(View.VISIBLE);
-                binding.includeAvatar.textInitial.setVisibility(View.GONE);
-                ImageLoader.load(avatar, binding.includeAvatar.imageAvatar,
-                        R.drawable.bg_avatar, R.drawable.bg_avatar);
-            } else {
-                binding.includeAvatar.imageAvatar.setVisibility(View.GONE);
-                binding.includeAvatar.textInitial.setVisibility(View.VISIBLE);
-                String initial = "";
-                if (displayName != null && !displayName.trim().isEmpty()) {
-                    initial = displayName.trim().substring(0, 1).toUpperCase();
-                }
-                binding.includeAvatar.textInitial.setText(initial);
-            }
+            AvatarBinder.bind(binding.includeAvatar, displayName, user.getAvatarBase64());
         }
     }
 }
