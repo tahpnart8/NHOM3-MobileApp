@@ -37,6 +37,7 @@
     <string name="trade_chat_offer_accept">Chấp nhận</string>
     <string name="trade_chat_offer_reject">Từ chối</string>
     <string name="trade_chat_offer_waiting">Chờ người bán trả lời</string>
+    <string name="trade_chat_offer_deal_cancelled">Giao dịch đã hủy</string>
     <string name="trade_chat_offer_verification_required">Tài khoản cần được admin duyệt xác thực trước khi mua bán.</string>
     <string name="trade_chat_offer_register_verification">Đăng ký xác thực</string>
     <string name="trade_make_offer_heading">Gửi đề nghị giá</string>
@@ -44,11 +45,12 @@
     <string name="trade_make_offer_amount_hint">Số tiền (đ)</string>
     <string name="trade_make_offer_item_hint">Mô tả món đồ muốn trao đổi</string>
     <string name="trade_make_offer_submit">Gửi đề nghị</string>
+    <string name="trade_make_offer_need_verification">Cần xác thực tài khoản trước khi gửi đề nghị</string>
     <string name="trade_make_offer_error_amount">Vui lòng nhập số tiền đề nghị hợp lệ</string>
     <string name="trade_make_offer_error_item">Vui lòng nhập thông tin món đồ trao đổi</string>
     <string name="trade_make_offer_error_type_required">Vui lòng chọn hình thức đề nghị</string>
     <string name="trade_make_offer_error_general">Không thể gửi đề nghị lúc này</string>
-    <string name="trade_make_offer_title">C02 Gửi đề nghị giá</string>
+    <string name="trade_make_offer_title">Gửi đề nghị giá</string>
     <string name="trade_deal_detail_title">Chi tiết giao dịch</string>
     <string name="trade_deal_detail_heading">Chi tiết giao dịch</string>
     <string name="trade_deal_detail_code">Mã giao dịch: %1$s</string>
@@ -152,7 +154,7 @@
     <string name="trade_deal_payment_return_button">Về chi tiết giao dịch</string>
     <string name="trade_deal_payment_not_buyer">Chỉ người mua mới có quyền thực hiện thanh toán cho giao dịch này.</string>
     <string name="trade_deal_payment_not_eligible">Giao dịch không đủ điều kiện thanh toán hoặc đã được thanh toán.</string>
-    <string name="trade_deal_payment_title">C07 Thanh toán giao dịch</string>
+    <string name="trade_deal_payment_title">Thanh toán giao dịch</string>
     <string name="trade_deal_detail_ship_deal">Xác nhận đã giao</string>
     <string name="trade_deal_detail_shipping_title">Xác nhận gửi vận chuyển</string>
     <string name="trade_deal_detail_carrier_label">Đơn vị vận chuyển: %1$s</string>

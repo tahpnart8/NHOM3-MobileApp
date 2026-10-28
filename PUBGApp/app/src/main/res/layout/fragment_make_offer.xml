@@ -129,6 +129,7 @@
                 android:minHeight="@dimen/touch_min"
                 android:layout_marginTop="@dimen/space_md"
                 android:text="@string/trade_make_offer_submit"
+                android:textColor="?attr/colorOnPrimary"
                 app:backgroundTint="?attr/colorPrimary" />
 
         </LinearLayout>
