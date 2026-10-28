@@ -35,8 +35,10 @@
                 android:id="@+id/layoutHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/bg_profile_header"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:padding="@dimen/space_md">
 
                 <include
                     android:id="@+id/includeAvatar"
@@ -59,7 +61,7 @@
                         android:ellipsize="end"
                         android:maxLines="1"
                         android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                        android:textColor="?attr/colorOnSurface" />
+                        android:textColor="?attr/colorOnPrimary" />
 
                     <TextView
                         android:id="@+id/textLocation"
@@ -67,7 +69,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_xs"
                         android:textAppearance="?attr/textAppearanceBodySmall"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                        android:textColor="?attr/colorOnPrimary" />
                 </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
@@ -76,7 +78,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:minHeight="@dimen/touch_min"
-                    android:text="@string/profile_my_profile_edit_action" />
+                    android:text="@string/profile_my_profile_edit_action"
+                    android:textColor="?attr/colorOnPrimary" />
             </LinearLayout>
 
             <LinearLayout
@@ -364,6 +367,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
                 android:background="?attr/selectableItemBackground"
+                android:drawablePadding="@dimen/space_md"
+                android:drawableStart="@drawable/ic_notification_listing"
+                android:drawableTint="?attr/colorPrimary"
                 android:gravity="center_vertical"
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/profile_my_profile_row_my_shop"
@@ -389,6 +395,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
+                android:drawablePadding="@dimen/space_md"
+                android:drawableStart="@drawable/ic_heart_outline"
+                android:drawableTint="?attr/colorPrimary"
                 android:gravity="center_vertical"
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/profile_my_profile_row_saved"
@@ -404,6 +413,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
+                android:drawablePadding="@dimen/space_md"
+                android:drawableStart="@drawable/ic_notification_deal"
+                android:drawableTint="?attr/colorPrimary"
                 android:gravity="center_vertical"
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/profile_my_profile_row_deal_history"
@@ -419,6 +431,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
+                android:drawablePadding="@dimen/space_md"
+                android:drawableStart="@drawable/ic_notification_verification"
+                android:drawableTint="?attr/colorPrimary"
                 android:gravity="center_vertical"
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/profile_my_profile_row_trust"
@@ -434,6 +449,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
+                android:drawablePadding="@dimen/space_md"
+                android:drawableStart="@drawable/ic_notification_alert"
+                android:drawableTint="?attr/colorPrimary"
                 android:gravity="center_vertical"
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/profile_my_profile_row_my_reports"
@@ -449,6 +467,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
+                android:drawablePadding="@dimen/space_md"
+                android:drawableStart="@drawable/ic_tab_profile"
+                android:drawableTint="?attr/colorPrimary"
                 android:gravity="center_vertical"
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/profile_my_profile_row_account_settings"
@@ -464,6 +485,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
+                android:drawablePadding="@dimen/space_md"
+                android:drawableStart="@drawable/ic_tab_home"
+                android:drawableTint="?attr/colorPrimary"
                 android:gravity="center_vertical"
                 android:minHeight="@dimen/touch_min"
                 android:text="@string/profile_my_profile_row_addresses"
