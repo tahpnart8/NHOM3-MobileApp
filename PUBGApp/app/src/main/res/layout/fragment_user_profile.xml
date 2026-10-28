@@ -44,7 +44,7 @@
                 android:id="@+id/viewCover"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/avatar_size_lg"
-                android:background="?attr/colorPrimary"
+                android:background="@drawable/bg_top_bar"
                 android:importantForAccessibility="no" />
 
             <LinearLayout
@@ -175,8 +175,8 @@
                             android:id="@+id/textSoldCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textAppearance="?attr/textAppearanceTitleMedium"
-                            android:textColor="?attr/colorOnSurface" />
+                            android:textAppearance="?attr/textAppearanceTitleLarge"
+                            android:textColor="?attr/colorPrimary" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -199,8 +199,8 @@
                             android:id="@+id/textCompletionRate"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textAppearance="?attr/textAppearanceTitleMedium"
-                            android:textColor="?attr/colorOnSurface" />
+                            android:textAppearance="?attr/textAppearanceTitleLarge"
+                            android:textColor="?attr/colorPrimary" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -223,8 +223,8 @@
                             android:id="@+id/textFollowerCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textAppearance="?attr/textAppearanceTitleMedium"
-                            android:textColor="?attr/colorOnSurface" />
+                            android:textAppearance="?attr/textAppearanceTitleLarge"
+                            android:textColor="?attr/colorPrimary" />
 
                         <TextView
                             android:layout_width="wrap_content"

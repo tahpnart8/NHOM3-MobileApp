@@ -164,8 +164,8 @@
                         android:id="@+id/textCompletionRate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAppearance="?attr/textAppearanceTitleMedium"
-                        android:textColor="?attr/colorOnSurface" />
+                        android:textAppearance="?attr/textAppearanceTitleLarge"
+                        android:textColor="?attr/colorPrimary" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -188,8 +188,8 @@
                         android:id="@+id/textDealCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAppearance="?attr/textAppearanceTitleMedium"
-                        android:textColor="?attr/colorOnSurface" />
+                        android:textAppearance="?attr/textAppearanceTitleLarge"
+                        android:textColor="?attr/colorPrimary" />
 
                     <TextView
                         android:layout_width="wrap_content"

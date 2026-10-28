@@ -218,7 +218,7 @@ Câu báo lỗi nằm trong màn hình (ví dụ `textError` ở A01 đến A03,
 
 Theme tắt `elevationOverlayEnabled`: Material 3 mặc định phủ một lớp `colorPrimary` mờ lên mọi bề mặt có bóng, làm thẻ và thanh dưới ngả xanh xám (thấy trên emulator). Bề mặt của PUBGApp luôn là `colorSurface` trắng; độ nổi chỉ thể hiện bằng bóng.
 
-Trang Cá nhân (D01, issue #359): đầu trang là khối `bg_profile_header` (cùng dải xanh với thanh trên của Trang chủ, bo `radius_lg`, đệm `space_md`) với tên, khu vực và nút "Sửa" màu `colorOnPrimary`. Mỗi dòng menu có biểu tượng bên trái qua `drawableStart`, tô `colorPrimary`, cách chữ `space_md`; các dòng cách nhau bằng `MaterialDivider`. Màn hình nào có danh sách dòng menu thì theo cùng kiểu này.
+Trang Cá nhân (D01, issue #359): đầu trang là khối `bg_profile_header` (cùng dải xanh với thanh trên của Trang chủ, bo `radius_lg`, đệm `space_md`) với tên, khu vực và nút "Sửa" màu `colorOnPrimary`. Mỗi dòng menu có biểu tượng bên trái qua `drawableStart`, tô `colorPrimary`, cách chữ `space_md`; các dòng cách nhau bằng `MaterialDivider`. Màn hình nào có danh sách dòng menu thì theo cùng kiểu này. Số thống kê trên trang hồ sơ (D01, D02, D03: đã bán, tỉ lệ hoàn tất, giao dịch, người theo dõi, điểm) dùng `TitleLarge` màu `colorPrimary`, nhãn dưới số `BodySmall` màu `colorOnSurfaceVariant`. Ảnh bìa của D02 dùng cùng dải `bg_top_bar`.
 
 Thanh nút cố định ở đáy màn hình (ví dụ Chi tiết tin, ô nhập tin nhắn) dùng khoảng đệm đều hai đầu. Việc chừa chỗ cho thanh cử chỉ của hệ thống do Activity lo bằng window insets: ở các tab, `BottomNavigationView` tự đệm; ở màn không phải tab, root của `MainActivity` đệm đáy bằng chiều cao thanh hệ thống (issue #366). Layout không tự cộng thêm khoảng đệm cho việc này.
 
