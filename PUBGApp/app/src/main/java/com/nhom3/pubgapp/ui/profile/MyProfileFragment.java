@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +36,7 @@ import com.nhom3.pubgapp.model.SellerVerification;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
 import com.nhom3.pubgapp.ui.admin.AdminActivity;
+import com.nhom3.pubgapp.ui.common.AvatarBinder;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.AuthViewModel;
@@ -46,7 +46,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /** D01: the signed-in user's own profile, shortcuts, account verification and sign out. */
 public class MyProfileFragment extends Fragment {
@@ -547,54 +546,7 @@ public class MyProfileFragment extends Fragment {
     }
 
     private void showAvatar(User user) {
-        String name = user.getDisplayName();
-        String initial = "";
-        if (name != null && !name.trim().isEmpty()) {
-            initial = name.trim().substring(0, 1).toUpperCase(Locale.ROOT);
-        }
-        binding.includeAvatar.textInitial.setText(initial);
-        binding.includeAvatar.textInitial.setVisibility(View.VISIBLE);
-        binding.includeAvatar.imageAvatar.setVisibility(View.GONE);
-        String avatarBase64 = user.getAvatarBase64();
-        if (avatarBase64 != null && !avatarBase64.isEmpty()) {
-            decodeAvatar(avatarBase64);
-        }
-    }
-
-    // Decoding is disk-like work, so it runs off the main thread; a failure keeps the initial letter.
-    private void decodeAvatar(String avatarBase64) {
-        View root = binding.getRoot();
-        Thread worker = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Bitmap bitmap = null;
-                try {
-                    byte[] bytes = Base64.decode(avatarBase64, Base64.DEFAULT);
-                    bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                } catch (IllegalArgumentException badBase64) {
-                    bitmap = null;
-                }
-                postAvatar(root, bitmap);
-            }
-        });
-        worker.start();
-    }
-
-    private void postAvatar(View root, Bitmap bitmap) {
-        if (bitmap == null) {
-            return;
-        }
-        root.post(new Runnable() {
-            @Override
-            public void run() {
-                if (binding == null) {
-                    return;
-                }
-                binding.includeAvatar.imageAvatar.setImageBitmap(bitmap);
-                binding.includeAvatar.imageAvatar.setVisibility(View.VISIBLE);
-                binding.includeAvatar.textInitial.setVisibility(View.GONE);
-            }
-        });
+        AvatarBinder.bind(binding.includeAvatar, user.getDisplayName(), user.getAvatarBase64());
     }
 
     private void showVerification(User user) {

@@ -1,12 +1,9 @@
 package com.nhom3.pubgapp.ui.profile;
 
 import android.content.DialogInterface;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
-import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,10 +25,10 @@ import com.google.android.material.snackbar.Snackbar;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentEditProfileBinding;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.ui.common.AvatarBinder;
 import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.ProfileViewModel;
 
-import java.util.Locale;
 
 /** A05: edit the public profile and change the avatar. */
 public class EditProfileFragment extends Fragment {
@@ -200,54 +197,7 @@ public class EditProfileFragment extends Fragment {
     }
 
     private void showAvatar(User user) {
-        String name = user.getDisplayName();
-        String initial = "";
-        if (name != null && !name.trim().isEmpty()) {
-            initial = name.trim().substring(0, 1).toUpperCase(Locale.ROOT);
-        }
-        binding.includeAvatar.textInitial.setText(initial);
-        String avatarBase64 = user.getAvatarBase64();
-        if (avatarBase64 == null || avatarBase64.isEmpty()) {
-            binding.includeAvatar.textInitial.setVisibility(View.VISIBLE);
-            binding.includeAvatar.imageAvatar.setVisibility(View.GONE);
-            return;
-        }
-        // Taken on the main thread: onDestroyView may null the binding while the worker runs.
-        View root = binding.getRoot();
-        Thread worker = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                postAvatar(root, decodeAvatar(avatarBase64));
-            }
-        });
-        worker.start();
-    }
-
-    private static Bitmap decodeAvatar(String avatarBase64) {
-        try {
-            byte[] bytes = Base64.decode(avatarBase64, Base64.DEFAULT);
-            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        } catch (IllegalArgumentException badBase64) {
-            return null;
-        }
-    }
-
-    // A failed decode keeps the initial letter, as giao-dien.md asks for a missing photo.
-    private void postAvatar(View root, Bitmap bitmap) {
-        root.post(new Runnable() {
-            @Override
-            public void run() {
-                if (binding == null) {
-                    return;
-                }
-                boolean hasBitmap = bitmap != null;
-                if (hasBitmap) {
-                    binding.includeAvatar.imageAvatar.setImageBitmap(bitmap);
-                }
-                binding.includeAvatar.imageAvatar.setVisibility(hasBitmap ? View.VISIBLE : View.GONE);
-                binding.includeAvatar.textInitial.setVisibility(hasBitmap ? View.GONE : View.VISIBLE);
-            }
-        });
+        AvatarBinder.bind(binding.includeAvatar, user.getDisplayName(), user.getAvatarBase64());
     }
 
     private void saveProfile() {
