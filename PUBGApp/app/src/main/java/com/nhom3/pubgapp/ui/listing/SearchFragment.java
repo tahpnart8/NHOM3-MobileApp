@@ -54,6 +54,8 @@ public class SearchFragment extends Fragment {
     private static final int TAB_USERS = 1;
 
     private FragmentSearchBinding binding;
+    // Null until the user first opens the filter panel; see getFilterPanel().
+    private LayoutListingFilterPanelBinding filterPanel;
     private SearchViewModel viewModel;
     private ListingCardAdapter adapter;
     private SearchUserAdapter userAdapter;
@@ -79,12 +81,11 @@ public class SearchFragment extends Fragment {
 
         setupRecyclerView();
         setupSearchInput();
-        setupFilterPanel();
         setupStates();
         observeViewModel();
 
         updateOfflineBanner();
-        loadUserLocation();
+        // The user location is read in onResume, which always follows; reading it here too doubled the read.
 
         // Load categories and recent search history once at start
         viewModel.loadCategories();
@@ -99,7 +100,9 @@ public class SearchFragment extends Fragment {
 
         if (savedInstanceState != null) {
             boolean isOpen = savedInstanceState.getBoolean(KEY_FILTER_OPEN, false);
-            binding.includeFilterPanel.getRoot().setVisibility(isOpen ? View.VISIBLE : View.GONE);
+            if (isOpen) {
+                getFilterPanel().getRoot().setVisibility(View.VISIBLE);
+            }
             currentTab = savedInstanceState.getInt(KEY_SEARCH_TAB, TAB_LISTINGS);
             if (currentTab == TAB_USERS) {
                 com.google.android.material.tabs.TabLayout.Tab tab =
@@ -116,8 +119,7 @@ public class SearchFragment extends Fragment {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         if (binding != null) {
-            boolean isOpen = binding.includeFilterPanel.getRoot().getVisibility() == View.VISIBLE;
-            outState.putBoolean(KEY_FILTER_OPEN, isOpen);
+            outState.putBoolean(KEY_FILTER_OPEN, isFilterPanelOpen());
             outState.putInt(KEY_SEARCH_TAB, currentTab);
         }
     }
@@ -133,6 +135,23 @@ public class SearchFragment extends Fragment {
         super.onDestroyView();
         // Views die with the view hierarchy; holding the binding would leak them.
         binding = null;
+        filterPanel = null;
+    }
+
+    // The panel has about 30 chips and two spinners. Building them made opening the Search tab freeze,
+    // so the panel is built from its ViewStub only when the user first opens it.
+    private LayoutListingFilterPanelBinding getFilterPanel() {
+        if (filterPanel == null) {
+            View panelView = binding.stubFilterPanel.inflate();
+            filterPanel = LayoutListingFilterPanelBinding.bind(panelView);
+            setupFilterPanel();
+            updateCategorySpinner(viewModel.getCategories().getValue());
+        }
+        return filterPanel;
+    }
+
+    private boolean isFilterPanelOpen() {
+        return filterPanel != null && filterPanel.getRoot().getVisibility() == View.VISIBLE;
     }
 
     private void loadUserLocation() {
@@ -276,9 +295,10 @@ public class SearchFragment extends Fragment {
         binding.buttonToggleFilter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean isPanelVisible = binding.includeFilterPanel.getRoot().getVisibility() == View.VISIBLE;
-                binding.includeFilterPanel.getRoot().setVisibility(isPanelVisible ? View.GONE : View.VISIBLE);
-                if (!isPanelVisible) {
+                if (isFilterPanelOpen()) {
+                    filterPanel.getRoot().setVisibility(View.GONE);
+                } else {
+                    getFilterPanel().getRoot().setVisibility(View.VISIBLE);
                     syncFilterPanelFromViewModel();
                 }
             }
@@ -300,7 +320,7 @@ public class SearchFragment extends Fragment {
     }
 
     private void setupFilterPanel() {
-        final LayoutListingFilterPanelBinding panel = binding.includeFilterPanel;
+        final LayoutListingFilterPanelBinding panel = filterPanel;
 
         panel.buttonCloseFilter.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -329,7 +349,7 @@ public class SearchFragment extends Fragment {
     }
 
     private void setupQuickPriceChips() {
-        final LayoutListingFilterPanelBinding panel = binding.includeFilterPanel;
+        final LayoutListingFilterPanelBinding panel = filterPanel;
 
         panel.chipPriceUnder100k.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -388,11 +408,11 @@ public class SearchFragment extends Fragment {
                 android.R.layout.simple_spinner_item,
                 provinceNames);
         provinceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.includeFilterPanel.spinnerProvince.setAdapter(provinceAdapter);
+        filterPanel.spinnerProvince.setAdapter(provinceAdapter);
     }
 
     private void setupRadiusChips() {
-        final LayoutListingFilterPanelBinding panel = binding.includeFilterPanel;
+        final LayoutListingFilterPanelBinding panel = filterPanel;
         CompoundButton.OnCheckedChangeListener radiusListener = new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -509,7 +529,8 @@ public class SearchFragment extends Fragment {
     }
 
     private void updateCategorySpinner(List<Category> categories) {
-        if (getContext() == null) {
+        // Before the panel is built there is no spinner to fill; getFilterPanel() calls this again.
+        if (getContext() == null || filterPanel == null) {
             return;
         }
         loadedCategories.clear();
@@ -529,14 +550,14 @@ public class SearchFragment extends Fragment {
                 android.R.layout.simple_spinner_item,
                 names);
         categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.includeFilterPanel.spinnerCategory.setAdapter(categoryAdapter);
+        filterPanel.spinnerCategory.setAdapter(categoryAdapter);
 
         // Pre-select category if existing in filter
         SearchFilter currentFilter = viewModel.getFilter();
         if (currentFilter != null && currentFilter.getCategoryId() != null) {
             for (int i = 0; i < loadedCategories.size(); i++) {
                 if (currentFilter.getCategoryId().equals(loadedCategories.get(i).getId())) {
-                    binding.includeFilterPanel.spinnerCategory.setSelection(i + 1);
+                    filterPanel.spinnerCategory.setSelection(i + 1);
                     break;
                 }
             }
@@ -582,7 +603,7 @@ public class SearchFragment extends Fragment {
         if (f == null) {
             return;
         }
-        LayoutListingFilterPanelBinding panel = binding.includeFilterPanel;
+        LayoutListingFilterPanelBinding panel = filterPanel;
 
         // Sync prices
         if (f.getMinPrice() > 0) {
@@ -653,7 +674,7 @@ public class SearchFragment extends Fragment {
     }
 
     private void resetFilterInputs() {
-        LayoutListingFilterPanelBinding panel = binding.includeFilterPanel;
+        LayoutListingFilterPanelBinding panel = filterPanel;
         panel.spinnerCategory.setSelection(0);
         panel.chipGroupQuickPrice.clearCheck();
         panel.editMinPrice.setText("");
@@ -667,7 +688,7 @@ public class SearchFragment extends Fragment {
     }
 
     private void applyFilterInputs() {
-        LayoutListingFilterPanelBinding panel = binding.includeFilterPanel;
+        LayoutListingFilterPanelBinding panel = filterPanel;
 
         long minPrice = 0;
         String minText = panel.editMinPrice.getText() != null ? panel.editMinPrice.getText().toString().trim() : "";
@@ -814,7 +835,9 @@ public class SearchFragment extends Fragment {
         if (currentTab == TAB_USERS) {
             binding.editKeyword.setHint(R.string.listing_search_hint_users);
             binding.buttonToggleFilter.setVisibility(View.GONE);
-            binding.includeFilterPanel.getRoot().setVisibility(View.GONE);
+            if (filterPanel != null) {
+                filterPanel.getRoot().setVisibility(View.GONE);
+            }
             binding.layoutRecentSearches.setVisibility(View.GONE);
             binding.textResultCount.setVisibility(View.GONE);
             binding.recyclerSearchResults.setVisibility(View.GONE);
