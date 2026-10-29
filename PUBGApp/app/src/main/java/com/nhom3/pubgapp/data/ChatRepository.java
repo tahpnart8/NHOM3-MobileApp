@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ChatRepository extends BaseRepository {
 
@@ -231,6 +232,7 @@ public class ChatRepository extends BaseRepository {
     }
 
     public void getConversations(String uid, DataCallback<List<Conversation>> cb) {
+        final AtomicBoolean liveArrived = new AtomicBoolean(false);
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -238,7 +240,7 @@ public class ChatRepository extends BaseRepository {
                 if (dao != null) {
                     List<ConversationEntity> cached = dao.getConversations();
                     if (cached != null && !cached.isEmpty()) {
-                        List<Conversation> cachedList = new ArrayList<Conversation>();
+                        final List<Conversation> cachedList = new ArrayList<Conversation>();
                         for (int i = 0; i < cached.size(); i++) {
                             Conversation conv = cached.get(i).toModel();
                             if (conv != null && conv.isParticipant(uid)) {
@@ -246,7 +248,15 @@ public class ChatRepository extends BaseRepository {
                             }
                         }
                         if (!cachedList.isEmpty()) {
-                            cb.onSuccess(cachedList);
+                            postToMain(new Runnable() {
+                                @Override
+                                public void run() {
+                                    // Once live data is on screen, a late Room copy would replace it with older data.
+                                    if (!liveArrived.get()) {
+                                        cb.onSuccess(cachedList);
+                                    }
+                                }
+                            });
                         }
                     }
                 }
@@ -275,6 +285,11 @@ public class ChatRepository extends BaseRepository {
 
                                         List<Conversation> list = new ArrayList<Conversation>(map.values());
                                         sortConversationsByDate(list);
+                                        // An empty answer may be Firestore's offline cache only,
+                                        // so the Room copy may still fill in.
+                                        if (!list.isEmpty()) {
+                                            liveArrived.set(true);
+                                        }
                                         cb.onSuccess(list);
 
                                         executor.execute(new Runnable() {
@@ -300,12 +315,21 @@ public class ChatRepository extends BaseRepository {
     // Live version of getConversations for D01: a new message moves its conversation to the top at once.
     // Like getConversations it answers from Room first, so the list opens offline.
     public ListenerRegistration observeConversations(final String uid, final DataCallback<List<Conversation>> cb) {
+        final AtomicBoolean liveArrived = new AtomicBoolean(false);
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                List<Conversation> cachedList = cachedConversations(uid);
+                final List<Conversation> cachedList = cachedConversations(uid);
                 if (!cachedList.isEmpty()) {
-                    cb.onSuccess(cachedList);
+                    postToMain(new Runnable() {
+                        @Override
+                        public void run() {
+                            // Once live data is on screen, a late Room copy would replace it with older data.
+                            if (!liveArrived.get()) {
+                                cb.onSuccess(cachedList);
+                            }
+                        }
+                    });
                 }
             }
         });
@@ -315,6 +339,11 @@ public class ChatRepository extends BaseRepository {
             @Override
             public void onSuccess(final List<Conversation> list) {
                 sortConversationsByDate(list);
+                // An empty answer may be Firestore's offline cache only,
+                // so the Room copy may still fill in.
+                if (!list.isEmpty()) {
+                    liveArrived.set(true);
+                }
                 cb.onSuccess(list);
                 if (list.isEmpty()) {
                     return;
@@ -393,6 +422,7 @@ public class ChatRepository extends BaseRepository {
     }
 
     public ListenerRegistration observeMessages(String id, DataCallback<List<ChatMessage>> cb) {
+        final AtomicBoolean liveArrived = new AtomicBoolean(false);
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -400,11 +430,19 @@ public class ChatRepository extends BaseRepository {
                 if (dao != null) {
                     List<MessageEntity> cached = dao.getMessages(id);
                     if (cached != null && !cached.isEmpty()) {
-                        List<ChatMessage> cachedList = new ArrayList<ChatMessage>();
+                        final List<ChatMessage> cachedList = new ArrayList<ChatMessage>();
                         for (int i = 0; i < cached.size(); i++) {
                             cachedList.add(cached.get(i).toModel());
                         }
-                        cb.onSuccess(cachedList);
+                        postToMain(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Once live data is on screen, a late Room copy would replace it with older data.
+                                if (!liveArrived.get()) {
+                                    cb.onSuccess(cachedList);
+                                }
+                            }
+                        });
                     }
                 }
             }
@@ -431,6 +469,11 @@ public class ChatRepository extends BaseRepository {
                             list.add(msg);
                         }
                     }
+                }
+                // An empty answer may be Firestore's offline cache only,
+                // so the Room copy may still fill in.
+                if (!list.isEmpty()) {
+                    liveArrived.set(true);
                 }
                 cb.onSuccess(list);
 
