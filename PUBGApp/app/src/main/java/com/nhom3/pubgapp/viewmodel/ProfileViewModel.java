@@ -797,6 +797,12 @@ public class ProfileViewModel extends ViewModel {
         stats.setValue(null);
         verification.setValue(null);
         following.setValue(null);
+        // Activity scope keeps these too, so the next account would otherwise see them for a moment.
+        addresses.setValue(null);
+        identity.setValue(null);
+        savedListings.setValue(null);
+        userListings.setValue(null);
+        listingsUid = null;
     }
 
     // Listens to the profile, so a status or verification change made elsewhere shows at once.
