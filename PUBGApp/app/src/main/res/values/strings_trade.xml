@@ -84,6 +84,8 @@
     <string name="trade_deal_detail_exchange_item_label">Món đồ trao đổi: %1$s</string>
     <string name="trade_deal_detail_not_specified">Chưa có</string>
     <string name="trade_deal_detail_offline_info_notice">Cần có mạng để xem</string>
+    <string name="trade_deal_detail_payment_notice_released">Người mua đã xác nhận nhận hàng, tiền đã được chuyển cho người bán.</string>
+    <string name="trade_deal_detail_payment_notice_refunded">Giao dịch đã hủy, tiền đã được hoàn lại cho người mua.</string>
     <string name="trade_deal_detail_payment_notice">Tiền thanh toán được hệ thống giữ an toàn dưới dạng khoản thanh toán đang giữ cho tới khi người mua xác nhận đã nhận hàng.</string>
     <string name="trade_deal_detail_offline_banner">Đang ngoại tuyến. Dữ liệu từ bộ nhớ đệm.</string>
     <string name="trade_deal_detail_not_found">Giao dịch không còn</string>
