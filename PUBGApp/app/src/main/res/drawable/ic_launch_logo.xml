@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Logo of the Android 12+ system splash. The system draws it at 288dp and keeps only a 192dp circle,
+     so a 24% inset per side is the largest that keeps the tagline inside it (farthest pixel 94dp from the centre). -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_logo_app"
+    android:inset="24%" />
