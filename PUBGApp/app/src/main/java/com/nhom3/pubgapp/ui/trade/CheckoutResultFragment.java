@@ -29,7 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-/** Screen C07, step 5: a short processing wait, then DealViewModel.pay, then the receipt or the error. */
+/** Screen C07, step 5: a short processing wait, then DealViewModel.pay (the only write), then the receipt or the error. */
 public class CheckoutResultFragment extends Fragment {
 
     public static final String ARG_DEAL_ID = "dealId";
@@ -258,7 +258,7 @@ public class CheckoutResultFragment extends Fragment {
         binding.textReceiptAmount.setText(new FormatUtils().formatPrice(amount));
         binding.textReceiptMethod.setText(CheckoutSummary.getMethodStringRes(method));
         binding.textReceiptProvider.setText(providerName != null ? providerName : "");
-        binding.textReceiptCode.setText(getString(R.string.trade_payment_deal_code, dealId));
+        binding.textReceiptCode.setText(SampleQrCode.buildTransferContent(dealId));
         Date heldAt = new Date();
         if (payment != null && payment.getHeldAt() != null) {
             heldAt = payment.getHeldAt().toDate();

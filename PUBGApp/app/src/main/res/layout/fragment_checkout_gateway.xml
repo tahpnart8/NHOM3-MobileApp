@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- C07 step 3 and 4: the simulated payment gateway, then the test OTP. Nothing here asks for real card data. -->
+<!-- C07 step 3 and 4: the payment screen, then the OTP. Simulated: nothing here asks for real card data or calls a bank. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -73,28 +73,11 @@
             android:orientation="vertical"
             android:padding="@dimen/space_md">
 
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardTestBanner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/colorTertiaryContainer"
-                app:contentPadding="@dimen/space_md">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="@string/trade_checkout_gateway_test_banner"
-                    android:textAppearance="?attr/textAppearanceTitleSmall"
-                    android:textColor="?attr/colorOnTertiaryContainer" />
-            </com.google.android.material.card.MaterialCardView>
-
             <include
                 android:id="@+id/includeSummary"
                 layout="@layout/view_checkout_summary"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_md" />
+                android:layout_height="wrap_content" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -119,7 +102,15 @@
                     android:textColor="?attr/colorError" />
             </LinearLayout>
 
-            <!-- CARD: a read-only test card. There is no field for a card number. -->
+            <TextView
+                android:id="@+id/textOrderCode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <!-- CARD: a linked card shown masked and read-only. There is no field for a card number or CVV. -->
             <LinearLayout
                 android:id="@+id/layoutCardPanel"
                 android:layout_width="match_parent"
@@ -177,27 +168,13 @@
                             android:textAppearance="?attr/textAppearanceTitleLarge"
                             android:textColor="?attr/colorOnPrimary" />
 
-                        <LinearLayout
+                        <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/space_md"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/trade_checkout_card_holder"
-                                android:textAppearance="?attr/textAppearanceBodyMedium"
-                                android:textColor="?attr/colorOnPrimary" />
-
-                            <TextView
-                                android:id="@+id/textCardExpiry"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:textAppearance="?attr/textAppearanceBodyMedium"
-                                android:textColor="?attr/colorOnPrimary" />
-                        </LinearLayout>
+                            android:text="@string/trade_checkout_card_type"
+                            android:textAppearance="?attr/textAppearanceBodyMedium"
+                            android:textColor="?attr/colorOnPrimary" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -210,7 +187,7 @@
                     android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
 
-            <!-- BANK_TRANSFER: a sample QR drawn on the device and the transfer content. -->
+            <!-- BANK_TRANSFER: a QR drawn on the device from the order code (not a real VietQR) and the transfer content. -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/layoutTransferPanel"
                 android:layout_width="match_parent"
@@ -253,19 +230,6 @@
                         app:layout_constraintWidth_percent="0.6" />
 
                     <TextView
-                        android:id="@+id/textQrNotice"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_sm"
-                        android:gravity="center"
-                        android:text="@string/trade_checkout_transfer_qr_notice"
-                        android:textAppearance="?attr/textAppearanceBodySmall"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/imageQr" />
-
-                    <TextView
                         android:id="@+id/textAccountLabel"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -275,7 +239,7 @@
                         android:textColor="?attr/colorOnSurfaceVariant"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/textQrNotice" />
+                        app:layout_constraintTop_toBottomOf="@id/imageQr" />
 
                     <TextView
                         android:id="@+id/textAccountValue"
@@ -360,7 +324,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Step 4: the OTP is shown on screen and filled with one tap. -->
+            <!-- Step 4: the OTP arrives as a local notification (PaymentOtpNotifier); no SMS is sent. -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/layoutOtpPanel"
                 android:layout_width="match_parent"
@@ -410,13 +374,13 @@
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/buttonFillOtp"
+                        android:id="@+id/buttonResendOtp"
                         style="?attr/borderlessButtonStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="end"
                         android:minHeight="@dimen/touch_min"
-                        android:text="@string/trade_checkout_otp_fill" />
+                        android:text="@string/trade_checkout_otp_resend" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
