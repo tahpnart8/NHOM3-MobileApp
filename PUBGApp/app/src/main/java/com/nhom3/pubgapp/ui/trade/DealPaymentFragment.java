@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -15,14 +14,17 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.google.android.material.color.MaterialColors;
 import com.nhom3.pubgapp.R;
+import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.databinding.FragmentDealPaymentBinding;
+import com.nhom3.pubgapp.databinding.ViewCheckoutMethodBinding;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Payment;
-import com.nhom3.pubgapp.model.enums.DealStatus;
+import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.PaymentMethod;
 import com.nhom3.pubgapp.model.enums.PaymentStatus;
-import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.util.FormatUtils;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
@@ -31,17 +33,21 @@ import com.nhom3.pubgapp.viewmodel.DealViewModel;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
-/** Screen C07: Simulated deal payment with a 3-step payment flow. */
+/** Screen C07: choose the payment method, then the simulated checkout continues on its own screens. */
 public class DealPaymentFragment extends Fragment {
 
     private static final String KEY_CURRENT_STEP = "key_payment_current_step";
     private static final String KEY_SELECTED_METHOD = "key_payment_selected_method";
+    private static final String KEY_SELLER_NAME = "key_payment_seller_name";
+    private static final int STEP_CHOOSE = 1;
+    private static final int STEP_RECEIPT = 3;
 
     private FragmentDealPaymentBinding binding;
     private DealViewModel viewModel;
     private String dealId;
-    private int currentStep = 1;
+    private int currentStep = STEP_CHOOSE;
     private PaymentMethod selectedMethod;
+    private String sellerName;
 
     @Nullable
     @Override
@@ -62,16 +68,17 @@ public class DealPaymentFragment extends Fragment {
         }
 
         setupToolbar();
+        setupMethodCards();
         setupStep1Controls();
-        setupStep2Controls();
         setupStep3Controls();
         observeViewModel();
 
+        // Coming back from a later checkout step recreates the view but keeps the fields.
         if (savedInstanceState != null) {
             restoreInstanceState(savedInstanceState);
-        } else {
-            showStep(1);
         }
+        selectMethod(selectedMethod);
+        showStep(currentStep);
 
         loadData();
     }
@@ -104,57 +111,62 @@ public class DealPaymentFragment extends Fragment {
         }
     }
 
-    private void setupStep1Controls() {
-        binding.buttonContinue.setEnabled(false);
-        binding.radioGroupMethods.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if (checkedId == R.id.radioMethodCard) {
-                    selectedMethod = PaymentMethod.CARD;
-                } else if (checkedId == R.id.radioMethodWallet) {
-                    selectedMethod = PaymentMethod.E_WALLET;
-                } else if (checkedId == R.id.radioMethodTransfer) {
-                    selectedMethod = PaymentMethod.BANK_TRANSFER;
-                } else {
-                    selectedMethod = null;
-                }
-                binding.buttonContinue.setEnabled(selectedMethod != null);
-            }
-        });
+    private void setupMethodCards() {
+        bindMethodCard(binding.includeMethodCard, PaymentMethod.CARD, R.drawable.ic_payment_card,
+                R.string.trade_deal_payment_method_card_hint);
+        bindMethodCard(binding.includeMethodWallet, PaymentMethod.E_WALLET, R.drawable.ic_payment_wallet,
+                R.string.trade_deal_payment_method_wallet_hint);
+        bindMethodCard(binding.includeMethodTransfer, PaymentMethod.BANK_TRANSFER, R.drawable.ic_payment_bank,
+                R.string.trade_deal_payment_method_transfer_hint);
+    }
 
-        binding.buttonContinue.setOnClickListener(new View.OnClickListener() {
+    private void bindMethodCard(ViewCheckoutMethodBinding card, final PaymentMethod method,
+                                int iconRes, int hintRes) {
+        card.imageMethodIcon.setImageResource(iconRes);
+        card.textMethodTitle.setText(CheckoutSummary.getMethodStringRes(method));
+        card.textMethodHint.setText(hintRes);
+        card.cardMethod.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (selectedMethod != null) {
-                    showStep(2);
-                }
+                selectMethod(method);
             }
         });
     }
 
-    private void setupStep2Controls() {
-        binding.buttonChangeMethod.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showStep(1);
-            }
-        });
+    private void selectMethod(@Nullable PaymentMethod method) {
+        selectedMethod = method;
+        markMethodCard(binding.includeMethodCard, method == PaymentMethod.CARD);
+        markMethodCard(binding.includeMethodWallet, method == PaymentMethod.E_WALLET);
+        markMethodCard(binding.includeMethodTransfer, method == PaymentMethod.BANK_TRANSFER);
+        binding.buttonContinue.setEnabled(method != null);
+    }
 
-        binding.buttonCancelPayment.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                navigateBackToDeal();
-            }
-        });
+    private void markMethodCard(ViewCheckoutMethodBinding card, boolean checked) {
+        card.cardMethod.setChecked(checked);
+        int strokeAttr = checked ? androidx.appcompat.R.attr.colorPrimary
+                : com.google.android.material.R.attr.colorOutlineVariant;
+        card.cardMethod.setStrokeColor(MaterialColors.getColor(card.cardMethod, strokeAttr));
+    }
 
-        binding.buttonConfirmPayment.setOnClickListener(new View.OnClickListener() {
+    private void setupStep1Controls() {
+        binding.buttonContinue.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (selectedMethod != null) {
-                    viewModel.pay(selectedMethod);
-                }
+                openProviderStep();
             }
         });
+    }
+
+    private void openProviderStep() {
+        if (selectedMethod == null || dealId == null) {
+            return;
+        }
+        Bundle args = new Bundle();
+        args.putString(CheckoutProviderFragment.ARG_DEAL_ID, dealId);
+        args.putString(CheckoutProviderFragment.ARG_METHOD, selectedMethod.name());
+        args.putString(CheckoutProviderFragment.ARG_SELLER_NAME, sellerName);
+        NavController navController = NavHostFragment.findNavController(DealPaymentFragment.this);
+        navController.navigate(R.id.checkoutProviderFragment, args);
     }
 
     private void setupStep3Controls() {
@@ -168,29 +180,13 @@ public class DealPaymentFragment extends Fragment {
 
     private void showStep(int step) {
         currentStep = step;
-        binding.layoutStep1.setVisibility(step == 1 ? View.VISIBLE : View.GONE);
-        binding.layoutStep2.setVisibility(step == 2 ? View.VISIBLE : View.GONE);
-        binding.layoutStep3.setVisibility(step == 3 ? View.VISIBLE : View.GONE);
+        binding.layoutStep1.setVisibility(step == STEP_CHOOSE ? View.VISIBLE : View.GONE);
+        binding.layoutBottomBar.setVisibility(step == STEP_CHOOSE ? View.VISIBLE : View.GONE);
+        binding.layoutStep3.setVisibility(step == STEP_RECEIPT ? View.VISIBLE : View.GONE);
 
-        if (step == 2) {
-            updateStep2Views();
-        } else if (step == 3) {
+        if (step == STEP_RECEIPT) {
             updateStep3Views();
         }
-    }
-
-    private void updateStep2Views() {
-        Deal deal = viewModel.getDeal().getValue();
-        if (deal == null) {
-            return;
-        }
-
-        binding.textConfirmAmount.setText(getString(R.string.trade_deal_payment_amount_label,
-                new FormatUtils().formatPrice(deal.getAgreedPrice())));
-
-        int methodRes = getPaymentMethodStringRes(selectedMethod);
-        binding.textConfirmMethod.setText(getString(R.string.trade_deal_payment_selected_method_label,
-                getString(methodRes)));
     }
 
     private void updateStep3Views() {
@@ -202,7 +198,7 @@ public class DealPaymentFragment extends Fragment {
 
         PaymentMethod method = payment != null && payment.getMethod() != null
                 ? payment.getMethod() : selectedMethod;
-        int methodRes = getPaymentMethodStringRes(method);
+        int methodRes = CheckoutSummary.getMethodStringRes(method);
         binding.textReceiptMethod.setText(getString(R.string.trade_deal_payment_method_label,
                 getString(methodRes)));
 
@@ -225,23 +221,12 @@ public class DealPaymentFragment extends Fragment {
                 getString(statusRes)));
     }
 
-    private int getPaymentMethodStringRes(PaymentMethod method) {
-        if (method == PaymentMethod.E_WALLET) {
-            return R.string.trade_deal_payment_method_wallet;
-        }
-        if (method == PaymentMethod.BANK_TRANSFER) {
-            return R.string.trade_deal_payment_method_transfer;
-        }
-        return R.string.trade_deal_payment_method_card;
-    }
-
     private void observeViewModel() {
         viewModel.getLoading().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean isLoading) {
                 boolean loading = isLoading != null && isLoading;
                 binding.progressBarLoading.setVisibility(loading ? View.VISIBLE : View.GONE);
-                binding.buttonConfirmPayment.setEnabled(!loading);
                 binding.buttonContinue.setEnabled(!loading && selectedMethod != null);
             }
         });
@@ -252,16 +237,6 @@ public class DealPaymentFragment extends Fragment {
                 if (errorMessage != null && !errorMessage.isEmpty()) {
                     Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show();
                     viewModel.clearError();
-                }
-            }
-        });
-
-        viewModel.getDone().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean isDone) {
-                if (isDone != null && isDone) {
-                    showStep(3);
-                    viewModel.clearDone();
                 }
             }
         });
@@ -281,7 +256,7 @@ public class DealPaymentFragment extends Fragment {
             @Override
             public void onChanged(Payment payment) {
                 if (payment != null && payment.isHeld()) {
-                    showStep(3);
+                    showStep(STEP_RECEIPT);
                 }
             }
         });
@@ -291,6 +266,7 @@ public class DealPaymentFragment extends Fragment {
         binding.includeEmptyState.layoutEmptyState.setVisibility(View.VISIBLE);
         binding.includeEmptyState.textEmptyTitle.setText(R.string.trade_deal_payment_not_eligible);
         binding.scrollContent.setVisibility(View.GONE);
+        binding.layoutBottomBar.setVisibility(View.GONE);
     }
 
     private void renderDeal(Deal deal) {
@@ -299,33 +275,45 @@ public class DealPaymentFragment extends Fragment {
             binding.includeErrorState.layoutErrorState.setVisibility(View.VISIBLE);
             binding.includeErrorState.textErrorMessage.setText(R.string.trade_deal_payment_not_buyer);
             binding.scrollContent.setVisibility(View.GONE);
+            binding.layoutBottomBar.setVisibility(View.GONE);
             return;
         }
 
-        if (deal.getStatus() != DealStatus.CONFIRMED || !deal.needsPayment()) {
-            binding.includeEmptyState.layoutEmptyState.setVisibility(View.VISIBLE);
-            binding.includeEmptyState.textEmptyTitle.setText(R.string.trade_deal_payment_not_eligible);
-            binding.scrollContent.setVisibility(View.GONE);
+        boolean alreadyPaid = currentStep == STEP_RECEIPT;
+        if (!alreadyPaid && !CheckoutSummary.canPay(deal, currentUid)) {
+            renderEmptyState();
             return;
         }
 
         binding.includeErrorState.layoutErrorState.setVisibility(View.GONE);
         binding.includeEmptyState.layoutEmptyState.setVisibility(View.GONE);
         binding.scrollContent.setVisibility(View.VISIBLE);
+        binding.layoutBottomBar.setVisibility(currentStep == STEP_CHOOSE ? View.VISIBLE : View.GONE);
 
-        binding.textProductTitle.setText(deal.getItemTitle() != null ? deal.getItemTitle() : "");
-        binding.textAmountToPay.setText(getString(R.string.trade_deal_payment_amount_label,
-                new FormatUtils().formatPrice(deal.getAgreedPrice())));
-
-        decodeProductThumbnail(deal.getItemThumb());
+        CheckoutSummary.bind(binding.includeSummary, deal, sellerName);
+        loadSellerName(deal);
     }
 
-    private void decodeProductThumbnail(String thumbBase64) {
-        if (thumbBase64 != null && !thumbBase64.trim().isEmpty()) {
-            ImageLoader.load(thumbBase64, binding.imageProductThumb, R.drawable.ic_inbox, R.drawable.ic_inbox);
-        } else {
-            binding.imageProductThumb.setImageResource(R.drawable.ic_inbox);
+    // Same lookup as C03 uses for the partner name; the name is display only.
+    private void loadSellerName(final Deal deal) {
+        if (sellerName != null || deal.getSellerId() == null || deal.getSellerId().isEmpty()) {
+            return;
         }
+        new UserRepository().getProfile(deal.getSellerId(), new DataCallback<User>() {
+            @Override
+            public void onSuccess(User user) {
+                if (binding == null || user == null || user.getDisplayName() == null) {
+                    return;
+                }
+                sellerName = user.getDisplayName().trim();
+                CheckoutSummary.bind(binding.includeSummary, deal, sellerName);
+            }
+
+            @Override
+            public void onError(String message) {
+                sellerName = null;
+            }
+        });
     }
 
     private String getCurrentUserId() {
@@ -337,29 +325,17 @@ public class DealPaymentFragment extends Fragment {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(KEY_CURRENT_STEP, currentStep);
+        outState.putString(KEY_SELLER_NAME, sellerName);
         if (selectedMethod != null) {
             outState.putString(KEY_SELECTED_METHOD, selectedMethod.name());
         }
     }
 
     private void restoreInstanceState(@NonNull Bundle savedInstanceState) {
-        currentStep = savedInstanceState.getInt(KEY_CURRENT_STEP, 1);
-        String methodStr = savedInstanceState.getString(KEY_SELECTED_METHOD);
-        if (methodStr != null) {
-            try {
-                selectedMethod = PaymentMethod.valueOf(methodStr);
-                if (selectedMethod == PaymentMethod.CARD) {
-                    binding.radioMethodCard.setChecked(true);
-                } else if (selectedMethod == PaymentMethod.E_WALLET) {
-                    binding.radioMethodWallet.setChecked(true);
-                } else if (selectedMethod == PaymentMethod.BANK_TRANSFER) {
-                    binding.radioMethodTransfer.setChecked(true);
-                }
-            } catch (IllegalArgumentException e) {
-                selectedMethod = null;
-            }
-        }
-        showStep(currentStep);
+        currentStep = savedInstanceState.getInt(KEY_CURRENT_STEP, STEP_CHOOSE);
+        sellerName = savedInstanceState.getString(KEY_SELLER_NAME);
+        String methodName = savedInstanceState.getString(KEY_SELECTED_METHOD);
+        selectedMethod = CheckoutSummary.parseMethod(methodName);
     }
 
     @Override

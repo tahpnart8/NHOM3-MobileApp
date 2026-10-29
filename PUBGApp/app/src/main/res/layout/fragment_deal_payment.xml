@@ -52,7 +52,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/layoutBottomBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/includeOfflineBanner">
@@ -63,213 +63,36 @@
             android:orientation="vertical"
             android:padding="@dimen/space_md">
 
-            <!-- Step 1: Select payment method -->
+            <!-- Step 1: order summary and the three simulated methods. The rest of the checkout is its own screens. -->
             <LinearLayout
                 android:id="@+id/layoutStep1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Product Summary Card -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/cardProductSummary"
+                <include
+                    android:id="@+id/includeSummary"
+                    layout="@layout/view_checkout_summary" />
+
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/space_md"
-                    app:contentPadding="@dimen/space_md">
+                    android:layout_marginTop="@dimen/space_lg"
+                    android:text="@string/trade_deal_payment_step1_title"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                <include
+                    android:id="@+id/includeMethodCard"
+                    layout="@layout/view_checkout_method" />
 
-                        <ImageView
-                            android:id="@+id/imageProductThumb"
-                            android:layout_width="72dp"
-                            android:layout_height="72dp"
-                            android:background="?attr/colorSurfaceVariant"
-                            android:contentDescription="@string/trade_deal_payment_heading"
-                            android:scaleType="centerCrop" />
+                <include
+                    android:id="@+id/includeMethodWallet"
+                    layout="@layout/view_checkout_method" />
 
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:id="@+id/textProductTitle"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:ellipsize="end"
-                                android:maxLines="2"
-                                android:textAppearance="?attr/textAppearanceTitleMedium"
-                                android:textColor="?attr/colorOnSurface" />
-
-                            <TextView
-                                android:id="@+id/textSellerRole"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/space_xs"
-                                android:text="@string/trade_deal_payment_seller_label"
-                                android:textAppearance="?attr/textAppearanceBodySmall"
-                                android:textColor="?attr/colorOnSurfaceVariant" />
-
-                            <TextView
-                                android:id="@+id/textAmountToPay"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/space_xs"
-                                android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                                android:textColor="?attr/colorPrimary" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- Methods Selection Card -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/cardPaymentMethods"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/space_md"
-                    app:contentPadding="@dimen/space_md">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/trade_deal_payment_step1_title"
-                            android:textAppearance="?attr/textAppearanceTitleMedium"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <RadioGroup
-                            android:id="@+id/radioGroupMethods"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_sm">
-
-                            <RadioButton
-                                android:id="@+id/radioMethodCard"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:minHeight="@dimen/touch_min"
-                                android:text="@string/trade_deal_payment_method_card" />
-
-                            <RadioButton
-                                android:id="@+id/radioMethodWallet"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:minHeight="@dimen/touch_min"
-                                android:text="@string/trade_deal_payment_method_wallet" />
-
-                            <RadioButton
-                                android:id="@+id/radioMethodTransfer"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:minHeight="@dimen/touch_min"
-                                android:text="@string/trade_deal_payment_method_transfer" />
-                        </RadioGroup>
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonContinue"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="@dimen/touch_min"
-                    android:text="@string/trade_deal_payment_continue" />
-            </LinearLayout>
-
-            <!-- Step 2: Confirmation -->
-            <LinearLayout
-                android:id="@+id/layoutStep2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/cardConfirmSummary"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/space_md"
-                    app:contentPadding="@dimen/space_md">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/trade_deal_payment_step2_title"
-                            android:textAppearance="?attr/textAppearanceTitleMedium"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <TextView
-                            android:id="@+id/textConfirmAmount"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_sm"
-                            android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                            android:textColor="?attr/colorPrimary" />
-
-                        <TextView
-                            android:id="@+id/textConfirmMethod"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xs"
-                            android:textAppearance="?attr/textAppearanceBodyMedium"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:layout_marginVertical="@dimen/space_sm"
-                            android:background="?attr/colorSurfaceVariant" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/trade_deal_payment_confirm_notice"
-                            android:textAppearance="?attr/textAppearanceBodySmall"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonConfirmPayment"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/space_sm"
-                    android:minHeight="@dimen/touch_min"
-                    android:text="@string/trade_deal_payment_confirm_button" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonChangeMethod"
-                    style="?attr/materialButtonOutlinedStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/space_sm"
-                    android:minHeight="@dimen/touch_min"
-                    android:text="@string/trade_deal_payment_change_method" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonCancelPayment"
-                    style="?attr/materialButtonOutlinedStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="@dimen/touch_min"
-                    android:text="@string/trade_deal_payment_cancel"
-                    android:textColor="?attr/colorError"
-                    app:strokeColor="?attr/colorError" />
+                <include
+                    android:id="@+id/includeMethodTransfer"
+                    layout="@layout/view_checkout_method" />
             </LinearLayout>
 
             <!-- Step 3: Receipt -->
@@ -298,7 +121,7 @@
                             android:layout_height="@dimen/touch_min"
                             android:contentDescription="@string/trade_deal_payment_heading"
                             android:importantForAccessibility="no"
-                            android:src="@drawable/ic_inbox"
+                            android:src="@drawable/ic_check_circle"
                             app:tint="?attr/colorPrimary" />
 
                         <TextView
@@ -358,5 +181,25 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <!-- Sticky bar of step 1, so "Tiếp tục" stays in reach in landscape too. -->
+    <LinearLayout
+        android:id="@+id/layoutBottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurface"
+        android:elevation="@dimen/elevation_card"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/space_md"
+        android:paddingVertical="@dimen/space_sm"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonContinue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/touch_min"
+            android:text="@string/trade_checkout_continue" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
