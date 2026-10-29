@@ -1,5 +1,7 @@
 package com.nhom3.pubgapp.data;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -25,6 +27,7 @@ import java.util.Map;
 
 public class ReviewRepository extends BaseRepository {
 
+    private static final String TAG = "ReviewRepository";
     private static final String COLLECTION_REVIEWS = "reviews";
     private static final String COLLECTION_USERS = "users";
     private static final String COLLECTION_DEALS = "deals";
@@ -141,8 +144,11 @@ public class ReviewRepository extends BaseRepository {
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        // The review is already saved, so this check failing must not report the review as failed.
                         if (!task.isSuccessful()) {
-                            fail(cb, task.getException());
+                            Log.w(TAG, "Review saved but checking deal " + dealId + " failed",
+                                    task.getException());
+                            cb.onSuccess(null);
                             return;
                         }
                         if (task.getResult() != null && task.getResult().size() >= 2) {
@@ -153,9 +159,13 @@ public class ReviewRepository extends BaseRepository {
                                     cb.onSuccess(null);
                                 }
 
+                                // The review is already saved, so the user is told it worked.
+                                // The deal stays RECEIVED and the auto-complete sweep finishes it later.
                                 @Override
                                 public void onError(String message) {
-                                    cb.onError(message);
+                                    Log.w(TAG, "Review saved but completing deal " + dealId
+                                            + " failed: " + message);
+                                    cb.onSuccess(null);
                                 }
                             });
                         } else {
