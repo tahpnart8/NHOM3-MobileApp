@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModel;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.nhom3.pubgapp.data.AdminRepository;
 import com.nhom3.pubgapp.data.AuthRepository;
 import com.nhom3.pubgapp.data.CategoryRepository;
@@ -64,6 +65,8 @@ public class AuthViewModel extends ViewModel {
     private final SessionManager sessionManager;
     private final MediaRepository mediaRepository = new MediaRepository();
     private final ExecutorService avatarExecutor = Executors.newSingleThreadExecutor();
+    // Listener of restoreSession that waits for the profile after a failed read; null when idle.
+    private ListenerRegistration profileWaiter;
     // One queue for every logout cache clear, so a new session can wait until it has run.
     private static final ExecutorService LOCAL_CLEAR_EXECUTOR = Executors.newSingleThreadExecutor();
 
@@ -587,18 +590,38 @@ public class AuthViewModel extends ViewModel {
 
             @Override
             public void onError(String message) {
-                if (isInvalidAccountError(message)) {
+                RestoreFailure failure = decideRestoreFailure(message,
+                        authRepository.isGoogleAccount(), authRepository.isEmailVerified());
+                if (failure == RestoreFailure.SIGN_OUT) {
                     authRepository.signOut();
                     loading.postValue(false);
                     return;
                 }
-                if (!authRepository.isGoogleAccount() && !authRepository.isEmailVerified()) {
+                if (failure == RestoreFailure.WAIT_FOR_VERIFICATION) {
                     loading.postValue(false);
                     return;
                 }
                 loadProfileForSession(uid);
             }
         });
+    }
+
+    // What a failed step of restoreSession means for the sign-in Firebase still holds.
+    enum RestoreFailure {
+        SIGN_OUT,
+        WAIT_FOR_VERIFICATION,
+        KEEP_SIGNED_IN
+    }
+
+    // Only a real account problem ends the session; a network error at launch keeps the user signed in.
+    static RestoreFailure decideRestoreFailure(String message, boolean googleAccount, boolean emailVerified) {
+        if (isInvalidAccountError(message)) {
+            return RestoreFailure.SIGN_OUT;
+        }
+        if (!googleAccount && !emailVerified) {
+            return RestoreFailure.WAIT_FOR_VERIFICATION;
+        }
+        return RestoreFailure.KEEP_SIGNED_IN;
     }
 
     private void loadProfileForSession(final String uid) {
@@ -615,9 +638,48 @@ public class AuthViewModel extends ViewModel {
 
             @Override
             public void onError(String message) {
-                loading.postValue(false);
+                if (decideRestoreFailure(message, true, true) == RestoreFailure.SIGN_OUT) {
+                    authRepository.signOut();
+                    loading.postValue(false);
+                    return;
+                }
+                waitForProfile(uid);
             }
         });
+    }
+
+    // The server read failed (often a flaky network at launch). A live listener answers from the
+    // Firestore cache at once if the profile is cached, and keeps retrying the server on its own.
+    private void waitForProfile(final String uid) {
+        // Let the screens go on as guest meanwhile; loggedIn turns true as soon as the profile arrives.
+        loading.postValue(false);
+        profileWaiter = userRepository.observeProfile(uid, new DataCallback<User>() {
+            @Override
+            public void onSuccess(User user) {
+                // A null snapshot means "not cached yet"; the listener calls again when the server answers.
+                if (user == null) {
+                    return;
+                }
+                stopWaitingForProfile();
+                // The user may have signed in or out by hand while we waited.
+                if (sessionManager.isLoggedIn() || !uid.equals(authRepository.getCurrentUserId())) {
+                    return;
+                }
+                processUserSession(user);
+            }
+
+            @Override
+            public void onError(String message) {
+                stopWaitingForProfile();
+            }
+        });
+    }
+
+    private void stopWaitingForProfile() {
+        if (profileWaiter != null) {
+            profileWaiter.remove();
+            profileWaiter = null;
+        }
     }
 
     public void resetPassword(String email) {
@@ -685,6 +747,7 @@ public class AuthViewModel extends ViewModel {
     }
 
     public void logout() {
+        stopWaitingForProfile();
         authRepository.signOut();
         sessionManager.clear();
         clearRoomDatabase();
@@ -727,5 +790,12 @@ public class AuthViewModel extends ViewModel {
 
     public void clearDone() {
         done.setValue(false);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        // A listener left behind keeps reading after the screen is gone.
+        stopWaitingForProfile();
     }
 }
