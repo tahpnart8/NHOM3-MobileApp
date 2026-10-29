@@ -36,6 +36,7 @@ Mọi màn hình quản trị chỉ dùng để xem và xử lý; phía admin kh
 
 **Trạng thái đặc biệt:**
 - Không có việc nào cần xử lý: hiện dòng chữ báo đã xử lý hết, vẫn giữ lưới lối tắt
+- Dòng khiếu nại là khiếu nại đang ở `OPEN` (khiếu nại `NEEDS_EVIDENCE` đang chờ người dùng gửi ảnh, không phải việc của admin). Khiếu nại, báo cáo và yêu cầu xác thực đều nghe theo thời gian thực, nên việc mới hiện ngay không cần tải lại; mỗi loại hiện tối đa 5 dòng
 - Mất mạng: hiện danh sách đã tải trước đó từ bộ nhớ đệm, kèm dải báo đang xem ngoại tuyến
 
 **Khác với ảnh:**
@@ -69,6 +70,7 @@ Mọi màn hình quản trị chỉ dùng để xem và xử lý; phía admin kh
 
 **Trạng thái đặc biệt:**
 - Không có kết quả: hiện dòng báo không có người dùng nào khớp
+- Làm mới: `AdminRepository.listUsers` không có bản nghe theo thời gian thực, nên danh sách được đọc lại mỗi khi admin quay lại màn hình (từ E03 hoặc từ nền), không đọc lại khi xoay màn hình
 - Tài khoản bị khóa: nhãn màu đỏ ghi "Khóa tạm" hoặc "Khóa vĩnh viễn"
 - Tài khoản đã từng bị cảnh báo: nhãn màu cam ghi "Cảnh báo" bên cạnh nhãn trạng thái
 - Mất mạng: hiện lại danh sách đã tải trước đó từ bộ nhớ đệm, kèm dải báo đang xem ngoại tuyến
@@ -119,6 +121,7 @@ Mọi màn hình quản trị chỉ dùng để xem và xử lý; phía admin kh
 - Tài khoản đã xóa: chỉ xem
 - Tài khoản bị khóa hoặc đã xóa mà đang có yêu cầu xác thực chờ duyệt: yêu cầu bị đóng, không duyệt được
 - Mất mạng: hiện lại thông tin đã tải, các nút hành động bị khóa
+- Làm mới: hồ sơ, yêu cầu xác thực và tab Giao dịch nghe theo thời gian thực (`observeProfile`, `observeVerificationRequests`, `observeMyDeals`). Thông tin định danh, số liệu, cảnh báo, tin đăng, đánh giá và số báo cáo chưa có bản `observe...`; chúng được đọc lại sau mỗi thao tác cảnh báo, khóa, mở khóa, duyệt của admin
 
 **Khác với ảnh:**
 - Ảnh chỉ vẽ phần "Lịch sử vi phạm". Các tab Tin đăng, Giao dịch, Đánh giá, Nhật ký hoạt động (STT 69, 74), khối định danh, khối yêu cầu xác thực tài khoản (STT 73) vẫn phải làm.
@@ -158,6 +161,7 @@ Mọi màn hình quản trị chỉ dùng để xem và xử lý; phía admin kh
 - Không có báo cáo nào đang chờ xử lý: hiện dòng chữ báo trống
 - Tin đã ẩn bởi admin: nút "Ẩn tin" đổi thành "Khôi phục" (đưa tin về đang bán, xóa lý do). Tin đã gỡ (admin gỡ ở màn chi tiết tin, hoặc gỡ toàn bộ tin của tài khoản bị khóa qua E03) thì không khôi phục được
 - Thêm từ khóa đã có: báo lỗi, không thêm
+- Làm mới: hàng báo cáo và màn chi tiết tin (`ListingRepository.observeListing`) nghe theo thời gian thực. Tab "Tin bị gắn cờ" (`AdminRepository.getFlaggedListings`) chưa có bản nghe, nên được đọc lại mỗi khi admin quay lại E04 (từ màn chi tiết tin hoặc từ nền), không đọc lại khi xoay màn hình
 - Mất mạng: hiện lại danh sách đã tải trước đó từ bộ nhớ đệm, kèm dải báo đang xem ngoại tuyến
 
 **Khác với ảnh:**
@@ -222,6 +226,7 @@ Mọi màn hình quản trị chỉ dùng để xem và xử lý; phía admin kh
 **Trạng thái đặc biệt:**
 - Giao dịch "Đã giao" chỉ hiển thị tài liệu thanh toán đang ở HELD và đếm ngược, không có nút duyệt tay: hệ thống tự chuyển tài liệu đó sang RELEASED khi người mua xác nhận đã nhận hoặc khi hết thời hạn đếm ngược. Thanh toán là mô phỏng trong Firestore, không có ngân hàng hay cổng thanh toán bên ngoài
 - Mất mạng: hiện lại danh sách đã tải trước đó từ bộ nhớ đệm, kèm dải báo đang xem ngoại tuyến
+- Mọi trạng thái giao dịch là chip `view_status_chip` qua `StatusChips`. Chip trung tính ("Đã hủy", và "Đã hoàn cho người mua" của thanh toán ở màn chi tiết) có nền `colorSurfaceVariant`, vì nền `colorSurface` mặc định trùng màu thẻ và trông như chữ xám thường
 
 **Khác với ảnh:**
 - Ảnh có chip "Chờ giải ngân" và "Khiếu nại". Đúng là các chip ứng với trạng thái giao dịch; "Chờ giải ngân" là giao dịch "Đã giao" (`SHIPPED`) có tài liệu thanh toán đang ở HELD; chip "Khiếu nại" đặt tên theo trạng thái "Tranh chấp" (`DISPUTED`).
