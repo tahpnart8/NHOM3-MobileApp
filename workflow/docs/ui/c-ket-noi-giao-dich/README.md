@@ -259,26 +259,26 @@
 
 **Lớp:** bốn Fragment trong `MainActivity`, đều là màn hình chi tiết (nút quay lại, ẩn thanh dưới): `DealPaymentFragment` (bước 1), `CheckoutProviderFragment` (bước 2), `CheckoutGatewayFragment` (bước 3 và 4), `CheckoutResultFragment` (bước 5). Chỉ mở từ nút "Thanh toán" trên C03 bằng hành động toàn cục `action_global_deal_payment` (tham số `dealId`), và chỉ dành cho người mua của giao dịch. Các bước sau đi bằng đích `checkoutProviderFragment`, `checkoutGatewayFragment`, `checkoutResultFragment` của `nav_main.xml`.
 
-**Mục đích:** Cho người mua thanh toán cho giao dịch mua bán đã xác nhận bằng một luồng giống trang thương mại điện tử. Đây là thanh toán mô phỏng (issue #391): không có cổng thanh toán thật, không gọi dịch vụ bên ngoài, không có tiền thật. Ngân hàng hoặc ví người mua chọn chỉ để hiển thị, nằm trong tham số điều hướng, không ghi vào Firestore. Đường ghi duy nhất vẫn là `DealViewModel.pay(PaymentMethod)`: hệ thống giữ tiền bằng khoản thanh toán "đang giữ" rồi chuyển "đã giải ngân" cho người bán hoặc "đã hoàn" cho người mua.
+**Mục đích:** Cho người mua thanh toán cho giao dịch mua bán đã xác nhận bằng một luồng giống trang thương mại điện tử. Đây là thanh toán mô phỏng (issue #391): không có cổng thanh toán thật, không gọi dịch vụ bên ngoài, không có tiền thật. Ngân hàng hoặc ví người mua chọn chỉ để hiển thị, nằm trong tham số điều hướng, không ghi vào Firestore. Từ issue #395 màn hình không còn chữ "mô phỏng" hay "thử nghiệm": câu chữ giống trang thanh toán thật để demo tự nhiên, còn việc mô phỏng được nói rõ trong code, tài liệu này và `decisions.md` để nhóm giải thích khi được hỏi. Đường ghi duy nhất vẫn là `DealViewModel.pay(PaymentMethod)`: hệ thống giữ tiền bằng khoản thanh toán "đang giữ" rồi chuyển "đã giải ngân" cho người bán hoặc "đã hoàn" cho người mua.
 
 **Thành phần chính:**
 - Tóm tắt đơn ở mọi bước (`view_checkout_summary.xml`): ảnh thu nhỏ, tên món đồ, người bán, "Tổng thanh toán" bằng giá chốt, không sửa được
 - Bước 1, chọn phương thức (`DealPaymentFragment`): ba thẻ lớn có biểu tượng, chọn một: "Thẻ ATM nội địa" (`CARD`), "Ví điện tử" (`E_WALLET`), "Chuyển khoản ngân hàng" (`BANK_TRANSFER`). Nút "Tiếp tục" cố định ở đáy, chưa bấm được khi chưa chọn
 - Bước 2, chọn ngân hàng hoặc ví (`CheckoutProviderFragment`): ô tìm theo tên hoặc mã (không phân biệt dấu) và lưới ô chữ viết tắt. Thẻ và chuyển khoản hiện danh sách ngân hàng (tên và mã ngắn như VCB, TCB, MB, BIDV, ACB), ví điện tử hiện danh sách ví đặt tên chung. Danh sách tĩnh trong `strings_trade.xml`; ô tô màu theo màu ứng dụng, không dùng logo hay màu thương hiệu thật. Nút "Tiếp tục" cố định ở đáy, kèm dòng "Đã chọn ..."
-- Bước 3, "Cổng thanh toán mô phỏng PUBGApp" (`CheckoutGatewayFragment`): dải báo "Môi trường thử nghiệm, không trừ tiền thật", tóm tắt đơn, tên ngân hàng hoặc ví, đồng hồ đếm ngược 10 phút. Theo phương thức:
-  - Thẻ: thẻ thử chỉ đọc (số, tên chủ thẻ, hạn cố định) và lời nhắc không nhập thẻ thật. Không có ô nhập số thẻ. Nút "Thanh toán"
-  - Chuyển khoản: mã QR mẫu vẽ ngay trên máy (không gọi mạng, không quét được), tài khoản nhận "PUBGApp giữ hộ (mô phỏng)", nội dung chuyển khoản "PUBG" cộng 8 ký tự đầu của mã giao dịch. Nút "Tôi đã chuyển khoản"
-  - Ví điện tử: thẻ xác nhận kiểu "Mở ví" với tên ví. Nút "Mở ví"
+- Bước 3, "Thanh toán an toàn" (`CheckoutGatewayFragment`): tóm tắt đơn, "Qua <ngân hàng hoặc ví>", đồng hồ đếm ngược 10 phút, "Mã đơn hàng: PUBG..." ("PUBG" cộng 8 ký tự đầu của mã giao dịch). Theo phương thức:
+  - Thẻ: "Thẻ đã liên kết" chỉ đọc gồm tên ngân hàng đã chọn, số che "•••• 0018", "Thẻ ghi nợ nội địa", và câu "Mã OTP sẽ được gửi để xác thực giao dịch". Thẻ này không có thật: số che cố định, không có ô nhập số thẻ, tên chủ thẻ, hạn hay CVV. Nút "Thanh toán"
+  - Chuyển khoản: "Quét mã QR để chuyển khoản" với mã QR vẽ ngay trên máy từ mã đơn hàng (không gọi mạng, không phải VietQR thật nên ứng dụng ngân hàng không quét được), "Tài khoản nhận: PUBGApp (ký quỹ)", "Nội dung chuyển khoản" là mã đơn hàng. Nút "Tôi đã chuyển khoản"
+  - Ví điện tử: thẻ "Mở ví" với tên ví và câu "Xác nhận thanh toán trong ví để tiếp tục". Không mở ứng dụng ví nào. Nút "Mở ví"
   - Nút "Hủy thanh toán" ở mọi phương thức
-- Bước 4, OTP (cùng màn bước 3): mã OTP thử hiện ngay trên màn, nút "Điền mã thử" điền bằng một chạm, nút "Xác nhận". Không hỏi mật khẩu, số thẻ hay dữ liệu thanh toán thật
-- Bước 5, kết quả (`CheckoutResultFragment`): vòng xoay "Đang xử lý thanh toán..." khoảng 1,5 giây rồi gọi `DealViewModel.pay`. Thành công: biên lai gồm số tiền, phương thức, ngân hàng hoặc ví (chỉ hiển thị), thời gian giữ tiền, mã giao dịch, trạng thái "Đang giữ", nút "Xem giao dịch". Lỗi: câu báo lỗi kèm "Thử lại" và "Chọn phương thức khác"
+- Bước 4, OTP (cùng màn bước 3): "Nhập mã OTP đã gửi tới số điện thoại ••••xxx" (3 số cuối của `User.phone`; không có số thì "đã gửi tới thiết bị của bạn"), ô nhập 6 chữ số, nút "Gửi lại mã" (khóa 60 giây, hiện "Gửi lại mã sau N giây"), nút "Xác nhận". Mã do `PaymentOtpNotifier` tạo ngẫu nhiên trên máy (`SecureRandom`) mỗi lần gửi và hiện bằng thông báo Android cục bộ, kênh "Mã xác thực thanh toán", tiêu đề "PUBGApp", nội dung "Mã xác thực thanh toán của bạn là 482913". Không có tin nhắn SMS nào được gửi. Nếu người dùng tắt quyền thông báo, mã hiện trong Snackbar ở đáy màn. Không hỏi mật khẩu, số thẻ hay dữ liệu thanh toán thật
+- Bước 5, kết quả (`CheckoutResultFragment`): vòng xoay "Đang xử lý thanh toán..." khoảng 1,5 giây rồi gọi `DealViewModel.pay`. Thành công: biên lai gồm số tiền, phương thức, ngân hàng hoặc ví (chỉ hiển thị), thời gian giữ tiền, mã đơn hàng, trạng thái "Đang giữ", nút "Xem giao dịch". Lỗi: câu báo lỗi kèm "Thử lại" và "Chọn phương thức khác"
 - Giao dịch đã có khoản thanh toán khi mở C07: bước 1 hiện biên lai cũ (số tiền, phương thức, thời điểm giữ, trạng thái) với nút "Về chi tiết giao dịch"
 
 **Hành động và điều hướng:**
 - Bấm nút quay lại ở bước 1: về C03, không tạo khoản thanh toán
 - Bước 1 "Tiếp tục": sang bước 2. Bước 2 "Tiếp tục": sang bước 3. Nút quay lại ở bước 2 và 3: về bước trước
 - Bấm "Hủy thanh toán" hoặc hết giờ đếm ngược: báo ngắn rồi về bước 1, không tạo khoản thanh toán
-- Bước 3 bấm nút chính: hiện bước OTP. Bấm "Xác nhận" với mã sai: báo "Mã OTP không đúng"; với mã đúng: sang bước 5
+- Bước 3 bấm nút chính: hiện bước OTP và gửi mã. Bấm "Gửi lại mã": tạo mã mới, mã cũ hết dùng được. Bấm "Xác nhận" với mã sai: báo "Mã OTP không đúng"; với mã đúng: sang bước 5
 - Bước 5 lúc đang xử lý: nút quay lại không làm gì, để không bỏ dở giữa chừng
 - Bấm "Xem giao dịch" hoặc quay lại trên biên lai: về C03, nơi nút "Thanh toán" không còn
 - Bấm "Thử lại" khi lỗi: xử lý và gọi `pay` lại. "Chọn phương thức khác" hoặc quay lại khi lỗi: về bước 1
@@ -291,6 +291,6 @@
 - Lỗi: đọc giao dịch lỗi: câu báo lỗi và "Thử lại". `pay` lỗi (mất mạng, giao dịch bị hủy giữa chừng, đã thanh toán trên thiết bị khác): bước 5 báo lỗi, không tạo khoản thanh toán, cho thử lại
 - Mất mạng: dải báo ngoại tuyến ở bước 1 đến 3
 - Giá thống nhất bằng 0 (trao đổi hoặc cho tặng), tài khoản chưa được duyệt xác thực, khách chưa đăng nhập: không vào được, vì C03 không có hoặc chặn nút "Thanh toán"
-- Xoay màn hình: giữ phương thức, ngân hàng hoặc ví đã chọn, từ khóa tìm, bước OTP và mã đã gõ, thời gian còn lại (tính theo giờ hết hạn, không đếm lại từ đầu) và bước 5 (không gửi `pay` hai lần)
+- Xoay màn hình: giữ phương thức, ngân hàng hoặc ví đã chọn, từ khóa tìm, bước OTP, mã đã gửi (không gửi lại khi xoay) và mã đã gõ, thời gian còn lại (tính theo giờ hết hạn, không đếm lại từ đầu) và bước 5 (không gửi `pay` hai lần)
 
 **Khác với ảnh:** màn hình này chưa có ảnh; không có gì để so sánh. Giao diện làm theo hệ thống thiết kế chung như các màn khác. Không có ví trung gian, số dư ví, logo ngân hàng hay dịch vụ thanh toán bên ngoài. Ghi chú STT 56 trước đây ghi "không có ngân hàng"; leader duyệt thêm bước chọn ngân hàng chỉ để hiển thị (quyết định 2026-10-29 trong `workflow/memory/decisions.md`).
