@@ -533,6 +533,7 @@ public class DealDetailFragment extends Fragment {
                         }
                         binding.textPaymentStatus.setText(getString(R.string.trade_deal_payment_status_label,
                                 getString(statusTextRes)));
+                        binding.textPaymentNotice.setText(paymentNoticeFor(payment));
 
                         if (payment.getMethod() != null) {
                             binding.textPaymentMethod.setVisibility(View.VISIBLE);
@@ -551,6 +552,10 @@ public class DealDetailFragment extends Fragment {
                     } else {
                         binding.textPaymentStatus.setVisibility(View.GONE);
                         binding.textPaymentMethod.setVisibility(View.GONE);
+                        // Cancelled before anyone paid: there is no money to describe, so hide the card.
+                        if (deal.getStatus() == DealStatus.CANCELLED) {
+                            binding.cardPaymentInfo.setVisibility(View.GONE);
+                        }
                     }
                 } else {
                     binding.cardPaymentInfo.setVisibility(View.GONE);
@@ -1310,5 +1315,16 @@ public class DealDetailFragment extends Fragment {
         super.onDestroyView();
         stopCountdown();
         binding = null;
+    }
+
+    // The notice explains where the money is now; "held until received" is wrong once it was released or refunded.
+    private int paymentNoticeFor(Payment payment) {
+        if (payment.getStatus() == com.nhom3.pubgapp.model.enums.PaymentStatus.RELEASED) {
+            return R.string.trade_deal_detail_payment_notice_released;
+        }
+        if (payment.getStatus() == com.nhom3.pubgapp.model.enums.PaymentStatus.REFUNDED) {
+            return R.string.trade_deal_detail_payment_notice_refunded;
+        }
+        return R.string.trade_deal_detail_payment_notice;
     }
 }
