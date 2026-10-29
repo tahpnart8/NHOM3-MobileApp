@@ -54,12 +54,22 @@ public class MediaRepository extends BaseRepository {
                     Context context = FirebaseApp.getInstance().getApplicationContext();
                     Bitmap bitmap = decodeSampledBitmap(context, uri, MAX_IMAGE_DIMENSION);
                     if (bitmap == null) {
-                        cb.onError("Không thể giải mã hình ảnh");
+                        postToMain(new Runnable() {
+                            @Override
+                            public void run() {
+                                cb.onError("Không thể giải mã hình ảnh");
+                            }
+                        });
                         return;
                     }
                     byte[] bytes = compressBitmap(bitmap, MAX_IMAGE_BYTES);
                     if (bytes.length == 0 || bytes.length > MAX_IMAGE_BYTES) {
-                        cb.onError("Ảnh vượt quá kích thước cho phép");
+                        postToMain(new Runnable() {
+                            @Override
+                            public void run() {
+                                cb.onError("Ảnh vượt quá kích thước cho phép");
+                            }
+                        });
                         return;
                     }
                     int width = bitmap.getWidth();
@@ -86,8 +96,13 @@ public class MediaRepository extends BaseRepository {
                                     fail(cb, e);
                                 }
                             });
-                } catch (Exception e) {
-                    fail(cb, e);
+                } catch (final Exception e) {
+                    postToMain(new Runnable() {
+                        @Override
+                        public void run() {
+                            fail(cb, e);
+                        }
+                    });
                 }
             }
         });
@@ -115,18 +130,38 @@ public class MediaRepository extends BaseRepository {
                     Context context = FirebaseApp.getInstance().getApplicationContext();
                     Bitmap bitmap = decodeSampledBitmap(context, uri, MAX_THUMB_DIMENSION);
                     if (bitmap == null) {
-                        cb.onError("Không thể tạo ảnh thu nhỏ");
+                        postToMain(new Runnable() {
+                            @Override
+                            public void run() {
+                                cb.onError("Không thể tạo ảnh thu nhỏ");
+                            }
+                        });
                         return;
                     }
                     byte[] bytes = compressBitmap(bitmap, MAX_THUMB_BYTES);
                     if (bytes.length == 0 || bytes.length > MAX_THUMB_BYTES) {
-                        cb.onError("Ảnh thu nhỏ vượt quá kích thước cho phép");
+                        postToMain(new Runnable() {
+                            @Override
+                            public void run() {
+                                cb.onError("Ảnh thu nhỏ vượt quá kích thước cho phép");
+                            }
+                        });
                         return;
                     }
-                    String base64 = Base64.encodeToString(bytes, Base64.NO_WRAP);
-                    cb.onSuccess(base64);
-                } catch (Exception e) {
-                    fail(cb, e);
+                    final String base64 = Base64.encodeToString(bytes, Base64.NO_WRAP);
+                    postToMain(new Runnable() {
+                        @Override
+                        public void run() {
+                            cb.onSuccess(base64);
+                        }
+                    });
+                } catch (final Exception e) {
+                    postToMain(new Runnable() {
+                        @Override
+                        public void run() {
+                            fail(cb, e);
+                        }
+                    });
                 }
             }
         });
@@ -141,19 +176,14 @@ public class MediaRepository extends BaseRepository {
         db.collection(COLLECTION_IMAGES).document(id).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
-                    public void onSuccess(DocumentSnapshot doc) {
-                        if (doc != null && doc.exists()) {
-                            MediaImage image = doc.toObject(MediaImage.class);
-                            if (image != null) {
-                                byte[] bytes = image.toBytes();
-                                if (bytes != null && bytes.length > 0) {
-                                    MEMORY_CACHE.put(id, bytes);
-                                    cb.onSuccess(bytes);
-                                    return;
-                                }
+                    public void onSuccess(final DocumentSnapshot doc) {
+                        // Decoding up to 400 KB of Base64 would freeze scrolling, so it runs on the executor.
+                        executor.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                decodeImage(id, doc, cb);
                             }
-                        }
-                        cb.onError("Không tìm thấy hình ảnh");
+                        });
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -162,6 +192,33 @@ public class MediaRepository extends BaseRepository {
                         fail(cb, e);
                     }
                 });
+    }
+
+    private void decodeImage(String id, DocumentSnapshot doc, final DataCallback<byte[]> cb) {
+        byte[] bytes = null;
+        if (doc != null && doc.exists()) {
+            MediaImage image = doc.toObject(MediaImage.class);
+            if (image != null) {
+                bytes = image.toBytes();
+            }
+        }
+        if (bytes == null || bytes.length == 0) {
+            postToMain(new Runnable() {
+                @Override
+                public void run() {
+                    cb.onError("Không tìm thấy hình ảnh");
+                }
+            });
+            return;
+        }
+        MEMORY_CACHE.put(id, bytes);
+        final byte[] result = bytes;
+        postToMain(new Runnable() {
+            @Override
+            public void run() {
+                cb.onSuccess(result);
+            }
+        });
     }
 
     public void delete(final String id, final DataCallback<Void> cb) {
