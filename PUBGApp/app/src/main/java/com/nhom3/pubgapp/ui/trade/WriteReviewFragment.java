@@ -16,7 +16,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentWriteReviewBinding;
-import com.nhom3.pubgapp.databinding.ViewRatingBinding;
+import com.nhom3.pubgapp.databinding.ViewRatingInputBinding;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Review;
 import com.nhom3.pubgapp.model.enums.DealStatus;
@@ -86,7 +86,7 @@ public class WriteReviewFragment extends Fragment {
         });
     }
 
-    private void setupRatingRow(ViewRatingBinding row) {
+    private void setupRatingRow(ViewRatingInputBinding row) {
         // view_rating is drawn as a read-only indicator; C05 turns it into a whole-star picker.
         row.ratingStars.setIsIndicator(false);
         row.ratingStars.setStepSize(STAR_STEP);
@@ -228,13 +228,13 @@ public class WriteReviewFragment extends Fragment {
         binding.buttonSubmitReview.setVisibility(View.GONE);
     }
 
-    private void showReadOnlyRating(ViewRatingBinding row, int stars) {
+    private void showReadOnlyRating(ViewRatingInputBinding row, int stars) {
         row.ratingStars.setIsIndicator(true);
         row.ratingStars.setRating(stars);
         showRatingValue(row);
     }
 
-    private void showRatingValue(ViewRatingBinding row) {
+    private void showRatingValue(ViewRatingInputBinding row) {
         int stars = starsOf(row);
         row.textRatingValue.setVisibility(stars > 0 ? View.VISIBLE : View.INVISIBLE);
         row.textRatingValue.setText(getString(R.string.trade_write_review_rating_value, stars));
@@ -310,7 +310,7 @@ public class WriteReviewFragment extends Fragment {
         return binding.editComment.getText().toString().trim();
     }
 
-    private int starsOf(ViewRatingBinding row) {
+    private int starsOf(ViewRatingInputBinding row) {
         return Math.round(row.ratingStars.getRating());
     }
 
