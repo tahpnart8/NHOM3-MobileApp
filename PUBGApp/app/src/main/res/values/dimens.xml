@@ -34,4 +34,11 @@
 
     <!-- Largest side of the sample transfer QR on the C07 gateway, so it stays a QR size in landscape. -->
     <dimen name="qr_max_size">240dp</dimen>
+
+    <!-- Splash logo at launch; the two sides keep the 640:672 ratio of ic_logo_splash and fit a landscape phone. -->
+    <dimen name="splash_logo_width">200dp</dimen>
+    <dimen name="splash_logo_height">210dp</dimen>
+
+    <!-- Height of the horizontal logo in the Home top bar and on the sign-in screen. -->
+    <dimen name="logo_header_height">36dp</dimen>
 </resources>
