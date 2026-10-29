@@ -1,0 +1,9 @@
+<resources>
+    <!-- Android 12 and later always draw the system splash first, so it gets the app background and the
+         launcher logo instead of a blank screen. The icon background is white, like the launcher icon. -->
+    <style name="Theme.PUBGApp.Launch" parent="Base.Theme.PUBGApp.Launch">
+        <item name="android:windowSplashScreenBackground">@color/background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/surface</item>
+    </style>
+</resources>

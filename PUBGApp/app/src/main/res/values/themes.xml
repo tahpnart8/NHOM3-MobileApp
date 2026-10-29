@@ -95,6 +95,14 @@
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.PUBGApp.BottomSheetDialog</item>
     </style>
 
+    <!-- Theme of MainActivity until onCreate: the window shows the splash logo while the app starts.
+         MainActivity switches to Theme.PUBGApp before it draws anything. -->
+    <style name="Base.Theme.PUBGApp.Launch" parent="Theme.PUBGApp">
+        <item name="android:windowBackground">@drawable/bg_splash</item>
+    </style>
+
+    <style name="Theme.PUBGApp.Launch" parent="Base.Theme.PUBGApp.Launch" />
+
     <!-- Type scale, giao-dien.md section 3. Sizes are the Material 3 ones; the font and the weights are ours.
          textStyle bold stays as a fallback for components that ignore textFontWeight. -->
     <style name="TextAppearance.PUBGApp.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">

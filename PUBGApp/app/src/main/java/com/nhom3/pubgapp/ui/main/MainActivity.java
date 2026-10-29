@@ -63,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // The manifest gives the launch theme so the splash logo shows at start; the real theme takes over here.
+        setTheme(R.style.Theme_PUBGApp);
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
