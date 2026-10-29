@@ -327,10 +327,13 @@ public class ListingDetailFragment extends Fragment {
         viewModel.getSaved().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean isSaved) {
+                // The spoken label follows the icon, so TalkBack says what a tap will do.
                 if (Boolean.TRUE.equals(isSaved)) {
                     binding.buttonSave.setImageResource(R.drawable.ic_heart_filled);
+                    binding.buttonSave.setContentDescription(getString(R.string.listing_saved_unsave));
                 } else {
                     binding.buttonSave.setImageResource(R.drawable.ic_heart_outline);
+                    binding.buttonSave.setContentDescription(getString(R.string.listing_detail_save_icon_desc));
                 }
             }
         });
