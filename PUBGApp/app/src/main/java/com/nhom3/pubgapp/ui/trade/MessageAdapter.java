@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 // Adapter for chat messages displaying text, image bubbles, and offer cards.
 public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -69,12 +70,64 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         notifyDataSetChanged();
     }
 
+    // Every snapshot sends the whole list. Only rows that really changed are rebound,
+    // so image bubbles do not blink and decode again on each new message.
     public void setMessages(List<ChatMessage> items) {
-        messages.clear();
-        if (items != null) {
-            messages.addAll(items);
+        List<ChatMessage> newItems = items != null ? items : new ArrayList<ChatMessage>();
+        if (!startsWithSameMessages(newItems)) {
+            // An older page was added on top, or another chat opened: rebind everything once.
+            messages.clear();
+            messages.addAll(newItems);
+            notifyDataSetChanged();
+            return;
         }
-        notifyDataSetChanged();
+        int oldSize = messages.size();
+        for (int i = 0; i < oldSize; i++) {
+            ChatMessage newMessage = newItems.get(i);
+            boolean changed = !sameContent(messages.get(i), newMessage);
+            messages.set(i, newMessage);
+            if (changed) {
+                notifyItemChanged(i);
+            }
+        }
+        for (int i = oldSize; i < newItems.size(); i++) {
+            messages.add(newItems.get(i));
+        }
+        if (newItems.size() > oldSize) {
+            notifyItemRangeInserted(oldSize, newItems.size() - oldSize);
+        }
+    }
+
+    // True when the new list keeps every current message at the same position and only adds at the end.
+    private boolean startsWithSameMessages(List<ChatMessage> newItems) {
+        if (newItems.size() < messages.size()) {
+            return false;
+        }
+        for (int i = 0; i < messages.size(); i++) {
+            if (!Objects.equals(messages.get(i).getId(), newItems.get(i).getId())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // The fields a bubble shows; the send time arrives later from the server, so it counts too.
+    private boolean sameContent(ChatMessage oldMessage, ChatMessage newMessage) {
+        return oldMessage.getType() == newMessage.getType()
+                && Objects.equals(oldMessage.getSenderId(), newMessage.getSenderId())
+                && Objects.equals(oldMessage.getText(), newMessage.getText())
+                && Objects.equals(oldMessage.getImageId(), newMessage.getImageId())
+                && Objects.equals(oldMessage.getOfferId(), newMessage.getOfferId())
+                && Objects.equals(oldMessage.getCreatedAt(), newMessage.getCreatedAt());
+    }
+
+    // Offer and deal status only change offer cards, so text and image rows are left alone.
+    private void notifyOfferRows() {
+        for (int i = 0; i < messages.size(); i++) {
+            if (messages.get(i).getType() == MessageType.OFFER) {
+                notifyItemChanged(i);
+            }
+        }
     }
 
     public void setOffers(List<Offer> offerList) {
@@ -87,7 +140,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 }
             }
         }
-        notifyDataSetChanged();
+        notifyOfferRows();
     }
 
     public void setDealStatusByOffer(Map<String, DealStatus> map) {
@@ -95,7 +148,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         if (map != null) {
             dealStatusByOffer.putAll(map);
         }
-        notifyDataSetChanged();
+        notifyOfferRows();
     }
 
     @Override
@@ -226,14 +279,26 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
         }
 
+        // The view's tag holds the image id it should show. A recycled view gets a new tag,
+        // so a late answer for its old message is dropped instead of showing the wrong photo.
         private void loadImage(final String imageId, final ImageView imageView) {
             if (imageId == null || imageId.isEmpty()) {
+                imageView.setTag(null);
                 imageView.setImageDrawable(null);
                 return;
             }
+            if (imageId.equals(imageView.getTag())) {
+                // Already showing or loading this image: rebinding the same row must not decode again.
+                return;
+            }
+            imageView.setTag(imageId);
+            imageView.setImageResource(R.drawable.bg_status_chip);
             mediaRepository.getImage(imageId, new DataCallback<byte[]>() {
                 @Override
                 public void onSuccess(final byte[] bytes) {
+                    if (!imageId.equals(imageView.getTag())) {
+                        return;
+                    }
                     ImageLoader.load(
                             bytes, imageId, imageView,
                             R.drawable.bg_status_chip, R.drawable.bg_status_chip
@@ -242,6 +307,11 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
                 @Override
                 public void onError(String message) {
+                    if (!imageId.equals(imageView.getTag())) {
+                        return;
+                    }
+                    // Clear the tag so the next bind tries again.
+                    imageView.setTag(null);
                     imageView.setImageDrawable(null);
                 }
             });
