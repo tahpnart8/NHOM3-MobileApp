@@ -22,6 +22,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <ImageView
+            android:id="@+id/imageAppLogo"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/logo_header_height"
+            android:layout_marginTop="@dimen/space_md"
+            android:layout_marginEnd="@dimen/space_lg"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/app_name"
+            android:scaleType="fitStart"
+            android:src="@drawable/ic_logo_header"
+            app:layout_constraintEnd_toStartOf="@id/guidelineCenter"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/viewOfflineBanner" />
+
         <TextView
             android:id="@+id/textTitle"
             android:layout_width="0dp"
@@ -33,7 +47,7 @@
             android:textColor="?attr/colorPrimary"
             app:layout_constraintEnd_toStartOf="@id/guidelineCenter"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/viewOfflineBanner" />
+            app:layout_constraintTop_toBottomOf="@id/imageAppLogo" />
 
         <TextView
             android:id="@+id/textSubtitle"
