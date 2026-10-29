@@ -6,13 +6,12 @@
     android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
-    <!-- Shown on the Home tab only; code toggles it in MainActivity. Light, because the logo's dark teal text
-         is unreadable on the green; Home's green search row sits right below it. -->
+    <!-- Shown on the Home tab only; code toggles it in MainActivity. -->
     <LinearLayout
         android:id="@+id/layoutTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/colorBackground"
+        android:background="@drawable/bg_top_bar"
         android:gravity="center_vertical"
         android:minHeight="@dimen/touch_min"
         android:orientation="horizontal"
@@ -29,7 +28,7 @@
             android:adjustViewBounds="true"
             android:contentDescription="@string/app_name"
             android:scaleType="fitStart"
-            android:src="@drawable/ic_logo_header" />
+            android:src="@drawable/ic_logo_header_on_primary" />
 
         <FrameLayout
             android:id="@+id/frameNotifications"
@@ -43,7 +42,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/common_top_bar_notifications"
                 android:src="@drawable/ic_bell"
-                app:tint="?attr/colorPrimary" />
+                app:tint="?attr/colorOnPrimary" />
 
             <!-- The unread count; the button's content description already says it, so this is hidden from TalkBack. -->
             <TextView
