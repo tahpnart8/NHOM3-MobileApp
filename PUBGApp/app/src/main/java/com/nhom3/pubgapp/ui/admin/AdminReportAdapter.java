@@ -11,8 +11,11 @@ import androidx.annotation.StringRes;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.nhom3.pubgapp.R;
+import com.nhom3.pubgapp.data.DataCallback;
+import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.databinding.ItemAdminReportBinding;
 import com.nhom3.pubgapp.model.Listing;
+import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.ReportReason;
 import com.nhom3.pubgapp.model.enums.ReportStatus;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
@@ -21,8 +24,10 @@ import com.nhom3.pubgapp.ui.common.StatusChips;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 // Rows of E04: one row per reported target, with the buttons that fit its type and state.
 public class AdminReportAdapter extends RecyclerView.Adapter<AdminReportAdapter.ReportViewHolder> {
@@ -42,6 +47,10 @@ public class AdminReportAdapter extends RecyclerView.Adapter<AdminReportAdapter.
     private final List<AdminReportGrouping.Group> groups = new ArrayList<AdminReportGrouping.Group>();
     private final Map<String, Listing> listingsById = new HashMap<String, Listing>();
     private final OnReportActionListener listener;
+    // A reported user is shown by name, read once per uid; the uid stays as the fallback while it loads.
+    private final UserRepository userRepository = new UserRepository();
+    private final Map<String, String> userNames = new HashMap<String, String>();
+    private final Set<String> namesAsked = new HashSet<String>();
     private boolean actionsEnabled = true;
 
     public AdminReportAdapter(OnReportActionListener listener) {
@@ -105,6 +114,30 @@ public class AdminReportAdapter extends RecyclerView.Adapter<AdminReportAdapter.
         return groups.size();
     }
 
+    private String userNameOf(final String uid) {
+        String name = userNames.get(uid);
+        if (name != null) {
+            return name;
+        }
+        if (namesAsked.add(uid)) {
+            userRepository.getProfile(uid, new DataCallback<User>() {
+                @Override
+                public void onSuccess(User user) {
+                    if (user != null && user.getDisplayName() != null && !user.getDisplayName().isEmpty()) {
+                        userNames.put(uid, user.getDisplayName());
+                        notifyDataSetChanged();
+                    }
+                }
+
+                @Override
+                public void onError(String message) {
+                    // Keep showing the uid; the admin can still open the user from the row.
+                }
+            });
+        }
+        return uid;
+    }
+
     private void bindTitleAndThumb(ItemAdminReportBinding binding, AdminReportGrouping.Group group,
             @Nullable Listing listing) {
         Context context = binding.getRoot().getContext();
@@ -112,7 +145,11 @@ public class AdminReportAdapter extends RecyclerView.Adapter<AdminReportAdapter.
             binding.imageThumb.setVisibility(View.GONE);
             int labelRes = group.getTargetType() == ReportTarget.USER
                     ? R.string.admin_moderation_target_user : R.string.admin_moderation_target_message;
-            binding.textTitle.setText(context.getString(labelRes, group.getTargetId()));
+            String shown = group.getTargetId();
+            if (group.getTargetType() == ReportTarget.USER) {
+                shown = userNameOf(group.getTargetId());
+            }
+            binding.textTitle.setText(context.getString(labelRes, shown));
             return;
         }
         binding.imageThumb.setVisibility(View.VISIBLE);
