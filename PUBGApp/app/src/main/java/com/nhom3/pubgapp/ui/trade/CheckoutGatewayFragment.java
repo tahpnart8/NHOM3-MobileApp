@@ -17,15 +17,20 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.color.MaterialColors;
+import com.google.android.material.snackbar.Snackbar;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentCheckoutGatewayBinding;
 import com.nhom3.pubgapp.model.Deal;
+import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.PaymentMethod;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.DealViewModel;
 
-/** Screen C07, steps 3 and 4: the simulated PUBGApp gateway, then the test OTP. No real card data is asked. */
+import java.security.SecureRandom;
+
+// Screen C07, steps 3 and 4: payment screen, then OTP. Simulated: no bank is called, no card data is asked,
+// and the OTP is made on the phone and shown as a local notification.
 public class CheckoutGatewayFragment extends Fragment {
 
     public static final String ARG_DEAL_ID = "dealId";
@@ -33,14 +38,17 @@ public class CheckoutGatewayFragment extends Fragment {
     public static final String ARG_SELLER_NAME = "sellerName";
     public static final String ARG_PROVIDER_CODE = "providerCode";
     public static final String ARG_PROVIDER_NAME = "providerName";
-    public static final String TEST_OTP = "123456";
     private static final String KEY_PHASE = "key_checkout_phase";
     private static final String KEY_DEADLINE = "key_checkout_deadline";
+    private static final String KEY_OTP_CODE = "key_checkout_otp_code";
+    private static final String KEY_OTP_SENT_AT = "key_checkout_otp_sent_at";
+    private static final String KEY_OTP_IN_APP = "key_checkout_otp_in_app";
     private static final int PHASE_GATEWAY = 1;
     private static final int PHASE_OTP = 2;
     private static final long SESSION_MILLIS = 10L * 60L * 1000L;
     private static final long TICK_MILLIS = 1000L;
     private static final int QR_BITMAP_SIZE_PX = 580;
+    private static final long RESEND_DELAY_MILLIS = 60L * 1000L;
 
     private FragmentCheckoutGatewayBinding binding;
     private DealViewModel viewModel;
@@ -51,6 +59,12 @@ public class CheckoutGatewayFragment extends Fragment {
     private String providerName;
     private int phase = PHASE_GATEWAY;
     private long deadlineMillis;
+    private PaymentOtpNotifier otpNotifier;
+    // SecureRandom, because an OTP must not be guessable from the previous one.
+    private final SecureRandom random = new SecureRandom();
+    private String otpCode;
+    private long otpSentAtMillis;
+    private boolean otpShownInApp;
 
     @Nullable
     @Override
@@ -68,15 +82,20 @@ public class CheckoutGatewayFragment extends Fragment {
         if (savedInstanceState != null) {
             phase = savedInstanceState.getInt(KEY_PHASE, PHASE_GATEWAY);
             deadlineMillis = savedInstanceState.getLong(KEY_DEADLINE, 0L);
+            otpCode = savedInstanceState.getString(KEY_OTP_CODE);
+            otpSentAtMillis = savedInstanceState.getLong(KEY_OTP_SENT_AT, 0L);
+            otpShownInApp = savedInstanceState.getBoolean(KEY_OTP_IN_APP, false);
         }
         if (deadlineMillis == 0L) {
             deadlineMillis = System.currentTimeMillis() + SESSION_MILLIS;
         }
+        otpNotifier = new PaymentOtpNotifier(requireContext());
         setupToolbar();
         setupMethodPanel();
         setupButtons();
         observeViewModel();
         showPhase(phase);
+        restoreOtp();
         loadDeal();
         startCountdown();
     }
@@ -105,17 +124,27 @@ public class CheckoutGatewayFragment extends Fragment {
     private void setupMethodPanel() {
         String provider = providerName != null ? providerName : "";
         binding.textProvider.setText(getString(R.string.trade_checkout_gateway_provider_label, provider));
+        binding.textOrderCode.setText(getString(R.string.trade_checkout_order_code_label,
+                SampleQrCode.buildTransferContent(dealId)));
         binding.textCardBank.setText(provider);
-        binding.textCardExpiry.setText(getString(R.string.trade_checkout_card_expiry_label,
-                getString(R.string.trade_checkout_card_expiry)));
         binding.textWalletName.setText(provider);
-        binding.textOtpMessage.setText(getString(R.string.trade_checkout_otp_message, TEST_OTP));
+        binding.textOtpMessage.setText(buildOtpMessage());
         if (method == PaymentMethod.BANK_TRANSFER) {
             drawSampleQr();
         }
     }
 
-    // The QR is drawn on the device from the transfer content; nothing is fetched.
+    // The masked number comes from the profile phone, like a bank that shows where the SMS went.
+    private String buildOtpMessage() {
+        User user = SessionManager.getInstance().getCurrentUser();
+        String masked = user != null ? PaymentOtpNotifier.maskPhone(user.getPhone()) : null;
+        if (masked == null) {
+            return getString(R.string.trade_checkout_otp_message_device);
+        }
+        return getString(R.string.trade_checkout_otp_message, masked);
+    }
+
+    // The QR is drawn on the device from the order code; nothing is fetched and it is not a real VietQR.
     private void drawSampleQr() {
         String content = SampleQrCode.buildTransferContent(dealId);
         binding.textTransferContent.setText(content);
@@ -138,11 +167,10 @@ public class CheckoutGatewayFragment extends Fragment {
                 returnToMethods(R.string.trade_checkout_gateway_cancelled);
             }
         });
-        binding.buttonFillOtp.setOnClickListener(new View.OnClickListener() {
+        binding.buttonResendOtp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                binding.editOtp.setText(TEST_OTP);
-                binding.layoutOtp.setError(null);
+                sendNewOtp();
             }
         });
         binding.includeErrorState.buttonRetry.setOnClickListener(new View.OnClickListener() {
@@ -156,14 +184,72 @@ public class CheckoutGatewayFragment extends Fragment {
     private void onPrimaryClicked() {
         if (phase == PHASE_GATEWAY) {
             showPhase(PHASE_OTP);
+            sendNewOtp();
             return;
         }
         String typed = binding.editOtp.getText() != null ? binding.editOtp.getText().toString().trim() : "";
-        if (!TEST_OTP.equals(typed)) {
+        if (otpCode == null || !otpCode.equals(typed)) {
             binding.layoutOtp.setError(getString(R.string.trade_checkout_otp_wrong));
             return;
         }
         openResult();
+    }
+
+    // Each send makes a new code, so a resent code replaces the old one.
+    private void sendNewOtp() {
+        otpCode = PaymentOtpNotifier.generateCode(random);
+        otpSentAtMillis = System.currentTimeMillis();
+        binding.editOtp.setText("");
+        binding.layoutOtp.setError(null);
+        boolean delivered = otpNotifier.send(otpCode);
+        otpShownInApp = !delivered;
+        if (otpShownInApp) {
+            showOtpInApp();
+        } else {
+            Toast.makeText(requireContext(), R.string.trade_checkout_otp_sent, Toast.LENGTH_SHORT).show();
+        }
+        updateResendButton();
+    }
+
+    // After a rotation the code stays the same; only the on-screen fallback has to be shown again.
+    private void restoreOtp() {
+        if (phase != PHASE_OTP) {
+            return;
+        }
+        if (otpCode == null) {
+            sendNewOtp();
+            return;
+        }
+        if (otpShownInApp) {
+            showOtpInApp();
+        }
+        updateResendButton();
+    }
+
+    // Used when notifications are off, so the payment can still be finished.
+    private void showOtpInApp() {
+        String text = getString(R.string.trade_checkout_otp_notification_text, otpCode);
+        Snackbar snackbar = Snackbar.make(binding.getRoot(), text, Snackbar.LENGTH_INDEFINITE);
+        snackbar.setAnchorView(binding.layoutBottomBar);
+        snackbar.setAction(R.string.trade_checkout_otp_close, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                otpShownInApp = false;
+            }
+        });
+        snackbar.show();
+    }
+
+    private void updateResendButton() {
+        long left = RESEND_DELAY_MILLIS - (System.currentTimeMillis() - otpSentAtMillis);
+        if (left <= 0L) {
+            binding.buttonResendOtp.setEnabled(true);
+            binding.buttonResendOtp.setText(R.string.trade_checkout_otp_resend);
+            return;
+        }
+        int seconds = (int) ((left + TICK_MILLIS - 1L) / TICK_MILLIS);
+        binding.buttonResendOtp.setEnabled(false);
+        binding.buttonResendOtp.setText(getString(R.string.trade_checkout_otp_resend_wait, seconds));
     }
 
     private void showPhase(int newPhase) {
@@ -236,6 +322,9 @@ public class CheckoutGatewayFragment extends Fragment {
         int minutes = (int) (totalSeconds / 60L);
         int seconds = (int) (totalSeconds % 60L);
         binding.textCountdown.setText(getString(R.string.trade_checkout_gateway_countdown, minutes, seconds));
+        if (phase == PHASE_OTP && otpCode != null) {
+            updateResendButton();
+        }
     }
 
     private void loadDeal() {
@@ -303,6 +392,9 @@ public class CheckoutGatewayFragment extends Fragment {
         super.onSaveInstanceState(outState);
         outState.putInt(KEY_PHASE, phase);
         outState.putLong(KEY_DEADLINE, deadlineMillis);
+        outState.putString(KEY_OTP_CODE, otpCode);
+        outState.putLong(KEY_OTP_SENT_AT, otpSentAtMillis);
+        outState.putBoolean(KEY_OTP_IN_APP, otpShownInApp);
     }
 
     @Override

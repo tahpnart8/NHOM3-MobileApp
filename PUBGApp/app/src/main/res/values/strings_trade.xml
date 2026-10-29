@@ -141,7 +141,7 @@
     <string name="trade_deal_payment_method_transfer">Chuyển khoản ngân hàng</string>
     <string name="trade_deal_payment_continue">Tiếp tục</string>
     <string name="trade_deal_payment_step3_title">Biên lai thanh toán</string>
-    <string name="trade_deal_payment_success_message">Thanh toán mô phỏng thành công</string>
+    <string name="trade_deal_payment_success_message">Thanh toán thành công</string>
     <string name="trade_deal_payment_status_held">Đang giữ</string>
     <string name="trade_deal_payment_status_released">Đã giải ngân cho người bán</string>
     <string name="trade_deal_payment_status_refunded">Đã hoàn cho người mua</string>
@@ -213,7 +213,7 @@
     <string name="trade_bullet_separator">·</string>
     <string name="trade_deal_payment_just_now">Vừa xong</string>
 
-    <!-- C07 simulated checkout (Issue #391). Display only: no real bank, card or wallet is contacted. -->
+    <!-- C07 checkout (Issues #391, #395). Simulated: no bank, card or wallet is contacted, but the screens use real checkout wording. -->
     <string name="trade_deal_payment_method_card_hint">Thẻ nội địa của các ngân hàng trong danh sách</string>
     <string name="trade_deal_payment_method_wallet_hint">Thanh toán bằng ví trên điện thoại</string>
     <string name="trade_deal_payment_method_transfer_hint">Quét mã QR hoặc chuyển khoản theo nội dung</string>
@@ -227,35 +227,40 @@
     <string name="trade_checkout_provider_empty_title">Không tìm thấy</string>
     <string name="trade_checkout_provider_empty_message">Không có ngân hàng hoặc ví nào khớp với từ khóa.</string>
     <string name="trade_checkout_provider_selected">Đã chọn %1$s</string>
-    <string name="trade_checkout_gateway_title">Cổng thanh toán mô phỏng PUBGApp</string>
-    <string name="trade_checkout_gateway_test_banner">Môi trường thử nghiệm, không trừ tiền thật</string>
+    <string name="trade_checkout_gateway_title">Thanh toán an toàn</string>
     <string name="trade_checkout_gateway_countdown">Thời gian còn lại %1$02d:%2$02d</string>
-    <string name="trade_checkout_gateway_expired">Hết thời gian thanh toán. Giao dịch chưa được thanh toán.</string>
+    <string name="trade_checkout_gateway_expired">Phiên thanh toán đã hết hạn. Vui lòng thực hiện lại.</string>
     <string name="trade_checkout_gateway_provider_label">Qua %1$s</string>
     <string name="trade_checkout_gateway_cancel">Hủy thanh toán</string>
-    <string name="trade_checkout_gateway_cancelled">Đã hủy thanh toán. Không có khoản tiền nào được tạo.</string>
-    <string name="trade_checkout_card_heading">Thẻ thử nghiệm</string>
-    <string name="trade_checkout_card_number" translatable="false">9999 0000 1234 5678</string>
-    <string name="trade_checkout_card_holder" translatable="false">NGUYEN VAN THU</string>
-    <string name="trade_checkout_card_expiry" translatable="false">12/30</string>
-    <string name="trade_checkout_card_expiry_label">Hiệu lực %1$s</string>
-    <string name="trade_checkout_card_notice">Thẻ thử do hệ thống cấp sẵn. Không nhập thông tin thẻ thật của bạn.</string>
+    <string name="trade_checkout_gateway_cancelled">Đã hủy thanh toán.</string>
+    <string name="trade_checkout_card_heading">Thẻ đã liên kết</string>
+    <string name="trade_checkout_card_number" translatable="false">•••• 0018</string>
+    <string name="trade_checkout_card_notice">Mã OTP sẽ được gửi để xác thực giao dịch.</string>
     <string name="trade_checkout_card_pay">Thanh toán</string>
-    <string name="trade_checkout_transfer_heading">Quét mã để chuyển khoản</string>
-    <string name="trade_checkout_transfer_qr_description">Mã QR mẫu cho chuyển khoản mô phỏng</string>
-    <string name="trade_checkout_transfer_qr_notice">Mã QR mẫu, chỉ để minh họa, không quét được.</string>
+    <string name="trade_checkout_transfer_heading">Quét mã QR để chuyển khoản</string>
+    <string name="trade_checkout_transfer_qr_description">Mã QR chuyển khoản cho đơn hàng</string>
     <string name="trade_checkout_transfer_account_label">Tài khoản nhận</string>
-    <string name="trade_checkout_transfer_account_value">PUBGApp giữ hộ (mô phỏng)</string>
+    <string name="trade_checkout_transfer_account_value">PUBGApp (ký quỹ)</string>
     <string name="trade_checkout_transfer_content_label">Nội dung chuyển khoản</string>
     <string name="trade_checkout_transfer_done">Tôi đã chuyển khoản</string>
     <string name="trade_checkout_wallet_heading">Xác nhận trong ví</string>
-    <string name="trade_checkout_wallet_message">Ứng dụng ví mô phỏng sẽ yêu cầu bạn xác nhận khoản thanh toán này.</string>
+    <string name="trade_checkout_wallet_message">Xác nhận thanh toán trong ví để tiếp tục.</string>
     <string name="trade_checkout_wallet_open">Mở ví</string>
     <string name="trade_checkout_otp_heading">Nhập mã OTP</string>
-    <string name="trade_checkout_otp_message">Mã OTP thử nghiệm của bạn là %1$s. Không có tin nhắn thật nào được gửi.</string>
+    <string name="trade_checkout_otp_message">Nhập mã OTP đã gửi tới số điện thoại %1$s.</string>
     <string name="trade_checkout_otp_hint">Mã OTP gồm 6 chữ số</string>
-    <string name="trade_checkout_otp_fill">Điền mã thử</string>
-    <string name="trade_checkout_otp_wrong">Mã OTP không đúng. Hãy dùng mã thử ở trên.</string>
+    <string name="trade_checkout_otp_resend">Gửi lại mã</string>
+    <string name="trade_checkout_otp_message_device">Nhập mã OTP đã gửi tới thiết bị của bạn.</string>
+    <string name="trade_checkout_otp_resend_wait">Gửi lại mã sau %1$d giây</string>
+    <string name="trade_checkout_otp_sent">Đã gửi mã OTP mới.</string>
+    <string name="trade_checkout_otp_notification_title">PUBGApp</string>
+    <string name="trade_checkout_otp_notification_text">Mã xác thực thanh toán của bạn là %1$s</string>
+    <string name="trade_checkout_otp_channel_name">Mã xác thực thanh toán</string>
+    <string name="trade_checkout_otp_channel_description">Mã OTP khi bạn thanh toán đơn hàng.</string>
+    <string name="trade_checkout_otp_close">Đóng</string>
+    <string name="trade_checkout_order_code_label">Mã đơn hàng: %1$s</string>
+    <string name="trade_checkout_card_type">Thẻ ghi nợ nội địa</string>
+    <string name="trade_checkout_otp_wrong">Mã OTP không đúng. Vui lòng kiểm tra lại.</string>
     <string name="trade_checkout_otp_confirm">Xác nhận</string>
     <string name="trade_checkout_processing">Đang xử lý thanh toán…</string>
     <string name="trade_checkout_processing_hint">Vui lòng không thoát khỏi màn hình này.</string>
@@ -265,10 +270,10 @@
     <string name="trade_checkout_result_method">Phương thức</string>
     <string name="trade_checkout_result_provider">Ngân hàng hoặc ví</string>
     <string name="trade_checkout_result_time">Thời gian</string>
-    <string name="trade_checkout_result_code">Mã giao dịch</string>
+    <string name="trade_checkout_result_code">Mã đơn hàng</string>
     <string name="trade_checkout_result_status">Trạng thái</string>
     <string name="trade_checkout_result_view_deal">Xem giao dịch</string>
-    <string name="trade_checkout_result_error">Thanh toán chưa thành công. Chưa có khoản tiền nào bị giữ.</string>
+    <string name="trade_checkout_result_error">Thanh toán chưa thành công. Bạn chưa bị trừ tiền.</string>
     <string name="trade_checkout_result_back_to_methods">Chọn phương thức khác</string>
 
     <!-- Static provider catalogue: short code, a bar, then the display name. Names only, no logo or brand artwork. -->
