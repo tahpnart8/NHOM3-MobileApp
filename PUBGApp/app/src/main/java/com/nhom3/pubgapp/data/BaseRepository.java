@@ -1,5 +1,7 @@
 package com.nhom3.pubgapp.data;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -110,6 +112,12 @@ public abstract class BaseRepository {
     protected void fail(DataCallback<?> cb, Exception error) {
         Log.w(TAG, "Operation failed", error);
         cb.onError(describeError(error));
+    }
+
+    // Screens may only touch their views on the main thread, so every DataCallback is called there.
+    // Work done on an executor (Room, image decoding) hands its answer to this method.
+    protected void postToMain(Runnable task) {
+        new Handler(Looper.getMainLooper()).post(task);
     }
 
     // Calls cb on the first snapshot and again on every change, until the caller removes the registration.
