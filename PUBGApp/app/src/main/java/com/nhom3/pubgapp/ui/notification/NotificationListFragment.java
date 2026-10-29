@@ -33,6 +33,16 @@ public class NotificationListFragment extends Fragment {
     private NotificationViewModel viewModel;
     private NotificationAdapter adapter;
 
+    // An accepted offer is an OFFER_RESULT that points at the new deal, the others point at the chat.
+    // Conversation ids are "listingId_buyerId"; Firestore's own deal ids never contain "_".
+    static int getDestinationAction(NotificationType type, String targetId) {
+        boolean pointsAtDeal = targetId != null && !targetId.isEmpty() && !targetId.contains("_");
+        if (type == NotificationType.OFFER_RESULT && pointsAtDeal) {
+            return R.id.action_global_deal_detail;
+        }
+        return getDestinationAction(type);
+    }
+
     static int getDestinationAction(NotificationType type) {
         if (type == null) {
             return ACTION_UNKNOWN;
@@ -179,7 +189,7 @@ public class NotificationListFragment extends Fragment {
             return;
         }
 
-        int actionId = getDestinationAction(notification.getType());
+        int actionId = getDestinationAction(notification.getType(), notification.getTargetId());
         if (actionId == ACTION_UNKNOWN) {
             return;
         }

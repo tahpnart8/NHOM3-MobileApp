@@ -706,9 +706,16 @@ public class DealDetailFragment extends Fragment {
             }
         });
 
-        String methodText = deal.getDeliveryMethod() == DeliveryMethod.SHIPPING
-                ? getString(R.string.trade_deal_detail_delivery_shipping)
-                : getString(R.string.trade_deal_detail_delivery_meet_up);
+        // A deal made from an offer has no delivery method yet; showing "Gặp trực tiếp" by default
+        // made the buyer think it was chosen, then "Xác nhận" failed with "Chưa chọn phương thức giao nhận".
+        String methodText;
+        if (deal.getDeliveryMethod() == null) {
+            methodText = getString(R.string.trade_deal_detail_not_specified);
+        } else if (deal.getDeliveryMethod() == DeliveryMethod.SHIPPING) {
+            methodText = getString(R.string.trade_deal_detail_delivery_shipping);
+        } else {
+            methodText = getString(R.string.trade_deal_detail_delivery_meet_up);
+        }
         binding.textDeliveryMethod.setText(getString(R.string.trade_deal_detail_delivery_method_label, methodText));
 
         boolean online = NetworkMonitor.getInstance().isOnline();

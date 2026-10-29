@@ -12,6 +12,20 @@ import org.junit.Test;
 public class NotificationListFragmentTest {
 
     @Test
+    public void getDestinationAction_acceptedOfferWithDealId_returnsDealDetailAction() {
+        int action = NotificationListFragment.getDestinationAction(
+                NotificationType.OFFER_RESULT, "m3gA1YBYs5GrG6FeBOIY");
+        assertEquals(R.id.action_global_deal_detail, action);
+    }
+
+    @Test
+    public void getDestinationAction_rejectedOfferWithConversationId_returnsChatAction() {
+        int action = NotificationListFragment.getDestinationAction(
+                NotificationType.OFFER_RESULT, "listing1_buyer1");
+        assertEquals(R.id.action_global_chat, action);
+    }
+
+    @Test
     public void getDestinationAction_dealUpdate_returnsDealDetailAction() {
         int action = NotificationListFragment.getDestinationAction(NotificationType.DEAL_UPDATE);
         assertEquals(R.id.action_global_deal_detail, action);

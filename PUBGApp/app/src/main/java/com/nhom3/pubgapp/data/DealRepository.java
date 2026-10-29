@@ -247,7 +247,8 @@ public class DealRepository extends BaseRepository {
                     return;
                 }
                 if (deal.getDeliveryMethod() == null) {
-                    cb.onError("Chưa chọn phương thức giao nhận.");
+                    cb.onError("Chưa chọn phương thức giao nhận."
+                            + " Bấm \"Sửa điều khoản\" để chọn.");
                     return;
                 }
                 if (deal.getDeliveryMethod() == DeliveryMethod.SHIPPING) {
