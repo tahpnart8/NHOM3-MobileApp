@@ -64,6 +64,8 @@ public class AuthViewModel extends ViewModel {
     private final SessionManager sessionManager;
     private final MediaRepository mediaRepository = new MediaRepository();
     private final ExecutorService avatarExecutor = Executors.newSingleThreadExecutor();
+    // One queue for every logout cache clear, so a new session can wait until it has run.
+    private static final ExecutorService LOCAL_CLEAR_EXECUTOR = Executors.newSingleThreadExecutor();
 
     public AuthViewModel() {
         this.authRepository = new AuthRepository();
@@ -398,7 +400,21 @@ public class AuthViewModel extends ViewModel {
         return "Tài khoản đang bị khóa.";
     }
 
+    // Runs next on the cache-clear queue, after every Room clear queued before it has finished.
+    static void queueAfterLocalClear(Runnable next) {
+        LOCAL_CLEAR_EXECUTOR.execute(next);
+    }
+
     private void startUserSession(final User user) {
+        queueAfterLocalClear(new Runnable() {
+            @Override
+            public void run() {
+                startUserSessionNow(user);
+            }
+        });
+    }
+
+    private void startUserSessionNow(final User user) {
         adminRepository.isAdmin(user.getId(), new DataCallback<Boolean>() {
             @Override
             public void onSuccess(Boolean isAdmin) {
@@ -678,14 +694,14 @@ public class AuthViewModel extends ViewModel {
         emailVerified.setValue(false);
     }
 
-    private void clearRoomDatabase() {
+    static void clearRoomDatabase() {
         try {
             FirebaseApp app = FirebaseApp.getInstance();
             if (app != null) {
                 Context context = app.getApplicationContext();
                 if (context != null) {
                     final AppDatabase db = AppDatabase.getInstance(context);
-                    new Thread(new Runnable() {
+                    LOCAL_CLEAR_EXECUTOR.execute(new Runnable() {
                         @Override
                         public void run() {
                             try {
@@ -697,7 +713,7 @@ public class AuthViewModel extends ViewModel {
                                 Log.w("AuthViewModel", "Cannot clear Room", e);
                             }
                         }
-                    }).start();
+                    });
                 }
             }
         } catch (Exception e) {
