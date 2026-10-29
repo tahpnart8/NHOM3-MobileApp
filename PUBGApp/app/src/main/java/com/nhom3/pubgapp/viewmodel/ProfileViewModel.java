@@ -1,13 +1,11 @@
 package com.nhom3.pubgapp.viewmodel;
 
-import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.FirebaseUserMetadata;
@@ -16,7 +14,6 @@ import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.ListingRepository;
 import com.nhom3.pubgapp.data.MediaRepository;
 import com.nhom3.pubgapp.data.UserRepository;
-import com.nhom3.pubgapp.data.local.AppDatabase;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.ProfileStats;
 import com.nhom3.pubgapp.model.SellerVerification;
@@ -1374,30 +1371,8 @@ public class ProfileViewModel extends ViewModel {
     }
 
     private void clearRoomDatabase() {
-        try {
-            FirebaseApp app = FirebaseApp.getInstance();
-            if (app != null) {
-                Context context = app.getApplicationContext();
-                if (context != null) {
-                    final AppDatabase db = AppDatabase.getInstance(context);
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                db.listingDao().clearAll();
-                                db.chatDao().clearAll();
-                                db.dealDao().clearAll();
-                                db.historyDao().clearAll();
-                            } catch (Exception e) {
-                                Log.w(TAG, "Could not clear local Room tables on deactivation", e);
-                            }
-                        }
-                    }).start();
-                }
-            }
-        } catch (Exception e) {
-            Log.w(TAG, "Could not access application context to clear Room on deactivation", e);
-        }
+        // Same queue as logout, so a new sign-in waits until this account's cache is gone.
+        AuthViewModel.clearRoomDatabase();
     }
 
     private long readLastSignInTimestamp() {
