@@ -14,7 +14,6 @@ import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.ItemAdminStatusChangeBinding;
 import com.nhom3.pubgapp.model.StatusChange;
 import com.nhom3.pubgapp.model.enums.DealStatus;
-import com.nhom3.pubgapp.ui.common.StatusChips;
 import com.nhom3.pubgapp.util.FormatUtils;
 
 import java.util.ArrayList;
@@ -84,9 +83,9 @@ public class AdminStatusHistoryAdapter
         } else {
             binding.layoutFromStatus.getRoot().setVisibility(View.VISIBLE);
             binding.textArrow.setVisibility(View.VISIBLE);
-            StatusChips.bind(binding.layoutFromStatus.textStatusChip, from);
+            AdminDealAdapter.bindDealStatus(binding.layoutFromStatus.textStatusChip, from);
         }
-        StatusChips.bind(binding.layoutToStatus.textStatusChip, to);
+        AdminDealAdapter.bindDealStatus(binding.layoutToStatus.textStatusChip, to);
 
         String desc = change.describe();
         binding.textDescription.setText(desc != null ? desc : "");

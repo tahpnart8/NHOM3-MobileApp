@@ -191,7 +191,7 @@ public class AdminDealDetailFragment extends Fragment {
         }
         binding.textDealCode.setText(getString(R.string.admin_deal_detail_code, deal.getId()));
         binding.textItemTitle.setText(deal.getItemTitle() != null ? deal.getItemTitle() : "");
-        StatusChips.bind(binding.layoutStatusChip.textStatusChip, deal.getStatus());
+        AdminDealAdapter.bindDealStatus(binding.layoutStatusChip.textStatusChip, deal.getStatus());
         ImageLoader.load(deal.getItemThumb(), binding.imageItemThumb, R.drawable.ic_inbox, R.drawable.ic_error);
 
         binding.textPrice.setText(getString(
@@ -318,6 +318,9 @@ public class AdminDealDetailFragment extends Fragment {
                 R.string.admin_deal_detail_payment_amount,
                 formatUtils.formatPrice(payment.getAmount())));
         StatusChips.bind(binding.layoutPaymentStatusChip.textStatusChip, payment.getStatus());
+        if (payment.getStatus() == PaymentStatus.REFUNDED) {
+            AdminDealAdapter.paintNeutralPill(binding.layoutPaymentStatusChip.textStatusChip);
+        }
 
         PaymentMethod method = payment.getMethod();
         int methodRes = 0;
