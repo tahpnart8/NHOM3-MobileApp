@@ -53,10 +53,9 @@ public class SavedListingsFragment extends Fragment {
         setUpGrid();
         setUpStates();
         observeViewModel();
-        // A rotation keeps the list in the ViewModel, so it is read only the first time.
-        if (profileViewModel.getSavedListings().getValue() == null) {
-            profileViewModel.loadSaved();
-        }
+        // Read again every time the screen is shown, so a save or unsave made on the listing detail appears here.
+        // The old list stays visible while the new one loads.
+        profileViewModel.loadSaved();
     }
 
     @Override
