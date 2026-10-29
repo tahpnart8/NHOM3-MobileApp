@@ -184,6 +184,7 @@ Kiểu của các thành phần trên (issue #351):
 - **Huy hiệu đếm số** (`bg_badge_count`): nền `colorTertiary` (màu nhấn), viền trắng `badge_stroke`, chữ `colorOnTertiary` cỡ `LabelSmall`.
 - **Thanh chi tiết** (`view_detail_toolbar`): nền trắng có đường kẻ `colorOutline` ở đáy (`bg_toolbar_divider`), tiêu đề `TitleLarge`. Màn admin dùng cùng thanh này.
 - **Ô trống và ô lỗi**: biểu tượng trong vòng tròn `state_icon_circle` (`bg_icon_circle`), ô trống nền `colorPrimaryContainer` với biểu tượng `colorPrimary`, ô lỗi nền `colorErrorContainer` với biểu tượng `colorError`; tiêu đề `TitleLarge`, lời giải thích `BodyMedium` màu `colorOnSurfaceVariant`; nút viên thuốc.
+- **Biểu tượng loại thông báo** (`imageNotificationType` trong `item_notification.xml`, C06): vòng tròn `bg_icon_circle` nền `colorPrimaryContainer`, biểu tượng `ic_notification_*` màu `colorPrimary` (4.78) hoặc `colorError` cho cảnh báo (4.48), đều trên mức 3:1 cho thành phần không phải chữ. Không dùng `bg_avatar` (nền `colorPrimary`) ở đây, vì biểu tượng cùng màu nền sẽ biến mất.
 - **Nhãn trạng thái** (`view_status_chip`): viên thuốc, chữ `LabelMedium`; màu vẫn do `StatusChips` đặt theo mục 4.
 - **Dải ngoại tuyến**: chữ `LabelLarge` trắng trên `colorInfo` (6.54).
 - **Hàng sao**: số điểm `LabelLarge` màu `colorOnSurface`, số lượt `BodySmall` màu `colorOnSurfaceVariant`.
