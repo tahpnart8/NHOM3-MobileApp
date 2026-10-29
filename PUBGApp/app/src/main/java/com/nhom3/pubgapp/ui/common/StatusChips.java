@@ -297,8 +297,9 @@ public final class StatusChips {
                 return ContextCompat.getColor(context, R.color.chip_background_beige);
             case STYLE_ERROR:
                 return ContextCompat.getColor(context, R.color.error);
+            // colorSurface is the card colour, so a neutral chip looked like plain text; surfaceVariant keeps AA (4.65:1).
             default:
-                return MaterialColors.getColor(chip, com.google.android.material.R.attr.colorSurface);
+                return MaterialColors.getColor(chip, com.google.android.material.R.attr.colorSurfaceVariant);
         }
     }
 }
