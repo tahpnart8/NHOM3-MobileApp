@@ -6,7 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:cardBackgroundColor="?attr/colorSurface"
-    app:cardElevation="0dp"
     app:contentPadding="@dimen/space_md"
     app:strokeColor="?attr/colorOutlineVariant"
     app:strokeWidth="1dp">
