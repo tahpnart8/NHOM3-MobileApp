@@ -68,7 +68,9 @@ public class AdminTaskAdapter extends RecyclerView.Adapter<AdminTaskAdapter.Task
 
         void bind(final AdminDashboardRules.TaskRow row) {
             Context context = binding.getRoot().getContext();
-            if (row.getKind() == AdminDashboardRules.KIND_REPORT) {
+            if (row.getKind() == AdminDashboardRules.KIND_COMPLAINT) {
+                bindComplaint(context, row);
+            } else if (row.getKind() == AdminDashboardRules.KIND_REPORT) {
                 bindReport(context, row);
             } else {
                 bindVerification(context, row);
@@ -79,6 +81,14 @@ public class AdminTaskAdapter extends RecyclerView.Adapter<AdminTaskAdapter.Task
                     clickListener.onTaskClick(row);
                 }
             });
+        }
+
+        // The reason label is the same one the complaint list shows, so both screens read alike.
+        private void bindComplaint(Context context, AdminDashboardRules.TaskRow row) {
+            binding.textTaskTitle.setText(R.string.admin_dashboard_task_complaint);
+            binding.textTaskDescription.setText(AdminComplaintAdapter.reasonLabel(row.getComplaintReason()));
+            styleChip(context, R.string.admin_dashboard_label_new, R.color.success,
+                    R.color.chip_background_green);
         }
 
         private void bindReport(Context context, AdminDashboardRules.TaskRow row) {

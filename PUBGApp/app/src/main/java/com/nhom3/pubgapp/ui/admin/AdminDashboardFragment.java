@@ -15,10 +15,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentAdminDashboardBinding;
+import com.nhom3.pubgapp.model.Complaint;
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.model.SellerVerification;
+import com.nhom3.pubgapp.model.enums.ComplaintStatus;
 import com.nhom3.pubgapp.model.enums.ReportStatus;
 import com.nhom3.pubgapp.util.NetworkMonitor;
+import com.nhom3.pubgapp.viewmodel.AdminComplaintViewModel;
 import com.nhom3.pubgapp.viewmodel.AdminContentViewModel;
 import com.nhom3.pubgapp.viewmodel.AdminUserViewModel;
 
@@ -31,12 +34,15 @@ public class AdminDashboardFragment extends Fragment {
     private static final String STATE_LEFT_SCREEN = "leftScreen";
     private static final String STATE_REPORTS_ERROR = "reportsError";
     private static final String STATE_VERIFICATIONS_ERROR = "verificationsError";
+    private static final String STATE_COMPLAINTS_ERROR = "complaintsError";
     private static final String ARG_PENDING_ONLY = "pendingOnly";
+    private static final String ARG_COMPLAINT_ID = "complaintId";
 
     @Nullable
     private FragmentAdminDashboardBinding binding;
     private AdminContentViewModel contentViewModel;
     private AdminUserViewModel userViewModel;
+    private AdminComplaintViewModel complaintViewModel;
     private AdminTaskAdapter adapter;
     private DemoDataPanel demoDataPanel;
 
@@ -48,6 +54,8 @@ public class AdminDashboardFragment extends Fragment {
     private String reportsError;
     @Nullable
     private String verificationsError;
+    @Nullable
+    private String complaintsError;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -57,6 +65,7 @@ public class AdminDashboardFragment extends Fragment {
             leftScreen = savedInstanceState.getBoolean(STATE_LEFT_SCREEN);
             reportsError = savedInstanceState.getString(STATE_REPORTS_ERROR);
             verificationsError = savedInstanceState.getString(STATE_VERIFICATIONS_ERROR);
+            complaintsError = savedInstanceState.getString(STATE_COMPLAINTS_ERROR);
         }
     }
 
@@ -73,6 +82,7 @@ public class AdminDashboardFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         contentViewModel = new ViewModelProvider(this).get(AdminContentViewModel.class);
         userViewModel = new ViewModelProvider(this).get(AdminUserViewModel.class);
+        complaintViewModel = new ViewModelProvider(this).get(AdminComplaintViewModel.class);
 
         setupTaskList();
         setupButtons();
@@ -83,6 +93,7 @@ public class AdminDashboardFragment extends Fragment {
         if (!hasLoaded || leftScreen) {
             hasLoaded = true;
             leftScreen = false;
+            loadComplaints();
             loadReports();
             loadVerifications();
         }
@@ -102,6 +113,7 @@ public class AdminDashboardFragment extends Fragment {
         outState.putBoolean(STATE_LEFT_SCREEN, leftScreen);
         outState.putString(STATE_REPORTS_ERROR, reportsError);
         outState.putString(STATE_VERIFICATIONS_ERROR, verificationsError);
+        outState.putString(STATE_COMPLAINTS_ERROR, complaintsError);
     }
 
     @Override
@@ -191,6 +203,8 @@ public class AdminDashboardFragment extends Fragment {
         contentViewModel.getLoading().observe(getViewLifecycleOwner(), renderObserver);
         userViewModel.getVerifications().observe(getViewLifecycleOwner(), renderObserver);
         userViewModel.getLoading().observe(getViewLifecycleOwner(), renderObserver);
+        complaintViewModel.getComplaints().observe(getViewLifecycleOwner(), renderObserver);
+        complaintViewModel.getLoading().observe(getViewLifecycleOwner(), renderObserver);
 
         contentViewModel.getError().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
@@ -212,6 +226,22 @@ public class AdminDashboardFragment extends Fragment {
                 }
             }
         });
+        complaintViewModel.getError().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String message) {
+                if (message != null && !message.isEmpty()) {
+                    complaintsError = message;
+                    complaintViewModel.clearError();
+                    render();
+                }
+            }
+        });
+    }
+
+    // The complaint queue is a live listener, so a new complaint appears here without a reload.
+    private void loadComplaints() {
+        complaintsError = null;
+        complaintViewModel.loadComplaints(ComplaintStatus.OPEN, null);
     }
 
     private void loadReports() {
@@ -226,6 +256,9 @@ public class AdminDashboardFragment extends Fragment {
     }
 
     private void retryFailedGroups() {
+        if (complaintsError != null) {
+            loadComplaints();
+        }
         if (reportsError != null) {
             loadReports();
         }
@@ -235,7 +268,14 @@ public class AdminDashboardFragment extends Fragment {
         render();
     }
 
+    // E01 README: a complaint row opens D06. The complaint id is the deal id, as in the complaint list.
     private void openTask(AdminDashboardRules.TaskRow row) {
+        if (row.getKind() == AdminDashboardRules.KIND_COMPLAINT) {
+            Bundle args = new Bundle();
+            args.putString(ARG_COMPLAINT_ID, row.getTargetId());
+            navigate(R.id.adminComplaintDetailFragment, args);
+            return;
+        }
         if (row.getKind() == AdminDashboardRules.KIND_VERIFICATION) {
             Bundle args = new Bundle();
             args.putBoolean(ARG_PENDING_ONLY, true);
@@ -257,34 +297,46 @@ public class AdminDashboardFragment extends Fragment {
         }
         List<Report> reports = contentViewModel.getReports().getValue();
         List<SellerVerification> verifications = userViewModel.getVerifications().getValue();
-        List<AdminDashboardRules.TaskRow> rows = AdminDashboardRules.buildRows(reports, verifications);
+        List<Complaint> complaints = complaintViewModel.getComplaints().getValue();
+        List<AdminDashboardRules.TaskRow> rows =
+                AdminDashboardRules.buildRows(complaints, reports, verifications);
         adapter.submitRows(rows);
 
         boolean loading = isTrue(contentViewModel.getLoading().getValue())
-                || isTrue(userViewModel.getLoading().getValue());
-        boolean failed = reportsError != null || verificationsError != null;
+                || isTrue(userViewModel.getLoading().getValue())
+                || isTrue(complaintViewModel.getLoading().getValue());
+        boolean failed = reportsError != null || verificationsError != null || complaintsError != null;
         boolean hasRows = !rows.isEmpty();
-        boolean loadedBoth = reports != null && verifications != null;
+        boolean loadedAll = reports != null && verifications != null && complaints != null;
 
         binding.recyclerTasks.setVisibility(hasRows ? View.VISIBLE : View.GONE);
         binding.progressTasks.setVisibility(loading && !hasRows ? View.VISIBLE : View.GONE);
         binding.viewErrorState.layoutErrorState.setVisibility(failed && !loading ? View.VISIBLE : View.GONE);
         binding.viewEmptyState.layoutEmptyState.setVisibility(
-                !hasRows && !failed && !loading && loadedBoth ? View.VISIBLE : View.GONE);
+                !hasRows && !failed && !loading && loadedAll ? View.VISIBLE : View.GONE);
         if (failed) {
             binding.viewErrorState.textErrorMessage.setText(joinErrors());
         }
         updateOfflineBanner();
     }
 
+    // Each different message once, one per line; the groups often fail with the same offline text.
     private String joinErrors() {
-        if (reportsError == null) {
-            return verificationsError;
+        StringBuilder text = new StringBuilder();
+        appendError(text, complaintsError);
+        appendError(text, reportsError);
+        appendError(text, verificationsError);
+        return text.toString();
+    }
+
+    private void appendError(StringBuilder text, @Nullable String message) {
+        if (message == null || text.indexOf(message) >= 0) {
+            return;
         }
-        if (verificationsError == null || verificationsError.equals(reportsError)) {
-            return reportsError;
+        if (text.length() > 0) {
+            text.append("\n");
         }
-        return reportsError + "\n" + verificationsError;
+        text.append(message);
     }
 
     private boolean isTrue(@Nullable Boolean value) {
