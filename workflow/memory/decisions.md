@@ -973,3 +973,23 @@ The plain radio list of C07 did not read as a payment during the demo, and the l
 
 ### Owner
 tahpnart8
+
+## 2026-10-29 - C07 checkout drops on-screen "simulated" wording, the OTP comes as a local notification
+
+### Decision
+The C07 screens use the wording of a real checkout ("Thanh toán an toàn", "Mã đơn hàng", "Tài khoản nhận: PUBGApp (ký quỹ)", "Thẻ đã liên kết •••• 0018", "Nhập mã OTP đã gửi tới số điện thoại ••••xxx") and no longer say "mô phỏng", "thử nghiệm" or "mẫu" on screen. The OTP is a random 6 digit code made on the phone with `SecureRandom` for each send, shown as a local Android notification by `PaymentOtpNotifier` on its own channel, with "Gửi lại mã" after 60 seconds; when notifications are off the code appears in a Snackbar. Everything else of "2026-10-29 - C07 checkout stays simulated: an e-commerce style flow with no payment gateway" still holds: no gateway, no network call, no field for a card number, CVV or password, no real logo or brand colour, and `DealViewModel.pay` is the only write.
+
+### Context
+The leader judged the first version too obviously fake for the demo and asked for a checkout that looks as real as possible while no real money moves (issue #395). The simulation is now stated where the team explains it: code comments, `workflow/docs/ui/c-ket-noi-giao-dich/README.md` section C07 and this file.
+
+### Alternatives rejected
+- Keeping the test banner on screen: the leader's explicit request was to remove it; the app holds no real money, so the banner protected nobody.
+- A real SMS OTP (Firebase phone auth or an SMS provider): costs money or needs the Blaze plan, and an SMS that is not tied to any bank would be the misleading part.
+- Reusing `InAppNotifier`'s channel: it is package-private in `ui.notification`, another area, and its channel is for notices at default importance; a separate high-importance channel lets the code pop up like a bank OTP.
+- A fixed OTP: easy to demo, but it is what made the step look fake.
+
+### Impact
+`ui/trade/CheckoutGatewayFragment`, `CheckoutResultFragment`, new `PaymentOtpNotifier`, `fragment_checkout_gateway.xml`, `strings_trade.xml`, C07 in `workflow/docs/ui/c-ket-noi-giao-dich/README.md`, `dac-ta-lop/README.md`, `so-huu.md` section 3, `dac-ta-chuc-nang.md` STT 56. `CheckoutGatewayFragment.TEST_OTP` is removed.
+
+### Owner
+tahpnart8
