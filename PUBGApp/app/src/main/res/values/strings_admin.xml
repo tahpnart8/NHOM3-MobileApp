@@ -31,6 +31,7 @@
     <string name="admin_demo_error">Lỗi: %1$s</string>
     <string name="admin_dashboard_label_new">Mới</string>
     <string name="admin_dashboard_label_waiting">Chờ</string>
+    <string name="admin_dashboard_task_complaint">Khiếu nại giao dịch mới</string>
     <string name="admin_dashboard_task_report_listing">Tin đăng bị báo cáo</string>
     <string name="admin_dashboard_task_report_user">Người dùng bị báo cáo</string>
     <string name="admin_dashboard_task_report_message">Tin nhắn bị báo cáo</string>

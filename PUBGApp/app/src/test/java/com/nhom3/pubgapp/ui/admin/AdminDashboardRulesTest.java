@@ -3,8 +3,11 @@ package com.nhom3.pubgapp.ui.admin;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.nhom3.pubgapp.model.Complaint;
 import com.nhom3.pubgapp.model.Report;
 import com.nhom3.pubgapp.model.SellerVerification;
+import com.nhom3.pubgapp.model.enums.ComplaintReason;
+import com.nhom3.pubgapp.model.enums.ComplaintStatus;
 import com.nhom3.pubgapp.model.enums.ReportStatus;
 import com.nhom3.pubgapp.model.enums.ReportTarget;
 import com.nhom3.pubgapp.model.enums.VerificationStatus;
@@ -18,7 +21,7 @@ public class AdminDashboardRulesTest {
 
     @Test
     public void nullListsGiveNoRows() {
-        assertTrue(AdminDashboardRules.buildRows(null, null).isEmpty());
+        assertTrue(AdminDashboardRules.buildRows(null, null, null).isEmpty());
     }
 
     @Test
@@ -96,17 +99,54 @@ public class AdminDashboardRulesTest {
     }
 
     @Test
-    public void rowsListReportsBeforeVerifications() {
+    public void rowsListComplaintsThenReportsThenVerifications() {
+        List<Complaint> complaints = new ArrayList<Complaint>();
+        complaints.add(complaint("D1", ComplaintStatus.OPEN));
         List<Report> reports = new ArrayList<Report>();
         reports.add(report(ReportTarget.MESSAGE, "M1", ReportStatus.OPEN));
         List<SellerVerification> requests = new ArrayList<SellerVerification>();
         requests.add(verification("U1", VerificationStatus.PENDING, 0));
 
-        List<AdminDashboardRules.TaskRow> rows = AdminDashboardRules.buildRows(reports, requests);
+        List<AdminDashboardRules.TaskRow> rows = AdminDashboardRules.buildRows(complaints, reports, requests);
 
-        assertEquals(2, rows.size());
-        assertEquals(AdminDashboardRules.KIND_REPORT, rows.get(0).getKind());
-        assertEquals(AdminDashboardRules.KIND_VERIFICATION, rows.get(1).getKind());
+        assertEquals(3, rows.size());
+        assertEquals(AdminDashboardRules.KIND_COMPLAINT, rows.get(0).getKind());
+        assertEquals(AdminDashboardRules.KIND_REPORT, rows.get(1).getKind());
+        assertEquals(AdminDashboardRules.KIND_VERIFICATION, rows.get(2).getKind());
+    }
+
+    @Test
+    public void onlyOpenComplaintsAreTasks() {
+        List<Complaint> complaints = new ArrayList<Complaint>();
+        complaints.add(complaint("D1", ComplaintStatus.NEEDS_EVIDENCE));
+        complaints.add(complaint("D2", ComplaintStatus.OPEN));
+        complaints.add(complaint("D3", ComplaintStatus.RESOLVED));
+        complaints.add(complaint("D4", ComplaintStatus.WITHDRAWN));
+
+        List<AdminDashboardRules.TaskRow> rows = AdminDashboardRules.buildComplaintRows(complaints);
+
+        assertEquals(1, rows.size());
+        assertEquals("D2", rows.get(0).getTargetId());
+        assertEquals(ComplaintReason.DAMAGED, rows.get(0).getComplaintReason());
+    }
+
+    @Test
+    public void complaintRowsAreCappedPerKind() {
+        List<Complaint> complaints = new ArrayList<Complaint>();
+        for (int index = 0; index < AdminDashboardRules.MAX_ROWS_PER_KIND + 2; index++) {
+            complaints.add(complaint("D" + index, ComplaintStatus.OPEN));
+        }
+
+        assertEquals(AdminDashboardRules.MAX_ROWS_PER_KIND,
+                AdminDashboardRules.buildComplaintRows(complaints).size());
+    }
+
+    private Complaint complaint(String dealId, ComplaintStatus status) {
+        Complaint complaint = new Complaint();
+        complaint.setDealId(dealId);
+        complaint.setStatus(status);
+        complaint.setReason(ComplaintReason.DAMAGED);
+        return complaint;
     }
 
     private Report report(ReportTarget target, String targetId, ReportStatus status) {
