@@ -2,8 +2,6 @@ package com.nhom3.pubgapp.ui.trade;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -49,7 +47,6 @@ import com.nhom3.pubgapp.util.FormatUtils;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.viewmodel.DealViewModel;
 
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -1013,30 +1010,18 @@ public class DealDetailFragment extends Fragment {
         if (binding == null || uri == null) {
             return;
         }
-        try (InputStream is = requireContext().getContentResolver().openInputStream(uri)) {
-            Bitmap bitmap = BitmapFactory.decodeStream(is);
-            if (bitmap != null) {
-                binding.imageWaybillPreview.setImageBitmap(bitmap);
-                binding.imageWaybillPreview.setVisibility(View.VISIBLE);
-            }
-        } catch (Exception e) {
-            binding.imageWaybillPreview.setVisibility(View.GONE);
-        }
+        // ImageLoader decodes off the main thread and shrinks the photo to the view size.
+        binding.imageWaybillPreview.setVisibility(View.VISIBLE);
+        ImageLoader.load(uri, binding.imageWaybillPreview, R.drawable.ic_inbox, R.drawable.ic_inbox);
     }
 
     private void displayReceivedPreview(Uri uri) {
         if (binding == null || uri == null) {
             return;
         }
-        try (InputStream is = requireContext().getContentResolver().openInputStream(uri)) {
-            Bitmap bitmap = BitmapFactory.decodeStream(is);
-            if (bitmap != null) {
-                binding.imageReceivedPreview.setImageBitmap(bitmap);
-                binding.imageReceivedPreview.setVisibility(View.VISIBLE);
-            }
-        } catch (Exception e) {
-            binding.imageReceivedPreview.setVisibility(View.GONE);
-        }
+        // ImageLoader decodes off the main thread and shrinks the photo to the view size.
+        binding.imageReceivedPreview.setVisibility(View.VISIBLE);
+        ImageLoader.load(uri, binding.imageReceivedPreview, R.drawable.ic_inbox, R.drawable.ic_inbox);
     }
 
     private void validateShippingForm() {

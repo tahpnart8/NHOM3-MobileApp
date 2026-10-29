@@ -125,9 +125,13 @@ public class MakeOfferFragment extends BottomSheetDialogFragment {
         new ListingRepository().getById(id, new DataCallback<Listing>() {
             @Override
             public void onSuccess(Listing result) {
+                // The answer can arrive after the user left this screen and the view is gone.
+                if (binding == null) {
+                    return;
+                }
                 binding.progressLoading.setVisibility(View.GONE);
                 currentListing = result;
-                if (result != null && binding != null) {
+                if (result != null) {
                     binding.textListingTitle.setText(result.getTitle());
                     binding.textListingPrice.setText(formatUtils.formatPrice(result.getPrice()));
 

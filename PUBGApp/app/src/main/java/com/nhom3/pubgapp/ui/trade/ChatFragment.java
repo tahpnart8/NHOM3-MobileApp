@@ -459,7 +459,7 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         dealsListener = dealRepository.observeMyDeals(uid, new DataCallback<List<Deal>>() {
             @Override
             public void onSuccess(List<Deal> deals) {
-                if (deals == null || adapter == null) {
+                if (binding == null || deals == null || adapter == null) {
                     return;
                 }
                 Map<String, DealStatus> dealStatusByOffer = new HashMap<String, DealStatus>();
