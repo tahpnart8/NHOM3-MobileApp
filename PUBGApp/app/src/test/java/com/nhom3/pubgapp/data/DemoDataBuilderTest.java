@@ -110,6 +110,22 @@ public class DemoDataBuilderTest {
         }
     }
 
+    // Issue #339: titles are accented, and the unaccented words a user types still find them.
+    @Test
+    public void titles_areAccentedAndStillFoundWithoutAccents() {
+        boolean foundRacket = false;
+        for (Listing listing : sampleListings()) {
+            if (listing.getTitle().startsWith("Vợt cầu lông")) {
+                foundRacket = true;
+                listing.buildSearchKeywords();
+                assertTrue(listing.getSearchKeywords().contains("vot"));
+                assertTrue(listing.getSearchKeywords().contains("cau"));
+                assertTrue(listing.getSearchKeywords().contains("long"));
+            }
+        }
+        assertTrue(foundRacket);
+    }
+
     @Test
     public void titles_shareTheCategoryKeyword() {
         List<Listing> listings = sampleListings();
