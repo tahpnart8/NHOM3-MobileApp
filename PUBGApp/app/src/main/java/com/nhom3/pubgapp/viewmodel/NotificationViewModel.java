@@ -60,6 +60,11 @@ public class NotificationViewModel extends ViewModel {
         if (uid.equals(liveUid) && listeners.has(KEY_NOTIFICATIONS)) {
             return;
         }
+        // Another account signed in: drop the previous user's list and badge before the new snapshot arrives.
+        if (liveUid != null && !uid.equals(liveUid)) {
+            notifications.setValue(null);
+            unreadCount.setValue(Integer.valueOf(0));
+        }
         liveUid = uid;
         loading.setValue(true);
         error.setValue(null);
