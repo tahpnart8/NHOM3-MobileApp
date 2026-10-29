@@ -282,6 +282,7 @@
     <string name="admin_complaint_reason_other">Khác</string>
     <string name="admin_complaint_detail_deal_code">Mã giao dịch: %1$s</string>
     <string name="admin_complaint_detail_complainant">Người khiếu nại: %1$s</string>
+    <string name="admin_complaint_detail_complainant_named">Người khiếu nại: %1$s (%2$s)</string>
     <string name="admin_complaint_detail_complainant_unknown">Người khiếu nại: đang tải giao dịch</string>
     <string name="admin_complaint_detail_role_buyer">Người mua</string>
     <string name="admin_complaint_detail_role_seller">Người bán</string>
