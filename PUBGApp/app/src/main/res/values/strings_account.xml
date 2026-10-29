@@ -110,6 +110,9 @@
     <string name="notification_type_warning">Cảnh báo từ quản trị viên</string>
     <string name="notification_type_listing_moderated">Kết quả duyệt tin đăng</string>
     <string name="notification_type_verification_result">Kết quả xác thực tài khoản</string>
+    <!-- System notification channel for new notices while the app is open (item B of issue #382) -->
+    <string name="notification_channel_name">Thông báo mới</string>
+    <string name="notification_channel_description">Báo tin nhắn, đề nghị giá và cập nhật đơn hàng mới khi ứng dụng đang mở.</string>
 
     <!-- Titles of the screens restored on 2026-10-25; the owning issue refines the text -->
     <string name="account_settings_title">Cài đặt tài khoản</string>

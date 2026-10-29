@@ -1,10 +1,14 @@
 package com.nhom3.pubgapp.ui.main;
 
+import android.Manifest;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,13 +28,17 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.snackbar.Snackbar;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.ActivityMainBinding;
+import com.nhom3.pubgapp.model.AppNotification;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.ui.common.AvatarBinder;
+import com.nhom3.pubgapp.ui.notification.InAppNotifier;
 import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.AuthViewModel;
 import com.nhom3.pubgapp.viewmodel.DealViewModel;
 import com.nhom3.pubgapp.viewmodel.NotificationViewModel;
 import com.nhom3.pubgapp.viewmodel.ProfileViewModel;
+
+import java.util.List;
 
 /** Hosts nav_main with the five-tab bottom bar. */
 public class MainActivity extends AppCompatActivity {
@@ -50,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
     private ProfileViewModel profileViewModel;
     private boolean autoReleaseChecked;
     private int pendingTabId;
+    private InAppNotifier inAppNotifier;
+    private ActivityResultLauncher<String> notificationPermissionLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
             pendingTabId = savedInstanceState.getInt(STATE_PENDING_TAB_ID, 0);
         }
         applyWindowInsets();
+        setUpInAppNotifier();
         setUpViewModels();
         setUpNavigation();
         setUpTopBar();
@@ -153,6 +164,13 @@ public class MainActivity extends AppCompatActivity {
                 showUnreadCount(unreadCount);
             }
         });
+        // Each new unread notice from the live list also pops up as a system notification.
+        notificationViewModel.getNotifications().observe(this, new Observer<List<AppNotification>>() {
+            @Override
+            public void onChanged(List<AppNotification> list) {
+                inAppNotifier.onNotificationsChanged(SessionManager.getInstance().getCurrentUserId(), list);
+            }
+        });
         // The profile is a live listener, so the Google photo saved just after sign in shows without a restart.
         profileViewModel.getProfile().observe(this, new Observer<User>() {
             @Override
@@ -160,6 +178,26 @@ public class MainActivity extends AppCompatActivity {
                 showTopBarAvatar();
             }
         });
+    }
+
+    // The launcher must be registered before the activity starts, so it is made in onCreate.
+    private void setUpInAppNotifier() {
+        inAppNotifier = new InAppNotifier(this);
+        notificationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(), new ActivityResultCallback<Boolean>() {
+                    @Override
+                    public void onActivityResult(Boolean granted) {
+                        // Nothing to do: a refusal only turns off pop-ups, the bell and the list still work.
+                    }
+                });
+    }
+
+    private void askNotificationPermissionOnce() {
+        if (!SessionManager.getInstance().isLoggedIn() || !inAppNotifier.shouldAskPermission()) {
+            return;
+        }
+        inAppNotifier.rememberPermissionAsked();
+        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
     }
 
     // Firebase may still hold a session while SessionManager is empty (the process was killed).
@@ -176,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onSessionReady() {
+        askNotificationPermissionOnce();
         updateTopBarForSession();
         refreshUnreadCount(getCurrentDestinationId());
         boolean loggedIn = SessionManager.getInstance().isLoggedIn();
