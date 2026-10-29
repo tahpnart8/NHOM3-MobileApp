@@ -10,6 +10,9 @@
     <string name="trade_error_not_signed_in_messages">Vui lòng đăng nhập để xem tin nhắn.</string>
     <string name="trade_error_not_signed_in_chat">Vui lòng đăng nhập để nhắn tin.</string>
     <string name="trade_error_invalid_conversation_id">Mã cuộc trò chuyện không hợp lệ.</string>
+    <string name="trade_error_load_partner">Không tải được thông tin người trò chuyện.</string>
+    <string name="trade_error_load_listing">Không tải được tin đăng của cuộc trò chuyện.</string>
+    <string name="trade_error_load_offers">Không tải được các đề nghị của cuộc trò chuyện.</string>
     <string name="trade_chat_title">Trò chuyện</string>
     <string name="trade_chat_active_now">Đang hoạt động</string>
     <string name="trade_chat_active_recent">Hoạt động %1$s</string>
