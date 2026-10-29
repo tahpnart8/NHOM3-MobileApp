@@ -1,25 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <!-- Quai túi mua sắm nằm trong vùng an toàn 66dp -->
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M44,40 V34 C44,28.5 48.5,24 54,24 C59.5,24 64,28.5 64,34 V40"
-        android:strokeColor="#FFFFFF"
-        android:strokeLineCap="round"
-        android:strokeWidth="4" />
-    <!-- Thân túi mua sắm màu trắng -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M34,40 L37,76 C37.3,79.3 40.1,82 43.4,82 L64.6,82 C67.9,82 70.7,79.3 71,76 L74,40 Z" />
-    <!-- Chữ Đ cách điệu âm bản trên thân túi -->
-    <path
-        android:fillColor="@color/primary"
-        android:pathData="M46,49 H54 C58.4,49 62,52.6 62,57 C62,61.4 58.4,65 54,65 H46 Z M50,53 V61 H54 C56.2,61 58,59.2 58,57 C58,54.8 56.2,53 54,53 Z" />
-    <path
-        android:fillColor="@color/primary"
-        android:pathData="M42,55 H52 V58 H42 Z" />
-</vector>
+<!-- Official square logo, 27% inset on each side so its farthest pixel stays 31dp from the centre,
+     inside the 66dp safe circle that every launcher mask keeps. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_logo_app"
+    android:inset="27%" />
