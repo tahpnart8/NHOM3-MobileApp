@@ -8,6 +8,8 @@
 
     <include
         android:id="@+id/includeToolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         layout="@layout/view_detail_toolbar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -15,6 +17,8 @@
 
     <include
         android:id="@+id/includeOfflineBanner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         layout="@layout/view_offline_banner"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -32,6 +36,8 @@
 
     <include
         android:id="@+id/includeErrorState"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         layout="@layout/view_error_state"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -41,6 +47,8 @@
 
     <include
         android:id="@+id/includeEmptyState"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         layout="@layout/view_empty_state"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
