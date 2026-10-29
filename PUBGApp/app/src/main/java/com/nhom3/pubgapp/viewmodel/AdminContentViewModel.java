@@ -73,6 +73,9 @@ public class AdminContentViewModel extends ViewModel {
     // The report queue is live: a new report or one closed elsewhere appears without a reload.
     private final ListenerSet listeners = new ListenerSet();
     private static final String KEY_REPORTS = "reports";
+    // The admin listing detail is live too, so a price or status change shows while the admin looks at it.
+    private static final String KEY_LISTING = "listing";
+    private static final String MESSAGE_LISTING_NOT_FOUND = "Không tìm thấy tin đăng này.";
     // One guard per kind of work, so loading a listing never cancels loading its reports.
     private final RequestGuard reportsGuard = new RequestGuard();
     private final RequestGuard listingGuard = new RequestGuard();
@@ -209,24 +212,35 @@ public class AdminContentViewModel extends ViewModel {
             error.postValue(MESSAGE_ID_REQUIRED);
             return;
         }
+        // The listing is already live (rotation, or a reload after a write), so no second listener is needed.
+        boolean alreadyLive = listingId.equals(lastListingId) && listeners.has(KEY_LISTING)
+                && selectedListing.getValue() != null;
+        if (alreadyLive) {
+            return;
+        }
         lastListingId = listingId;
         final int token = listingGuard.begin();
         refreshLoading();
-        listingRepository.getById(listingId, new DataCallback<Listing>() {
+        listeners.put(KEY_LISTING, listingRepository.observeListing(listingId, new DataCallback<Listing>() {
             @Override
             public void onSuccess(Listing result) {
-                if (!listingGuard.finish(token)) {
+                if (result == null) {
+                    listeners.remove(KEY_LISTING);
+                    failRequest(listingGuard, token, MESSAGE_LISTING_NOT_FOUND);
                     return;
                 }
+                // Only the first answer ends the spinner; later answers are changes made by the seller or an admin.
+                listingGuard.finish(token);
                 selectedListing.postValue(result);
                 refreshLoading();
             }
 
             @Override
             public void onError(String message) {
+                listeners.remove(KEY_LISTING);
                 failRequest(listingGuard, token, message);
             }
-        });
+        }));
     }
 
     // Null while reading; an empty list means the report has no image. Order follows evidenceImageIds.
