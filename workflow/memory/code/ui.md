@@ -92,3 +92,18 @@ To prevent premature guest-blocking:
 - **Fact:** `CoordinatorLayout` saves each child behavior's state, so an `AppBarLayout` with `layout_scrollFlags="scroll"` is restored at its saved offset when a Fragment view is recreated (back from a detail screen, switching tabs). If the list below reloads to its top meanwhile, whatever sits in the app bar stays hidden until the user drags down. `android:saveEnabled="false"` on the `CoordinatorLayout` drops only its own state; its children (the `RecyclerView`) still save theirs, because `ViewGroup.dispatchSaveInstanceState` still visits them.
 - **Why it matters here:** `fragment_home.xml` (`coordinatorFeed`, issue #372): "Dành cho bạn" and the channel selector live in `appBarForYou`, and `HomeFragment.onResume` calls `refresh()`, so the grid can come back at the top.
 - **Source:** Android `View.dispatchSaveInstanceState` and `ViewGroup.dispatchSaveInstanceState`; Material `CoordinatorLayout.onSaveInstanceState`. **Unverified** on a device (the emulator was off); verify by scrolling Home down, opening a listing and going back.
+
+### A Fragment coming back from the back stack gets no saved state
+- **Fact:** when the user returns to a Fragment that stayed on the back stack (for example from `CheckoutProviderFragment` to `DealPaymentFragment`), `onViewCreated` runs again with `savedInstanceState == null`, but the Fragment object and its fields survived. Code that only re-applies UI from `savedInstanceState` shows an empty selection.
+- **Why it matters here:** the C07 checkout screens (issue #391) restore the bundle into fields first, then always redraw from the fields (`selectMethod(selectedMethod)`, `showSelection()`), which covers both rotation and back navigation.
+- **Source:** AndroidX Fragment lifecycle (view destroyed, instance kept, on `replace` with back stack). **Unverified** on a device in this pass; verify by choosing a method, going forward and pressing back.
+
+### Countdowns store a deadline, not the time left
+- **Fact:** `CheckoutGatewayFragment` saves `deadlineMillis` (a wall clock time) instead of the remaining seconds, and starts a new `CountDownTimer` from `deadline - now` in every `onViewCreated`; the timer is cancelled in `onDestroyView`. Saving the time left would add the rotation time back to the clock.
+- **Why it matters here:** the 10 minute gateway session of C07 must expire at the same moment whatever the user rotates.
+- **Source:** `android.os.CountDownTimer` keeps no state across a view recreation.
+
+### A payment request must survive rotation exactly once
+- **Fact:** `CheckoutResultFragment` keeps `payRequested` in saved state and only calls `DealViewModel.pay` when it is false. The `DealViewModel` is scoped to the Fragment, so it survives rotation and its sticky `done` value reaches the new observer; a held `Payment` seen after the request also counts as success.
+- **Why it matters here:** a second `pay` would be refused by `DealRepository.pay` with "đã được thanh toán" and show an error after a payment that went through.
+- **Source:** `ViewModelProvider(this)` lifetime and `LiveData` re-delivery of the last value.
