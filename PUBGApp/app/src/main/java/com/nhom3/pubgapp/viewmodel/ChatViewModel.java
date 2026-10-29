@@ -54,6 +54,14 @@ public class ChatViewModel extends ViewModel {
     private final ListenerSet listeners = new ListenerSet();
     private String liveConversationsUid;
     private static final String KEY_CONVERSATIONS = "conversations";
+    private static final String KEY_LISTING = "listing";
+    private String liveListingId;
+    // The merged messages live here, not in messages.getValue(), which lags while a postValue is pending.
+    private final Map<String, ChatMessage> messageById = new LinkedHashMap<String, ChatMessage>();
+    // Bumped when a conversation is closed, so a late answer for the old one is dropped.
+    private int openGeneration = 0;
+    // The listing id or conversation id the chat screen opened with; closeConversation matches against it.
+    private String openedWith;
 
     public LiveData<List<Conversation>> getConversations() {
         return conversations;
@@ -157,11 +165,16 @@ public class ChatViewModel extends ViewModel {
             return;
         }
         clearPreviousConversation();
+        openedWith = listingId;
+        final int generation = openGeneration;
         loading.setValue(true);
         chatRepository.getOrCreateConversation(listingId, uid, new DataCallback<Conversation>() {
             @Override
             public void onSuccess(Conversation result) {
                 loading.postValue(false);
+                if (generation != openGeneration) {
+                    return;
+                }
                 if (result != null) {
                     currentConversation = result;
                     currentConversationId = result.getId();
@@ -192,6 +205,8 @@ public class ChatViewModel extends ViewModel {
             return;
         }
         clearPreviousConversation();
+        openedWith = id;
+        final int generation = openGeneration;
         currentConversationId = id;
         loading.setValue(true);
         startObservingMessages(id);
@@ -200,6 +215,9 @@ public class ChatViewModel extends ViewModel {
             @Override
             public void onSuccess(Conversation result) {
                 loading.postValue(false);
+                if (generation != openGeneration) {
+                    return;
+                }
                 if (result != null) {
                     currentConversation = result;
                     loadPartnerInternal(result);
@@ -225,14 +243,36 @@ public class ChatViewModel extends ViewModel {
             offersListener.remove();
             offersListener = null;
         }
+        listeners.remove(KEY_LISTING);
+        liveListingId = null;
+        openedWith = null;
+        openGeneration++;
         currentConversation = null;
         currentConversationId = null;
         isLoadingOlder = false;
+        synchronized (messageById) {
+            messageById.clear();
+        }
         messages.setValue(new ArrayList<ChatMessage>());
         partner.setValue(null);
         listing.setValue(null);
         offers.setValue(new ArrayList<Offer>());
         createdDealId.setValue(null);
+    }
+
+    // Called when a chat screen is really closed. Another chat screen may already have opened a
+    // different conversation, so only the one this screen opened is stopped.
+    public void closeConversation(String screenOpenedWith) {
+        if (screenOpenedWith == null || screenOpenedWith.isEmpty()) {
+            return;
+        }
+        boolean sameOpen = screenOpenedWith.equals(openedWith);
+        boolean sameId = screenOpenedWith.equals(currentConversationId);
+        boolean sameListing = currentConversation != null
+                && screenOpenedWith.equals(currentConversation.getListingId());
+        if (sameOpen || sameId || sameListing) {
+            clearPreviousConversation();
+        }
     }
 
     private void startObservingMessages(final String conversationId) {
@@ -243,28 +283,14 @@ public class ChatViewModel extends ViewModel {
         messageListener = chatRepository.observeMessages(conversationId, new DataCallback<List<ChatMessage>>() {
             @Override
             public void onSuccess(List<ChatMessage> result) {
-                if (result == null) {
+                if (result == null || !conversationId.equals(currentConversationId)) {
                     return;
                 }
-                List<ChatMessage> currentList = messages.getValue();
-                if (currentList == null || currentList.isEmpty()) {
-                    messages.postValue(new ArrayList<ChatMessage>(result));
-                } else {
-                    Map<String, ChatMessage> map = new LinkedHashMap<String, ChatMessage>();
-                    for (int i = 0; i < currentList.size(); i++) {
-                        ChatMessage m = currentList.get(i);
-                        if (m != null && m.getId() != null) {
-                            map.put(m.getId(), m);
-                        }
-                    }
-                    for (int i = 0; i < result.size(); i++) {
-                        ChatMessage m = result.get(i);
-                        if (m != null && m.getId() != null) {
-                            map.put(m.getId(), m);
-                        }
-                    }
-                    messages.postValue(new ArrayList<ChatMessage>(map.values()));
+                List<ChatMessage> merged;
+                synchronized (messageById) {
+                    merged = mergeNewer(messageById, result);
                 }
+                messages.postValue(merged);
             }
 
             @Override
@@ -278,38 +304,26 @@ public class ChatViewModel extends ViewModel {
         if (isLoadingOlder || currentConversationId == null || currentConversationId.isEmpty()) {
             return;
         }
-        List<ChatMessage> currentList = messages.getValue();
-        if (currentList == null || currentList.isEmpty()) {
-            return;
-        }
-        ChatMessage oldest = currentList.get(0);
+        ChatMessage oldest = oldestLoadedMessage();
         if (oldest == null || oldest.getCreatedAt() == null) {
             return;
         }
         isLoadingOlder = true;
-        chatRepository.loadOlder(currentConversationId, oldest.getCreatedAt(),
+        final String conversationId = currentConversationId;
+        chatRepository.loadOlder(conversationId, oldest.getCreatedAt(),
                 new DataCallback<List<ChatMessage>>() {
                     @Override
                     public void onSuccess(List<ChatMessage> olderMessages) {
                         isLoadingOlder = false;
+                        if (!conversationId.equals(currentConversationId)) {
+                            return;
+                        }
                         if (olderMessages != null && !olderMessages.isEmpty()) {
-                            Map<String, ChatMessage> map = new LinkedHashMap<String, ChatMessage>();
-                            for (int i = 0; i < olderMessages.size(); i++) {
-                                ChatMessage m = olderMessages.get(i);
-                                if (m != null && m.getId() != null) {
-                                    map.put(m.getId(), m);
-                                }
+                            List<ChatMessage> merged;
+                            synchronized (messageById) {
+                                merged = mergeOlder(messageById, olderMessages);
                             }
-                            List<ChatMessage> existing = messages.getValue();
-                            if (existing != null) {
-                                for (int i = 0; i < existing.size(); i++) {
-                                    ChatMessage m = existing.get(i);
-                                    if (m != null && m.getId() != null) {
-                                        map.put(m.getId(), m);
-                                    }
-                                }
-                            }
-                            messages.postValue(new ArrayList<ChatMessage>(map.values()));
+                            messages.postValue(merged);
                         }
                     }
 
@@ -319,6 +333,15 @@ public class ChatViewModel extends ViewModel {
                         error.postValue(message);
                     }
                 });
+    }
+
+    private ChatMessage oldestLoadedMessage() {
+        synchronized (messageById) {
+            if (messageById.isEmpty()) {
+                return null;
+            }
+            return messageById.values().iterator().next();
+        }
     }
 
     public void loadPartner() {
@@ -342,6 +365,8 @@ public class ChatViewModel extends ViewModel {
 
                 @Override
                 public void onError(String message) {
+                    error.postValue(getString(R.string.trade_error_load_partner,
+                            "Không tải được thông tin người trò chuyện."));
                 }
             });
         }
@@ -356,19 +381,34 @@ public class ChatViewModel extends ViewModel {
         }
     }
 
-    private void loadListingInternal(String listingId) {
-        if (listingId != null && !listingId.isEmpty()) {
-            listingRepository.getById(listingId, new DataCallback<Listing>() {
-                @Override
-                public void onSuccess(Listing result) {
-                    listing.postValue(result);
-                }
-
-                @Override
-                public void onError(String message) {
-                }
-            });
+    // A live listener, so the banner shows the new status and price as soon as an offer is accepted.
+    private void loadListingInternal(final String listingId) {
+        if (listingId == null || listingId.isEmpty()) {
+            return;
         }
+        if (listingId.equals(liveListingId) && listeners.has(KEY_LISTING)) {
+            return;
+        }
+        liveListingId = listingId;
+        listeners.put(KEY_LISTING, listingRepository.observeListing(listingId,
+                new DataCallback<Listing>() {
+                    @Override
+                    public void onSuccess(Listing result) {
+                        if (listingId.equals(liveListingId)) {
+                            listing.postValue(result);
+                        }
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        if (!listingId.equals(liveListingId)) {
+                            return;
+                        }
+                        listeners.remove(KEY_LISTING);
+                        error.postValue(getString(R.string.trade_error_load_listing,
+                                "Không tải được tin đăng của cuộc trò chuyện."));
+                    }
+                }));
     }
 
     public void observeOffers() {
@@ -387,6 +427,8 @@ public class ChatViewModel extends ViewModel {
 
             @Override
             public void onError(String message) {
+                error.postValue(getString(R.string.trade_error_load_offers,
+                        "Không tải được các đề nghị của cuộc trò chuyện."));
             }
         });
     }
@@ -517,6 +559,32 @@ public class ChatViewModel extends ViewModel {
                 error.postValue(message);
             }
         });
+    }
+
+    // Newer snapshot: a known id is replaced in place, a new id goes to the end.
+    static List<ChatMessage> mergeNewer(Map<String, ChatMessage> byId, List<ChatMessage> incoming) {
+        for (int i = 0; i < incoming.size(); i++) {
+            ChatMessage message = incoming.get(i);
+            if (message != null && message.getId() != null) {
+                byId.put(message.getId(), message);
+            }
+        }
+        return new ArrayList<ChatMessage>(byId.values());
+    }
+
+    // Older page: those messages go before everything already loaded.
+    static List<ChatMessage> mergeOlder(Map<String, ChatMessage> byId, List<ChatMessage> older) {
+        Map<String, ChatMessage> rebuilt = new LinkedHashMap<String, ChatMessage>();
+        for (int i = 0; i < older.size(); i++) {
+            ChatMessage message = older.get(i);
+            if (message != null && message.getId() != null && !byId.containsKey(message.getId())) {
+                rebuilt.put(message.getId(), message);
+            }
+        }
+        rebuilt.putAll(byId);
+        byId.clear();
+        byId.putAll(rebuilt);
+        return new ArrayList<ChatMessage>(byId.values());
     }
 
     static boolean canUserBuy(User user, boolean emailVerified) {

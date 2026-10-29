@@ -2,6 +2,8 @@ package com.nhom3.pubgapp.ui.trade;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -63,6 +65,8 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
     private boolean isOnline = true;
     private final DealRepository dealRepository = new DealRepository();
     private ListenerRegistration dealsListener;
+    // The cached first answer of observeMyDeals can come from a background thread; the adapter needs the main one.
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -459,17 +463,18 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         dealsListener = dealRepository.observeMyDeals(uid, new DataCallback<List<Deal>>() {
             @Override
             public void onSuccess(List<Deal> deals) {
-                if (binding == null || deals == null || adapter == null) {
+                if (deals == null) {
                     return;
                 }
-                Map<String, DealStatus> dealStatusByOffer = new HashMap<String, DealStatus>();
-                for (int i = 0; i < deals.size(); i++) {
-                    Deal d = deals.get(i);
-                    if (d != null && d.getOfferId() != null) {
-                        dealStatusByOffer.put(d.getOfferId(), d.getStatus());
+                final Map<String, DealStatus> dealStatusByOffer = dealStatusByOffer(deals);
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (binding != null && adapter != null) {
+                            adapter.setDealStatusByOffer(dealStatusByOffer);
+                        }
                     }
-                }
-                adapter.setDealStatusByOffer(dealStatusByOffer);
+                });
             }
 
             @Override
@@ -478,9 +483,41 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         });
     }
 
+    // Live deal status per offer: the offer cards show "deal cancelled" as soon as the other party cancels.
+    private Map<String, DealStatus> dealStatusByOffer(List<Deal> deals) {
+        Map<String, DealStatus> result = new HashMap<String, DealStatus>();
+        for (int i = 0; i < deals.size(); i++) {
+            Deal deal = deals.get(i);
+            if (deal != null && deal.getOfferId() != null) {
+                result.put(deal.getOfferId(), deal.getStatus());
+            }
+        }
+        return result;
+    }
+
+    // The ViewModel belongs to the activity, so it outlives this screen; stop the chat's listeners
+    // when the screen is really closed, but not on rotation, which recreates it at once.
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        boolean rotating = getActivity() != null && getActivity().isChangingConfigurations();
+        if (viewModel != null && !rotating) {
+            viewModel.closeConversation(openedWith());
+        }
+    }
+
+    // The same key the screen passed to openConversationById or openConversation.
+    private String openedWith() {
+        if (currentConversationId != null && !currentConversationId.isEmpty()) {
+            return currentConversationId;
+        }
+        return currentListingId;
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        mainHandler.removeCallbacksAndMessages(null);
         if (dealsListener != null) {
             dealsListener.remove();
             dealsListener = null;

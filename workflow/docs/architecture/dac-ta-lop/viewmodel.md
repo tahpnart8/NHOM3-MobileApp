@@ -344,7 +344,8 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | `public void openConversationById(String id)` | Mở cuộc trò chuyện theo mã (người bán, hoặc từ thông báo). |  |
 | `public void loadOlder()` | Tải thêm tin nhắn cũ. |  |
 | `public void loadPartner()` | Đọc hồ sơ bên còn lại để hiện tên và trạng thái hoạt động. | 46 |
-| `public void loadListing()` | `ListingRepository.getById` cho dải tin trên cùng màn chat. |  |
+| `public void loadListing()` | `ListingRepository.observeListing` (lắng nghe thời gian thực, giữ trong `ListenerSet`) cho dải tin trên cùng màn chat, để trạng thái và giá đổi ngay khi đề nghị được chấp nhận. |  |
+| `public void closeConversation(String screenOpenedWith)` | Màn chat gọi khi bị đóng hẳn (không gọi khi xoay màn hình): gỡ listener tin nhắn, đề nghị và tin đăng nếu cuộc trò chuyện đang mở vẫn là cuộc mà màn đó đã mở bằng mã `screenOpenedWith` (mã tin hoặc mã cuộc trò chuyện). |  |
 | `public void observeOffers()` | `ChatRepository.observeOffers` cho cuộc trò chuyện đang mở; kết quả vào `offers`. |  |
 | `public void sendText(String text)` | Gọi `ChatRepository.sendText` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 43, 44 |
 | `public void sendImage(Uri uri)` | `ChatRepository.sendImage`. | 43, 44 |
