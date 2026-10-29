@@ -126,7 +126,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
                 app:cardBackgroundColor="?attr/colorSurface"
-                app:cardElevation="0dp"
                 app:contentPadding="@dimen/space_md"
                 app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp">

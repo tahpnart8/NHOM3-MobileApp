@@ -70,7 +70,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardBackgroundColor="?attr/colorTertiaryContainer"
-                app:cardElevation="0dp"
                 app:contentPadding="@dimen/space_md">
 
                 <TextView
@@ -125,8 +124,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:cardBackgroundColor="?attr/colorPrimary"
-                    app:cardCornerRadius="@dimen/radius_lg"
-                    app:cardElevation="@dimen/elevation_card"
                     app:contentPadding="@dimen/space_lg">
 
                     <LinearLayout
@@ -213,7 +210,6 @@
                 android:layout_marginTop="@dimen/space_md"
                 android:visibility="gone"
                 app:cardBackgroundColor="?attr/colorSurface"
-                app:cardElevation="0dp"
                 app:contentPadding="@dimen/space_md"
                 app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp">
@@ -318,7 +314,6 @@
                 android:layout_marginTop="@dimen/space_md"
                 android:visibility="gone"
                 app:cardBackgroundColor="?attr/colorSurface"
-                app:cardElevation="0dp"
                 app:contentPadding="@dimen/space_lg"
                 app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp">
@@ -365,7 +360,6 @@
                 android:layout_marginTop="@dimen/space_md"
                 android:visibility="gone"
                 app:cardBackgroundColor="?attr/colorSurface"
-                app:cardElevation="0dp"
                 app:contentPadding="@dimen/space_md"
                 app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp">
