@@ -280,4 +280,15 @@ public class ShopViewModelTest {
         assertFalse(ShopViewModel.isAllowedStatusChange(ListingStatus.DRAFT, ListingStatus.AVAILABLE));
         assertFalse(ShopViewModel.isAllowedStatusChange(ListingStatus.SOLD, ListingStatus.REMOVED));
     }
+
+    @Test
+    public void isOtherUser_sameOrNoCachedUser_keepsShelf() {
+        assertFalse(ShopViewModel.isOtherUser(null, "uid-a"));
+        assertFalse(ShopViewModel.isOtherUser("uid-a", "uid-a"));
+    }
+
+    @Test
+    public void isOtherUser_newAccount_forgetsShelf() {
+        assertTrue(ShopViewModel.isOtherUser("uid-a", "uid-b"));
+    }
 }

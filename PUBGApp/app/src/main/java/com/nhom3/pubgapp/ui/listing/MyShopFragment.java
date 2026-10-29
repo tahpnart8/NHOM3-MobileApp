@@ -85,6 +85,11 @@ public class MyShopFragment extends Fragment {
 
         viewModel.loadCategories();
         viewModel.loadMyListings(currentSortOrder, selectedCategoryId);
+        // Offers, deals and admin hides change the shelf elsewhere, so every new visit reads it again.
+        // A rotation keeps the copy already shown.
+        if (savedInstanceState == null) {
+            viewModel.refresh();
+        }
     }
 
     @Override
@@ -123,7 +128,7 @@ public class MyShopFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 viewModel.clearError();
-                viewModel.loadMyListings(currentSortOrder, selectedCategoryId);
+                viewModel.refresh();
             }
         });
     }
@@ -290,7 +295,11 @@ public class MyShopFragment extends Fragment {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 int id = item.getItemId();
-                if (id == R.id.action_sort_newest) {
+                if (id == R.id.action_refresh) {
+                    checkNetworkAndVerification();
+                    viewModel.refresh();
+                    return true;
+                } else if (id == R.id.action_sort_newest) {
                     currentSortOrder = SortOrder.NEWEST;
                     viewModel.loadMyListings(currentSortOrder, selectedCategoryId);
                     return true;

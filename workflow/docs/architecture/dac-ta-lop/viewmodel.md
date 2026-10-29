@@ -163,7 +163,8 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public void loadMyListings(SortOrder order, String categoryId)` | Tin của chính mình, sắp theo cách chọn và lọc theo danh mục. | 14 |
+| `public void loadMyListings(SortOrder order, String categoryId)` | Tin của chính mình, sắp theo cách chọn và lọc theo danh mục. Dùng bản đã đọc nếu còn; đổi tài khoản thì bỏ bản của tài khoản trước. | 14 |
+| `public void refresh()` | Đọc lại kệ hàng từ Firestore với cách sắp và danh mục đang chọn. B05 gọi mỗi lần mở màn (không gọi khi xoay) và khi bấm Tải lại, vì offer, giao dịch và admin đổi tin mà ViewModel này không biết. | 14 |
 | `public void loadCategories()` | `CategoryRepository.getAll`. |  |
 | `public void createListing(Listing listing, List<Uri> imageUris)` | Kiểm tra từ khóa cấm, tải ảnh, rồi `ListingRepository.create`. | 13, 17, 78 |
 | `public void saveDraft(Listing listing, List<Uri> imageUris)` | Gọi `ListingRepository.saveDraft` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 22 |
