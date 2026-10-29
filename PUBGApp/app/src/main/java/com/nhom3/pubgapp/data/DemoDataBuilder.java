@@ -41,9 +41,10 @@ class DemoDataBuilder {
         {"Dụng cụ gym", "Cầu lông"}
     };
     // Each keyword repeats in every title of its category, so similar listings and search find each other.
+    // Titles carry Vietnamese accents; search still matches "vot cau long" because keywords drop the accents.
     private static final String[][] CHILD_KEYWORDS = {
-        {"iphone", "macbook"}, {"xe dap", "honda"}, {"giay nike", "ao khoac"},
-        {"ban go", "noi chien"}, {"giao trinh", "truyen tranh"}, {"ta tay", "vot cau long"}
+        {"iPhone", "MacBook"}, {"Xe đạp", "Honda"}, {"Giày Nike", "Áo khoác"},
+        {"Bàn gỗ", "Nồi chiên"}, {"Giáo trình", "Truyện tranh"}, {"Tạ tay", "Vợt cầu lông"}
     };
     private static final String[][] ROOT_FIELDS = {
         {"Dung lượng pin", "Bảo hành"}, {"Năm sản xuất", "Bảo hành"}, {"Kích cỡ", "Màu sắc"},
