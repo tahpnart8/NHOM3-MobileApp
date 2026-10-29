@@ -355,6 +355,7 @@
     <string name="admin_category_delete_confirm_message">Bạn có chắc chắn muốn xóa danh mục \"%1$s\"?</string>
     <string name="admin_category_name_required">Tên danh mục không được để trống.</string>
     <string name="admin_category_name_too_long">Tên danh mục không được vượt quá 100 ký tự.</string>
+    <string name="admin_category_name_taken">Tên danh mục đã có trong danh sách.</string>
     <string name="admin_category_parent_invalid">Danh mục cha phải là danh mục gốc.</string>
     <string name="admin_category_parent_self">Danh mục không thể là cha của chính mình.</string>
     <string name="admin_category_save_success">Đã lưu danh mục thành công.</string>
