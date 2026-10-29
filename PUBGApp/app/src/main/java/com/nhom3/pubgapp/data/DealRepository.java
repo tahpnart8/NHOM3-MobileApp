@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DealRepository extends BaseRepository {
 
@@ -818,14 +819,17 @@ public class DealRepository extends BaseRepository {
                                         collectReceivedDueDeals(sellerTask.getResult(), receivedDeals, now);
 
                                         int count = 0;
-                                        for (Deal deal : receivedDeals.values()) {
+                                        for (final Deal deal : receivedDeals.values()) {
                                             completeDeal(deal.getId(), new DataCallback<Void>() {
                                                 @Override
                                                 public void onSuccess(Void result) {
                                                 }
 
+                                                // The sweep runs again on the next visit; the log shows why it failed.
                                                 @Override
                                                 public void onError(String message) {
+                                                    Log.w(TAG, "Auto-complete failed for deal "
+                                                            + deal.getId() + ": " + message);
                                                 }
                                             });
                                             count++;
@@ -885,7 +889,7 @@ public class DealRepository extends BaseRepository {
                                         collectExpiredDeals(sellerTask.getResult(), expiredDeals, now);
 
                                         int count = 0;
-                                        for (Deal deal : expiredDeals.values()) {
+                                        for (final Deal deal : expiredDeals.values()) {
                                             executeCancelInternal(deal.getId(), "system",
                                                     "Hết hạn chờ xác nhận",
                                                     new DataCallback<Void>() {
@@ -893,8 +897,11 @@ public class DealRepository extends BaseRepository {
                                                         public void onSuccess(Void result) {
                                                         }
 
+                                                        // The sweep runs again on the next visit.
                                                         @Override
                                                         public void onError(String message) {
+                                                            Log.w(TAG, "Auto-expire failed for deal "
+                                                                    + deal.getId() + ": " + message);
                                                         }
                                                     });
                                             count++;
@@ -1039,6 +1046,7 @@ public class DealRepository extends BaseRepository {
     }
 
     public void getMyDeals(String uid, DataCallback<List<Deal>> cb) {
+        final AtomicBoolean liveArrived = new AtomicBoolean(false);
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -1046,11 +1054,19 @@ public class DealRepository extends BaseRepository {
                 if (dao != null) {
                     List<DealEntity> cached = dao.getMyDeals(uid);
                     if (cached != null && !cached.isEmpty()) {
-                        List<Deal> cachedList = new ArrayList<Deal>();
+                        final List<Deal> cachedList = new ArrayList<Deal>();
                         for (int i = 0; i < cached.size(); i++) {
                             cachedList.add(cached.get(i).toModel());
                         }
-                        cb.onSuccess(cachedList);
+                        postToMain(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Once live data is on screen, a late Room copy would replace it with older data.
+                                if (!liveArrived.get()) {
+                                    cb.onSuccess(cachedList);
+                                }
+                            }
+                        });
                     }
                 }
             }
@@ -1078,6 +1094,11 @@ public class DealRepository extends BaseRepository {
 
                                         List<Deal> list = new ArrayList<Deal>(map.values());
                                         sortDealsByDate(list);
+                                        // An empty answer may be Firestore's offline cache only,
+                                        // so the Room copy may still fill in.
+                                        if (!list.isEmpty()) {
+                                            liveArrived.set(true);
+                                        }
                                         cb.onSuccess(list);
 
                                         executor.execute(new Runnable() {
@@ -1101,6 +1122,7 @@ public class DealRepository extends BaseRepository {
 
     // Live version of getMyDeals: shows the Room copy first, then every change of a deal I buy or sell.
     public ListenerRegistration observeMyDeals(final String uid, final DataCallback<List<Deal>> cb) {
+        final AtomicBoolean liveArrived = new AtomicBoolean(false);
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -1112,11 +1134,19 @@ public class DealRepository extends BaseRepository {
                 if (cached == null || cached.isEmpty()) {
                     return;
                 }
-                List<Deal> cachedList = new ArrayList<Deal>();
+                final List<Deal> cachedList = new ArrayList<Deal>();
                 for (int i = 0; i < cached.size(); i++) {
                     cachedList.add(cached.get(i).toModel());
                 }
-                cb.onSuccess(cachedList);
+                postToMain(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Once live data is on screen, a late Room copy would replace it with older data.
+                        if (!liveArrived.get()) {
+                            cb.onSuccess(cachedList);
+                        }
+                    }
+                });
             }
         });
         Query asBuyer = db.collection(COLLECTION_DEALS).whereEqualTo("buyerId", uid);
@@ -1125,6 +1155,11 @@ public class DealRepository extends BaseRepository {
             @Override
             public void onSuccess(List<Deal> result) {
                 sortDealsByDate(result);
+                // An empty answer may be Firestore's offline cache only,
+                // so the Room copy may still fill in.
+                if (!result.isEmpty()) {
+                    liveArrived.set(true);
+                }
                 cb.onSuccess(result);
                 cacheDeals(result);
             }
