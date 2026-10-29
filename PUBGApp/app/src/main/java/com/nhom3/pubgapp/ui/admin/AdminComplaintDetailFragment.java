@@ -23,12 +23,14 @@ import com.google.android.material.snackbar.Snackbar;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.data.DataCallback;
 import com.nhom3.pubgapp.data.MediaRepository;
+import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.databinding.DialogAdminComplaintDecisionBinding;
 import com.nhom3.pubgapp.databinding.FragmentAdminComplaintDetailBinding;
 import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Complaint;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.StatusChange;
+import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.model.enums.ComplaintDecision;
 import com.nhom3.pubgapp.model.enums.ComplaintStatus;
 import com.nhom3.pubgapp.model.enums.DealStatus;
@@ -55,6 +57,9 @@ public class AdminComplaintDetailFragment extends Fragment {
     private AdminComplaintViewModel complaintViewModel;
     private EvidenceImageAdapter evidenceAdapter;
     private String complaintId;
+    // Display name of the complainant, looked up once; null until the profile arrives.
+    private String complainantName;
+    private String complainantNameUid;
     // True while the chips are set from the loaded complaint, so that is not taken as the admin's choice.
     private boolean showingPriority;
     // The saved note is put in the box once; after that the box keeps what the admin types, also on rotation.
@@ -406,7 +411,37 @@ public class AdminComplaintDetailFragment extends Fragment {
         boolean buyer = complaint.getComplainantId() != null
                 && complaint.getComplainantId().equals(deal.getBuyerId());
         int role = roleLabel(buyer);
+        String uid = complaint.getComplainantId();
+        if (complainantName != null && uid != null && uid.equals(complainantNameUid)) {
+            binding.textComplainant.setText(getString(R.string.admin_complaint_detail_complainant_named,
+                    complainantName, getString(role)));
+            return;
+        }
         binding.textComplainant.setText(getString(R.string.admin_complaint_detail_complainant, getString(role)));
+        loadComplainantName(uid);
+    }
+
+    // The admin needs to know who complained, not only the role; the role stays if the profile cannot load.
+    private void loadComplainantName(@Nullable final String uid) {
+        if (uid == null || uid.equals(complainantNameUid)) {
+            return;
+        }
+        complainantNameUid = uid;
+        new UserRepository().getProfile(uid, new DataCallback<User>() {
+            @Override
+            public void onSuccess(User user) {
+                if (binding == null || user == null || user.getDisplayName() == null) {
+                    return;
+                }
+                complainantName = user.getDisplayName();
+                showComplainantRole();
+            }
+
+            @Override
+            public void onError(String message) {
+                // Keep the role line; the admin can still open both parties from the deal.
+            }
+        });
     }
 
     private static int roleLabel(boolean buyer) {
