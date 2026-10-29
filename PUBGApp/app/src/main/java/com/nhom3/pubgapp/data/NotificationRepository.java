@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class NotificationRepository extends BaseRepository {
 
@@ -160,10 +161,25 @@ public class NotificationRepository extends BaseRepository {
                 .whereEqualTo("recipientId", uid)
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .limit(50);
+        final AtomicInteger latestSnapshot = new AtomicInteger(0);
         return listenQuery(query, AppNotification.class, new DataCallback<List<AppNotification>>() {
             @Override
             public void onSuccess(List<AppNotification> list) {
-                hideDisabledTypes(uid, list, cb);
+                final int snapshotNumber = latestSnapshot.incrementAndGet();
+                hideDisabledTypes(uid, list, new DataCallback<List<AppNotification>>() {
+                    @Override
+                    public void onSuccess(List<AppNotification> result) {
+                        // The settings reads can finish out of order; an older answer would hide newer notices.
+                        if (snapshotNumber == latestSnapshot.get()) {
+                            cb.onSuccess(result);
+                        }
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        cb.onError(message);
+                    }
+                });
             }
 
             @Override
