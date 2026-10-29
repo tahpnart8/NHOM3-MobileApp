@@ -89,6 +89,12 @@ public class ListingDetailViewModel extends ViewModel {
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> done = new MutableLiveData<>();
 
+    private List<Listing> similarCandidates;
+    private String similarCandidatesFor;
+    private boolean similarLoading = false;
+    // Set once the user taps the heart; a saved-list read that started earlier must not undo that tap.
+    private boolean saveTouched = false;
+
     public LiveData<Listing> getListing() {
         return listing;
     }
@@ -166,16 +172,17 @@ public class ListingDetailViewModel extends ViewModel {
                             userRepository.getSavedIds(currentUid, new DataCallback<List<String>>() {
                                 @Override
                                 public void onSuccess(List<String> savedIds) {
-                                    if (savedIds != null && savedIds.contains(result.getId())) {
-                                        saved.postValue(true);
-                                    } else {
-                                        saved.postValue(false);
+                                    if (saveTouched) {
+                                        return;
                                     }
+                                    saved.postValue(isSavedIn(savedIds, result.getId()));
                                 }
 
                                 @Override
                                 public void onError(String errorMessage) {
-                                    saved.postValue(false);
+                                    if (!saveTouched) {
+                                        saved.postValue(false);
+                                    }
                                 }
                             });
                             userRepository.getFollowingIds(currentUid, new DataCallback<List<String>>() {
@@ -280,6 +287,11 @@ public class ListingDetailViewModel extends ViewModel {
         }
     }
 
+    // True when the listing id is in the user's saved list; drives the filled or empty heart.
+    static boolean isSavedIn(List<String> savedIds, String listingId) {
+        return savedIds != null && listingId != null && savedIds.contains(listingId);
+    }
+
     public void toggleSave() {
         final Listing current = listing.getValue();
         if (current == null || current.getId() == null) {
@@ -295,6 +307,7 @@ public class ListingDetailViewModel extends ViewModel {
         }
         final boolean currentSaved = Boolean.TRUE.equals(saved.getValue());
         final boolean newSaved = !currentSaved;
+        saveTouched = true;
         saved.setValue(newSaved);
 
         if (newSaved) {
@@ -380,42 +393,55 @@ public class ListingDetailViewModel extends ViewModel {
     }
 
     public void loadSimilar() {
-        final Listing current = listing.getValue();
+        Listing current = listing.getValue();
         if (current == null) {
             return;
         }
-        listingRepository.getSimilar(current, new DataCallback<List<Listing>>() {
-            @Override
-            public void onSuccess(List<Listing> candidates) {
-                List<Listing> scored = recommendationEngine.similarTo(current, candidates);
-                similar.postValue(scored);
-            }
-
-            @Override
-            public void onError(String errorMessage) {
-                similar.postValue(new ArrayList<Listing>());
-            }
-        });
+        loadSimilarCandidates(current);
     }
 
     public void loadPriceRange() {
-        final Listing current = listing.getValue();
+        Listing current = listing.getValue();
         if (current == null) {
             priceRange.setValue(new long[0]);
             return;
         }
+        loadSimilarCandidates(current);
+    }
+
+    // Similar listings and the price range use the same candidates (up to 100 reads), so they are read once
+    // per listing and both results are published from that one read.
+    private void loadSimilarCandidates(final Listing current) {
+        String listingId = current.getId();
+        if (similarCandidates != null && listingId != null && listingId.equals(similarCandidatesFor)) {
+            publishSimilarAndPriceRange(current, similarCandidates);
+            return;
+        }
+        if (similarLoading) {
+            return;
+        }
+        similarLoading = true;
         listingRepository.getSimilar(current, new DataCallback<List<Listing>>() {
             @Override
-            public void onSuccess(List<Listing> fetchedCandidates) {
-                long[] range = recommendationEngine.priceRange(current, fetchedCandidates);
-                priceRange.postValue(range);
+            public void onSuccess(List<Listing> candidates) {
+                similarLoading = false;
+                similarCandidates = candidates != null ? candidates : new ArrayList<Listing>();
+                similarCandidatesFor = current.getId();
+                publishSimilarAndPriceRange(current, similarCandidates);
             }
 
             @Override
             public void onError(String errorMessage) {
+                similarLoading = false;
+                similar.postValue(new ArrayList<Listing>());
                 priceRange.postValue(new long[0]);
             }
         });
+    }
+
+    private void publishSimilarAndPriceRange(Listing current, List<Listing> candidates) {
+        similar.postValue(recommendationEngine.similarTo(current, candidates));
+        priceRange.postValue(recommendationEngine.priceRange(current, candidates));
     }
 
     public void clearError() {
