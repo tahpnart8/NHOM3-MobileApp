@@ -446,6 +446,10 @@ public class AdminCategoryFragment extends Fragment {
                     }
                     return;
                 }
+                if (isNameTaken(name, existing)) {
+                    dialogBinding.layoutCategoryName.setError(getString(R.string.admin_category_name_taken));
+                    return;
+                }
                 dialogBinding.layoutCategoryName.setError(null);
 
                 String chosenText = dialogBinding.spinnerParentCategory.getText().toString();
@@ -481,6 +485,21 @@ public class AdminCategoryFragment extends Fragment {
             }
         });
         activeDialog.show();
+    }
+
+    // UC39 exception 2b: two categories with the same name confuse sellers, so the name must be new.
+    private boolean isNameTaken(String name, @Nullable Category existing) {
+        List<Category> all = viewModel.getCategories().getValue();
+        if (all == null) {
+            return false;
+        }
+        for (Category c : all) {
+            boolean same = existing != null && c.getId() != null && c.getId().equals(existing.getId());
+            if (!same && c.getName() != null && c.getName().trim().equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void showDeleteConfirmDialog(final Category category) {
