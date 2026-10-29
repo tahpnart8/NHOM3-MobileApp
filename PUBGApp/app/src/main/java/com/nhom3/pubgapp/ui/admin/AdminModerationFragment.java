@@ -99,6 +99,8 @@ public class AdminModerationFragment extends Fragment {
     @Nullable
     private String dialogTargetId;
     private int selectedTab = TAB_REPORTS;
+    // True after the admin left this screen (another screen or the home button), so the flagged tab reloads.
+    private boolean leftScreen;
     // The error of a tab that has no data yet; once data exists an error is a snackbar instead.
     @Nullable
     private String flaggedError;
@@ -175,6 +177,27 @@ public class AdminModerationFragment extends Fragment {
     public void onResume() {
         super.onResume();
         renderConnection();
+        refreshFlaggedAfterLeaving();
+    }
+
+    // A rotation is not leaving the screen; the ViewModel still holds the lists then.
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (!requireActivity().isChangingConfigurations()) {
+            leftScreen = true;
+        }
+    }
+
+    // getFlaggedListings has no live version, so the flagged tab is read again when the admin comes back.
+    private void refreshFlaggedAfterLeaving() {
+        if (!leftScreen) {
+            return;
+        }
+        leftScreen = false;
+        if (viewModel.getFlagged().getValue() != null) {
+            viewModel.loadFlagged();
+        }
     }
 
     @Override

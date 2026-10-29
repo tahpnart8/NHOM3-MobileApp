@@ -126,6 +126,26 @@ public class AdminUserListFragment extends Fragment {
         updateOfflineBanner();
     }
 
+    // listUsers has no live version, so the list is read again whenever the admin comes back to it.
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (hasLoaded && leftScreen) {
+            leftScreen = false;
+            applyFilters();
+            render();
+        }
+    }
+
+    // A rotation is not leaving the screen; the ViewModel still holds the list then.
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (!requireActivity().isChangingConfigurations()) {
+            leftScreen = true;
+        }
+    }
+
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);

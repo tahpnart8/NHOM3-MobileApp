@@ -61,6 +61,7 @@ public class AdminUserViewModel extends ViewModel {
     private static final int PROFILE_READ_COUNT = 8;
     private static final String KEY_PROFILE = "profile";
     private static final String KEY_REQUESTS = "requests";
+    private static final String KEY_DEALS = "deals";
     private static final int IMAGE_COUNT = 2;
     private static final String MESSAGE_USER_REQUIRED = "Thiếu mã người dùng cần xem.";
     private static final String MESSAGE_REASON_REQUIRED = "Hãy nhập lý do từ chối.";
@@ -445,7 +446,8 @@ public class AdminUserViewModel extends ViewModel {
         userRepository.getStats(userId, new ReadCallback<ProfileStats>(stats));
         adminRepository.getWarnings(userId, new ReadCallback<List<Warning>>(warnings));
         listingRepository.getBySeller(userId, new ReadCallback<List<Listing>>(userListings));
-        dealRepository.getMyDeals(userId, new ReadCallback<List<Deal>>(userDeals));
+        // The deals of the user are live, so a deal created or cancelled while E03 is open shows at once.
+        listeners.put(KEY_DEALS, dealRepository.observeMyDeals(userId, new ReadCallback<List<Deal>>(userDeals)));
         reviewRepository.getReceived(userId, new ReadCallback<List<Review>>(userReviews));
         reportRepository.countByTarget(userId, new ReadCallback<Integer>(reportCount));
     }
