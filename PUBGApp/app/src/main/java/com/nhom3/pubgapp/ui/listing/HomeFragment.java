@@ -102,7 +102,8 @@ public class HomeFragment extends Fragment {
         if (isInitialResume) {
             isInitialResume = false;
         } else {
-            viewModel.refresh();
+            // The feed is read again so new listings show; For You only reloads once its kept copy is old.
+            viewModel.loadFeed(isFollowingChannel, SortOrder.NEWEST);
             viewModel.loadForYou();
         }
     }
@@ -220,7 +221,6 @@ public class HomeFragment extends Fragment {
             public void onClick(View v) {
                 updateOfflineBanner();
                 viewModel.refresh();
-                viewModel.loadForYou();
             }
         });
     }
@@ -269,7 +269,6 @@ public class HomeFragment extends Fragment {
                 binding.includeErrorState.getRoot().setVisibility(View.GONE);
                 updateOfflineBanner();
                 viewModel.refresh();
-                viewModel.loadForYou();
             }
         });
 

@@ -41,6 +41,11 @@ public class FeedViewModel extends ViewModel {
     private boolean hasMore = true;
     private boolean isLoadingNext = false;
 
+    // For You costs about 40 reads, so the list is kept for a while instead of read on every return to Home.
+    static final long FOR_YOU_MAX_AGE_MS = 10L * 60L * 1000L;
+    private long forYouLoadedAtMs = 0L;
+    private boolean forYouLoading = false;
+
     public LiveData<List<Listing>> getFeed() {
         return feed;
     }
@@ -161,7 +166,15 @@ public class FeedViewModel extends ViewModel {
         });
     }
 
+    // Does nothing while a load runs or while the kept list is younger than FOR_YOU_MAX_AGE_MS.
+    // An empty list is not kept: right after the user views a first listing, For You should appear.
     public void loadForYou() {
+        List<Listing> current = forYou.getValue();
+        boolean hasData = current != null && !current.isEmpty();
+        if (forYouLoading || isForYouFresh(hasData, forYouLoadedAtMs, System.currentTimeMillis())) {
+            return;
+        }
+        forYouLoading = true;
         listingRepo.getRecentViews(20, new DataCallback<List<String>>() {
             @Override
             public void onSuccess(final List<String> viewedCategoryIds) {
@@ -273,7 +286,7 @@ public class FeedViewModel extends ViewModel {
                 && !currentUser.getInterestedCategoryIds().isEmpty();
 
         if (!hasViews && !hasSearches && !hasSaved && !hasInterested) {
-            forYou.postValue(new ArrayList<Listing>());
+            publishForYou(new ArrayList<Listing>());
             return;
         }
 
@@ -282,23 +295,36 @@ public class FeedViewModel extends ViewModel {
             @Override
             public void onSuccess(List<Listing> candidates) {
                 if (candidates == null || candidates.isEmpty()) {
-                    forYou.postValue(new ArrayList<Listing>());
+                    publishForYou(new ArrayList<Listing>());
                     return;
                 }
                 List<Listing> scored = recommendationEngine.forYou(candidates, viewedCategoryIds,
                         recentKeywords, savedCategoryIds, currentUser);
-                forYou.postValue(scored);
+                publishForYou(scored);
             }
 
             @Override
             public void onError(String err) {
-                forYou.postValue(new ArrayList<Listing>());
+                publishForYou(new ArrayList<Listing>());
             }
         });
     }
 
+    static boolean isForYouFresh(boolean hasData, long loadedAtMs, long nowMs) {
+        return hasData && nowMs - loadedAtMs < FOR_YOU_MAX_AGE_MS;
+    }
+
+    private void publishForYou(List<Listing> list) {
+        forYouLoadedAtMs = System.currentTimeMillis();
+        forYouLoading = false;
+        forYou.postValue(list);
+    }
+
+    // The user asked for fresh data (Reload or Retry), so For You is read again even if it is still fresh.
     public void refresh() {
         loadFeed(currentFollowingOnly, currentSortOrder);
+        forYouLoadedAtMs = 0L;
+        loadForYou();
     }
 
     public void clearError() {

@@ -211,8 +211,8 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | `public void loadFeed(boolean followingOnly, SortOrder order)` | Trang đầu của kênh chung hoặc kênh đang theo dõi. | 29, 30 |
 | `public void loadCategories()` | `CategoryRepository.getAll`. |  |
 | `public void loadNext()` | Trang kế tiếp. | 29 |
-| `public void loadForYou()` | Đọc lịch sử xem, tìm kiếm và tin đã lưu rồi gọi `RecommendationEngine.forYou`. | 38 |
-| `public void refresh()` | Tải lại từ đầu. |  |
+| `public void loadForYou()` | Đọc lịch sử xem, tìm kiếm và tin đã lưu rồi gọi `RecommendationEngine.forYou`. Giữ danh sách không rỗng trong 10 phút (khoảng 40 lượt đọc mỗi lần), nên B01 gọi mỗi lần quay lại mà không tốn đọc. | 38 |
+| `public void refresh()` | Tải lại từ đầu kênh tin và Dành cho bạn, kể cả khi Dành cho bạn còn mới (nút Tải lại, Thử lại). |  |
 | `public void clearError()` | Đặt `error` về rỗng sau khi màn hình đã hiện câu lỗi, để xoay màn hình không hiện lại. |  |
 | `public void clearDone()` | Đặt `done` về false sau khi màn hình đã phản ứng (đóng hộp thoại, quay lại), để không chạy hai lần. |  |
 
@@ -302,7 +302,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | `public void toggleSave()` | Lưu hoặc bỏ lưu tin. | 40 đến 42 |
 | `public void toggleFollowSeller()` | `UserRepository.follow` hoặc `unfollow` người bán của tin đang xem. |  |
 | `public void loadSimilar()` | Tin tương tự qua `RecommendationEngine.similarTo`. | 36 |
-| `public void loadPriceRange()` | Khoảng giá tham khảo qua `RecommendationEngine.priceRange`. | 37 |
+| `public void loadPriceRange()` | Khoảng giá tham khảo qua `RecommendationEngine.priceRange`. Dùng chung một lần `ListingRepository.getSimilar` với `loadSimilar` cho mỗi tin. | 37 |
 | `public void clearError()` | Đặt `error` về rỗng sau khi màn hình đã hiện câu lỗi, để xoay màn hình không hiện lại. |  |
 | `public void clearDone()` | Đặt `done` về false sau khi màn hình đã phản ứng (đóng hộp thoại, quay lại), để không chạy hai lần. |  |
 
