@@ -1,14 +1,17 @@
 package com.nhom3.pubgapp.ui.admin;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.color.MaterialColors;
 import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.data.DataCallback;
@@ -16,6 +19,7 @@ import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.databinding.ItemAdminDealBinding;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.User;
+import com.nhom3.pubgapp.model.enums.DealStatus;
 import com.nhom3.pubgapp.ui.common.ImageLoader;
 import com.nhom3.pubgapp.ui.common.StatusChips;
 import com.nhom3.pubgapp.util.FormatUtils;
@@ -53,6 +57,21 @@ public class AdminDealAdapter extends RecyclerView.Adapter<AdminDealAdapter.Deal
         return deal.isAutoReleaseDue(now);
     }
 
+    // StatusChips paints a neutral chip ("Đã hủy") on colorSurface, the same white as the card, so it looked
+    // like plain grey text next to the "Hoàn tất" chip. On the admin deal screens it gets a visible pill.
+    static void bindDealStatus(TextView chip, DealStatus status) {
+        StatusChips.bind(chip, status);
+        if (status == DealStatus.CANCELLED) {
+            paintNeutralPill(chip);
+        }
+    }
+
+    // colorSurfaceVariant keeps the grey text readable (4.6:1, giao-dien.md needs 4.5).
+    static void paintNeutralPill(TextView chip) {
+        int pill = MaterialColors.getColor(chip, com.google.android.material.R.attr.colorSurfaceVariant);
+        chip.setBackgroundTintList(ColorStateList.valueOf(pill));
+    }
+
     public void submitList(List<Deal> newDeals) {
         deals.clear();
         if (newDeals != null) {
@@ -85,7 +104,7 @@ public class AdminDealAdapter extends RecyclerView.Adapter<AdminDealAdapter.Deal
 
         binding.textPrice.setText(formatUtils.formatPrice(deal.getAgreedPrice()));
 
-        StatusChips.bind(binding.layoutStatusChip.textStatusChip, deal.getStatus());
+        bindDealStatus(binding.layoutStatusChip.textStatusChip, deal.getStatus());
 
         boolean overdue = isOverdue(deal, Timestamp.now());
         binding.chipOverdue.setVisibility(overdue ? View.VISIBLE : View.GONE);
