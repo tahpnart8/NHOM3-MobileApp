@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ListingRepository extends BaseRepository {
 
@@ -669,7 +670,13 @@ public class ListingRepository extends BaseRepository {
                                 return;
                             }
                         }
-                        loadFromCache(id, cb);
+                        // The server said the listing is gone, so an old Room copy must not reopen it.
+                        // Only an answer from Firestore's offline cache may still fall back to Room.
+                        if (doc != null && doc.getMetadata().isFromCache()) {
+                            loadFromCache(id, cb);
+                            return;
+                        }
+                        cb.onError("Không tìm thấy tin đăng");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -754,11 +761,13 @@ public class ListingRepository extends BaseRepository {
             return;
         }
 
+        final AtomicBoolean liveArrived = new AtomicBoolean(false);
         if (after == null) {
             loadFeedFromCache(filter, new DataCallback<List<Listing>>() {
                 @Override
                 public void onSuccess(List<Listing> cached) {
-                    if (cached != null && !cached.isEmpty()) {
+                    // Once live data is on screen, a late Room copy would replace it with older data.
+                    if (cached != null && !cached.isEmpty() && !liveArrived.get()) {
                         cb.onSuccess(cached);
                     }
                 }
@@ -769,6 +778,23 @@ public class ListingRepository extends BaseRepository {
                 }
             });
         }
+
+        // Passes the Firestore answer on and marks it live, so a later Room copy is dropped.
+        // An empty answer may only be Firestore's offline cache, so Room may still fill in.
+        final DataCallback<List<Listing>> liveCb = new DataCallback<List<Listing>>() {
+            @Override
+            public void onSuccess(List<Listing> result) {
+                if (result != null && !result.isEmpty()) {
+                    liveArrived.set(true);
+                }
+                cb.onSuccess(result);
+            }
+
+            @Override
+            public void onError(String error) {
+                cb.onError(error);
+            }
+        };
 
         if (filter != null && filter.isFollowingOnly()) {
             String uid = currentUserId();
@@ -781,7 +807,7 @@ public class ListingRepository extends BaseRepository {
                 @Override
                 public void onSuccess(final List<String> followingIds) {
                     if (followingIds == null || followingIds.isEmpty()) {
-                        cb.onSuccess(new ArrayList<Listing>());
+                        liveCb.onSuccess(new ArrayList<Listing>());
                         return;
                     }
                     List<String> top30 = followingIds;
@@ -789,7 +815,7 @@ public class ListingRepository extends BaseRepository {
                     if (top30.size() > 30) {
                         top30 = top30.subList(0, 30);
                     }
-                    executeFeedQuery(filter, after, top30, cb);
+                    executeFeedQuery(filter, after, top30, liveCb);
                 }
 
                 @Override
@@ -799,7 +825,7 @@ public class ListingRepository extends BaseRepository {
             });
             return;
         }
-        executeFeedQuery(filter, after, null, cb);
+        executeFeedQuery(filter, after, null, liveCb);
     }
 
     private void executeFeedQuery(final SearchFilter filter, final Timestamp after,
@@ -1093,7 +1119,7 @@ public class ListingRepository extends BaseRepository {
             @Override
             public void run() {
                 HistoryDao dao = getHistoryDao();
-                List<String> result = new ArrayList<String>();
+                final List<String> result = new ArrayList<String>();
                 if (dao != null) {
                     List<RecentViewEntity> views = dao.getRecentViews(limit);
                     if (views != null) {
@@ -1108,7 +1134,12 @@ public class ListingRepository extends BaseRepository {
                         }
                     }
                 }
-                cb.onSuccess(result);
+                postToMain(new Runnable() {
+                    @Override
+                    public void run() {
+                        cb.onSuccess(result);
+                    }
+                });
             }
         });
     }
@@ -1118,7 +1149,7 @@ public class ListingRepository extends BaseRepository {
             @Override
             public void run() {
                 HistoryDao dao = getHistoryDao();
-                List<String> result = new ArrayList<String>();
+                final List<String> result = new ArrayList<String>();
                 if (dao != null) {
                     List<RecentSearchEntity> searches = dao.getRecentSearches(limit);
                     if (searches != null) {
@@ -1127,7 +1158,12 @@ public class ListingRepository extends BaseRepository {
                         }
                     }
                 }
-                cb.onSuccess(result);
+                postToMain(new Runnable() {
+                    @Override
+                    public void run() {
+                        cb.onSuccess(result);
+                    }
+                });
             }
         });
     }
@@ -1205,14 +1241,26 @@ public class ListingRepository extends BaseRepository {
             @Override
             public void run() {
                 ListingDao dao = getListingDao();
+                ListingEntity entity = null;
                 if (dao != null) {
-                    ListingEntity entity = dao.getById(id);
-                    if (entity != null) {
-                        cb.onSuccess(entity.toModel());
-                        return;
-                    }
+                    entity = dao.getById(id);
                 }
-                cb.onError("Không tìm thấy tin đăng");
+                if (entity == null) {
+                    postToMain(new Runnable() {
+                        @Override
+                        public void run() {
+                            cb.onError("Không tìm thấy tin đăng");
+                        }
+                    });
+                    return;
+                }
+                final Listing listing = entity.toModel();
+                postToMain(new Runnable() {
+                    @Override
+                    public void run() {
+                        cb.onSuccess(listing);
+                    }
+                });
             }
         });
     }
@@ -1222,7 +1270,7 @@ public class ListingRepository extends BaseRepository {
             @Override
             public void run() {
                 ListingDao dao = getListingDao();
-                List<Listing> list = new ArrayList<Listing>();
+                final List<Listing> list = new ArrayList<Listing>();
                 if (dao != null) {
                     List<ListingEntity> cached = dao.getFeed();
                     if (cached != null) {
@@ -1234,7 +1282,12 @@ public class ListingRepository extends BaseRepository {
                         }
                     }
                 }
-                cb.onSuccess(list);
+                postToMain(new Runnable() {
+                    @Override
+                    public void run() {
+                        cb.onSuccess(list);
+                    }
+                });
             }
         });
     }
