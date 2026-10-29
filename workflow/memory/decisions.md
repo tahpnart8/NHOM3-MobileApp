@@ -993,3 +993,26 @@ The leader judged the first version too obviously fake for the demo and asked fo
 
 ### Owner
 tahpnart8
+
+## 2026-10-29 - Official logo set: adaptive icon on white, splash through a launch theme, light Home top row
+
+### Decision
+The three official logo PNGs are used unchanged, only scaled (and trimmed of fully transparent margins), as WebP in `drawable-nodpi`. The launcher icon is an adaptive icon on a white background with the square logo as foreground, inset 27% per side so its farthest pixel sits 31dp from the centre, inside the 66dp safe circle; it has no monochrome layer. The launch splash is a `Theme.PUBGApp.Launch` on `MainActivity` whose `windowBackground` is `bg_splash` (app background with the loader logo centred at 200 x 210dp), switched to `Theme.PUBGApp` at the top of `onCreate`; `values-v31` gives the Android 12+ system splash the app background and the logo. The Home top row (`layoutTopBar`) becomes `colorBackground` with the horizontal logo, because the logo's dark teal text is unreadable on the green; the green search row below stays.
+
+### Context
+The leader chose the official logo set and asked for it on the launcher, at launch and in the main UI (issue #397), with no edits to the artwork and no new dependency.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| `androidx.core:core-splashscreen` | A new dependency for what a launch theme and `values-v31` attributes already do on minSdk 30. |
+| A Splash Activity or Fragment with a delay | An extra screen and an artificial wait; the launch theme shows the logo exactly while the app starts. |
+| Logo on a white pill inside the green top row | Two backgrounds in one bar; a light row is simpler and matches the light status bar icons. |
+| Larger icon foreground filling the 72dp visible area | The tagline would be cut by circle masks. |
+| A monochrome layer from the logo | A silhouette of an illustrated logo is an unreadable blob in themed icons. |
+
+### Impact
+`res/mipmap-*`, `drawable/ic_launcher_*`, `drawable/bg_splash.xml`, `drawable-nodpi/ic_logo_*`, `values/themes.xml`, `values-v31/themes.xml`, `values/dimens.xml`, `AndroidManifest.xml`, `MainActivity.onCreate`, `activity_main.xml`, `fragment_login.xml` (portrait and land), `workflow/docs/conventions/giao-dien.md` sections 5 and 7a.
+
+### Owner
+tahpnart8, issue #397
