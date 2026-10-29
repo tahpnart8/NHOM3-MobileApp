@@ -55,6 +55,7 @@ public class ShopViewModel extends ViewModel {
 
     private List<Listing> rawListings;
     private String cachedUid;
+    private String fetchingUid;
     private SortOrder currentSortOrder = SortOrder.NEWEST;
     private String currentCategoryId = "";
     private final MutableLiveData<List<Listing>> myListings = new MutableLiveData<>();
@@ -103,16 +104,58 @@ public class ShopViewModel extends ViewModel {
         currentSortOrder = order != null ? order : SortOrder.NEWEST;
         currentCategoryId = categoryId != null ? categoryId : "";
 
-        if (rawListings != null && uid.equals(cachedUid)) {
+        if (isOtherUser(cachedUid, uid)) {
+            forgetPreviousUser();
+        }
+        if (rawListings != null) {
             List<Listing> filtered = sortAndFilter(rawListings, currentSortOrder, currentCategoryId);
             myListings.setValue(filtered);
             return;
         }
+        fetchMyListings(uid);
+    }
 
+    // Reads the shelf again from Firestore: deals, offers and admin actions change it without this ViewModel.
+    public void refresh() {
+        final String uid = SessionManager.getInstance().getCurrentUserId();
+        if (uid == null || uid.isEmpty()) {
+            error.setValue("Chưa đăng nhập");
+            return;
+        }
+        if (isOtherUser(cachedUid, uid)) {
+            forgetPreviousUser();
+        }
+        fetchMyListings(uid);
+    }
+
+    // True when the kept shelf was read for a different account than the one signed in now.
+    static boolean isOtherUser(String cachedUid, String uid) {
+        return cachedUid != null && !cachedUid.equals(uid);
+    }
+
+    // This ViewModel lives as long as the Activity, so another account must never see the old shelf.
+    private void forgetPreviousUser() {
+        rawListings = null;
+        cachedUid = null;
+        myListings.setValue(new ArrayList<Listing>());
+    }
+
+    // One read at a time: opening the screen and pressing reload together cost a single read.
+    private void fetchMyListings(final String uid) {
+        if (uid.equals(fetchingUid)) {
+            return;
+        }
+        fetchingUid = uid;
         loading.setValue(true);
         listingRepository.getBySeller(uid, new DataCallback<List<Listing>>() {
             @Override
             public void onSuccess(List<Listing> data) {
+                fetchingUid = null;
+                // An answer that arrives after a sign out belongs to the old account: drop it.
+                if (!uid.equals(SessionManager.getInstance().getCurrentUserId())) {
+                    loading.postValue(false);
+                    return;
+                }
                 cachedUid = uid;
                 rawListings = data;
                 List<Listing> filtered = sortAndFilter(rawListings, currentSortOrder, currentCategoryId);
@@ -122,6 +165,7 @@ public class ShopViewModel extends ViewModel {
 
             @Override
             public void onError(String errorMessage) {
+                fetchingUid = null;
                 loading.postValue(false);
                 error.postValue(errorMessage);
             }

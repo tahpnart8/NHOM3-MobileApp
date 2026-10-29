@@ -201,6 +201,7 @@
     <string name="listing_shop_menu_sort">Sắp xếp</string>
     <string name="listing_shop_sort_newest">Mới đăng</string>
     <string name="listing_shop_menu_filter">Lọc theo danh mục</string>
+    <string name="listing_shop_menu_refresh">Tải lại</string>
     <string name="listing_shop_filter_all">Tất cả danh mục</string>
     <string name="listing_shop_action_edit">Chỉnh sửa</string>
     <string name="listing_shop_action_hide">Ẩn tin</string>
