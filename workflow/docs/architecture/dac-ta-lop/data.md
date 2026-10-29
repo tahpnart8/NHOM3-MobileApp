@@ -2,7 +2,7 @@
 
 Bản chữ của sơ đồ lớp cho gói này: 14 lớp. Mục lục và cách đọc ở [README.md](README.md).
 
-Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, không gọi Firebase hay Room trực tiếp. Mọi phương thức bất đồng bộ trả kết quả qua `DataCallback<T>` (không dùng lambda, theo luật viết code). Kiểu tham số ghi theo thiết kế; khi code mà cần đổi thì sửa tài liệu này trong cùng Pull Request.
+Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, không gọi Firebase hay Room trực tiếp. Mọi phương thức bất đồng bộ trả kết quả qua `DataCallback<T>` (không dùng lambda, theo luật viết code). `DataCallback` luôn được gọi trên luồng chính, nên màn hình được cập nhật view ngay trong `onSuccess` và `onError`: kết quả của Firestore vốn về luồng chính, còn việc chạy trên executor (đọc Room, nén và giải mã ảnh) chuyển kết quả về qua `BaseRepository.postToMain`. Khi một phương thức trả bản Room trước rồi mới tới dữ liệu Firestore, bản Room đến muộn bị bỏ nếu dữ liệu Firestore (không rỗng) đã được giao, để dữ liệu cũ không đè dữ liệu mới. Kiểu tham số ghi theo thiết kế; khi code mà cần đổi thì sửa tài liệu này trong cùng Pull Request.
 
 | Lớp | Loại | Trách nhiệm |
 | --- | --- | --- |
@@ -74,6 +74,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `protected String currentUserId()` | Trả `uid` của người đang đăng nhập; rỗng khi chưa đăng nhập. |  |
 | `protected void logActivity(String action, String targetType, String targetId)` | Ghi một `ActivityLog`. `action` là chuỗi hằng viết hoa có gạch dưới, ví dụ `LISTING_CREATED`, `USER_LOCKED`, `USER_WARNED`, `LISTING_HIDDEN`, `LISTING_REMOVED`, `CATEGORY_CREATED`, `KEYWORD_ADDED`, `ADMIN_GRANTED`, `ADMIN_REVOKED`. `targetType` là chuỗi tự do (`listing`, `user`, `message`, `category`, `keyword`, `admin`, `deal`, `complaint`, `report`), không phải enum, vì nhật ký trỏ tới nhiều loại hơn `ReportTarget`. | 74 |
 | `protected void fail(DataCallback, Exception)` | Dịch ngoại lệ Firebase thành câu báo lỗi và gọi `onError`. |  |
+| `protected void postToMain(Runnable task)` | Đưa `task` sang luồng chính (`Handler` của `Looper.getMainLooper()`). Mọi chỗ gọi `DataCallback` từ executor đều đi qua đây, để màn hình không cập nhật view sai luồng. |  |
 | `protected <T> ListenerRegistration listenDocument(DocumentReference ref, Class<T> type, DataCallback<T> cb)` | Bọc `addSnapshotListener` của một tài liệu: gọi `cb` lúc gắn và mỗi lần tài liệu đổi; tài liệu không có thì trả null; lỗi đi qua `fail`. Người gọi gỡ `ListenerRegistration` khi rời màn. |  |
 | `protected <T> ListenerRegistration listenQuery(Query query, Class<T> type, DataCallback<List<T>> cb)` | Như `listenDocument` cho một truy vấn: mỗi lần đổi trả cả danh sách hiện tại. |  |
 | `protected <T extends BaseDocument> ListenerRegistration listenEitherQuery(Query first, Query second, Class<T> type, DataCallback<List<T>> cb)` | Nghe hai truy vấn (ví dụ "tôi là người mua" và "tôi là người bán") và trả hợp của hai danh sách theo mã tài liệu, sau khi cả hai đã trả lời; gỡ registration trả về là gỡ cả hai. |  |
@@ -236,7 +237,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void setHidden(String id, boolean hidden, DataCallback<Void> cb)` | Người bán tự ẩn (HIDDEN, lý do rỗng) hoặc hiện lại (chỉ khi lý do rỗng). Ẩn thì từ chối mọi offer PENDING của tin trong cùng lô ghi. | 15 |
 | `public void setStatus(String id, ListingStatus from, ListingStatus to, DataCallback<Void> cb)` | Đổi trạng thái theo cặp người bán được phép (AVAILABLE sang SOLD khi bán ngoài ứng dụng, SOLD sang AVAILABLE khi chưa có giao dịch COMPLETED); từ chối cặp khác. Rời AVAILABLE thì từ chối offer PENDING cùng lô. |  |
 | `public void delete(String id, DataCallback<Void> cb)` | Chỉ xóa hẳn tin DRAFT. Tin khác muốn bỏ thì ẩn (`setHidden`). | 13 |
-| `public void getById(String id, DataCallback<Listing> cb)` | Đọc một tin; offline thì đọc `listing_cache`. |  |
+| `public void getById(String id, DataCallback<Listing> cb)` | Đọc một tin; offline (lỗi mạng hoặc Firestore chỉ trả bộ nhớ đệm của nó) thì đọc `listing_cache`. Máy chủ trả lời tin không còn thì báo lỗi "Không tìm thấy tin đăng", không mở lại bản Room cũ. |  |
 | `public ListenerRegistration observeListing(String id, DataCallback<Listing> cb)` | Nghe một tin cho B03 sau lần đọc đầu: giá, trạng thái, ẩn tin do người bán hoặc admin đổi hiện ngay; mỗi bản mới ghi vào `listing_cache`. |  |
 | `public void getBySeller(String sellerId, DataCallback<List<Listing>> cb)` | Tin của một người bán, mới trước. Người xem khác thêm điều kiện `status in [AVAILABLE, RESERVED, SOLD]`; chính chủ thấy mọi trạng thái. | 14 |
 | `public void getFeed(SearchFilter filter, Timestamp after, DataCallback<List<Listing>> cb)` | Tin AVAILABLE, 20 tin một trang, con trỏ là `createdAt` của tin cuối trang trước (`after`, rỗng ở trang đầu). Lọc phía máy chủ tối đa một điều kiện bằng (danh mục hoặc tỉnh); bộ lọc còn lại lọc trên máy, ViewModel tải tiếp tới khi đủ 20 hoặc hết. Có mạng thì ghi trang mới vào Room. | 29 |
@@ -273,7 +274,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | --- | --- | --- |
 | `public void saveImage(Uri uri, ImagePurpose purpose, DataCallback<String> cb)` | Nén ảnh (cạnh dài 1024 px, JPEG, tối đa 300 KB), mã hóa Base64, ghi `images/{id}` với mục đích truyền vào; trả mã ảnh. | 17, 43, 44, 54 |
 | `public void makeThumb(Uri uri, DataCallback<String> cb)` | Tạo ảnh thu nhỏ (320 px cho tin, 256 px cho ảnh đại diện; tối đa 20 KB) dạng Base64; không ghi lên mạng. | 5, 17 |
-| `public void getImage(String id, DataCallback<byte[]> cb)` | Đọc `images/{id}` và trả mảng byte; giữ bộ nhớ đệm LRU trong RAM để không đọc lại. | 17 |
+| `public void getImage(String id, DataCallback<byte[]> cb)` | Đọc `images/{id}` và trả mảng byte; giải mã Base64 trên executor rồi trả về luồng chính; giữ bộ nhớ đệm LRU trong RAM để không đọc lại. | 17 |
 | `public void delete(String id, DataCallback<Void> cb)` | Xóa `images/{id}`; chỉ người tải lên xóa được. |  |
 
 **Quan hệ trên sơ đồ lớp**
@@ -348,8 +349,8 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void markReceived(String dealId, String imageId, DataCallback<Void> cb)` | Nhận mã ảnh đã được ViewModel lưu trước qua `MediaRepository` (giống `markShipped`); kiểm tra `Payment` đang HELD nếu `needsPayment()`, gọi `Deal.markReceived`, `Payment` sang RELEASED trong cùng lô ghi, thông báo PAYMENT_UPDATE cho người bán. | 53, 84 |
 | `public void completeDeal(String dealId, DataCallback<Void> cb)` | Nơi duy nhất chuyển RECEIVED sang COMPLETED: giao dịch COMPLETED, tin SOLD, thông báo DEAL_UPDATE cho hai bên. Gọi từ `ReviewRepository.create` và `completeDueDeals`. |  |
 | `public void releaseDueDeals(DataCallback<Integer> cb)` | Tìm giao dịch SHIPPED của người dùng hiện tại (ở cả hai vai trò) đã qua `autoReleaseAt`, chuyển sang RECEIVED và giải ngân. | 84 |
-| `public void completeDueDeals(DataCallback<Integer> cb)` | Tìm giao dịch RECEIVED đã quá 3 ngày từ `receivedAt` và gọi `completeDeal`. | 53 |
-| `public void expirePendingDeals(DataCallback<Integer> cb)` | Giao dịch PENDING_CONFIRM quá 3 ngày (`Deal.isPendingExpired`) sang CANCELLED, người đổi là `system`, tin về AVAILABLE. |  |
+| `public void completeDueDeals(DataCallback<Integer> cb)` | Tìm giao dịch RECEIVED đã quá 3 ngày từ `receivedAt` và gọi `completeDeal`. Giao dịch nào hoàn tất không được thì ghi `Log.w` và lần quét sau thử lại. | 53 |
+| `public void expirePendingDeals(DataCallback<Integer> cb)` | Giao dịch PENDING_CONFIRM quá 3 ngày (`Deal.isPendingExpired`) sang CANCELLED, người đổi là `system`, tin về AVAILABLE. Giao dịch nào hủy không được thì ghi `Log.w` và lần quét sau thử lại. |  |
 | `public void cancel(String dealId, String reason, DataCallback<Void> cb)` | Hủy có lý do, hoàn `Payment` nếu đang giữ, đưa tin về AVAILABLE (bỏ qua nếu tin không còn). | 55 |
 | `public void getMyDeals(String uid, DataCallback<List<Deal>> cb)` | Giao dịch mà người dùng là người mua hoặc người bán, mới cập nhật trước; ghi vào Room. | 57 |
 | `public void getPayments(String uid, DataCallback<List<Payment>> cb)` | Khoản ký quỹ mà người dùng trả hoặc nhận. | 58 |
@@ -382,7 +383,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
-| `public void create(Review review, DataCallback<Void> cb)` | Ghi `reviews/{dealId}_{reviewerId}` (mỗi bên một lần) khi giao dịch RECEIVED hoặc COMPLETED; tăng `ratingSum`, `ratingCount` của người được đánh giá cùng lô; thông báo NEW_REVIEW. Hai bên đều đã đánh giá thì gọi `DealRepository.completeDeal`. | 7, 59 |
+| `public void create(Review review, DataCallback<Void> cb)` | Ghi `reviews/{dealId}_{reviewerId}` (mỗi bên một lần) khi giao dịch RECEIVED hoặc COMPLETED; tăng `ratingSum`, `ratingCount` của người được đánh giá cùng lô; thông báo NEW_REVIEW. Hai bên đều đã đánh giá thì gọi `DealRepository.completeDeal`. Đánh giá đã ghi xong thì luôn báo thành công: nếu bước kiểm tra hoặc `completeDeal` sau đó lỗi, chỉ ghi `Log.w`, giao dịch được lần tự hoàn tất sau xử lý. | 7, 59 |
 | `public void getByDeal(String dealId, DataCallback<List<Review>> cb)` | Các đánh giá của một giao dịch (0 đến 2), để biết mình đã đánh giá chưa. |  |
 | `public void getReceived(String uid, DataCallback<List<Review>> cb)` | Đánh giá người dùng đã nhận. | 60 |
 | `public void getGiven(String uid, DataCallback<List<Review>> cb)` | Đánh giá người dùng đã viết. | 60 |
@@ -479,7 +480,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
 | `public void getForUser(String uid, DataCallback<List<AppNotification>> cb)` | Thông báo của người dùng, mới nhất trước. | 67, 91 |
-| `public ListenerRegistration observeForUser(String uid, DataCallback<List<AppNotification>> cb)` | Như `getForUser` nhưng nghe theo thời gian thực: thông báo mới và số chưa đọc trên chuông đổi ngay. | 67, 91 |
+| `public ListenerRegistration observeForUser(String uid, DataCallback<List<AppNotification>> cb)` | Như `getForUser` nhưng nghe theo thời gian thực: thông báo mới và số chưa đọc trên chuông đổi ngay. Mỗi lần đổi đọc lại cài đặt thông báo; câu trả lời của lần cũ về sau lần mới thì bị bỏ. | 67, 91 |
 | `public void markRead(String id, DataCallback<Void> cb)` | Đánh dấu đã đọc. | 67, 91 |
 | `public void create(AppNotification notification, WriteBatch batch, DataCallback<Void> cb)` | Ghi một thông báo cho người nhận, bỏ qua nếu người nhận đã tắt loại này. Chỉ repository gọi, ngay trong thao tác làm đổi trạng thái; ViewModel không gọi. Tham số `batch`: khác null thì phương thức **chỉ thêm lệnh ghi vào lô đó rồi gọi lại ngay**, bên gọi mới commit, nên thông báo và việc đổi trạng thái cùng thành công hoặc cùng thất bại (`trang-thai.md` mục 9); bằng null thì phương thức tự ghi và tự commit. Gửi cho nhiều người thì gọi nhiều lần vào cùng một lô rồi commit một lần. | 91 |
 
