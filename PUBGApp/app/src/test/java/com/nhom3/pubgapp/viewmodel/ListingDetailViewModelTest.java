@@ -8,6 +8,9 @@ import com.nhom3.pubgapp.model.enums.ListingStatus;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ListingDetailViewModelTest {
 
     private Listing createListingWithStatus(ListingStatus status, String sellerId) {
@@ -97,5 +100,21 @@ public class ListingDetailViewModelTest {
         assertFalse(ListingDetailViewModel.canFollowSeller("seller-1", "seller-1"));
         assertTrue(ListingDetailViewModel.canFollowSeller("seller-1", null));
         assertTrue(ListingDetailViewModel.canFollowSeller("seller-1", "buyer-1"));
+    }
+
+    @Test
+    public void isSavedIn_listingInSavedList_showsFilledHeart() {
+        List<String> savedIds = new ArrayList<String>();
+        savedIds.add("listing-123");
+        assertTrue(ListingDetailViewModel.isSavedIn(savedIds, "listing-123"));
+    }
+
+    @Test
+    public void isSavedIn_missingOrNull_showsEmptyHeart() {
+        List<String> savedIds = new ArrayList<String>();
+        savedIds.add("listing-999");
+        assertFalse(ListingDetailViewModel.isSavedIn(savedIds, "listing-123"));
+        assertFalse(ListingDetailViewModel.isSavedIn(null, "listing-123"));
+        assertFalse(ListingDetailViewModel.isSavedIn(savedIds, null));
     }
 }
