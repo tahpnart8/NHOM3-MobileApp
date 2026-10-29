@@ -153,6 +153,56 @@
             android:name="dealId"
             app:argType="string" />
     </fragment>
+    <!-- Simulated checkout of C07 (Issue #391). The provider is display only and stays in these arguments. -->
+    <fragment
+        android:id="@+id/checkoutProviderFragment"
+        android:name="com.nhom3.pubgapp.ui.trade.CheckoutProviderFragment">
+        <argument
+            android:name="dealId"
+            app:argType="string" />
+        <argument
+            android:name="method"
+            app:argType="string" />
+        <argument
+            android:name="sellerName"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/checkoutGatewayFragment"
+        android:name="com.nhom3.pubgapp.ui.trade.CheckoutGatewayFragment">
+        <argument
+            android:name="dealId"
+            app:argType="string" />
+        <argument
+            android:name="method"
+            app:argType="string" />
+        <argument
+            android:name="sellerName"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="providerCode"
+            app:argType="string" />
+        <argument
+            android:name="providerName"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/checkoutResultFragment"
+        android:name="com.nhom3.pubgapp.ui.trade.CheckoutResultFragment">
+        <argument
+            android:name="dealId"
+            app:argType="string" />
+        <argument
+            android:name="method"
+            app:argType="string" />
+        <argument
+            android:name="providerName"
+            app:argType="string" />
+    </fragment>
 
     <!-- Module A: notifications -->
     <fragment
