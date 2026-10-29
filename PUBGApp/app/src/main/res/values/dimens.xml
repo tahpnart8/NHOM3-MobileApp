@@ -31,4 +31,7 @@
 
     <!-- Large avatar, for profile headers (view_avatar defaults to touch_min). -->
     <dimen name="avatar_size_lg">96dp</dimen>
+
+    <!-- Largest side of the sample transfer QR on the C07 gateway, so it stays a QR size in landscape. -->
+    <dimen name="qr_max_size">240dp</dimen>
 </resources>
