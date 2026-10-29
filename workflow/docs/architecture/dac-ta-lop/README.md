@@ -11,6 +11,7 @@ Cách mô tả mỗi lớp theo khung "thực thể thiết kế" của IEEE 101
 - **`DataCallback<T>`:** kết quả bất đồng bộ của repository; `T` ghi ở chữ ký. `Void` nghĩa là chỉ báo xong.
 - **STT:** số dòng trong [bảng đặc tả chức năng](../../product/dac-ta-chuc-nang.md). Chỉ chức năng Đợt này.
 - **Lớp ngoài danh sách:** `PubgApplication` (lớp `Application` ở gói gốc, khởi tạo `NetworkMonitor`, Room và WorkManager), các Activity, Fragment và Adapter thuộc tầng giao diện, xem [overview.md](../overview.md) mục 5.
+- **Lớp trợ giúp giao diện `InAppNotifier`** (gói `ui.notification`, ngoài 93 lớp, issue #382): hiện thông báo hệ thống cho thông báo mới khi ứng dụng đang mở. `public InAppNotifier(Context context)` tạo kênh; `public void onNotificationsChanged(String uid, List<AppNotification> list)` nhận danh sách từ listener sống và hiện những thông báo mới; `static List<AppNotification> takeNew(List<AppNotification> list, String uid, Set<String> seenIds, long sinceMillis)` chọn thông báo chưa thấy, chưa đọc, đúng người nhận, tạo sau lúc bắt đầu theo dõi; `public boolean shouldAskPermission()` và `public void rememberPermissionAsked()` để `MainActivity` hỏi quyền `POST_NOTIFICATIONS` đúng một lần.
 - **Quan hệ:** hợp thành nghĩa là phần con nằm trong cha (collection con hoặc mảng lồng) và mất khi cha mất; liên kết nghĩa là lưu mã của bên kia; phụ thuộc nghĩa là dùng tạm thời trong phương thức.
 
 ## Theo gói
