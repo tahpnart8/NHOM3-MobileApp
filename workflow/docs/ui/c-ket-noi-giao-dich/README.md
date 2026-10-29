@@ -114,7 +114,7 @@
 
 **Hành động và điều hướng:**
 - Bấm nút quay lại: về màn đã gọi (C02, C04 hoặc thông báo)
-- Bấm "Thanh toán": sang C07 Thanh toán giao dịch bằng `action_global_deal_payment` (tham số `dealId`), luồng thanh toán mô phỏng giống ứng dụng thanh toán thật (chọn phương thức, màn xác nhận, biên lai). Không gọi dịch vụ bên ngoài và không có tiền thật; xác nhận xong, hệ thống tạo khoản thanh toán "đang giữ" kèm phương thức đã chọn và thông báo cho người bán
+- Bấm "Thanh toán": sang C07 Thanh toán giao dịch bằng `action_global_deal_payment` (tham số `dealId`), luồng thanh toán mô phỏng giống trang thương mại điện tử (chọn phương thức, chọn ngân hàng hoặc ví, cổng thanh toán mô phỏng, OTP thử, biên lai). Không gọi dịch vụ bên ngoài và không có tiền thật; xác nhận xong, hệ thống tạo khoản thanh toán "đang giữ" kèm phương thức đã chọn và thông báo cho người bán
 - Bấm "Xác nhận đã nhận hàng": hiện hộp thoại nhắc xác nhận không thể thu hồi và yêu cầu chụp hoặc chọn một ảnh món đồ đã nhận (bắt buộc, chỉ một ảnh, ảnh được nén trước khi lưu). Bấm "Xác nhận" trong hộp thoại: lưu ảnh nhận hàng, giao dịch sang "Đã nhận", hệ thống chuyển khoản thanh toán từ "đang giữ" sang "đã giải ngân" cho người bán
 - Bấm "Khiếu nại giao dịch": sang D05 Tạo khiếu nại
 - Bấm "Viết đánh giá": sang C05 Viết đánh giá
@@ -257,34 +257,40 @@
 
 **Ảnh:** chưa có ảnh
 
-**Lớp:** `DealPaymentFragment` trong `MainActivity`. Màn hình chi tiết: có nút quay lại, ẩn thanh dưới. Chỉ mở từ nút "Thanh toán" trên C03 bằng hành động toàn cục `action_global_deal_payment` (tham số `dealId`), và chỉ dành cho người mua của giao dịch.
+**Lớp:** bốn Fragment trong `MainActivity`, đều là màn hình chi tiết (nút quay lại, ẩn thanh dưới): `DealPaymentFragment` (bước 1), `CheckoutProviderFragment` (bước 2), `CheckoutGatewayFragment` (bước 3 và 4), `CheckoutResultFragment` (bước 5). Chỉ mở từ nút "Thanh toán" trên C03 bằng hành động toàn cục `action_global_deal_payment` (tham số `dealId`), và chỉ dành cho người mua của giao dịch. Các bước sau đi bằng đích `checkoutProviderFragment`, `checkoutGatewayFragment`, `checkoutResultFragment` của `nav_main.xml`.
 
-**Mục đích:** Cho người mua thanh toán cho giao dịch mua bán đã xác nhận bằng một luồng giống ứng dụng thanh toán thật (chọn phương thức, màn xác nhận, biên lai). Đây là thanh toán mô phỏng: không gọi dịch vụ bên ngoài, không có tiền thật, không có ngân hàng; hệ thống giữ tiền bằng khoản thanh toán "đang giữ" rồi chuyển "đã giải ngân" cho người bán hoặc "đã hoàn" cho người mua.
+**Mục đích:** Cho người mua thanh toán cho giao dịch mua bán đã xác nhận bằng một luồng giống trang thương mại điện tử. Đây là thanh toán mô phỏng (issue #391): không có cổng thanh toán thật, không gọi dịch vụ bên ngoài, không có tiền thật. Ngân hàng hoặc ví người mua chọn chỉ để hiển thị, nằm trong tham số điều hướng, không ghi vào Firestore. Đường ghi duy nhất vẫn là `DealViewModel.pay(PaymentMethod)`: hệ thống giữ tiền bằng khoản thanh toán "đang giữ" rồi chuyển "đã giải ngân" cho người bán hoặc "đã hoàn" cho người mua.
 
 **Thành phần chính:**
-- Thanh tiêu đề: nút quay lại, tiêu đề "Thanh toán"
-- Bước 1, chọn phương thức: tóm tắt giao dịch (ảnh thu nhỏ, tên món đồ, người bán), số tiền phải trả (bằng giá chốt, không sửa được) và ba phương thức mô phỏng chọn một: "Thẻ ngân hàng", "Ví điện tử", "Chuyển khoản". Nút "Tiếp tục", chưa bấm được khi chưa chọn phương thức
-- Bước 2, màn xác nhận: tóm tắt giao dịch, số tiền, phương thức đã chọn, lời lưu ý đây là thanh toán mô phỏng và tiền được giữ an toàn tới khi người mua nhận hàng. Nút "Xác nhận thanh toán", nút "Đổi phương thức" và nút "Hủy"
-- Bước 3, biên lai: số tiền, phương thức, thời điểm giữ, trạng thái "Đang giữ". Nút "Về chi tiết giao dịch"
+- Tóm tắt đơn ở mọi bước (`view_checkout_summary.xml`): ảnh thu nhỏ, tên món đồ, người bán, "Tổng thanh toán" bằng giá chốt, không sửa được
+- Bước 1, chọn phương thức (`DealPaymentFragment`): ba thẻ lớn có biểu tượng, chọn một: "Thẻ ATM nội địa" (`CARD`), "Ví điện tử" (`E_WALLET`), "Chuyển khoản ngân hàng" (`BANK_TRANSFER`). Nút "Tiếp tục" cố định ở đáy, chưa bấm được khi chưa chọn
+- Bước 2, chọn ngân hàng hoặc ví (`CheckoutProviderFragment`): ô tìm theo tên hoặc mã (không phân biệt dấu) và lưới ô chữ viết tắt. Thẻ và chuyển khoản hiện danh sách ngân hàng (tên và mã ngắn như VCB, TCB, MB, BIDV, ACB), ví điện tử hiện danh sách ví đặt tên chung. Danh sách tĩnh trong `strings_trade.xml`; ô tô màu theo màu ứng dụng, không dùng logo hay màu thương hiệu thật. Nút "Tiếp tục" cố định ở đáy, kèm dòng "Đã chọn ..."
+- Bước 3, "Cổng thanh toán mô phỏng PUBGApp" (`CheckoutGatewayFragment`): dải báo "Môi trường thử nghiệm, không trừ tiền thật", tóm tắt đơn, tên ngân hàng hoặc ví, đồng hồ đếm ngược 10 phút. Theo phương thức:
+  - Thẻ: thẻ thử chỉ đọc (số, tên chủ thẻ, hạn cố định) và lời nhắc không nhập thẻ thật. Không có ô nhập số thẻ. Nút "Thanh toán"
+  - Chuyển khoản: mã QR mẫu vẽ ngay trên máy (không gọi mạng, không quét được), tài khoản nhận "PUBGApp giữ hộ (mô phỏng)", nội dung chuyển khoản "PUBG" cộng 8 ký tự đầu của mã giao dịch. Nút "Tôi đã chuyển khoản"
+  - Ví điện tử: thẻ xác nhận kiểu "Mở ví" với tên ví. Nút "Mở ví"
+  - Nút "Hủy thanh toán" ở mọi phương thức
+- Bước 4, OTP (cùng màn bước 3): mã OTP thử hiện ngay trên màn, nút "Điền mã thử" điền bằng một chạm, nút "Xác nhận". Không hỏi mật khẩu, số thẻ hay dữ liệu thanh toán thật
+- Bước 5, kết quả (`CheckoutResultFragment`): vòng xoay "Đang xử lý thanh toán..." khoảng 1,5 giây rồi gọi `DealViewModel.pay`. Thành công: biên lai gồm số tiền, phương thức, ngân hàng hoặc ví (chỉ hiển thị), thời gian giữ tiền, mã giao dịch, trạng thái "Đang giữ", nút "Xem giao dịch". Lỗi: câu báo lỗi kèm "Thử lại" và "Chọn phương thức khác"
+- Giao dịch đã có khoản thanh toán khi mở C07: bước 1 hiện biên lai cũ (số tiền, phương thức, thời điểm giữ, trạng thái) với nút "Về chi tiết giao dịch"
 
 **Hành động và điều hướng:**
-- Bấm nút quay lại ở bước chọn phương thức: về C03, không tạo khoản thanh toán
-- Chọn một phương thức rồi bấm "Tiếp tục": sang màn xác nhận
-- Bấm "Đổi phương thức": về bước chọn phương thức
-- Bấm "Hủy": về C03, không tạo khoản thanh toán
-- Bấm "Xác nhận thanh toán": nút bị khóa trong lúc xử lý; hệ thống tạo khoản thanh toán "đang giữ" kèm phương thức đã chọn, thông báo cho người bán, rồi hiện biên lai
-- Bấm "Về chi tiết giao dịch" trên biên lai: về C03, nơi nút "Thanh toán" không còn
+- Bấm nút quay lại ở bước 1: về C03, không tạo khoản thanh toán
+- Bước 1 "Tiếp tục": sang bước 2. Bước 2 "Tiếp tục": sang bước 3. Nút quay lại ở bước 2 và 3: về bước trước
+- Bấm "Hủy thanh toán" hoặc hết giờ đếm ngược: báo ngắn rồi về bước 1, không tạo khoản thanh toán
+- Bước 3 bấm nút chính: hiện bước OTP. Bấm "Xác nhận" với mã sai: báo "Mã OTP không đúng"; với mã đúng: sang bước 5
+- Bước 5 lúc đang xử lý: nút quay lại không làm gì, để không bỏ dở giữa chừng
+- Bấm "Xem giao dịch" hoặc quay lại trên biên lai: về C03, nơi nút "Thanh toán" không còn
+- Bấm "Thử lại" khi lỗi: xử lý và gọi `pay` lại. "Chọn phương thức khác" hoặc quay lại khi lỗi: về bước 1
 
 **Chức năng liên quan:** STT 56 (thanh toán mô phỏng, tiền được giữ trong hệ thống). Khoản thanh toán vừa tạo hiện ở tab "Thanh toán" của C04 (STT 58).
 
 **Trạng thái đặc biệt:**
-- Đang xử lý: nút "Xác nhận thanh toán" bị khóa và hiện vòng xoay, để không tạo khoản thanh toán trùng
-- Giao dịch không còn ở trạng thái "Đã xác nhận" (đã bị hủy lúc đang thanh toán): báo không thể thanh toán, về C03
-- Giao dịch đã có khoản thanh toán (bấm trùng hoặc đã trả trên thiết bị khác): báo giao dịch đã được thanh toán, về C03, không tạo thêm
-- Mất mạng hoặc ghi dữ liệu lỗi: báo lỗi, không tạo khoản thanh toán, cho phép thử lại
-- Giá thống nhất bằng 0 (trao đổi hoặc cho tặng): không vào được màn này, vì C03 không có nút "Thanh toán"
-- Tài khoản chưa được duyệt xác thực: nút "Thanh toán" trên C03 bị chặn nên không vào được màn này
-- Khách chưa đăng nhập: không vào được màn này
-- Xoay màn hình: giữ nguyên phương thức đã chọn và bước đang xem
+- Đang tải: mỗi bước đọc lại giao dịch qua `DealViewModel.loadDeal` và hiện vòng xoay
+- Rỗng: giao dịch không còn ở trạng thái "Đã xác nhận", không cần thanh toán hoặc người xem không phải người mua: báo "Giao dịch không đủ điều kiện thanh toán hoặc đã được thanh toán". Ô tìm không khớp ngân hàng hoặc ví nào: "Không tìm thấy"
+- Lỗi: đọc giao dịch lỗi: câu báo lỗi và "Thử lại". `pay` lỗi (mất mạng, giao dịch bị hủy giữa chừng, đã thanh toán trên thiết bị khác): bước 5 báo lỗi, không tạo khoản thanh toán, cho thử lại
+- Mất mạng: dải báo ngoại tuyến ở bước 1 đến 3
+- Giá thống nhất bằng 0 (trao đổi hoặc cho tặng), tài khoản chưa được duyệt xác thực, khách chưa đăng nhập: không vào được, vì C03 không có hoặc chặn nút "Thanh toán"
+- Xoay màn hình: giữ phương thức, ngân hàng hoặc ví đã chọn, từ khóa tìm, bước OTP và mã đã gõ, thời gian còn lại (tính theo giờ hết hạn, không đếm lại từ đầu) và bước 5 (không gửi `pay` hai lần)
 
-**Khác với ảnh:** màn hình này chưa có ảnh; không có gì để so sánh. Giao diện làm theo hệ thống thiết kế chung như các màn khác; không có ví trung gian, số dư ví hay dịch vụ thanh toán bên ngoài.
+**Khác với ảnh:** màn hình này chưa có ảnh; không có gì để so sánh. Giao diện làm theo hệ thống thiết kế chung như các màn khác. Không có ví trung gian, số dư ví, logo ngân hàng hay dịch vụ thanh toán bên ngoài. Ghi chú STT 56 trước đây ghi "không có ngân hàng"; leader duyệt thêm bước chọn ngân hàng chỉ để hiển thị (quyết định 2026-10-29 trong `workflow/memory/decisions.md`).

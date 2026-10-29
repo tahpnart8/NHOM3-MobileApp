@@ -56,7 +56,7 @@ Tên lớp chốt ở đây để đồ thị điều hướng và lối tắt g
 | C03 | `DealDetailFragment` | `MainActivity` | Hải Long |
 | C04 | `DealHistoryFragment` | `MainActivity` | Hải Long |
 | C05 | `WriteReviewFragment` | `MainActivity` | Hải Long |
-| C07 | `DealPaymentFragment` | `MainActivity` | Hải Long |
+| C07 | `DealPaymentFragment` (chọn phương thức), `CheckoutProviderFragment` (chọn ngân hàng hoặc ví), `CheckoutGatewayFragment` (cổng thanh toán mô phỏng và OTP thử), `CheckoutResultFragment` (đang xử lý, biên lai hoặc lỗi); lớp trợ giúp `PaymentProvider`, `PaymentProviderAdapter`, `SampleQrCode`, `CheckoutSummary` (issue #391) | `MainActivity` | Hải Long |
 | D01 | `MyProfileFragment` | `MainActivity` (tab Cá nhân) | Phúc |
 | D02 | `UserProfileFragment` | `MainActivity` | Phúc |
 | D03 | `SellerTrustFragment` | `MainActivity` | Phúc |

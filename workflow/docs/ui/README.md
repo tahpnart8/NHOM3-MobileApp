@@ -30,7 +30,7 @@ Tên lớp lấy từ [bản đồ sở hữu](../../plan/so-huu.md) mục 3. M�
 | C04 | Lịch sử giao dịch và thanh toán | `DealHistoryFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
 | C05 | Viết đánh giá | `WriteReviewFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
 | C06 | Thông báo | `NotificationListFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
-| C07 (chưa có ảnh) | Thanh toán giao dịch | `DealPaymentFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
+| C07 (chưa có ảnh) | Thanh toán giao dịch | `DealPaymentFragment`, `CheckoutProviderFragment`, `CheckoutGatewayFragment`, `CheckoutResultFragment` | `MainActivity` | [c-ket-noi-giao-dich](c-ket-noi-giao-dich/README.md) |
 | D01 | Hồ sơ cá nhân | `MyProfileFragment` | `MainActivity` (tab Cá nhân) | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
 | D02 | Trang cá nhân | `UserProfileFragment` | `MainActivity` | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |
 | D03 | Hồ sơ uy tín người bán | `SellerTrustFragment` | `MainActivity` | [d-ho-so-tin-cay](d-ho-so-tin-cay/README.md) |

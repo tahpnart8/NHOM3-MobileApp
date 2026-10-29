@@ -953,3 +953,23 @@ Leader-approved refresh towards a modern marketplace look (issue #349). Before i
 
 ### Owner
 tahpnart8
+
+## 2026-10-29 - C07 checkout stays simulated: an e-commerce style flow with no payment gateway
+
+### Decision
+C07 becomes a multi-screen checkout that looks like an online shop: choose the method, choose a bank or e-wallet from a static local list, a "Cổng thanh toán mô phỏng PUBGApp" screen with a 10 minute countdown, a read-only test card, a sample QR drawn on the device or an "open the wallet" confirmation, a test OTP shown on screen, then processing and a receipt. Everything before the last step is display only. The single write is still `DealViewModel.pay(PaymentMethod)`, which creates `payments/{dealId}` as before; the chosen bank or wallet lives only in navigation arguments and saved state. No Firestore field, no enum value and no dependency is added. Banks appear by name and short code on tinted monogram tiles in the app colours; no real logo or brand colour is used.
+
+### Context
+The plain radio list of C07 did not read as a payment during the demo, and the leader asked for a realistic flow (issue #391, refs #380). A real gateway is impossible here: the Spark plan has no server side to receive gateway callbacks or keep merchant secrets, and a student team has no licence to hold buyers' money. The point "Payment is simulated inside Firestore" of "2026-10-22 - Guest browsing, verification as a trading gate, admin accounts in the app" still holds; this entry only changes how the screens look.
+
+### Alternatives rejected
+- A real or sandbox gateway (VNPay, MoMo or Stripe test mode): needs a server for the signed callback and a merchant account, neither of which fits the Spark plan or the course; a sandbox key in the app would also be a secret in the client (R11).
+- Storing the chosen bank or wallet in `payments`: it would add a field to a documented schema for data that means nothing, since no bank is contacted.
+- A QR library such as ZXing to draw a real QR: a new dependency for a picture that must not be scannable anyway, because there is no account to pay into.
+- Text fields for card number and expiry, validated locally: they teach users to type real card data into a student app; a fixed read-only test card shows the same step without that risk.
+
+### Impact
+`ui/trade/` (`DealPaymentFragment`, new `CheckoutProviderFragment`, `CheckoutGatewayFragment`, `CheckoutResultFragment`, `PaymentProvider`, `PaymentProviderAdapter`, `SampleQrCode`, `CheckoutSummary`), `nav_main.xml`, `strings_trade.xml`, `dimens.xml` (`qr_max_size`), `workflow/docs/ui/c-ket-noi-giao-dich/README.md` section C07, `dac-ta-chuc-nang.md` STT 56, `so-huu.md` section 3, `dac-ta-lop/README.md`.
+
+### Owner
+tahpnart8
