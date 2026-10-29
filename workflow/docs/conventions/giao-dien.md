@@ -180,7 +180,7 @@ Cái nào xuất hiện ở hai màn hình trở lên thì làm một layout dù
 
 Kiểu của các thành phần trên (issue #351):
 
-- **Thanh trên của Trang chủ** (`layoutTopBar` trong `activity_main.xml`): nền sáng `colorBackground` liền với thanh trạng thái, bên trái là logo ngang `ic_logo_header` (xem mục 7a), chuông màu `colorPrimary`, ảnh đại diện có vòng `bg_avatar_ring` dày `badge_stroke`. Ngay dưới là hàng tìm kiếm xanh `bg_top_bar` của `fragment_home.xml`. Hàng trên không còn nền xanh vì chữ của logo màu xanh đậm, đặt trên dải xanh thì không đọc được (issue #397).
+- **Thanh trên của Trang chủ** (`layoutTopBar` trong `activity_main.xml`): nền `bg_top_bar` chuyển từ `primary_dark` sang `colorPrimary`, bên trái là logo ngang chữ trắng `ic_logo_header_on_primary` (xem mục 7a), chuông màu `colorOnPrimary`, ảnh đại diện có vòng trắng `bg_avatar_ring` dày `badge_stroke`.
 - **Huy hiệu đếm số** (`bg_badge_count`): nền `colorTertiary` (màu nhấn), viền trắng `badge_stroke`, chữ `colorOnTertiary` cỡ `LabelSmall`.
 - **Thanh chi tiết** (`view_detail_toolbar`): nền trắng có đường kẻ `colorOutline` ở đáy (`bg_toolbar_divider`), tiêu đề `TitleLarge`. Màn admin dùng cùng thanh này.
 - **Ô trống và ô lỗi**: biểu tượng trong vòng tròn `state_icon_circle` (`bg_icon_circle`), ô trống nền `colorPrimaryContainer` với biểu tượng `colorPrimary`, ô lỗi nền `colorErrorContainer` với biểu tượng `colorError`; tiêu đề `TitleLarge`, lời giải thích `BodyMedium` màu `colorOnSurfaceVariant`; nút viên thuốc.
@@ -245,17 +245,18 @@ Tối đa 5 ảnh một tin. Luôn có ảnh giữ chỗ lúc đang giải mã v
 
 ## 7a. Logo
 
-Bộ logo chính thức do leader chốt (issue #397). Không sửa, vẽ lại, đổi màu, thêm chữ hay tạo biến thể; chỉ thu nhỏ cho vừa chỗ, giữ đúng tỉ lệ. File trong repo là bản đã thu nhỏ từ bản gốc (WebP chất lượng 90, cắt phần viền trong suốt thừa), nằm trong `drawable-nodpi`.
+Bộ logo chính thức do leader chốt (issue #397). Không sửa, vẽ lại, đổi màu, thêm chữ hay tạo biến thể; chỉ thu nhỏ cho vừa chỗ, giữ đúng tỉ lệ. Ngoại lệ duy nhất, leader đã duyệt: bản `ic_logo_header_on_primary` có chữ "PUBGApp" màu trắng để đọc được trên dải xanh. File trong repo là bản đã thu nhỏ từ bản gốc (WebP chất lượng 90, cắt phần viền trong suốt thừa), nằm trong `drawable-nodpi`.
 
 | File | Bản gốc | Dùng ở |
 | --- | --- | --- |
-| `ic_logo_app` (256 px) | `pubgapp_icon_512.png` | Lớp trước của biểu tượng launcher (`ic_launcher_foreground`, thụt 27% mỗi cạnh để nằm trong vòng an toàn 66dp, nền trắng `ic_launcher_background`) và biểu tượng màn chờ hệ thống Android 12+. Các file `mipmap-*/ic_launcher*.webp` cũ cho launcher không hỗ trợ adaptive icon cũng thu nhỏ từ bản gốc này, đặt trên nền trắng vuông bo góc hoặc tròn. |
-| `ic_logo_splash` (640 px) | `pubgapp_loader_1080x1920.png` | Màn chờ khi mở trên Android 11: `bg_splash` là nền `background` với logo ở giữa, cỡ `splash_logo_width` x `splash_logo_height` (200 x 210dp, vừa cả máy xoay ngang). |
-| `ic_logo_header` (cao 192 px) | `pubgapp_header_horizontal_transparent.png` | Thanh trên của Trang chủ và phía trên lời chào của màn đăng nhập A01, cao `logo_header_height` (36dp), `adjustViewBounds`, `fitStart`, `contentDescription` là `app_name`. |
+| `ic_logo_app` (512 px) | `pubgapp_icon_512.png` | Lớp trước của biểu tượng launcher (`ic_launcher_foreground`, thụt 27% mỗi cạnh để nằm trong vòng an toàn 66dp, nền trắng `ic_launcher_background`) và biểu tượng màn chờ hệ thống Android 12+ (`ic_launch_logo`, thụt 24% mỗi cạnh). Các file `mipmap-*/ic_launcher*.webp` cũ cho launcher không hỗ trợ adaptive icon cũng thu nhỏ từ bản gốc này, đặt trên nền trắng vuông bo góc hoặc tròn. |
+| `ic_logo_splash` (640 px) | `pubgapp_loader_1080x1920.png` | Màn chờ khi mở trên Android 11: `bg_splash` là nền `background` với logo ở giữa, cỡ `splash_logo_width` x `splash_logo_height` (288 x 302dp: khoảng 70 đến 80% bề ngang máy khi cầm dọc, vẫn vừa chiều cao khi xoay ngang). |
+| `ic_logo_header` (cao 192 px) | `pubgapp_header_horizontal_transparent.png` | Phía trên lời chào của màn đăng nhập A01 (nền sáng), cao `logo_header_height` (36dp), `adjustViewBounds`, `fitStart`, `contentDescription` là `app_name`. |
+| `ic_logo_header_on_primary` (cao 192 px) | `pubgapp_header_horizontal_transparent.png` | Thanh trên xanh của Trang chủ, cùng cỡ và thuộc tính như trên. Hình minh họa giữ nguyên; chỉ các điểm ảnh của chữ "PUBGApp" (bên phải khoảng trống trong suốt ngăn hình và chữ) đổi sang trắng, giữ nguyên độ trong suốt nên viền chữ vẫn mịn. |
 
-Màn chờ: `MainActivity` khai báo theme `Theme.PUBGApp.Launch` trong manifest; `windowBackground` của theme này là `bg_splash`. Trong `onCreate`, `MainActivity` gọi `setTheme(R.style.Theme_PUBGApp)` trước mọi thứ, nên logo chỉ hiện trong lúc ứng dụng khởi động, không có thời gian chờ cố ý. Từ Android 12 hệ thống luôn vẽ màn chờ của nó trước; `values-v31/themes.xml` cho màn đó nền `background`, biểu tượng `ic_launcher_foreground` trên vòng tròn trắng. Không dùng thư viện `core-splashscreen`.
+Màn chờ: `MainActivity` khai báo theme `Theme.PUBGApp.Launch` trong manifest; `windowBackground` của theme này là `bg_splash`. Trong `onCreate`, `MainActivity` gọi `setTheme(R.style.Theme_PUBGApp)` trước mọi thứ, nên logo chỉ hiện trong lúc ứng dụng khởi động, không có thời gian chờ cố ý. Từ Android 12 hệ thống luôn vẽ màn chờ của nó trước; `values-v31/themes.xml` cho màn đó nền `background`, biểu tượng `ic_launch_logo` đặt thẳng trên nền đó, không có vòng tròn nền. Hệ thống vẽ biểu tượng này ở 288dp và chỉ giữ một vòng tròn 192dp, nên trên Android 12+ logo không thể to bằng màn chờ của Android 11; thụt 24% là mức lớn nhất mà dòng chữ nhỏ vẫn nằm trong vòng tròn. Không dùng thư viện `core-splashscreen`.
 
-Logo ngang chỉ đặt trên nền sáng (`colorBackground` hoặc `colorSurface`), không đặt trên dải xanh.
+Logo ngang: trên nền sáng (`colorBackground`, `colorSurface`) dùng `ic_logo_header`, trên dải xanh dùng `ic_logo_header_on_primary`. Cả hai file sinh từ bản gốc bằng `python workflow/scripts/make-header-logo.py <bản gốc> PUBGApp/app/src/main/res/drawable-nodpi` (cần Pillow).
 
 ## 8. Tiếng Việt
 

@@ -1016,3 +1016,28 @@ The leader chose the official logo set and asked for it on the launcher, at laun
 
 ### Owner
 tahpnart8, issue #397
+
+### Status
+Partly superseded by "2026-10-29 - Header logo with a white word on the green Home top bar, larger splash logo": the Home top row is green again and the splash logo is larger.
+
+## 2026-10-29 - Header logo with a white word on the green Home top bar, larger splash logo
+
+### Decision
+The Home top row (`layoutTopBar`) keeps its green `bg_top_bar` and white bell, and shows `ic_logo_header_on_primary`: the official horizontal logo with only the word "PUBGApp" turned white, alpha kept, made by `workflow/scripts/make-header-logo.py`. The illustration keeps its colours. The sign-in screen, on a light background, keeps the original `ic_logo_header`. The Android 11 splash logo grows to 288 x 302dp (about 70 to 80% of a portrait phone's width, still fits a landscape height). The Android 12+ system splash uses `ic_launch_logo` (the square logo with a 24% inset) with no icon background, the largest size whose tagline stays inside the 192dp circle the system keeps.
+
+### Context
+The leader reviewed issue #397 on the emulator: the splash logo looked small and the light Home top row broke the green header. The leader approved changing the colour of the word in the header logo, which the first entry ruled out.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| A light Home top row with the original logo | Tried first; the leader preferred keeping the green header. |
+| Recolouring the whole header logo white | The illustration would lose its colours; only the word needs contrast. |
+| Hand-editing the logo in an image editor | Not repeatable; the script shows exactly which pixels change and can be rerun. |
+| A larger Android 12+ splash icon than the 24% inset | The system masks it to a 192dp circle, so the tagline would be cut. |
+
+### Impact
+`activity_main.xml`, `drawable-nodpi/ic_logo_header_on_primary.webp`, `drawable-nodpi/ic_logo_app.webp` (now 512 px), `drawable/ic_launch_logo.xml`, `values-v31/themes.xml`, `values/dimens.xml` (`splash_logo_width`, `splash_logo_height`), `workflow/scripts/make-header-logo.py`, `workflow/docs/conventions/giao-dien.md` sections 5 and 7a.
+
+### Owner
+tahpnart8, issue #397
