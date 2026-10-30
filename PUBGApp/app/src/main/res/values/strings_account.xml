@@ -60,6 +60,7 @@
     <string name="account_register_national_id_hint">Số CCCD (12 chữ số)</string>
     <string name="account_register_national_id_invalid">Số CCCD cần đủ 12 chữ số</string>
     <string name="account_register_dob_hint">Ngày sinh</string>
+    <string name="account_register_dob_future">Ngày sinh không được ở tương lai</string>
     <string name="account_register_dob_empty">Vui lòng chọn ngày sinh</string>
     <string name="account_register_gender_title">Giới tính</string>
     <string name="account_register_gender_male">Nam</string>
