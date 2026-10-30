@@ -29,9 +29,9 @@ Cách mô tả mỗi lớp theo khung "thực thể thiết kế" của IEEE 101
 | [enums.md](enums.md) | `com.nhom3.pubgapp.model.enums` | 23 |
 | [data.md](data.md) | `com.nhom3.pubgapp.data` | 14 |
 | [data-local.md](data-local.md) | `com.nhom3.pubgapp.data.local` | 12 |
-| [util.md](util.md) | `com.nhom3.pubgapp.util` | 7 |
+| [util.md](util.md) | `com.nhom3.pubgapp.util` | 8 |
 | [viewmodel.md](viewmodel.md) | `com.nhom3.pubgapp.viewmodel` | 14 |
-| **Tổng** | | **93** |
+| **Tổng** | | **94** |
 
 ## Mọi lớp theo thứ tự chữ cái
 
@@ -43,6 +43,7 @@ Cách mô tả mỗi lớp theo khung "thực thể thiết kế" của IEEE 101
 | [`AdminDealViewModel`](viewmodel.md#admindealviewmodel) | `viewmodel` | lớp (ViewModel) |
 | [`AdminRepository`](data.md#adminrepository) | `data` | lớp (repository) |
 | [`AdminUserViewModel`](viewmodel.md#adminuserviewmodel) | `viewmodel` | lớp (ViewModel) |
+| [`AirplaneModeReceiver`](util.md#airplanemodereceiver) | `util` | lớp (broadcast receiver) |
 | [`AppDatabase`](data-local.md#appdatabase) | `data.local` | lớp (Room database) |
 | [`AppNotification`](model.md#appnotification) | `model` | lớp |
 | [`AuthRepository`](data.md#authrepository) | `data` | lớp (repository) |

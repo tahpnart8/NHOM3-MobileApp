@@ -1,6 +1,6 @@
 # Đặc tả lớp: gói `com.nhom3.pubgapp.util`
 
-Bản chữ của sơ đồ lớp cho gói này: 7 lớp. Mục lục và cách đọc ở [README.md](README.md).
+Bản chữ của sơ đồ lớp cho gói này: 8 lớp. Mục lục và cách đọc ở [README.md](README.md).
 
 Tiện ích dùng chung, không giữ trạng thái màn hình.
 
@@ -13,6 +13,7 @@ Tiện ích dùng chung, không giữ trạng thái màn hình.
 | [`GeoUtils`](#geoutils) | lớp | Tính khoảng cách và lọc theo bán kính (Firestore không truy vấn được theo bán kính). |
 | [`FormatUtils`](#formatutils) | lớp | Định dạng giá, thời gian; bỏ dấu tiếng Việt để tìm kiếm. |
 | [`AutoReleaseWorker`](#autoreleaseworker) | lớp (background job) | Việc chạy nền định kỳ trên máy: tự chuyển giao dịch hết đếm ngược sang Đã nhận và giải ngân; tự hoàn tất giao dịch Đã nhận sau 3 ngày. |
+| [`AirplaneModeReceiver`](#airplanemodereceiver) | lớp (broadcast receiver) | Nhận broadcast hệ thống khi người dùng bật hoặc tắt chế độ máy bay, để màn hình báo chuyển sang xem dữ liệu đã lưu. |
 
 ### SessionManager
 
@@ -192,3 +193,36 @@ Tiện ích dùng chung, không giữ trạng thái màn hình.
 - `AutoReleaseWorker` kế thừa `Worker`. Trang 7. ViewModel và tiện ích.
 
 **Dùng tới:** [`DealRepository`](data.md#dealrepository)
+
+### AirplaneModeReceiver
+
+| Mục | Nội dung |
+| --- | --- |
+| Định danh | `com.nhom3.pubgapp.util.AirplaneModeReceiver` |
+| Loại | lớp (broadcast receiver) |
+| Kế thừa | `android.content.BroadcastReceiver` |
+| Lưu trữ | Không lưu |
+| Trách nhiệm | Nhận broadcast hệ thống `Intent.ACTION_AIRPLANE_MODE_CHANGED` và báo trạng thái mới cho màn hình đã đăng ký. Đáp ứng kỹ thuật Broadcast của chương 7 (slide `07.3 Broadcasts`), issue #401. |
+| Chức năng liên quan (STT) | hạ tầng dùng chung (xem offline) |
+
+**Thuộc tính**
+
+| Tên | Kiểu | Truy cập | Ý nghĩa |
+| --- | --- | --- | --- |
+| `EXTRA_STATE` | `String` | private, static, final | Tên extra boolean `"state"` mà hệ thống gửi kèm broadcast. |
+| `listener` | `Listener` | private, final | Nơi nhận trạng thái mới, do màn hình truyền vào. |
+
+**Phương thức**
+
+| Chữ ký | Mô tả | STT |
+| --- | --- | --- |
+| `public AirplaneModeReceiver(Listener listener)` | Tạo receiver gắn với một nơi nhận. |  |
+| `public static IntentFilter createFilter()` | Bộ lọc chỉ nhận `ACTION_AIRPLANE_MODE_CHANGED`. |  |
+| `public void onReceive(Context context, Intent intent)` | Đọc extra `state` và gọi `Listener.onAirplaneModeChanged(boolean)`. |  |
+| `public static int messageFor(boolean on)` | Mã chuỗi thông báo cho trạng thái mới (`common_airplane_mode_on` hoặc `common_airplane_mode_off`). |  |
+
+Interface lồng `Listener` có một phương thức `void onAirplaneModeChanged(boolean on)`.
+
+**Cách dùng:** `MainActivity` đăng ký động trong `onStart` bằng `ContextCompat.registerReceiver(..., ContextCompat.RECEIVER_EXPORTED)` (broadcast đến từ hệ thống nên receiver phải được export) và hủy trong `onStop`, nên chỉ nghe khi màn hình đang hiện. Nhận tin thì hiện Snackbar phía trên thanh tab.
+
+**Được dùng bởi:** `MainActivity` (tầng giao diện)
