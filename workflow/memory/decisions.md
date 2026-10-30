@@ -1041,3 +1041,23 @@ The leader reviewed issue #397 on the emulator: the splash logo looked small and
 
 ### Owner
 tahpnart8, issue #397
+
+## 2026-10-30 - Deal terms: the seller writes them when accepting, only the seller edits, the buyer accepts or negotiates in chat
+
+### Decision
+Accepting an offer opens a terms dialog (delivery method, address or meeting place, meeting time, optional conditions); `ChatRepository.respondToOffer` refuses to accept without them and `DealRepository.buildFromOffer` writes them in the same batch with `sellerConfirmed` true. In PENDING_CONFIRM only the seller edits terms (`Deal.canEditTermsBy`); an edit clears only `buyerConfirmed`. The buyer accepts the terms (`Deal.canConfirmBy`, after a 5 second countdown dialog) or negotiates in chat. After CONFIRMED nobody edits. `firestore.rules` allows the terms update only for the seller with `sellerConfirmed == true` and `buyerConfirmed == false`. The carrier is still chosen at shipping time from a fixed list; no new Firestore field.
+
+### Context
+The leader ran the app on 2026-10-30: the deal was created without terms and either side could rewrite them, so nobody knew what had been agreed. The leader approved the behaviour change in issue #403.
+
+### Alternatives rejected
+| Alternative | Why not |
+| --- | --- |
+| Keep both sides editing and only add a notification | The buyer could still change terms the seller had accepted. |
+| Store the carrier on the deal at acceptance | `carrierName` is a shipping proof field; a second carrier field would change the schema (rule R6). |
+
+### Impact
+`Deal`, `DealRepository`, `ChatRepository`, `ChatViewModel`, `DealViewModel`, `DealDetailFragment`, `ChatFragment`, `MessageAdapter`, `DealTermsDialogFragment`, `CountdownConfirmDialogFragment`, `firebase/firestore.rules`, `trang-thai.md` section 3, `security-rules.md`, `firestore-schema.md`.
+
+### Owner
+tahpnart8, issue #403
