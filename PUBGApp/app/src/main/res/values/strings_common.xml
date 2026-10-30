@@ -16,6 +16,8 @@
 
     <!-- Offline banner wording from luong-xu-ly.md section 3 -->
     <string name="common_offline_banner">Đang offline, đây là dữ liệu đã xem</string>
+    <string name="common_airplane_mode_on">Đã bật chế độ máy bay. Bạn vẫn xem được các trang đã mở trước đó.</string>
+    <string name="common_airplane_mode_off">Đã tắt chế độ máy bay. Đang kết nối lại.</string>
 
     <!-- Bottom bar tabs and top bar of MainActivity -->
     <string name="common_tab_home">Trang chủ</string>
