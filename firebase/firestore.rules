@@ -1167,15 +1167,16 @@ service cloud.firestore {
         && emptyString(request.resource.data, 'receivedImageId')
         && createStamps();
 
-      // Sửa điều khoản: xóa cả hai cờ xác nhận; trạng thái và lịch sử giữ nguyên.
-      allow update: if isDealParty()
+      // Sửa điều khoản: chỉ người bán; cờ người bán giữ true, cờ người mua về false để họ chấp nhận lại;
+      // trạng thái và lịch sử giữ nguyên.
+      allow update: if isDealSeller()
         && writerActive()
         && moved('PENDING_CONFIRM', 'PENDING_CONFIRM')
         && onlyKeys(['deliveryMethod', 'deliveryAddress', 'scheduledAt', 'agreedTerms',
                      'exchangeItem', 'agreedPrice', 'buyerConfirmed', 'sellerConfirmed',
                      'updatedAt'])
         && request.resource.data.buyerConfirmed == false
-        && request.resource.data.sellerConfirmed == false
+        && request.resource.data.sellerConfirmed == true
         && dealTermsOk(request.resource.data)
         && serverStamp('updatedAt');
 

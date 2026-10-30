@@ -5,10 +5,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.enums.DealStatus;
+import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.OfferType;
 import com.nhom3.pubgapp.model.enums.TradeType;
@@ -104,5 +106,31 @@ public class DealRepositoryTest {
         assertFalse(DealRepository.shouldUpdateListingToSold(null, "deal_abc"));
         assertFalse(DealRepository.shouldUpdateListingToSold(listing, null));
         assertFalse(DealRepository.shouldUpdateListingToSold(listing, ""));
+    }
+
+    @Test
+    public void buildFromOffer_withTermsKeepsThemAndTheSellerFlag() {
+        Offer offer = new Offer();
+        offer.setId("offer1");
+        offer.setListingId("listing1");
+        offer.setBuyerId("buyer1");
+        offer.setSellerId("seller1");
+        offer.setOfferType(OfferType.MONEY);
+        offer.setAmount(500000);
+
+        Deal terms = new Deal();
+        terms.setDeliveryMethod(DeliveryMethod.SHIPPING);
+        terms.setDeliveryAddress("12 Nguyễn Huệ");
+        terms.setScheduledAt(Timestamp.now());
+        terms.setAgreedTerms("Kiểm tra hàng trước khi nhận");
+
+        Deal deal = DealRepository.buildFromOffer(offer, new Listing(), terms);
+
+        assertEquals(DeliveryMethod.SHIPPING, deal.getDeliveryMethod());
+        assertEquals("12 Nguyễn Huệ", deal.getDeliveryAddress());
+        assertEquals(terms.getScheduledAt(), deal.getScheduledAt());
+        assertEquals("Kiểm tra hàng trước khi nhận", deal.getAgreedTerms());
+        assertTrue(deal.isSellerConfirmed());
+        assertFalse(deal.isBuyerConfirmed());
     }
 }

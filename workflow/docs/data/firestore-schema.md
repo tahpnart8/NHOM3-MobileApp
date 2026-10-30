@@ -997,8 +997,8 @@ Ví dụ một tài liệu (thời gian ghi dạng chữ cho dễ đọc, trên 
 | `itemTitle` | string |  | Bản chụp tiêu đề tin lúc tạo giao dịch, để lịch sử không đổi khi tin bị sửa hoặc gỡ. | bản chụp từ tin đăng lúc tạo giao dịch |
 | `itemThumb` | string |  | Bản chụp `Listing.coverThumb` lúc tạo giao dịch. | bản chụp từ tin đăng lúc tạo giao dịch |
 | `status` | string |  | Trạng thái giao dịch, xem `trang-thai.md`. | một trong: PENDING_CONFIRM, CONFIRMED, SHIPPED, RECEIVED, COMPLETED, CANCELLED, DISPUTED |
-| `buyerConfirmed` | boolean |  | Người mua đã xác nhận thông tin giao dịch. |  |
-| `sellerConfirmed` | boolean |  | Người bán đã xác nhận thông tin giao dịch. |  |
+| `buyerConfirmed` | boolean |  | Người mua đã chấp nhận điều khoản. Người bán sửa điều khoản thì về false. |  |
+| `sellerConfirmed` | boolean |  | Người bán đã xác nhận điều khoản; bật ngay khi chấp nhận offer và luôn true từ đó. |  |
 | `cancelReason` | string |  | Lý do hủy, bắt buộc khi hủy. |  |
 | `carrierName` | string |  | Tên đơn vị vận chuyển. |  |
 | `trackingCode` | string |  | Mã vận đơn. |  |

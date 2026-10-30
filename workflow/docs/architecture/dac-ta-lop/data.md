@@ -311,6 +311,7 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | `public void sendImage(String id, Uri uri, DataCallback<Void> cb)` | Lưu ảnh qua `MediaRepository`, ghi tin nhắn IMAGE với mã ảnh, ghi thông báo NEW_MESSAGE. | 43, 44 |
 | `public void sendOffer(Offer offer, DataCallback<String> cb)` | Kiểm tra `Listing.acceptsOffer`, ghi `Offer` PENDING và một tin nhắn loại OFFER, ghi thông báo NEW_OFFER. Security Rules từ chối nếu tin không còn AVAILABLE. | 47 đến 49 |
 | `public void respondToOffer(String offerId, boolean accept, DataCallback<String> cb)` | Trong một lô ghi: offer ACCEPTED hoặc REJECTED; nếu chấp nhận thì các offer PENDING khác của tin sang REJECTED, giao dịch dựng bằng `DealRepository.buildFromOffer`, tin sang RESERVED và ghi `reservedDealId`. Ghi thông báo OFFER_RESULT. Tin không còn AVAILABLE thì từ chối offer và báo lỗi. | 47 đến 50 |
+| `public void respondToOffer(String offerId, boolean accept, Deal terms, DataCallback<String> cb)` | Như `respondToOffer` ba tham số, nhưng giao dịch được dựng kèm điều khoản người bán vừa điền (`buildFromOffer` ba tham số). Chấp nhận mà `terms` thiếu phương thức giao nhận, nơi hẹn hoặc giờ hẹn, hoặc giờ hẹn ở quá khứ thì báo lỗi, không ghi gì. Bản ba tham số gọi bản này với `terms` rỗng nên không còn chấp nhận được. | 47 đến 51 |
 | `public ListenerRegistration observeOffers(String conversationId, DataCallback<Void> cb)` | Lắng nghe các `Offer` của một cuộc trò chuyện theo thời gian thực, để thẻ đề nghị trong chat đổi theo khi người bán chấp nhận hoặc từ chối. Nhớ gỡ `ListenerRegistration` khi màn hình đóng. |  |
 
 **Quan hệ trên sơ đồ lớp**
@@ -338,12 +339,13 @@ Tầng truy cập dữ liệu. ViewModel chỉ nói chuyện với repository, k
 | Chữ ký | Mô tả | STT |
 | --- | --- | --- |
 | `public Deal buildFromOffer(Offer offer, Listing listing)` | Dựng một `Deal` từ đề nghị đã được chấp nhận, chụp `itemTitle` và `itemThumb` từ `Listing` truyền vào; chưa ghi lên Firestore. | 50 |
+| `public Deal buildFromOffer(Offer offer, Listing listing, Deal terms)` | Như trên và chép thêm điều khoản người bán điền (`deliveryMethod`, `deliveryAddress`, `scheduledAt`, `agreedTerms`). | 50, 51 |
 | `public void getById(String dealId, DataCallback<Deal> cb)` | Đọc một giao dịch. |  |
 | `public void getPayment(String dealId, DataCallback<Payment> cb)` | Đọc `payments/{dealId}`; rỗng khi chưa thanh toán. |  |
 | `public ListenerRegistration observeDeal(String dealId, DataCallback<Deal> cb)` | Nghe một giao dịch cho C03: bước của bên kia (xác nhận, gửi hàng, nhận hàng, hủy) hiện ngay. |  |
 | `public ListenerRegistration observePayment(String dealId, DataCallback<Payment> cb)` | Nghe `payments/{dealId}`; null khi chưa thanh toán. |  |
-| `public void updateTerms(Deal deal, DataCallback<Void> cb)` | Sửa điều khoản khi còn PENDING_CONFIRM; xóa cả hai cờ xác nhận để hai bên xác nhận lại. | 51 |
-| `public void confirm(String dealId, DataCallback<Void> cb)` | Gọi `Deal.confirmBy`. Từ chối nếu chưa chọn phương thức giao nhận, hoặc giao qua vận chuyển mà chưa có địa chỉ. | 52 |
+| `public void updateTerms(Deal deal, DataCallback<Void> cb)` | Chỉ người bán, chỉ khi còn PENDING_CONFIRM, điều khoản đủ và giờ hẹn không ở quá khứ; xóa cờ của người mua, giữ cờ người bán, thông báo DEAL_UPDATE cho người mua. | 51 |
+| `public void confirm(String dealId, DataCallback<Void> cb)` | Người mua chấp nhận điều khoản: gọi `Deal.confirmBy`. Từ chối người bán (đã xác nhận khi chấp nhận offer), và khi chưa chọn phương thức giao nhận, hoặc giao qua vận chuyển mà chưa có địa chỉ. | 52 |
 | `public void pay(String dealId, PaymentMethod method, DataCallback<Void> cb)` | Tạo `payments/{dealId}` HELD; chỉ người mua, chỉ khi CONFIRMED và `needsPayment`. | 56 |
 | `public void markShipped(String dealId, String carrier, String trackingCode, String imageId, DataCallback<Void> cb)` | Kiểm tra `Payment` đang HELD nếu `needsPayment()`, gọi `Deal.markShipped`, ghi `shippedAt` giờ máy chủ và `autoReleaseAt` sau 7 ngày, ghi lịch sử, thông báo DEAL_UPDATE cho người mua. | 54 |
 | `public void markReceived(String dealId, String imageId, DataCallback<Void> cb)` | Nhận mã ảnh đã được ViewModel lưu trước qua `MediaRepository` (giống `markShipped`); kiểm tra `Payment` đang HELD nếu `needsPayment()`, gọi `Deal.markReceived`, `Payment` sang RELEASED trong cùng lô ghi, thông báo PAYMENT_UPDATE cho người bán. | 53, 84 |

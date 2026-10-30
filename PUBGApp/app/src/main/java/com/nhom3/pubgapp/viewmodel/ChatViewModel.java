@@ -17,6 +17,7 @@ import com.nhom3.pubgapp.data.ListingRepository;
 import com.nhom3.pubgapp.data.UserRepository;
 import com.nhom3.pubgapp.model.ChatMessage;
 import com.nhom3.pubgapp.model.Conversation;
+import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Offer;
 import com.nhom3.pubgapp.model.User;
@@ -517,6 +518,10 @@ public class ChatViewModel extends ViewModel {
     }
 
     public void respondToOffer(final String offerId, final boolean accept) {
+        respondToOffer(offerId, accept, null);
+    }
+
+    public void respondToOffer(final String offerId, final boolean accept, final Deal terms) {
         loading.setValue(true);
         String uid = SessionManager.getInstance().getCurrentUserId();
         if (uid.isEmpty()) {
@@ -534,7 +539,7 @@ public class ChatViewModel extends ViewModel {
                             + "xác thực trước khi phản hồi đề nghị.");
                     return;
                 }
-                chatRepository.respondToOffer(offerId, accept, new DataCallback<String>() {
+                chatRepository.respondToOffer(offerId, accept, terms, new DataCallback<String>() {
                     @Override
                     public void onSuccess(String dealId) {
                         loading.postValue(false);

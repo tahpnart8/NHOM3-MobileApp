@@ -6,9 +6,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.model.Conversation;
+import com.nhom3.pubgapp.model.Deal;
 import com.nhom3.pubgapp.model.Listing;
 import com.nhom3.pubgapp.model.Offer;
+import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 import com.nhom3.pubgapp.model.enums.ListingStatus;
 import com.nhom3.pubgapp.model.enums.OfferType;
 
@@ -16,6 +19,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 // Unit tests for pure validation rules of ChatRepository.
@@ -177,5 +181,20 @@ public class ChatRepositoryTest {
         List<Offer> filtered = ChatRepository.filterOtherPendingOffers(Arrays.asList(o1, o2), "offer1");
         assertEquals(1, filtered.size());
         assertEquals("offer2", filtered.get(0).getId());
+    }
+
+    @Test
+    public void checkAcceptTerms_requiresMethodPlaceAndFutureTime() {
+        assertNotNull(ChatRepository.checkAcceptTerms(null));
+        assertNotNull(ChatRepository.checkAcceptTerms(new Deal()));
+
+        Deal terms = new Deal();
+        terms.setDeliveryMethod(DeliveryMethod.MEET_UP);
+        terms.setDeliveryAddress("Cổng trường");
+        terms.setScheduledAt(new Timestamp(new Date(System.currentTimeMillis() - 60_000L)));
+        assertNotNull(ChatRepository.checkAcceptTerms(terms));
+
+        terms.setScheduledAt(new Timestamp(new Date(System.currentTimeMillis() + 3_600_000L)));
+        assertNull(ChatRepository.checkAcceptTerms(terms));
     }
 }
