@@ -40,6 +40,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public interface OnOfferActionListener {
         void onOfferAccept(Offer offer);
         void onOfferReject(Offer offer);
+        // dealId is null while the offer has no deal (pending or rejected).
+        void onOfferClick(Offer offer, String dealId);
     }
 
     private static final int VIEW_TYPE_TEXT = 1;
@@ -49,6 +51,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final List<ChatMessage> messages = new ArrayList<ChatMessage>();
     private final Map<String, Offer> offerMap = new HashMap<String, Offer>();
     private final Map<String, DealStatus> dealStatusByOffer = new HashMap<String, DealStatus>();
+    private final Map<String, String> dealIdByOffer = new HashMap<String, String>();
     private final FormatUtils formatUtils = new FormatUtils();
     private final MediaRepository mediaRepository = new MediaRepository();
     private String currentUserId = "";
@@ -147,6 +150,14 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         dealStatusByOffer.clear();
         if (map != null) {
             dealStatusByOffer.putAll(map);
+        }
+        notifyOfferRows();
+    }
+
+    public void setDealIdByOffer(Map<String, String> map) {
+        dealIdByOffer.clear();
+        if (map != null) {
+            dealIdByOffer.putAll(map);
         }
         notifyOfferRows();
     }
@@ -344,7 +355,21 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 binding.textOfferWaitingBuyer.setVisibility(View.GONE);
                 binding.layoutSellerActions.setVisibility(View.GONE);
                 StatusChips.bind(binding.chipOfferStatus.textStatusChip, OfferStatus.PENDING);
+                binding.getRoot().setOnClickListener(null);
+                binding.getRoot().setClickable(false);
             }
+        }
+
+        // The whole card opens the deal of an accepted offer; the buttons inside keep their own clicks.
+        private void bindCardClick(final Offer offer) {
+            binding.getRoot().setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (offerActionListener != null) {
+                        offerActionListener.onOfferClick(offer, dealIdByOffer.get(offer.getId()));
+                    }
+                }
+            });
         }
 
         private void bindOfferDetails(final Offer offer) {
@@ -379,6 +404,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
 
             StatusChips.bind(binding.chipOfferStatus.textStatusChip, offer.getStatus());
+            bindCardClick(offer);
 
             DealStatus dealStatus = offer.getId() != null
                     ? dealStatusByOffer.get(offer.getId()) : null;

@@ -25,6 +25,8 @@
     <string name="trade_chat_resend">Gửi lại</string>
     <string name="trade_chat_image_sent">Đã gửi một ảnh</string>
     <string name="trade_chat_menu_profile">Xem trang cá nhân</string>
+    <string name="trade_chat_menu_options">Tùy chọn</string>
+    <string name="trade_chat_offer_no_deal_hint">Đề nghị này chưa được chấp nhận nên chưa có giao dịch.</string>
     <string name="trade_chat_menu_report_user">Báo cáo người dùng</string>
     <string name="trade_chat_menu_report_message">Báo cáo tin nhắn</string>
     <string name="trade_chat_offer_placeholder">[Đề nghị giá]</string>
@@ -91,7 +93,7 @@
     <string name="trade_deal_detail_not_found">Giao dịch không còn</string>
     <string name="trade_deal_detail_retry">Thử lại</string>
     <string name="trade_deal_detail_edit_terms">Sửa điều khoản</string>
-    <string name="trade_deal_detail_confirm">Xác nhận</string>
+    <string name="trade_deal_detail_confirm">Chấp nhận điều khoản</string>
     <string name="trade_deal_detail_confirmed_by_you">Bạn đã xác nhận</string>
     <string name="trade_deal_detail_waiting_partner_confirm">Chờ đối tác xác nhận</string>
     <string name="trade_deal_detail_cancel_deal">Hủy giao dịch</string>
@@ -157,7 +159,7 @@
     <string name="trade_deal_detail_ship_deal">Xác nhận đã giao</string>
     <string name="trade_deal_detail_shipping_title">Xác nhận gửi vận chuyển</string>
     <string name="trade_deal_detail_carrier_label">Đơn vị vận chuyển: %1$s</string>
-    <string name="trade_deal_detail_carrier_hint">Tên đơn vị vận chuyển (bắt buộc)...</string>
+    <string name="trade_deal_detail_carrier_hint">Chọn đơn vị vận chuyển (bắt buộc)</string>
     <string name="trade_deal_detail_tracking_code_label">Mã vận đơn: %1$s</string>
     <string name="trade_deal_detail_tracking_code_hint">Mã vận đơn (bắt buộc)...</string>
     <string name="trade_deal_detail_pick_waybill_photo">Chọn ảnh vận đơn</string>
@@ -298,5 +300,37 @@
         <item>VQR|Ví QR</item>
         <item>VLK|Ví liên kết ngân hàng</item>
         <item>VVT|Ví nhà mạng</item>
+    </string-array>
+    <string name="trade_deal_detail_message">Nhắn tin</string>
+    <string name="trade_deal_detail_waiting_buyer_terms">Bạn đã gửi điều khoản. Chờ người mua chấp nhận.</string>
+    <string name="trade_deal_detail_review_terms_hint">Người bán đã nêu điều khoản. Hãy xem kỹ rồi chấp nhận, hoặc nhắn tin để thương lượng.</string>
+    <string name="trade_terms_dialog_title_accept">Điền điều khoản trước khi chấp nhận</string>
+    <string name="trade_terms_dialog_accept">Chấp nhận đề nghị</string>
+    <string name="trade_terms_dialog_cancel">Đóng</string>
+    <string name="trade_terms_dialog_schedule_empty">Chưa chọn thời gian hẹn</string>
+    <string name="trade_terms_error_method">Hãy chọn phương thức giao nhận.</string>
+    <string name="trade_terms_error_address">Hãy nhập địa chỉ hoặc nơi hẹn.</string>
+    <string name="trade_terms_error_schedule_missing">Hãy chọn thời gian hẹn.</string>
+    <string name="trade_terms_error_schedule_past">Thời gian hẹn không được ở trong quá khứ.</string>
+    <string name="trade_countdown_agree">Đồng ý</string>
+    <string name="trade_countdown_agree_wait">Đồng ý (%1$d)</string>
+    <string name="trade_countdown_back">Quay lại</string>
+    <string name="trade_cancel_dialog_title">Hủy giao dịch?</string>
+    <string name="trade_cancel_dialog_message">Hủy rồi thì không hoàn tác được. Tin đăng sẽ được mở bán lại, khoản thanh toán đang giữ (nếu có) được hoàn cho người mua.</string>
+    <string name="trade_accept_terms_dialog_title">Chấp nhận điều khoản?</string>
+    <string name="trade_accept_terms_dialog_message">Sau khi chấp nhận, giao dịch được xác nhận và điều khoản bị khóa, không ai sửa được nữa. Hãy đọc kỹ trước khi đồng ý.</string>
+    <string-array name="trade_carrier_names">
+        <item>GHN (Giao Hàng Nhanh)</item>
+        <item>GHTK (Giao Hàng Tiết Kiệm)</item>
+        <item>Viettel Post</item>
+        <item>VNPost</item>
+        <item>J&amp;T Express</item>
+        <item>Ninja Van</item>
+        <item>Best Express</item>
+        <item>SPX Express</item>
+        <item>Ahamove</item>
+        <item>Grab Express</item>
+        <item>Lalamove</item>
+        <item>Khác</item>
     </string-array>
 </resources>

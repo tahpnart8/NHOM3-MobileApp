@@ -200,7 +200,7 @@ public class DealRepository extends BaseRepository {
             return;
         }
         if (!deal.canEditTermsBy(currentUid)) {
-            cb.onError("Chỉ người bán mới được sửa điều khoản. Hãy nhắn tin để đề nghị người bán sửa.");
+            cb.onError("Chỉ người bán được sửa điều khoản. Hãy nhắn tin cho người bán.");
             return;
         }
         if (!deal.hasRequiredTerms()) {
@@ -272,11 +272,11 @@ public class DealRepository extends BaseRepository {
                     return;
                 }
                 if (currentUid.equals(deal.getSellerId())) {
-                    cb.onError("Người bán đã xác nhận khi chấp nhận đề nghị. Chờ người mua chấp nhận điều khoản.");
+                    cb.onError("Người bán đã xác nhận. Chờ người mua chấp nhận điều khoản.");
                     return;
                 }
                 if (deal.getDeliveryMethod() == null) {
-                    cb.onError("Chưa có phương thức giao nhận. Hãy nhắn tin để người bán bổ sung điều khoản.");
+                    cb.onError("Chưa có cách giao nhận. Hãy nhắn tin cho người bán.");
                     return;
                 }
                 if (deal.getDeliveryMethod() == DeliveryMethod.SHIPPING) {

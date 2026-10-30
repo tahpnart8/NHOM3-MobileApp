@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentResultListener;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
@@ -103,6 +104,7 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         }
 
         setupRecyclerView();
+        setupTermsResult();
         setupInputBar();
         setupHeader();
         setupProductBanner();
@@ -134,8 +136,13 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
             @Override
             public void onOfferAccept(Offer offer) {
                 if (offer != null && offer.getId() != null) {
-                    viewModel.respondToOffer(offer.getId(), true);
+                    showTermsDialog(offer.getId());
                 }
+            }
+
+            @Override
+            public void onOfferClick(Offer offer, String dealId) {
+                openDealOfOffer(dealId);
             }
 
             @Override
@@ -161,6 +168,37 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
                 }
             }
         });
+    }
+
+    // The seller must give the terms before an offer is accepted; the dialog hands them back here.
+    private void showTermsDialog(String offerId) {
+        DealTermsDialogFragment dialog = DealTermsDialogFragment.newInstance(offerId, null, false);
+        dialog.show(getParentFragmentManager(), "deal_terms");
+    }
+
+    private void setupTermsResult() {
+        getParentFragmentManager().setFragmentResultListener(DealTermsDialogFragment.RESULT_KEY,
+                getViewLifecycleOwner(), new FragmentResultListener() {
+                    @Override
+                    public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
+                        String offerId = result.getString(DealTermsDialogFragment.RESULT_OFFER_ID, "");
+                        if (offerId.isEmpty()) {
+                            return;
+                        }
+                        Deal terms = DealTermsDialogFragment.termsFromResult(result);
+                        viewModel.respondToOffer(offerId, true, terms);
+                    }
+                });
+    }
+
+    private void openDealOfOffer(String dealId) {
+        if (dealId == null || dealId.isEmpty()) {
+            Snackbar.make(binding.getRoot(), R.string.trade_chat_offer_no_deal_hint, Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+        Bundle args = new Bundle();
+        args.putString("dealId", dealId);
+        Navigation.findNavController(requireView()).navigate(R.id.action_global_deal_detail, args);
     }
 
     private void setupInputBar() {
@@ -467,10 +505,12 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
                     return;
                 }
                 final Map<String, DealStatus> dealStatusByOffer = dealStatusByOffer(deals);
+                final Map<String, String> dealIdByOffer = dealIdByOffer(deals);
                 mainHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         if (binding != null && adapter != null) {
+                            adapter.setDealIdByOffer(dealIdByOffer);
                             adapter.setDealStatusByOffer(dealStatusByOffer);
                         }
                     }
@@ -490,6 +530,17 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
             Deal deal = deals.get(i);
             if (deal != null && deal.getOfferId() != null) {
                 result.put(deal.getOfferId(), deal.getStatus());
+            }
+        }
+        return result;
+    }
+
+    private Map<String, String> dealIdByOffer(List<Deal> deals) {
+        Map<String, String> result = new HashMap<String, String>();
+        for (int i = 0; i < deals.size(); i++) {
+            Deal deal = deals.get(i);
+            if (deal != null && deal.getOfferId() != null && deal.getId() != null) {
+                result.put(deal.getOfferId(), deal.getId());
             }
         }
         return result;

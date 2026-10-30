@@ -401,150 +401,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Edit Terms Form (Toggleable) -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardEditTerms"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/space_md"
-                android:visibility="gone"
-                app:contentPadding="@dimen/space_md">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/trade_deal_detail_edit_terms_title"
-                        android:textAppearance="?attr/textAppearanceTitleMedium"
-                        android:textColor="?attr/colorOnSurface" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_sm"
-                        android:text="@string/trade_deal_detail_edit_delivery_method"
-                        android:textAppearance="?attr/textAppearanceBodyMedium"
-                        android:textColor="?attr/colorOnSurface" />
-
-                    <RadioGroup
-                        android:id="@+id/radioGroupDeliveryMethod"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <RadioButton
-                            android:id="@+id/radioMeetUp"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_delivery_meet_up" />
-
-                        <RadioButton
-                            android:id="@+id/radioShipping"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_delivery_shipping" />
-                    </RadioGroup>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/inputDeliveryAddress"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xs"
-                        android:hint="@string/trade_deal_detail_edit_address_hint">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/editDeliveryAddress"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textPostalAddress" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_sm"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/buttonPickSchedule"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_edit_schedule_button" />
-
-                        <TextView
-                            android:id="@+id/textSelectedSchedule"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_sm"
-                            android:layout_weight="1"
-                            android:textAppearance="?attr/textAppearanceBodySmall"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-                    </LinearLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/inputAgreedPrice"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xs"
-                        android:hint="@string/trade_deal_detail_edit_price_hint">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/editAgreedPrice"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="number" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/inputAgreedTerms"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xs"
-                        android:hint="@string/trade_deal_detail_edit_terms_hint">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/editAgreedTerms"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textMultiLine"
-                            android:minLines="2" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_md"
-                        android:gravity="end"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/buttonCancelEditTerms"
-                            style="?attr/materialButtonOutlinedStyle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="@dimen/space_sm"
-                            android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_close_edit" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/buttonSaveTerms"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minHeight="@dimen/touch_min"
-                            android:text="@string/trade_deal_detail_save_terms" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
             <!-- Cancel Deal Form (Toggleable) -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardCancelDeal"
@@ -752,16 +608,17 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/inputCarrierName"
+                        style="@style/Widget.PUBGApp.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_sm"
                         android:hint="@string/trade_deal_detail_carrier_hint">
 
-                        <com.google.android.material.textfield.TextInputEditText
+                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
                             android:id="@+id/editCarrierName"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="textCapWords" />
+                            android:inputType="none" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -1001,6 +858,15 @@
                     android:textColor="?attr/colorError"
                     app:strokeColor="?attr/colorError" />
             </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonMessagePartner"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_sm"
+                android:minHeight="@dimen/touch_min"
+                android:text="@string/trade_deal_detail_message" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonWriteReview"
