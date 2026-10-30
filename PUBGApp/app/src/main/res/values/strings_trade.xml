@@ -302,6 +302,8 @@
         <item>VVT|Ví nhà mạng</item>
     </string-array>
     <string name="trade_deal_detail_message">Nhắn tin</string>
+    <string name="trade_request_terms_change">Đề nghị sửa điều khoản</string>
+    <string name="trade_request_terms_change_draft">Mình muốn đề nghị sửa điều khoản: </string>
     <string name="trade_deal_detail_waiting_buyer_terms">Bạn đã gửi điều khoản. Chờ người mua chấp nhận.</string>
     <string name="trade_deal_detail_review_terms_hint">Người bán đã nêu điều khoản. Hãy xem kỹ rồi chấp nhận, hoặc nhắn tin để thương lượng.</string>
     <string name="trade_terms_dialog_title_accept">Điền điều khoản trước khi chấp nhận</string>

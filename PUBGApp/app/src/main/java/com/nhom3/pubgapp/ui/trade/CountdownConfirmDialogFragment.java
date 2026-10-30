@@ -27,6 +27,7 @@ public class CountdownConfirmDialogFragment extends DialogFragment {
     private static final String ARG_ACTION = "action";
     private static final String ARG_TITLE = "title";
     private static final String ARG_MESSAGE = "message";
+    private static final String ARG_MESSAGE_TEXT = "messageText";
     private static final long TICK_MILLIS = 1000L;
 
     private CountDownTimer timer;
@@ -38,6 +39,13 @@ public class CountdownConfirmDialogFragment extends DialogFragment {
         args.putInt(ARG_MESSAGE, messageRes);
         CountdownConfirmDialogFragment fragment = new CountdownConfirmDialogFragment();
         fragment.setArguments(args);
+        return fragment;
+    }
+
+    // Same dialog with a built message, so the buyer reads the actual terms while the timer runs.
+    public static CountdownConfirmDialogFragment newInstance(String action, int titleRes, String messageText) {
+        CountdownConfirmDialogFragment fragment = newInstance(action, titleRes, 0);
+        fragment.requireArguments().putString(ARG_MESSAGE_TEXT, messageText);
         return fragment;
     }
 
@@ -55,7 +63,7 @@ public class CountdownConfirmDialogFragment extends DialogFragment {
         final Bundle args = requireArguments();
         return new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(args.getInt(ARG_TITLE))
-                .setMessage(args.getInt(ARG_MESSAGE))
+                .setMessage(messageOf(args))
                 .setNegativeButton(R.string.trade_countdown_back, null)
                 .setPositiveButton(getString(R.string.trade_countdown_agree_wait, COUNTDOWN_SECONDS),
                         new DialogInterface.OnClickListener() {
@@ -67,6 +75,14 @@ public class CountdownConfirmDialogFragment extends DialogFragment {
                             }
                         })
                 .create();
+    }
+
+    private CharSequence messageOf(Bundle args) {
+        String text = args.getString(ARG_MESSAGE_TEXT);
+        if (text != null) {
+            return text;
+        }
+        return getString(args.getInt(ARG_MESSAGE));
     }
 
     @Override
