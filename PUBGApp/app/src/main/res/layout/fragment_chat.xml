@@ -75,9 +75,9 @@
             android:layout_width="@dimen/touch_min"
             android:layout_height="@dimen/touch_min"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/trade_chat_menu_profile"
+            android:contentDescription="@string/trade_chat_menu_options"
             android:scaleType="centerInside"
-            android:src="@drawable/ic_bell"
+            android:src="@drawable/ic_more_vert"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
