@@ -576,7 +576,8 @@ public class SearchFragment extends Fragment {
             return;
         }
 
-        binding.layoutRecentSearches.setVisibility(View.VISIBLE);
+        // The users tab never shows recent listing keywords; they would draw over its results.
+        binding.layoutRecentSearches.setVisibility(currentTab == TAB_USERS ? View.GONE : View.VISIBLE);
         LayoutInflater inflater = LayoutInflater.from(getContext());
 
         for (int i = 0; i < cleaned.size(); i++) {
