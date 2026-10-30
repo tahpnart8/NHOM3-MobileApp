@@ -43,23 +43,25 @@ Cột cuối ghi "**có**" khi kế hoạch đã có chỗ làm, "**hở**" khi 
 | 5 | Drawable, style, theme | `colors.xml`, `themes.xml`, `giao-dien.md` mục 1 | có |
 | 5 | Material Design | Material Components, token màu, chip trạng thái | có |
 | 5 | **Layout thích ứng, thư mục resource thay thế** | `res/layout-land/`, các việc P3 | có |
-| 6 | **UI testing (Espresso)** | Chưa có việc nào trong kế hoạch, dù `espresso-core` đã có trong build | **hở** |
+| 6 | **UI testing (Espresso)** | `PUBGApp/app/src/androidTest/`: `LoginFlowEspressoTest`, `PostListingFlowEspressoTest`, `AdminVerificationFlowEspressoTest` và `EspressoTestHelper` (10 test) | có |
 | 7 | **Async** | Mọi lệnh gọi Firebase đi qua `DataCallback`, không chạy trên luồng chính | có |
 | 7 | **Kiểm tra kết nối mạng** | `NetworkMonitor`, dải báo offline, bộ nhớ đệm Room | có |
-| 7 | **Broadcast** | Chưa có chỗ nào gửi hay nhận broadcast | **hở** |
-| 7 | **Service** | `AutoReleaseWorker` là `Worker` của WorkManager, không phải `Service` | **hở một phần** |
+| 7 | **Broadcast** | `util/AirplaneModeReceiver` nhận broadcast hệ thống `ACTION_AIRPLANE_MODE_CHANGED`; `MainActivity` đăng ký ở `onStart`, hủy ở `onStop`, hiện Snackbar báo đang xem dữ liệu đã lưu (issue #401) | có |
+| 7 | **Service** | `AutoReleaseWorker` là `Worker` của WorkManager, không phải `Service`. Báo cáo phải giải thích: WorkManager là cách Android khuyên dùng thay `Service` cho việc chạy nền có điều kiện (trích slide 07.4) | có, phải giải trình |
 
-Ngoài barem nhưng thầy có dạy và có yêu cầu riêng: chương 9 (`SharedPreferences`, app settings) chưa dùng ở đâu; chương 10 (SQLite, Room, LiveData, ViewModel) đã dùng đầy đủ; chương 8 (notification, alarm) dự án dùng thông báo trong ứng dụng (tài liệu Firestore), không dùng notification của hệ điều hành.
+Ngoài barem nhưng thầy có dạy và có yêu cầu riêng: chương 9 (`SharedPreferences`) dùng ở `ui/notification/InAppNotifier` (nhớ đã hỏi quyền thông báo); chương 10 (SQLite, Room, LiveData, ViewModel) đã dùng đầy đủ; chương 8 (notification) dùng notification của hệ điều hành qua `NotificationCompat` và kênh thông báo ở `InAppNotifier` (thông báo mới khi app đang mở) và `ui/trade/PaymentOtpNotifier` (mã OTP thanh toán mô phỏng). Không dùng `AlarmManager`, `TimePicker`.
 
-## 4. Ba chỗ hở, đề xuất bịt
+## 4. Hiện trạng các chỗ hở (cập nhật 2026-10-30)
 
-Ba dòng dưới đây chưa có việc nào trong `workflow/plan/`. Leader quyết có thêm hay không; thêm thì mở issue mới, không nhét vào issue đang có (luật R19).
+Rà lại toàn bộ code ngày 2026-10-29 và 2026-10-30. Ba chỗ hở ghi trước đây đã đóng hoặc có cách giải trình:
 
-| Chỗ hở | Đề xuất | Vì sao đáng làm |
-| --- | --- | --- |
-| UI testing (chương 6) | Một việc mới `P3-U`: 3 đến 5 kịch bản Espresso cho các luồng xương sống (đăng nhập, đăng tin, gửi đề nghị, duyệt xác thực) | Đây là một dòng barem riêng, hiện bằng không. `espresso-core` đã có trong build nên không cần thêm thư viện |
-| Broadcast (chương 7) | `AutoReleaseWorker` gửi một broadcast nội bộ khi nó chuyển một khoản thanh toán sang đã giải ngân; màn C03 và C04 đang mở thì nhận và tự cập nhật | Việc này có thật trong luồng nghiệp vụ, không phải làm cho có. Gắn vào `P2-E6b` hoặc một việc nhỏ riêng |
-| Service (chương 7) | Hoặc viết một `Service` ngắn cho việc nén và lưu nhiều ảnh khi đăng tin, hoặc giữ WorkManager và giải thích trong báo cáo rằng WorkManager là bản thay thế hiện đại của `Service` cho việc chạy nền có điều kiện | Nếu chọn cách giải thích thì phải viết hẳn một mục trong báo cáo, kèm trích slide 7.4, chứ không bỏ trống |
+| Chỗ hở cũ | Hiện trạng |
+| --- | --- |
+| UI testing (chương 6) | Đã có 10 test Espresso ở `androidTest` (xem bảng mục 3). Báo cáo cần ghi lệnh chạy và kết quả chạy thật |
+| Broadcast (chương 7) | Đã có `AirplaneModeReceiver` (issue #401). Trình diễn: đang mở app, bật chế độ máy bay, Snackbar hiện ngay, rồi lướt các trang đã xem nhờ Room |
+| Service (chương 7) | Giữ WorkManager (`AutoReleaseWorker`); báo cáo viết một mục giải thích, trích slide 07.4 |
+
+Chỗ còn mỏng, chỉ cần nêu trong báo cáo: bản ngang `layout-land` mới có 5 màn (đăng nhập, đăng ký, quên mật khẩu, chi tiết tin, đăng tin), các màn khác vẫn xoay được và giữ trạng thái nhờ ViewModel và `onSaveInstanceState`.
 
 ## 5. Hai dòng còn lại
 
