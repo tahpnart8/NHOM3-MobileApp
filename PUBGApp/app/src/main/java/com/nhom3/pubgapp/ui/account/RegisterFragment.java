@@ -528,6 +528,9 @@ public class RegisterFragment extends Fragment {
         if (selectedDob == null) {
             binding.layoutDob.setError(getString(R.string.account_register_dob_empty));
             hasError = true;
+        } else if (isFutureDate(selectedDob.toDate(), new Date())) {
+            binding.layoutDob.setError(getString(R.string.account_register_dob_future));
+            hasError = true;
         }
         if (getSelectedGender() == null) {
             binding.textError.setText(R.string.account_register_gender_empty);
@@ -606,7 +609,12 @@ public class RegisterFragment extends Fragment {
                 month,
                 day
         );
+        dialog.getDatePicker().setMaxDate(System.currentTimeMillis());
         dialog.show();
+    }
+
+    static boolean isFutureDate(Date chosen, Date now) {
+        return chosen.after(now);
     }
 
     private void showTextDialog(int titleRes, int contentRes) {
