@@ -1,7 +1,5 @@
 package com.nhom3.pubgapp.ui.trade;
 
-import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,8 +10,7 @@ import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.DatePicker;
-import android.widget.TimePicker;
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultCallback;
@@ -22,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentResultListener;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -48,26 +46,23 @@ import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.viewmodel.DealViewModel;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
 /** Screen C03: Deal details, editing terms, two-party confirmation and cancellation. */
 public class DealDetailFragment extends Fragment {
 
-    private static final String KEY_EDIT_TERMS_OPEN = "key_edit_terms_open";
     private static final String KEY_CANCEL_OPEN = "key_cancel_open";
-    private static final String KEY_SCHEDULE_MILLIS = "key_schedule_millis";
     private static final String KEY_WAYBILL_URI = "key_waybill_uri";
     private static final String KEY_RECEIVED_URI = "key_received_uri";
     private static final String KEY_SHIPPING_FORM_OPEN = "key_shipping_form_open";
     private static final String KEY_RECEIVING_FORM_OPEN = "key_receiving_form_open";
+    private static final String TAG_TERMS_DIALOG = "deal_terms";
+    private static final String TAG_COUNTDOWN_DIALOG = "countdown_confirm";
 
     private FragmentDealDetailBinding binding;
     private DealViewModel viewModel;
     private String dealId;
     private boolean isUserVerified;
-    private Timestamp selectedScheduleTimestamp;
     private Uri selectedWaybillUri;
     private Uri selectedReceivedUri;
     private Deal currentDeal;
@@ -128,8 +123,11 @@ public class DealDetailFragment extends Fragment {
         setupToolbar();
         setupErrorAndEmptyStates();
         setupEditTermsControls();
+        setupDialogResults();
+        setupMessageButton();
         setupCancelControls();
         setupShippingAndReceivingControls();
+        setupCarrierDropdown();
         setupWriteReviewButton();
         observeViewModel();
         checkAccountVerification();
@@ -237,140 +235,99 @@ public class DealDetailFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Deal deal = viewModel.getDeal().getValue();
-                if (deal != null) {
-                    populateEditTermsForm(deal);
-                    binding.cardEditTerms.setVisibility(View.VISIBLE);
-                    binding.cardCancelDeal.setVisibility(View.GONE);
+                if (deal != null && deal.canEditTermsBy(getCurrentUserId())) {
+                    boolean showPrice = deal.getTradeType() == TradeType.SELL;
+                    DealTermsDialogFragment.newInstance(null, deal, showPrice)
+                            .show(getParentFragmentManager(), TAG_TERMS_DIALOG);
                 }
             }
         });
-
-        binding.buttonCancelEditTerms.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                binding.cardEditTerms.setVisibility(View.GONE);
-            }
-        });
-
-        binding.buttonPickSchedule.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDateTimePicker();
-            }
-        });
-
-        binding.buttonSaveTerms.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveTerms();
-            }
-        });
     }
 
-    private void populateEditTermsForm(Deal deal) {
-        if (deal.getDeliveryMethod() == DeliveryMethod.SHIPPING) {
-            binding.radioShipping.setChecked(true);
-        } else {
-            binding.radioMeetUp.setChecked(true);
-        }
-
-        binding.editDeliveryAddress.setText(deal.getDeliveryAddress() != null ? deal.getDeliveryAddress() : "");
-        binding.editAgreedTerms.setText(deal.getAgreedTerms() != null ? deal.getAgreedTerms() : "");
-
-        if (deal.getTradeType() == TradeType.SELL) {
-            binding.inputAgreedPrice.setVisibility(View.VISIBLE);
-            binding.editAgreedPrice.setText(String.valueOf(deal.getAgreedPrice()));
-        } else {
-            binding.inputAgreedPrice.setVisibility(View.GONE);
-        }
-
-        selectedScheduleTimestamp = deal.getScheduledAt();
-        updateSelectedScheduleText();
-    }
-
-    private void showDateTimePicker() {
-        Calendar calendar = Calendar.getInstance();
-        if (selectedScheduleTimestamp != null) {
-            calendar.setTime(selectedScheduleTimestamp.toDate());
-        }
-
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-        DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
-                new DatePickerDialog.OnDateSetListener() {
+    // Both dialogs answer through the fragment manager, so a rotation does not lose the answer.
+    private void setupDialogResults() {
+        getParentFragmentManager().setFragmentResultListener(DealTermsDialogFragment.RESULT_KEY,
+                getViewLifecycleOwner(), new FragmentResultListener() {
                     @Override
-                    public void onDateSet(DatePicker view, int selectedYear, int selectedMonth, int selectedDay) {
-                        calendar.set(Calendar.YEAR, selectedYear);
-                        calendar.set(Calendar.MONTH, selectedMonth);
-                        calendar.set(Calendar.DAY_OF_MONTH, selectedDay);
-                        showTimePicker(calendar);
+                    public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
+                        saveTerms(result);
                     }
-                }, year, month, day);
-        datePickerDialog.show();
-    }
-
-    private void showTimePicker(Calendar calendar) {
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        int minute = calendar.get(Calendar.MINUTE);
-
-        TimePickerDialog timePickerDialog = new TimePickerDialog(requireContext(),
-                new TimePickerDialog.OnTimeSetListener() {
+                });
+        getParentFragmentManager().setFragmentResultListener(CountdownConfirmDialogFragment.RESULT_KEY,
+                getViewLifecycleOwner(), new FragmentResultListener() {
                     @Override
-                    public void onTimeSet(TimePicker view, int selectedHour, int selectedMinute) {
-                        calendar.set(Calendar.HOUR_OF_DAY, selectedHour);
-                        calendar.set(Calendar.MINUTE, selectedMinute);
-                        calendar.set(Calendar.SECOND, 0);
-                        selectedScheduleTimestamp = new Timestamp(calendar.getTime());
-                        updateSelectedScheduleText();
+                    public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
+                        runConfirmedAction(result.getString(CountdownConfirmDialogFragment.RESULT_ACTION, ""));
                     }
-                }, hour, minute, true);
-        timePickerDialog.show();
+                });
     }
 
-    private void updateSelectedScheduleText() {
-        if (selectedScheduleTimestamp != null) {
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-            binding.textSelectedSchedule.setText(sdf.format(selectedScheduleTimestamp.toDate()));
-        } else {
-            binding.textSelectedSchedule.setText(R.string.trade_deal_detail_not_specified);
+    private void runConfirmedAction(String action) {
+        if (CountdownConfirmDialogFragment.ACTION_ACCEPT_TERMS.equals(action)) {
+            viewModel.confirm();
+        } else if (CountdownConfirmDialogFragment.ACTION_CANCEL_DEAL.equals(action)) {
+            String reason = binding.editCancelReason.getText() != null
+                    ? binding.editCancelReason.getText().toString().trim() : "";
+            if (!reason.isEmpty()) {
+                viewModel.cancel(reason);
+            }
         }
     }
 
-    private void saveTerms() {
+    private void showCountdownDialog(String action, int titleRes, int messageRes) {
+        CountdownConfirmDialogFragment.newInstance(action, titleRes, messageRes)
+                .show(getParentFragmentManager(), TAG_COUNTDOWN_DIALOG);
+    }
+
+    private void saveTerms(Bundle result) {
         Deal current = viewModel.getDeal().getValue();
         if (current == null) {
             return;
         }
-
-        DeliveryMethod method = binding.radioShipping.isChecked() ? DeliveryMethod.SHIPPING : DeliveryMethod.MEET_UP;
-        current.setDeliveryMethod(method);
-
-        String address = binding.editDeliveryAddress.getText() != null
-                ? binding.editDeliveryAddress.getText().toString().trim() : "";
-        current.setDeliveryAddress(address);
-
-        String terms = binding.editAgreedTerms.getText() != null
-                ? binding.editAgreedTerms.getText().toString().trim() : "";
-        current.setAgreedTerms(terms);
-
-        if (selectedScheduleTimestamp != null) {
-            current.setScheduledAt(selectedScheduleTimestamp);
+        Deal terms = DealTermsDialogFragment.termsFromResult(result);
+        current.setDeliveryMethod(terms.getDeliveryMethod());
+        current.setDeliveryAddress(terms.getDeliveryAddress());
+        current.setAgreedTerms(terms.getAgreedTerms());
+        current.setScheduledAt(terms.getScheduledAt());
+        long price = result.getLong(DealTermsDialogFragment.RESULT_PRICE, DealTermsDialogFragment.PRICE_HIDDEN);
+        if (price != DealTermsDialogFragment.PRICE_HIDDEN) {
+            current.setAgreedPrice(price);
         }
-
-        if (current.getTradeType() == TradeType.SELL && binding.editAgreedPrice.getText() != null) {
-            try {
-                long price = Long.parseLong(binding.editAgreedPrice.getText().toString().trim());
-                if (price >= 0) {
-                    current.setAgreedPrice(price);
-                }
-            } catch (NumberFormatException e) {
-                // Keep existing price if invalid format
-            }
-        }
-
         viewModel.updateTerms(current);
+    }
+
+    private void setupMessageButton() {
+        binding.buttonMessagePartner.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Deal deal = viewModel.getDeal().getValue();
+                if (deal == null || deal.getListingId() == null || deal.getBuyerId() == null) {
+                    return;
+                }
+                Bundle args = new Bundle();
+                args.putString("listingId", deal.getListingId());
+                args.putString("conversationId", deal.getListingId() + "_" + deal.getBuyerId());
+                NavHostFragment.findNavController(DealDetailFragment.this)
+                        .navigate(R.id.action_global_chat, args);
+            }
+        });
+    }
+
+    // The carrier is picked from a fixed list so the buyer sees the same name the seller chose.
+    private void setupCarrierDropdown() {
+        String[] carriers = getResources().getStringArray(R.array.trade_carrier_names);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(),
+                android.R.layout.simple_list_item_1, carriers);
+        binding.editCarrierName.setAdapter(adapter);
+    }
+
+    // Restoring the saved text filters the list down to one row; setting the adapter again shows all rows.
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if (binding != null) {
+            setupCarrierDropdown();
+        }
     }
 
     private void setupCancelControls() {
@@ -378,7 +335,6 @@ public class DealDetailFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 binding.cardCancelDeal.setVisibility(View.VISIBLE);
-                binding.cardEditTerms.setVisibility(View.GONE);
             }
         });
 
@@ -412,7 +368,8 @@ public class DealDetailFragment extends Fragment {
                 String reason = binding.editCancelReason.getText() != null
                         ? binding.editCancelReason.getText().toString().trim() : "";
                 if (!reason.isEmpty()) {
-                    viewModel.cancel(reason);
+                    showCountdownDialog(CountdownConfirmDialogFragment.ACTION_CANCEL_DEAL,
+                            R.string.trade_cancel_dialog_title, R.string.trade_cancel_dialog_message);
                 }
             }
         });
@@ -420,7 +377,8 @@ public class DealDetailFragment extends Fragment {
         binding.buttonConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                viewModel.confirm();
+                showCountdownDialog(CountdownConfirmDialogFragment.ACTION_ACCEPT_TERMS,
+                        R.string.trade_accept_terms_dialog_title, R.string.trade_accept_terms_dialog_message);
             }
         });
     }
@@ -491,7 +449,6 @@ public class DealDetailFragment extends Fragment {
             @Override
             public void onChanged(Boolean isDone) {
                 if (isDone != null && isDone) {
-                    binding.cardEditTerms.setVisibility(View.GONE);
                     binding.cardCancelDeal.setVisibility(View.GONE);
                     binding.cardShippingForm.setVisibility(View.GONE);
                     binding.cardReceivingForm.setVisibility(View.GONE);
@@ -521,50 +478,63 @@ public class DealDetailFragment extends Fragment {
             @Override
             public void onChanged(Payment payment) {
                 Deal deal = viewModel.getDeal().getValue();
-                if (deal != null && deal.needsPayment()) {
-                    binding.cardPaymentInfo.setVisibility(View.VISIBLE);
-                    if (payment != null) {
-                        binding.textPaymentStatus.setVisibility(View.VISIBLE);
-                        int statusTextRes = R.string.trade_deal_payment_status_held;
-                        if (payment.getStatus() == com.nhom3.pubgapp.model.enums.PaymentStatus.RELEASED) {
-                            statusTextRes = R.string.trade_deal_payment_status_released;
-                        } else if (payment.getStatus() == com.nhom3.pubgapp.model.enums.PaymentStatus.REFUNDED) {
-                            statusTextRes = R.string.trade_deal_payment_status_refunded;
-                        }
-                        binding.textPaymentStatus.setText(getString(R.string.trade_deal_payment_status_label,
-                                getString(statusTextRes)));
-                        binding.textPaymentNotice.setText(paymentNoticeFor(payment));
-
-                        if (payment.getMethod() != null) {
-                            binding.textPaymentMethod.setVisibility(View.VISIBLE);
-                            int methodTextRes = R.string.trade_deal_payment_method_card;
-                            if (payment.getMethod() == com.nhom3.pubgapp.model.enums.PaymentMethod.E_WALLET) {
-                                methodTextRes = R.string.trade_deal_payment_method_wallet;
-                            } else if (payment.getMethod()
-                                    == com.nhom3.pubgapp.model.enums.PaymentMethod.BANK_TRANSFER) {
-                                methodTextRes = R.string.trade_deal_payment_method_transfer;
-                            }
-                            binding.textPaymentMethod.setText(getString(R.string.trade_deal_payment_method_label,
-                                    getString(methodTextRes)));
-                        } else {
-                            binding.textPaymentMethod.setVisibility(View.GONE);
-                        }
-                    } else {
-                        binding.textPaymentStatus.setVisibility(View.GONE);
-                        binding.textPaymentMethod.setVisibility(View.GONE);
-                        // Cancelled before anyone paid: there is no money to describe, so hide the card.
-                        if (deal.getStatus() == DealStatus.CANCELLED) {
-                            binding.cardPaymentInfo.setVisibility(View.GONE);
-                        }
-                    }
-                } else {
-                    binding.cardPaymentInfo.setVisibility(View.GONE);
-                }
+                renderPaymentCard(deal, payment);
                 if (deal != null) {
                     renderActionButtons(deal, getCurrentUserId());
                 }
             }
         });
+    }
+
+    // Also called when the deal changes: a deal cancelled before payment has no money to describe.
+    private void renderPaymentCard(Deal deal, Payment payment) {
+        if (binding == null) {
+            return;
+        }
+        if (!shouldShowPaymentCard(deal, payment)) {
+            binding.cardPaymentInfo.setVisibility(View.GONE);
+            return;
+        }
+        binding.cardPaymentInfo.setVisibility(View.VISIBLE);
+        if (payment == null) {
+            binding.textPaymentStatus.setVisibility(View.GONE);
+            binding.textPaymentMethod.setVisibility(View.GONE);
+            return;
+        }
+        binding.textPaymentStatus.setVisibility(View.VISIBLE);
+        int statusTextRes = R.string.trade_deal_payment_status_held;
+        if (payment.getStatus() == com.nhom3.pubgapp.model.enums.PaymentStatus.RELEASED) {
+            statusTextRes = R.string.trade_deal_payment_status_released;
+        } else if (payment.getStatus() == com.nhom3.pubgapp.model.enums.PaymentStatus.REFUNDED) {
+            statusTextRes = R.string.trade_deal_payment_status_refunded;
+        }
+        binding.textPaymentStatus.setText(getString(R.string.trade_deal_payment_status_label,
+                getString(statusTextRes)));
+        binding.textPaymentNotice.setText(paymentNoticeFor(payment));
+        renderPaymentMethod(payment);
+    }
+
+    private void renderPaymentMethod(Payment payment) {
+        if (payment.getMethod() == null) {
+            binding.textPaymentMethod.setVisibility(View.GONE);
+            return;
+        }
+        binding.textPaymentMethod.setVisibility(View.VISIBLE);
+        int methodTextRes = R.string.trade_deal_payment_method_card;
+        if (payment.getMethod() == com.nhom3.pubgapp.model.enums.PaymentMethod.E_WALLET) {
+            methodTextRes = R.string.trade_deal_payment_method_wallet;
+        } else if (payment.getMethod() == com.nhom3.pubgapp.model.enums.PaymentMethod.BANK_TRANSFER) {
+            methodTextRes = R.string.trade_deal_payment_method_transfer;
+        }
+        binding.textPaymentMethod.setText(getString(R.string.trade_deal_payment_method_label,
+                getString(methodTextRes)));
+    }
+
+    static boolean shouldShowPaymentCard(Deal deal, Payment payment) {
+        if (deal == null || !deal.needsPayment()) {
+            return false;
+        }
+        return !(deal.getStatus() == DealStatus.CANCELLED && payment == null);
     }
 
     private void renderEmptyState() {
@@ -594,6 +564,7 @@ public class DealDetailFragment extends Fragment {
         renderProductCard(deal);
         renderDealInfo(deal, currentUid);
         bindWaybillAndReceivedInfo(deal);
+        renderPaymentCard(deal, viewModel.getPayment().getValue());
         updateCountdown();
         renderActionButtons(deal, currentUid);
         renderWriteReviewButton(deal);
@@ -937,7 +908,6 @@ public class DealDetailFragment extends Fragment {
                 binding.buttonShipDeal.setVisibility(View.GONE);
                 binding.cardReceivingForm.setVisibility(View.GONE);
                 binding.cardCancelDeal.setVisibility(View.GONE);
-                binding.cardEditTerms.setVisibility(View.GONE);
             }
         });
 
@@ -991,7 +961,6 @@ public class DealDetailFragment extends Fragment {
                 binding.buttonReceiveDeal.setVisibility(View.GONE);
                 binding.cardShippingForm.setVisibility(View.GONE);
                 binding.cardCancelDeal.setVisibility(View.GONE);
-                binding.cardEditTerms.setVisibility(View.GONE);
             }
         });
 
@@ -1071,26 +1040,7 @@ public class DealDetailFragment extends Fragment {
         binding.buttonViewComplaint.setVisibility(View.GONE);
 
         if (status == DealStatus.PENDING_CONFIRM) {
-            binding.layoutActions.setVisibility(View.VISIBLE);
-            binding.buttonEditTerms.setVisibility(View.VISIBLE);
-            binding.buttonConfirm.setVisibility(View.VISIBLE);
-            binding.buttonCancelDeal.setVisibility(View.VISIBLE);
-            binding.buttonPay.setVisibility(View.GONE);
-
-            boolean myConfirmed = isBuyer ? deal.isBuyerConfirmed() : deal.isSellerConfirmed();
-            if (myConfirmed) {
-                binding.buttonConfirm.setEnabled(false);
-                binding.buttonConfirm.setText(R.string.trade_deal_detail_confirmed_by_you);
-                binding.textConfirmationStatus.setVisibility(View.VISIBLE);
-                binding.textConfirmationStatus.setText(R.string.trade_deal_detail_waiting_partner_confirm);
-            } else {
-                binding.buttonConfirm.setEnabled(online && isUserVerified);
-                binding.buttonConfirm.setText(R.string.trade_deal_detail_confirm);
-                binding.textConfirmationStatus.setVisibility(View.GONE);
-            }
-
-            binding.buttonEditTerms.setEnabled(online && isUserVerified);
-            binding.buttonCancelDeal.setEnabled(online);
+            renderPendingActions(deal, currentUid, online);
         } else if (status == DealStatus.CONFIRMED) {
             binding.layoutActions.setVisibility(View.VISIBLE);
             binding.buttonEditTerms.setVisibility(View.GONE);
@@ -1217,8 +1167,30 @@ public class DealDetailFragment extends Fragment {
         });
     }
 
+    // Seller: edits the terms and waits. Buyer: reads the terms, then accepts or negotiates in chat.
+    private void renderPendingActions(Deal deal, String currentUid, boolean online) {
+        binding.layoutActions.setVisibility(View.VISIBLE);
+        binding.buttonPay.setVisibility(View.GONE);
+        binding.buttonCancelDeal.setVisibility(View.VISIBLE);
+        binding.buttonCancelDeal.setEnabled(online);
+
+        boolean canEdit = deal.canEditTermsBy(currentUid);
+        binding.buttonEditTerms.setVisibility(canEdit ? View.VISIBLE : View.GONE);
+        binding.buttonEditTerms.setEnabled(online && isUserVerified);
+
+        boolean isBuyer = currentUid.equals(deal.getBuyerId());
+        binding.buttonConfirm.setVisibility(isBuyer ? View.VISIBLE : View.GONE);
+        binding.textConfirmationStatus.setVisibility(View.VISIBLE);
+        if (isBuyer) {
+            binding.buttonConfirm.setEnabled(deal.canConfirmBy(currentUid) && online && isUserVerified);
+            binding.buttonConfirm.setText(R.string.trade_deal_detail_confirm);
+            binding.textConfirmationStatus.setText(R.string.trade_deal_detail_review_terms_hint);
+        } else {
+            binding.textConfirmationStatus.setText(R.string.trade_deal_detail_waiting_buyer_terms);
+        }
+    }
+
     private void setFormActionsEnabled(boolean enabled) {
-        binding.buttonSaveTerms.setEnabled(enabled);
         binding.buttonConfirmCancel.setEnabled(enabled && binding.editCancelReason.getText() != null
                 && !binding.editCancelReason.getText().toString().trim().isEmpty());
         if (!enabled) {
@@ -1251,17 +1223,12 @@ public class DealDetailFragment extends Fragment {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         if (binding != null) {
-            outState.putBoolean(KEY_EDIT_TERMS_OPEN,
-                    binding.cardEditTerms.getVisibility() == View.VISIBLE);
             outState.putBoolean(KEY_CANCEL_OPEN,
                     binding.cardCancelDeal.getVisibility() == View.VISIBLE);
             outState.putBoolean(KEY_SHIPPING_FORM_OPEN,
                     binding.cardShippingForm.getVisibility() == View.VISIBLE);
             outState.putBoolean(KEY_RECEIVING_FORM_OPEN,
                     binding.cardReceivingForm.getVisibility() == View.VISIBLE);
-        }
-        if (selectedScheduleTimestamp != null) {
-            outState.putLong(KEY_SCHEDULE_MILLIS, selectedScheduleTimestamp.toDate().getTime());
         }
         if (selectedWaybillUri != null) {
             outState.putString(KEY_WAYBILL_URI, selectedWaybillUri.toString());
@@ -1272,15 +1239,10 @@ public class DealDetailFragment extends Fragment {
     }
 
     private void restoreInstanceState(@NonNull Bundle savedInstanceState) {
-        boolean editOpen = savedInstanceState.getBoolean(KEY_EDIT_TERMS_OPEN, false);
         boolean cancelOpen = savedInstanceState.getBoolean(KEY_CANCEL_OPEN, false);
         boolean shippingOpen = savedInstanceState.getBoolean(KEY_SHIPPING_FORM_OPEN, false);
         boolean receivingOpen = savedInstanceState.getBoolean(KEY_RECEIVING_FORM_OPEN, false);
-        long scheduleMillis = savedInstanceState.getLong(KEY_SCHEDULE_MILLIS, 0);
 
-        if (editOpen && binding != null) {
-            binding.cardEditTerms.setVisibility(View.VISIBLE);
-        }
         if (cancelOpen && binding != null) {
             binding.cardCancelDeal.setVisibility(View.VISIBLE);
         }
@@ -1291,10 +1253,6 @@ public class DealDetailFragment extends Fragment {
         if (receivingOpen && binding != null) {
             binding.cardReceivingForm.setVisibility(View.VISIBLE);
             binding.buttonReceiveDeal.setVisibility(View.GONE);
-        }
-        if (scheduleMillis > 0) {
-            selectedScheduleTimestamp = new Timestamp(new Date(scheduleMillis));
-            updateSelectedScheduleText();
         }
         String waybillStr = savedInstanceState.getString(KEY_WAYBILL_URI);
         if (waybillStr != null) {

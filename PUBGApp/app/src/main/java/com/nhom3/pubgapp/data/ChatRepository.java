@@ -896,7 +896,7 @@ public class ChatRepository extends BaseRepository {
     // Null when the terms are complete; otherwise the message for the seller.
     static String checkAcceptTerms(Deal terms) {
         if (terms == null || !terms.hasRequiredTerms()) {
-            return "Cần chọn phương thức giao nhận, địa điểm và thời gian hẹn trước khi chấp nhận.";
+            return "Cần chọn cách giao nhận, nơi hẹn và giờ hẹn trước khi chấp nhận.";
         }
         if (Deal.isScheduleInPast(terms.getScheduledAt(), Timestamp.now())) {
             return "Thời gian hẹn không được ở trong quá khứ.";
