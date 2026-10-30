@@ -31,6 +31,8 @@
     <string name="trade_chat_menu_report_message">Báo cáo tin nhắn</string>
     <string name="trade_chat_offer_placeholder">[Đề nghị giá]</string>
     <string name="trade_chat_offer_title">Đề nghị giá</string>
+    <string name="trade_chat_offer_title_active">Đang xử lý</string>
+    <string name="trade_chat_offer_title_done">Đã xử lý</string>
     <string name="trade_chat_offer_type_money">Tiền</string>
     <string name="trade_chat_offer_type_item">Vật trao đổi</string>
     <string name="trade_chat_offer_type_both">Tiền và vật</string>
