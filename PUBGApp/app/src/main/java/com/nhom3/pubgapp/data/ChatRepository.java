@@ -841,10 +841,23 @@ public class ChatRepository extends BaseRepository {
     }
 
     public void respondToOffer(final String offerId, final boolean accept, final DataCallback<String> cb) {
+        respondToOffer(offerId, accept, null, cb);
+    }
+
+    // Accepting needs the seller's terms, so the deal is born with them (STT 50, 51).
+    public void respondToOffer(final String offerId, final boolean accept, final Deal terms,
+                               final DataCallback<String> cb) {
         final String currentUid = currentUserId();
         if (currentUid.isEmpty()) {
             cb.onError("Chưa đăng nhập.");
             return;
+        }
+        if (accept) {
+            String termsError = checkAcceptTerms(terms);
+            if (termsError != null) {
+                cb.onError(termsError);
+                return;
+            }
         }
 
         final DocumentReference offerRef = db.collection(COLLECTION_OFFERS).document(offerId);
@@ -874,10 +887,21 @@ public class ChatRepository extends BaseRepository {
                 if (!accept) {
                     rejectOffer(offerRef, offer, cb);
                 } else {
-                    acceptOffer(offerRef, offer, cb);
+                    acceptOffer(offerRef, offer, terms, cb);
                 }
             }
         });
+    }
+
+    // Null when the terms are complete; otherwise the message for the seller.
+    static String checkAcceptTerms(Deal terms) {
+        if (terms == null || !terms.hasRequiredTerms()) {
+            return "Cần chọn phương thức giao nhận, địa điểm và thời gian hẹn trước khi chấp nhận.";
+        }
+        if (Deal.isScheduleInPast(terms.getScheduledAt(), Timestamp.now())) {
+            return "Thời gian hẹn không được ở trong quá khứ.";
+        }
+        return null;
     }
 
     private void rejectOffer(DocumentReference offerRef, Offer offer, final DataCallback<String> cb) {
@@ -905,7 +929,8 @@ public class ChatRepository extends BaseRepository {
         });
     }
 
-    private void acceptOffer(final DocumentReference offerRef, final Offer offer, final DataCallback<String> cb) {
+    private void acceptOffer(final DocumentReference offerRef, final Offer offer, final Deal terms,
+                             final DataCallback<String> cb) {
         final DocumentReference listingRef = db.collection(COLLECTION_LISTINGS).document(offer.getListingId());
         listingRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -935,14 +960,14 @@ public class ChatRepository extends BaseRepository {
                     return;
                 }
                 listing.setId(task.getResult().getId());
-                executeAcceptOfferBatch(offerRef, offer, listingRef, listing, cb);
+                executeAcceptOfferBatch(offerRef, offer, listingRef, listing, terms, cb);
             }
         });
     }
 
     private void executeAcceptOfferBatch(final DocumentReference offerRef, final Offer offer,
                                          final DocumentReference listingRef, final Listing listing,
-                                         final DataCallback<String> cb) {
+                                         final Deal terms, final DataCallback<String> cb) {
         String currentUid = currentUserId();
         db.collection(COLLECTION_OFFERS)
                 .whereEqualTo("sellerId", currentUid)
@@ -964,7 +989,7 @@ public class ChatRepository extends BaseRepository {
                         offerUpdates.put("updatedAt", FieldValue.serverTimestamp());
                         batch.update(offerRef, offerUpdates);
 
-                        Deal deal = DealRepository.buildFromOffer(offer, listing);
+                        Deal deal = DealRepository.buildFromOffer(offer, listing, terms);
                         DocumentReference dealRef = db.collection(COLLECTION_DEALS).document();
                         final String dealId = dealRef.getId();
                         deal.setId(dealId);

@@ -67,6 +67,19 @@ public class DealRepository extends BaseRepository {
         return null;
     }
 
+    // The seller fills the terms when accepting, so the deal starts with them and the seller's flag on.
+    public static Deal buildFromOffer(Offer offer, Listing listing, Deal terms) {
+        Deal deal = buildFromOffer(offer, listing);
+        if (terms == null) {
+            return deal;
+        }
+        deal.setDeliveryMethod(terms.getDeliveryMethod());
+        deal.setDeliveryAddress(terms.getDeliveryAddress() != null ? terms.getDeliveryAddress() : "");
+        deal.setScheduledAt(terms.getScheduledAt());
+        deal.setAgreedTerms(terms.getAgreedTerms() != null ? terms.getAgreedTerms() : "");
+        return deal;
+    }
+
     public static Deal buildFromOffer(Offer offer, Listing listing) {
         Deal deal = new Deal();
         deal.setListingId(offer.getListingId());
@@ -186,7 +199,20 @@ public class DealRepository extends BaseRepository {
             cb.onError("Chỉ có thể sửa điều khoản khi đang chờ xác nhận.");
             return;
         }
+        if (!deal.canEditTermsBy(currentUid)) {
+            cb.onError("Chỉ người bán mới được sửa điều khoản. Hãy nhắn tin để đề nghị người bán sửa.");
+            return;
+        }
+        if (!deal.hasRequiredTerms()) {
+            cb.onError("Cần chọn phương thức giao nhận, địa điểm và thời gian hẹn.");
+            return;
+        }
+        if (Deal.isScheduleInPast(deal.getScheduledAt(), Timestamp.now())) {
+            cb.onError("Thời gian hẹn không được ở trong quá khứ.");
+            return;
+        }
 
+        deal.resetConfirmationsAfterEdit();
         WriteBatch batch = db.batch();
         DocumentReference dealRef = db.collection(COLLECTION_DEALS).document(deal.getId());
 
@@ -197,15 +223,14 @@ public class DealRepository extends BaseRepository {
         updates.put("agreedTerms", deal.getAgreedTerms() != null ? deal.getAgreedTerms() : "");
         updates.put("exchangeItem", deal.getExchangeItem() != null ? deal.getExchangeItem() : "");
         updates.put("agreedPrice", deal.getAgreedPrice());
-        updates.put("buyerConfirmed", false);
-        updates.put("sellerConfirmed", false);
+        updates.put("buyerConfirmed", deal.isBuyerConfirmed());
+        updates.put("sellerConfirmed", deal.isSellerConfirmed());
         updates.put("updatedAt", FieldValue.serverTimestamp());
         batch.update(dealRef, updates);
 
-        String otherParty = currentUid.equals(deal.getBuyerId()) ? deal.getSellerId() : deal.getBuyerId();
-        sendNotification(otherParty, NotificationType.DEAL_UPDATE,
+        sendNotification(deal.getBuyerId(), NotificationType.DEAL_UPDATE,
                 "Điều khoản giao dịch đã cập nhật",
-                "Đối tác đã sửa đổi điều khoản giao dịch. Vui lòng xác nhận lại.",
+                "Người bán đã sửa điều khoản giao dịch. Vui lòng xem và chấp nhận lại.",
                 deal.getId(), batch);
 
         commitBatch(batch, cb);
@@ -246,9 +271,12 @@ public class DealRepository extends BaseRepository {
                     cb.onError("Giao dịch không ở trạng thái chờ xác nhận.");
                     return;
                 }
+                if (currentUid.equals(deal.getSellerId())) {
+                    cb.onError("Người bán đã xác nhận khi chấp nhận đề nghị. Chờ người mua chấp nhận điều khoản.");
+                    return;
+                }
                 if (deal.getDeliveryMethod() == null) {
-                    cb.onError("Chưa chọn phương thức giao nhận."
-                            + " Bấm \"Sửa điều khoản\" để chọn.");
+                    cb.onError("Chưa có phương thức giao nhận. Hãy nhắn tin để người bán bổ sung điều khoản.");
                     return;
                 }
                 if (deal.getDeliveryMethod() == DeliveryMethod.SHIPPING) {

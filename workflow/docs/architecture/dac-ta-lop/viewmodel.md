@@ -352,6 +352,7 @@ Mỗi ViewModel phục vụ một nhóm màn hình, giữ trạng thái bằng L
 | `public void sendImage(Uri uri)` | `ChatRepository.sendImage`. | 43, 44 |
 | `public void makeOffer(Offer offer)` | `ChatRepository.sendOffer`. | 47 đến 49 |
 | `public void respondToOffer(String offerId, boolean accept)` | Gọi `ChatRepository.respondToOffer` ngoài luồng chính, đưa kết quả hoặc lỗi vào LiveData. | 47 đến 49 |
+| `public void respondToOffer(String offerId, boolean accept, Deal terms)` | Như trên nhưng kèm điều khoản người bán điền khi chấp nhận. | 47 đến 51 |
 | `public void clearError()` | Đặt `error` về rỗng sau khi màn hình đã hiện câu lỗi, để xoay màn hình không hiện lại. |  |
 | `public void clearDone()` | Đặt `done` về false sau khi màn hình đã phản ứng (đóng hộp thoại, quay lại), để không chạy hai lần. |  |
 

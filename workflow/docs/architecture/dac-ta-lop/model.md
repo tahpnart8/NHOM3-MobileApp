@@ -716,6 +716,11 @@ Kế thừa từ `BaseDocument`: `id`, `createdAt`, `updatedAt`, `getId()`, `tou
 | `public void resolveDispute(DealStatus)` | Rời DISPUTED theo quyết định khiếu nại hoặc khi rút đơn; chỉ nhận trạng thái mà `canMoveTo` cho phép. |  |
 | `public boolean isParticipant(String userId)` | True khi người đó là người mua hoặc người bán. |  |
 | `public boolean needsPayment()` | True khi `agreedPrice` lớn hơn 0. | 56 |
+| `public boolean canEditTermsBy(String userId)` | True khi đang PENDING_CONFIRM và người đó là người bán; người mua và mọi trạng thái khác không sửa được. | 51 |
+| `public boolean canConfirmBy(String userId)` | True khi đang PENDING_CONFIRM, người đó là người mua, người bán đã xác nhận và người mua chưa. | 52 |
+| `public void resetConfirmationsAfterEdit()` | Sau khi người bán sửa điều khoản: `sellerConfirmed` true, `buyerConfirmed` false. | 51 |
+| `public boolean hasRequiredTerms()` | True khi có `deliveryMethod`, `deliveryAddress` không rỗng và `scheduledAt`. | 50, 51 |
+| `public static boolean isScheduleInPast(Timestamp scheduledAt, Timestamp now)` | True khi giờ hẹn có và đứng trước `now`. | 50, 51 |
 
 **Quan hệ trên sơ đồ lớp**
 

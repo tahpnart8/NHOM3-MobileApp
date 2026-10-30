@@ -1,5 +1,6 @@
 package com.nhom3.pubgapp.model;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -7,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.util.CustomClassMapper;
 import com.nhom3.pubgapp.model.enums.DealStatus;
+import com.nhom3.pubgapp.model.enums.DeliveryMethod;
 
 import org.junit.Test;
 
@@ -181,5 +183,74 @@ public class DealTest {
         Map<String, Object> fields = (Map<String, Object>) CustomClassMapper.convertToPlainJavaTypes(deal);
         assertNull(fields.get("shippedAt"));
         assertNull(fields.get("receivedAt"));
+    }
+
+    @Test
+    public void canEditTermsBy_isTheSellerWhilePendingConfirmOnly() {
+        Deal deal = sampleDeal(DealStatus.PENDING_CONFIRM);
+        assertTrue(deal.canEditTermsBy("seller1"));
+        assertFalse(deal.canEditTermsBy("buyer1"));
+        assertFalse(deal.canEditTermsBy(null));
+
+        deal.setStatus(DealStatus.CONFIRMED);
+        assertFalse(deal.canEditTermsBy("seller1"));
+    }
+
+    @Test
+    public void canConfirmBy_isTheBuyerOnceTheSellerConfirmed() {
+        Deal deal = sampleDeal(DealStatus.PENDING_CONFIRM);
+        deal.setSellerConfirmed(true);
+        assertTrue(deal.canConfirmBy("buyer1"));
+        assertFalse(deal.canConfirmBy("seller1"));
+
+        deal.confirmBy("buyer1");
+        assertEquals(DealStatus.CONFIRMED, deal.getStatus());
+        assertFalse(deal.canConfirmBy("buyer1"));
+    }
+
+    @Test
+    public void resetConfirmationsAfterEdit_clearsOnlyTheBuyerFlag() {
+        Deal deal = sampleDeal(DealStatus.PENDING_CONFIRM);
+        deal.setSellerConfirmed(true);
+        deal.setBuyerConfirmed(true);
+
+        deal.resetConfirmationsAfterEdit();
+
+        assertTrue(deal.isSellerConfirmed());
+        assertFalse(deal.isBuyerConfirmed());
+    }
+
+    @Test
+    public void hasRequiredTerms_needsMethodPlaceAndTime() {
+        Deal deal = sampleDeal(DealStatus.PENDING_CONFIRM);
+        assertFalse(deal.hasRequiredTerms());
+
+        deal.setDeliveryMethod(DeliveryMethod.MEET_UP);
+        deal.setDeliveryAddress("  ");
+        deal.setScheduledAt(Timestamp.now());
+        assertFalse(deal.hasRequiredTerms());
+
+        deal.setDeliveryAddress("Cổng trường");
+        assertTrue(deal.hasRequiredTerms());
+
+        deal.setScheduledAt(null);
+        assertFalse(deal.hasRequiredTerms());
+    }
+
+    @Test
+    public void isScheduleInPast_comparesWithNow() {
+        Timestamp now = new Timestamp(new Date(1_000_000L));
+        assertTrue(Deal.isScheduleInPast(new Timestamp(new Date(999_000L)), now));
+        assertFalse(Deal.isScheduleInPast(new Timestamp(new Date(1_000_000L)), now));
+        assertFalse(Deal.isScheduleInPast(new Timestamp(new Date(1_001_000L)), now));
+        assertFalse(Deal.isScheduleInPast(null, now));
+    }
+
+    private Deal sampleDeal(DealStatus status) {
+        Deal deal = new Deal();
+        deal.setBuyerId("buyer1");
+        deal.setSellerId("seller1");
+        deal.setStatus(status);
+        return deal;
     }
 }

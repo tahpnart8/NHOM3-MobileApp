@@ -414,4 +414,36 @@ public class Deal extends BaseDocument {
     public boolean needsPayment() {
         return agreedPrice > 0;
     }
+
+    /** Only the seller edits terms, and only while the deal waits for the buyer's agreement. */
+    public boolean canEditTermsBy(String userId) {
+        return status == DealStatus.PENDING_CONFIRM && userId != null && userId.equals(sellerId);
+    }
+
+    /** The buyer agrees to terms the seller already confirmed. */
+    public boolean canConfirmBy(String userId) {
+        return status == DealStatus.PENDING_CONFIRM && userId != null && userId.equals(buyerId)
+                && sellerConfirmed && !buyerConfirmed;
+    }
+
+    /** After a seller edit the seller stays confirmed and the buyer has to agree again. */
+    public void resetConfirmationsAfterEdit() {
+        sellerConfirmed = true;
+        buyerConfirmed = false;
+    }
+
+    /** Terms the seller must give: delivery method, a place or address, and a meeting time. */
+    public boolean hasRequiredTerms() {
+        return deliveryMethod != null
+                && deliveryAddress != null && !deliveryAddress.trim().isEmpty()
+                && scheduledAt != null;
+    }
+
+    /** True when the meeting time is before now; a missing time is not in the past. */
+    public static boolean isScheduleInPast(Timestamp scheduledAt, Timestamp now) {
+        if (scheduledAt == null || now == null) {
+            return false;
+        }
+        return scheduledAt.compareTo(now) < 0;
+    }
 }

@@ -25,47 +25,47 @@ import java.util.List;
 public class DealViewModelTest {
 
     @Test
-    public void canEditTerms_allowsOnlyPendingConfirmParticipantVerifiedAndOnline() {
+    public void canEditTerms_allowsOnlySellerWhilePendingConfirmVerifiedAndOnline() {
         Deal deal = createSampleDeal(DealStatus.PENDING_CONFIRM);
 
-        assertTrue(DealViewModel.canEditTerms(deal, "buyer1", true, true));
         assertTrue(DealViewModel.canEditTerms(deal, "seller1", true, true));
+        assertFalse(DealViewModel.canEditTerms(deal, "buyer1", true, true));
 
-        assertFalse(DealViewModel.canEditTerms(deal, "buyer1", false, true));
-        assertFalse(DealViewModel.canEditTerms(deal, "buyer1", true, false));
+        assertFalse(DealViewModel.canEditTerms(deal, "seller1", false, true));
+        assertFalse(DealViewModel.canEditTerms(deal, "seller1", true, false));
         assertFalse(DealViewModel.canEditTerms(deal, "stranger", true, true));
 
         deal.setStatus(DealStatus.CONFIRMED);
-        assertFalse(DealViewModel.canEditTerms(deal, "buyer1", true, true));
+        assertFalse(DealViewModel.canEditTerms(deal, "seller1", true, true));
 
         deal.setStatus(DealStatus.SHIPPED);
-        assertFalse(DealViewModel.canEditTerms(deal, "buyer1", true, true));
+        assertFalse(DealViewModel.canEditTerms(deal, "seller1", true, true));
 
         deal.setStatus(DealStatus.CANCELLED);
-        assertFalse(DealViewModel.canEditTerms(deal, "buyer1", true, true));
+        assertFalse(DealViewModel.canEditTerms(deal, "seller1", true, true));
 
-        assertFalse(DealViewModel.canEditTerms(null, "buyer1", true, true));
+        assertFalse(DealViewModel.canEditTerms(null, "seller1", true, true));
     }
 
     @Test
-    public void canConfirm_allowsOnlyPendingConfirmWhenNotYetConfirmed() {
+    public void canConfirm_allowsOnlyBuyerAfterSellerConfirmedAndBeforeOwnConfirm() {
         Deal deal = createSampleDeal(DealStatus.PENDING_CONFIRM);
         deal.setBuyerConfirmed(false);
-        deal.setSellerConfirmed(false);
+        deal.setSellerConfirmed(true);
 
         assertTrue(DealViewModel.canConfirm(deal, "buyer1", true, true));
-        assertTrue(DealViewModel.canConfirm(deal, "seller1", true, true));
-
-        deal.setBuyerConfirmed(true);
-        assertFalse(DealViewModel.canConfirm(deal, "buyer1", true, true));
-        assertTrue(DealViewModel.canConfirm(deal, "seller1", true, true));
-
-        deal.setSellerConfirmed(true);
         assertFalse(DealViewModel.canConfirm(deal, "seller1", true, true));
-
         assertFalse(DealViewModel.canConfirm(deal, "buyer1", false, true));
         assertFalse(DealViewModel.canConfirm(deal, "buyer1", true, false));
 
+        deal.setSellerConfirmed(false);
+        assertFalse(DealViewModel.canConfirm(deal, "buyer1", true, true));
+
+        deal.setSellerConfirmed(true);
+        deal.setBuyerConfirmed(true);
+        assertFalse(DealViewModel.canConfirm(deal, "buyer1", true, true));
+
+        deal.setBuyerConfirmed(false);
         deal.setStatus(DealStatus.CONFIRMED);
         assertFalse(DealViewModel.canConfirm(deal, "buyer1", true, true));
     }

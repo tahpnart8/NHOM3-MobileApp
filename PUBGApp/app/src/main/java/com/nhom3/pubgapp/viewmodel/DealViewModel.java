@@ -537,21 +537,14 @@ public class DealViewModel extends ViewModel {
         if (deal == null || !isOnline || !isVerified) {
             return false;
         }
-        return deal.getStatus() == com.nhom3.pubgapp.model.enums.DealStatus.PENDING_CONFIRM
-                && deal.isParticipant(userId);
+        return deal.canEditTermsBy(userId);
     }
 
     static boolean canConfirm(Deal deal, String userId, boolean isVerified, boolean isOnline) {
         if (deal == null || !isOnline || !isVerified) {
             return false;
         }
-        if (deal.getStatus() != com.nhom3.pubgapp.model.enums.DealStatus.PENDING_CONFIRM
-                || !deal.isParticipant(userId)) {
-            return false;
-        }
-        boolean alreadyConfirmed = userId.equals(deal.getBuyerId())
-                ? deal.isBuyerConfirmed() : deal.isSellerConfirmed();
-        return !alreadyConfirmed;
+        return deal.canConfirmBy(userId);
     }
 
     static boolean canCancel(Deal deal, String userId, boolean isOnline) {
