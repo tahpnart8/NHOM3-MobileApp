@@ -96,6 +96,7 @@
     <string name="listing_post_trade_giveaway">Cho tặng</string>
     <string name="listing_post_price_label">Giá bán (VNĐ)</string>
     <string name="listing_post_price_hint">Nhập giá bán...</string>
+    <string name="listing_post_offer_mismatch">Offer mong muốn không khớp với hình thức giao dịch đã chọn</string>
     <string name="listing_post_price_error">Giá bán phải lớn hơn 0 đối với hình thức Bán</string>
     <string name="listing_post_offer_label">Offer mong muốn</string>
     <string name="listing_post_offer_money">Tiền</string>

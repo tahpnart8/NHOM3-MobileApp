@@ -409,9 +409,7 @@ public class PostListingFragment extends Fragment {
         binding.checkTradeExchange.setEnabled(enabled);
         binding.checkTradeGiveaway.setEnabled(enabled);
         binding.editPrice.setEnabled(enabled);
-        binding.radioOfferMoney.setEnabled(enabled);
-        binding.radioOfferItem.setEnabled(enabled);
-        binding.radioOfferBoth.setEnabled(enabled);
+        updateOfferAvailability();
         binding.editMinOfferPrice.setEnabled(enabled);
         binding.spinnerProvince.setEnabled(enabled);
         binding.buttonAddImage.setEnabled(enabled);
@@ -593,6 +591,13 @@ public class PostListingFragment extends Fragment {
             return;
         }
 
+        if (!isSelectedOfferMatchingTradeTypes()) {
+            Toast.makeText(requireContext(),
+                    R.string.listing_post_offer_mismatch, Toast.LENGTH_SHORT).show();
+            binding.nestedScrollView.smoothScrollTo(0, binding.textOfferLabel.getTop());
+            return;
+        }
+
         long typedPrice = 0L;
         String priceStr = binding.editPrice.getText() != null
                 ? binding.editPrice.getText().toString().trim() : "";
@@ -674,6 +679,56 @@ public class PostListingFragment extends Fragment {
         binding.textOfferLabel.setVisibility(offerVisibility);
         binding.radioGroupOffer.setVisibility(offerVisibility);
         binding.layoutMinOfferPrice.setVisibility(offerVisibility);
+        updateOfferAvailability();
+    }
+
+    /** Offer MONEY needs SELL; ITEM and MONEY_AND_ITEM need EXCHANGE; GIVEAWAY accepts no offer. */
+    static boolean isOfferAllowed(boolean isSell, boolean isExchange, boolean isGiveaway,
+            OfferType offerType) {
+        if (isGiveaway || offerType == null) {
+            return false;
+        }
+        if (offerType == OfferType.MONEY) {
+            return isSell;
+        }
+        return isExchange;
+    }
+
+    private boolean isOfferAllowedNow(OfferType offerType) {
+        return isOfferAllowed(binding.checkTradeSell.isChecked(),
+                binding.checkTradeExchange.isChecked(),
+                binding.checkTradeGiveaway.isChecked(), offerType);
+    }
+
+    private void updateOfferAvailability() {
+        if (binding == null) {
+            return;
+        }
+        boolean moneyAllowed = isOfferAllowedNow(OfferType.MONEY);
+        boolean itemAllowed = isOfferAllowedNow(OfferType.ITEM);
+        boolean bothAllowed = isOfferAllowedNow(OfferType.MONEY_AND_ITEM);
+        binding.radioOfferMoney.setEnabled(isFormEnabled && moneyAllowed);
+        binding.radioOfferItem.setEnabled(isFormEnabled && itemAllowed);
+        binding.radioOfferBoth.setEnabled(isFormEnabled && bothAllowed);
+        int checkedId = binding.radioGroupOffer.getCheckedRadioButtonId();
+        boolean checkedIsInvalid = (checkedId == R.id.radioOfferMoney && !moneyAllowed)
+                || (checkedId == R.id.radioOfferItem && !itemAllowed)
+                || (checkedId == R.id.radioOfferBoth && !bothAllowed);
+        if (checkedIsInvalid) {
+            binding.radioGroupOffer.clearCheck();
+        }
+    }
+
+    private boolean isSelectedOfferMatchingTradeTypes() {
+        int checkedId = binding.radioGroupOffer.getCheckedRadioButtonId();
+        if (checkedId == R.id.radioOfferMoney) {
+            return isOfferAllowedNow(OfferType.MONEY);
+        } else if (checkedId == R.id.radioOfferItem) {
+            return isOfferAllowedNow(OfferType.ITEM);
+        } else if (checkedId == R.id.radioOfferBoth) {
+            return isOfferAllowedNow(OfferType.MONEY_AND_ITEM);
+        }
+        return true;
     }
 
     private boolean isNetworkAvailable() {
@@ -970,6 +1025,7 @@ public class PostListingFragment extends Fragment {
             } else if (offers.contains(OfferType.MONEY)) {
                 binding.radioGroupOffer.check(R.id.radioOfferMoney);
             }
+            updateOfferAvailability();
         }
 
         if (listing.getConditionValues() != null) {
