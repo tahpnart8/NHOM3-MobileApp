@@ -154,6 +154,17 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         notifyOfferRows();
     }
 
+    /** "Đang xử lý" while the deal runs, "Đã xử lý" once completed, otherwise the plain offer title. */
+    static int offerTitleFor(DealStatus dealStatus) {
+        if (dealStatus == null || dealStatus == DealStatus.CANCELLED) {
+            return R.string.trade_chat_offer_title;
+        }
+        if (dealStatus == DealStatus.COMPLETED) {
+            return R.string.trade_chat_offer_title_done;
+        }
+        return R.string.trade_chat_offer_title_active;
+    }
+
     public void setDealIdByOffer(Map<String, String> map) {
         dealIdByOffer.clear();
         if (map != null) {
@@ -413,6 +424,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             } else {
                 binding.textOfferDealCancelled.setVisibility(View.GONE);
             }
+            binding.textOfferTitle.setText(offerTitleFor(dealStatus));
 
             OfferStatus status = offer.getStatus();
             boolean isSeller = currentUserId != null && currentUserId.equals(offer.getSellerId());

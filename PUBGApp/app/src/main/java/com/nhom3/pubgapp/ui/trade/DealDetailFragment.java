@@ -1061,6 +1061,7 @@ public class DealDetailFragment extends Fragment {
         DealStatus status = deal.getStatus();
 
         binding.textWaitingStatus.setVisibility(View.GONE);
+        binding.buttonMessagePartner.setVisibility(View.VISIBLE);
         binding.buttonShipDeal.setVisibility(View.GONE);
         binding.buttonReceiveDeal.setVisibility(View.GONE);
         binding.buttonComplain.setVisibility(View.GONE);
@@ -1211,6 +1212,8 @@ public class DealDetailFragment extends Fragment {
         boolean isBuyer = currentUid.equals(deal.getBuyerId());
         binding.buttonConfirm.setVisibility(isBuyer ? View.VISIBLE : View.GONE);
         binding.buttonRequestTermsChange.setVisibility(isBuyer ? View.VISIBLE : View.GONE);
+        // The change request already opens the chat, so a second chat button would only repeat it.
+        binding.buttonMessagePartner.setVisibility(isBuyer ? View.GONE : View.VISIBLE);
         binding.textConfirmationStatus.setVisibility(View.VISIBLE);
         if (isBuyer) {
             binding.buttonConfirm.setEnabled(deal.canConfirmBy(currentUid) && online && isUserVerified);
