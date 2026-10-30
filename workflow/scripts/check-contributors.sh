@@ -12,7 +12,7 @@ here=$(cd "$(dirname "$0")" && pwd)
 
 refuse() {
     echo "" >&2
-    echo "policy: refused. Contributors are limited to the 5 team members (see AGENTS.md rule R8)." >&2
+    echo "policy: refused. Contributors are limited to the 5 team members (see .github/CONTRIBUTING.md)." >&2
     exit 1
 }
 

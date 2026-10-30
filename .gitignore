@@ -39,3 +39,13 @@ tmp/
 
 # Personal working files of the team, never pushed.
 /local/
+
+# AI tool files kept on the leader's machine only (issue #413).
+AGENTS.md
+CLAUDE.md
+.agents/
+.claude/
+.mcp.json
+workflow/guide/
+workflow/memory/
+workflow/scripts/sync-ai-skills.sh

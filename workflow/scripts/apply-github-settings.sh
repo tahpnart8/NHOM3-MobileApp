@@ -9,7 +9,7 @@
 #                it, the leader included. A branch does NOT have to be up to date with main to merge: with
 #                many document pull requests open at once, that turned every merge into an Update branch,
 #                a re-run of CI and a second review for everyone else. The reviewer builds the merged tree
-#                instead (skill pubg-review-pr), and `build` runs again on main after each merge.
+#                instead, and `build` runs again on main after each merge.
 #   main-review  pull request required, no approval count, rebase or squash merge. The admin role may
 #                bypass it inside a pull request only, because the leader cannot approve their own PR.
 #                An approval is NOT dismissed by a later push, so fixing a typo does not cost a review.

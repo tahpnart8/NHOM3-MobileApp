@@ -45,9 +45,6 @@ jobs:
             echo "documents only: skipping the JDK, Gradle and the Android build."
           fi
 
-      - name: Skills mirror is in sync
-        run: sh workflow/scripts/sync-ai-skills.sh --check
-
       - name: Policy scripts behave as documented
         run: sh workflow/scripts/tests/policy-test.sh
 
