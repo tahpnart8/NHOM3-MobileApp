@@ -107,3 +107,8 @@ To prevent premature guest-blocking:
 - **Fact:** `CheckoutResultFragment` keeps `payRequested` in saved state and only calls `DealViewModel.pay` when it is false. The `DealViewModel` is scoped to the Fragment, so it survives rotation and its sticky `done` value reaches the new observer; a held `Payment` seen after the request also counts as success.
 - **Why it matters here:** a second `pay` would be refused by `DealRepository.pay` with "đã được thanh toán" and show an error after a payment that went through.
 - **Source:** `ViewModelProvider(this)` lifetime and `LiveData` re-delivery of the last value.
+
+### Dialogs that must survive rotation are DialogFragments that answer through the fragment manager
+- **Fact:** `DealTermsDialogFragment` and `CountdownConfirmDialogFragment` return their answer with `getParentFragmentManager().setFragmentResult(...)`; `ChatFragment` and `DealDetailFragment` listen with `setFragmentResultListener(key, getViewLifecycleOwner(), ...)`. A plain `AlertDialog` built in the Fragment is lost on rotation. The countdown dialog restarts its 5 seconds in `onStart`, so a rotation cannot skip the wait.
+- **Why it matters here:** the seller's terms form (issue #403) is long; losing it on rotation would be a bug. `DealDetailFragment` calls `setupCarrierDropdown()` again in `onViewStateRestored` because restoring the saved text of an `AutoCompleteTextView` filters its list down to the matching rows.
+- **Source:** AndroidX Fragment result API; `AutoCompleteTextView` filtering on `setText`. **Unverified** on a device in this pass; verify by rotating with the terms dialog open and with a carrier chosen.
