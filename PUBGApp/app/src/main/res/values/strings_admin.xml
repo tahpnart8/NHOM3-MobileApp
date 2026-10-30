@@ -413,7 +413,7 @@
     <string name="admin_deal_detail_price">Giá thỏa thuận: %1$s</string>
     <string name="admin_deal_detail_delivery_label">Phương thức: %1$s</string>
     <string name="admin_deal_detail_delivery_meet_up">Gặp mặt trực tiếp</string>
-    <string name="admin_deal_detail_delivery_shipping">Giao hàng qua bưu điện</string>
+    <string name="admin_deal_detail_delivery_shipping">Gửi vận chuyển</string>
     <string name="admin_deal_detail_appointment_label">Hẹn gặp: %1$s</string>
     <string name="admin_deal_detail_location_label">Địa điểm: %1$s</string>
     <string name="admin_deal_detail_shipping_address">Địa chỉ nhận hàng: %1$s</string>

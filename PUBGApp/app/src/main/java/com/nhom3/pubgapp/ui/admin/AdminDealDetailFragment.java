@@ -14,6 +14,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.Timestamp;
 import com.nhom3.pubgapp.R;
 import com.nhom3.pubgapp.databinding.FragmentAdminDealDetailBinding;
 import com.nhom3.pubgapp.model.Deal;
@@ -29,7 +30,9 @@ import com.nhom3.pubgapp.util.FormatUtils;
 import com.nhom3.pubgapp.util.NetworkMonitor;
 import com.nhom3.pubgapp.viewmodel.AdminDealViewModel;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 /** Screen E06 Detail: View-only deal detail and status transition history for admin. */
 public class AdminDealDetailFragment extends Fragment {
@@ -75,6 +78,12 @@ public class AdminDealDetailFragment extends Fragment {
         }
         boolean online = NetworkMonitor.getInstance().isOnline();
         binding.includeOfflineBanner.getRoot().setVisibility(online ? View.GONE : View.VISIBLE);
+    }
+
+    // A meeting time is in the future, so it is shown as a date, not as "x minutes ago".
+    private String formatSchedule(Timestamp time) {
+        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+        return format.format(time.toDate());
     }
 
     @Override
@@ -210,7 +219,7 @@ public class AdminDealDetailFragment extends Fragment {
             binding.textScheduledAt.setVisibility(View.VISIBLE);
             binding.textScheduledAt.setText(getString(
                     R.string.admin_deal_detail_scheduled_at,
-                    formatUtils.formatTime(deal.getScheduledAt())));
+                    formatSchedule(deal.getScheduledAt())));
         } else {
             binding.textScheduledAt.setVisibility(View.GONE);
         }
