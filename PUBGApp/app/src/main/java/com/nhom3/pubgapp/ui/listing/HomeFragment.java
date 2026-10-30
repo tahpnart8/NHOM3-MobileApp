@@ -76,7 +76,6 @@ public class HomeFragment extends Fragment {
 
         setupRecyclerView();
         setupForYouRecyclerView();
-        setupTopHeader();
         setupSearchBar();
         setupChannelSelector();
         setupErrorState();
@@ -97,7 +96,6 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        setupTopHeader();
         updateOfflineBanner();
         if (isInitialResume) {
             isInitialResume = false;
@@ -183,31 +181,6 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void setupTopHeader() {
-        if (binding == null) {
-            return;
-        }
-        boolean loggedIn = SessionManager.getInstance().isLoggedIn();
-        boolean isRestoring = false;
-        if (authViewModel != null) {
-            Boolean loading = authViewModel.getLoading().getValue();
-            isRestoring = loading != null && loading.booleanValue();
-        }
-        if (shouldShowGuestSignIn(loggedIn, isRestoring)) {
-            binding.layoutTopHeader.setVisibility(View.VISIBLE);
-            binding.buttonSignIn.setVisibility(View.VISIBLE);
-            binding.buttonSignIn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Navigation.findNavController(v).navigate(R.id.action_global_sign_in);
-                }
-            });
-        } else {
-            binding.layoutTopHeader.setVisibility(View.GONE);
-            binding.buttonSignIn.setVisibility(View.GONE);
-        }
-    }
-
     private void setupSearchBar() {
         binding.cardSearch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -281,20 +254,6 @@ public class HomeFragment extends Fragment {
     }
 
     private void observeViewModel() {
-        if (authViewModel != null) {
-            authViewModel.getLoading().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
-                @Override
-                public void onChanged(Boolean loading) {
-                    setupTopHeader();
-                }
-            });
-            authViewModel.getLoggedIn().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
-                @Override
-                public void onChanged(Boolean loggedIn) {
-                    setupTopHeader();
-                }
-            });
-        }
         viewModel.getForYou().observe(getViewLifecycleOwner(), new Observer<List<Listing>>() {
             @Override
             public void onChanged(List<Listing> list) {

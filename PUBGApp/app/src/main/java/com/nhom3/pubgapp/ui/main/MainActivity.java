@@ -34,6 +34,7 @@ import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.ui.common.AvatarBinder;
 import com.nhom3.pubgapp.ui.notification.InAppNotifier;
 import com.nhom3.pubgapp.util.AirplaneModeReceiver;
+import com.nhom3.pubgapp.ui.listing.HomeFragment;
 import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.AuthViewModel;
 import com.nhom3.pubgapp.viewmodel.DealViewModel;
@@ -184,6 +185,7 @@ public class MainActivity extends AppCompatActivity {
         restoreViewModel.getLoading().observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean loading) {
+                showTopBarSignIn();
                 if (loading != null && !loading.booleanValue()) {
                     onRestoreSessionFinished();
                 }
@@ -386,17 +388,27 @@ public class MainActivity extends AppCompatActivity {
         refreshUnreadCount(destinationId);
     }
 
-    // A guest sees neither the bell nor the avatar; Home draws the sign-in button itself.
+    // A guest sees neither the bell nor the avatar; the top bar shows a sign-in button instead.
     private void updateTopBarForSession() {
         boolean loggedIn = SessionManager.getInstance().isLoggedIn();
         int visibility = loggedIn ? View.VISIBLE : View.GONE;
         binding.frameNotifications.setVisibility(visibility);
         binding.frameTopBarAvatar.setVisibility(visibility);
+        showTopBarSignIn();
         showTopBarAvatar();
         if (loggedIn) {
             // Does nothing when this account's profile is already loaded or loading.
             profileViewModel.loadProfile(SessionManager.getInstance().getCurrentUserId());
         }
+    }
+
+    // The guest button waits for the session restore, so a signed in user never sees it flash.
+    private void showTopBarSignIn() {
+        boolean loggedIn = SessionManager.getInstance().isLoggedIn();
+        Boolean loading = restoreViewModel.getLoading().getValue();
+        boolean isRestoring = loading != null && loading.booleanValue();
+        boolean show = HomeFragment.shouldShowGuestSignIn(loggedIn, isRestoring);
+        binding.buttonTopBarSignIn.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
     // Until the first snapshot arrives, the session's copy of the user gives the initial; a guest's is cleared.
@@ -444,6 +456,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setUpTopBar() {
+        binding.buttonTopBarSignIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                navController.navigate(R.id.action_global_sign_in);
+            }
+        });
         binding.buttonNotifications.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

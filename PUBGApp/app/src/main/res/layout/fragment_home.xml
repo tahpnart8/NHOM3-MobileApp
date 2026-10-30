@@ -15,32 +15,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Guest sign-in banner: shown only when not logged in -->
-    <LinearLayout
-        android:id="@+id/layoutTopHeader"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_top_bar"
-        android:gravity="end|center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="@dimen/space_md"
-        android:paddingTop="@dimen/space_xs"
-        android:paddingBottom="@dimen/space_xs"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/includeOfflineBanner">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonSignIn"
-            style="@style/Widget.PUBGApp.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/touch_min"
-            android:text="@string/listing_home_guest_sign_in"
-            android:textColor="?attr/colorOnPrimary"
-            android:visibility="gone" />
-    </LinearLayout>
-
     <!-- Search bar and refresh button row -->
     <LinearLayout
         android:id="@+id/layoutSearchRow"
@@ -54,7 +28,7 @@
         android:paddingBottom="@dimen/space_md"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutTopHeader">
+        app:layout_constraintTop_toBottomOf="@id/includeOfflineBanner">
 
         <!-- Clickable search bar leading to B02 SearchFragment -->
         <com.google.android.material.card.MaterialCardView
