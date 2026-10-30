@@ -54,6 +54,8 @@ import java.util.Map;
 public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLongClickListener {
 
     private static final String STATE_DRAFT_MESSAGE = "state_draft_message";
+    // Text placed in the message box when the chat opens, e.g. a terms change request from C03.
+    public static final String ARG_DRAFT_MESSAGE = "draftMessage";
 
     private FragmentChatBinding binding;
     private ChatViewModel viewModel;
@@ -110,6 +112,13 @@ public class ChatFragment extends Fragment implements MessageAdapter.OnMessageLo
         setupProductBanner();
         observeViewModel();
 
+        if (savedInstanceState == null && getArguments() != null) {
+            String opening = getArguments().getString(ARG_DRAFT_MESSAGE);
+            if (opening != null && binding != null) {
+                binding.editMessage.setText(opening);
+                binding.editMessage.setSelection(opening.length());
+            }
+        }
         if (savedInstanceState != null) {
             String draft = savedInstanceState.getString(STATE_DRAFT_MESSAGE, "");
             if (draft != null && !draft.isEmpty() && binding != null) {

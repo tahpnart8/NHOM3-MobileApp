@@ -300,17 +300,25 @@ public class DealDetailFragment extends Fragment {
         binding.buttonMessagePartner.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Deal deal = viewModel.getDeal().getValue();
-                if (deal == null || deal.getListingId() == null || deal.getBuyerId() == null) {
-                    return;
-                }
-                Bundle args = new Bundle();
-                args.putString("listingId", deal.getListingId());
-                args.putString("conversationId", deal.getListingId() + "_" + deal.getBuyerId());
-                NavHostFragment.findNavController(DealDetailFragment.this)
-                        .navigate(R.id.action_global_chat, args);
+                openChat(null);
             }
         });
+    }
+
+    // A draft fills the chat box, so a change request reaches the seller as a normal message.
+    private void openChat(String draft) {
+        Deal deal = viewModel.getDeal().getValue();
+        if (deal == null || deal.getListingId() == null || deal.getBuyerId() == null) {
+            return;
+        }
+        Bundle args = new Bundle();
+        args.putString("listingId", deal.getListingId());
+        args.putString("conversationId", deal.getListingId() + "_" + deal.getBuyerId());
+        if (draft != null) {
+            args.putString(ChatFragment.ARG_DRAFT_MESSAGE, draft);
+        }
+        NavHostFragment.findNavController(DealDetailFragment.this)
+                .navigate(R.id.action_global_chat, args);
     }
 
     // The carrier is picked from a fixed list so the buyer sees the same name the seller chose.
@@ -377,10 +385,29 @@ public class DealDetailFragment extends Fragment {
         binding.buttonConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showCountdownDialog(CountdownConfirmDialogFragment.ACTION_ACCEPT_TERMS,
-                        R.string.trade_accept_terms_dialog_title, R.string.trade_accept_terms_dialog_message);
+                CountdownConfirmDialogFragment.newInstance(CountdownConfirmDialogFragment.ACTION_ACCEPT_TERMS,
+                        R.string.trade_accept_terms_dialog_title, buildAcceptTermsMessage())
+                        .show(getParentFragmentManager(), TAG_COUNTDOWN_DIALOG);
             }
         });
+
+        binding.buttonRequestTermsChange.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openChat(getString(R.string.trade_request_terms_change_draft));
+            }
+        });
+    }
+
+    // The buyer agrees to exactly what is on screen, so the dialog repeats the terms lines.
+    private String buildAcceptTermsMessage() {
+        StringBuilder text = new StringBuilder();
+        text.append(binding.textDeliveryMethod.getText()).append('\n');
+        text.append(binding.textDeliveryAddress.getText()).append('\n');
+        text.append(binding.textScheduledAt.getText()).append('\n');
+        text.append(binding.textAgreedTerms.getText()).append("\n\n");
+        text.append(getString(R.string.trade_accept_terms_dialog_message));
+        return text.toString();
     }
 
     private void setupWriteReviewButton() {
@@ -1045,6 +1072,7 @@ public class DealDetailFragment extends Fragment {
             binding.layoutActions.setVisibility(View.VISIBLE);
             binding.buttonEditTerms.setVisibility(View.GONE);
             binding.buttonConfirm.setVisibility(View.GONE);
+            binding.buttonRequestTermsChange.setVisibility(View.GONE);
             binding.textConfirmationStatus.setVisibility(View.GONE);
             binding.buttonCancelDeal.setVisibility(View.VISIBLE);
             binding.buttonCancelDeal.setEnabled(online);
@@ -1117,6 +1145,7 @@ public class DealDetailFragment extends Fragment {
             binding.layoutActions.setVisibility(View.VISIBLE);
             binding.buttonEditTerms.setVisibility(View.GONE);
             binding.buttonConfirm.setVisibility(View.GONE);
+            binding.buttonRequestTermsChange.setVisibility(View.GONE);
             binding.buttonPay.setVisibility(View.GONE);
             binding.buttonCancelDeal.setVisibility(View.GONE);
             binding.textConfirmationStatus.setVisibility(View.GONE);
@@ -1136,6 +1165,7 @@ public class DealDetailFragment extends Fragment {
             binding.layoutActions.setVisibility(View.VISIBLE);
             binding.buttonEditTerms.setVisibility(View.GONE);
             binding.buttonConfirm.setVisibility(View.GONE);
+            binding.buttonRequestTermsChange.setVisibility(View.GONE);
             binding.buttonPay.setVisibility(View.GONE);
             binding.buttonCancelDeal.setVisibility(View.GONE);
             binding.textConfirmationStatus.setVisibility(View.GONE);
@@ -1180,6 +1210,7 @@ public class DealDetailFragment extends Fragment {
 
         boolean isBuyer = currentUid.equals(deal.getBuyerId());
         binding.buttonConfirm.setVisibility(isBuyer ? View.VISIBLE : View.GONE);
+        binding.buttonRequestTermsChange.setVisibility(isBuyer ? View.VISIBLE : View.GONE);
         binding.textConfirmationStatus.setVisibility(View.VISIBLE);
         if (isBuyer) {
             binding.buttonConfirm.setEnabled(deal.canConfirmBy(currentUid) && online && isUserVerified);

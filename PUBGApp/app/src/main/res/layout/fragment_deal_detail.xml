@@ -793,6 +793,16 @@
                     android:text="@string/trade_deal_detail_confirm" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonRequestTermsChange"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/space_sm"
+                    android:minHeight="@dimen/touch_min"
+                    android:text="@string/trade_request_terms_change"
+                    android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonEditTerms"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="match_parent"
