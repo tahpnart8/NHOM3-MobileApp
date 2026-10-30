@@ -30,6 +30,16 @@
             android:scaleType="fitStart"
             android:src="@drawable/ic_logo_header_on_primary" />
 
+        <!-- A guest sees this instead of the bell and the avatar. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonTopBarSignIn"
+            style="@style/Widget.PUBGApp.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/touch_min"
+            android:text="@string/listing_home_guest_sign_in"
+            android:textColor="?attr/colorOnPrimary"
+            android:visibility="gone" />
+
         <FrameLayout
             android:id="@+id/frameNotifications"
             android:layout_width="@dimen/touch_min"
