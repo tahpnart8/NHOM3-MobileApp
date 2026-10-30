@@ -59,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
     private DealViewModel dealViewModel;
     private ProfileViewModel profileViewModel;
     private boolean autoReleaseChecked;
+    private boolean isBottomBarWanted = true;
+    private boolean isKeyboardShown;
     private int pendingTabId;
     private InAppNotifier inAppNotifier;
     private ActivityResultLauncher<String> notificationPermissionLauncher;
@@ -288,6 +290,11 @@ public class MainActivity extends AppCompatActivity {
             public WindowInsetsCompat onApplyWindowInsets(View view, WindowInsetsCompat insets) {
                 Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
                 Insets keyboard = insets.getInsets(WindowInsetsCompat.Type.ime());
+                boolean isKeyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
+                if (isKeyboardVisible != isKeyboardShown) {
+                    isKeyboardShown = isKeyboardVisible;
+                    updateBottomBarVisibility();
+                }
                 int bottom = keyboard.bottom;
                 boolean isBottomBarShown = binding.bottomNavigation.getVisibility() == View.VISIBLE;
                 if (!isBottomBarShown) {
@@ -352,6 +359,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // The bar is hidden while the keyboard is open so it never floats above the keyboard.
+    private void updateBottomBarVisibility() {
+        boolean show = isBottomBarWanted && !isKeyboardShown;
+        binding.bottomNavigation.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
     // Per ui/README.md: the bottom bar shows on the five tabs only, the top bar on Home only.
     private void updateBars(NavDestination destination) {
         // A bottom sheet floats over the current screen, so the bars stay as they are.
@@ -364,7 +377,8 @@ public class MainActivity extends AppCompatActivity {
                 || destinationId == R.id.postListingFragment
                 || destinationId == R.id.conversationListFragment
                 || destinationId == R.id.myProfileFragment;
-        binding.bottomNavigation.setVisibility(isTab ? View.VISIBLE : View.GONE);
+        isBottomBarWanted = isTab;
+        updateBottomBarVisibility();
         // The bottom padding depends on whether the bottom bar shows, so ask for it again.
         ViewCompat.requestApplyInsets(binding.getRoot());
         binding.layoutTopBar.setVisibility(destinationId == R.id.homeFragment ? View.VISIBLE : View.GONE);
