@@ -9,7 +9,7 @@
 # Rules: only the people in .github/team.txt may author commits; no AI byline and no co-author trailer
 # except a team member's GitHub noreply address (what "Commit suggestion" writes); branch, title and commit
 # subjects follow .github/NAMING.md; a pull request that deletes or renames app code names an approved
-# removal issue; Gradle files change only in a build or chore pull request; workflow/memory/decisions.md only grows.
+# removal issue; Gradle files change only in a build or chore pull request.
 set -eu
 here=${POLICY_SCRIPTS_DIR:-$(cd "$(dirname "$0")" && pwd)}
 . "$here/lib/policy.sh"
@@ -66,7 +66,7 @@ without_team_coauthors() {
 check_commit_row() {
     _sha=$(printf '%s' "$1" | cut -c1-8)
     if [ "${7:-1}" -gt 1 ]; then
-        note "commit $_sha: là commit gộp nhánh. Merge bằng rebase không nhận commit gộp. Đừng gộp main vào nhánh: chạy theo skill pubg-sync-branch (git rebase origin/main rồi git push --force-with-lease)."
+        note "commit $_sha: là commit gộp nhánh. Merge bằng rebase không nhận commit gộp. Đừng gộp main vào nhánh: chạy git rebase origin/main rồi git push --force-with-lease."
     fi
     if ! is_team "$2"; then
         note "commit $_sha: author login '$2' is not on the team list (.github/team.txt). If the e-mail is not linked to a GitHub account the login shows as NONE."
@@ -88,7 +88,7 @@ check_commit_row() {
 require_removal_issue() {
     issue=$(printf '%s\n' "$2" | sed -n 's/.*[Rr]emoval-[Ii]ssue:[[:space:]]*#\([0-9][0-9]*\).*/\1/p' | head -n 1)
     if [ -z "$issue" ]; then
-        note "$1: add a line 'Removal-Issue: #N' pointing to an issue labelled type:removal (AGENTS.md rule R4)."
+        note "$1: add a line 'Removal-Issue: #N' pointing to an issue labelled type:removal (.github/CONTRIBUTING.md)."
     elif ! gh api "repos/$REPO/issues/$issue" --jq '[.labels[].name] | join(",")' 2>/dev/null | grep -q 'type:removal'; then
         note "$1: issue #$issue does not exist or does not carry the label type:removal."
     fi
@@ -101,7 +101,7 @@ check_files_row() {
             if [ "$2" = "removed" ]; then
                 require_removal_issue "deleted file $1" "$6"
             elif [ "$2" = "modified" ] && [ "$3" -gt 40 ]; then
-                echo "::warning::$1 loses $3 lines. The reviewer should confirm no designed behaviour was removed (AGENTS.md rule R4)."
+                echo "::warning::$1 loses $3 lines. The reviewer should confirm no designed behaviour was removed (.github/CONTRIBUTING.md)."
             fi
             ;;
     esac
@@ -115,12 +115,7 @@ check_files_row() {
     case "$1" in
         PUBGApp/gradle/libs.versions.toml | PUBGApp/gradle/wrapper/* | PUBGApp/*.gradle.kts | PUBGApp/app/*.gradle.kts | PUBGApp/gradle.properties | PUBGApp/gradle/gradle-daemon-jvm.properties)
             printf '%s\n' "$5" | grep -Eq '^(build|chore)[(:]' ||
-                note "$1 changes the build or its dependencies, which happens only in a pull request titled build(...) or chore(deps) (AGENTS.md rule R5)."
-            ;;
-        workflow/memory/decisions.md)
-            if [ "$2" = "removed" ] || [ "$3" != "0" ]; then
-                note "workflow/memory/decisions.md is append-only, but this pull request removes or rewrites lines in it."
-            fi
+                note "$1 changes the build or its dependencies, which happens only in a pull request titled build(...) or chore(deps) (.github/CONTRIBUTING.md)."
             ;;
     esac
 }
@@ -142,7 +137,7 @@ $raw_body"; then
     body_links_issue "$body" ||
         note "the pull request body must say 'Closes #N' (or 'Refs #N', or 'Closes: none') outside the template comments."
 
-    # Issues and pull requests are read by people, so they are written in Vietnamese (AGENTS.md R14). The
+    # Issues and pull requests are read by people, so they are written in Vietnamese (.github/CONTRIBUTING.md). The
     # type and scope of the title and the keywords Closes, Refs, Removal-Issue and Deviation stay English.
     case "$title" in
         Revert\ * | Merge\ *) ;;

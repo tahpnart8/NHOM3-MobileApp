@@ -1,12 +1,12 @@
 #!/bin/sh
-# Style check for Java you added or changed. The rules are in .agents/skills/pubg-code/SKILL.md.
+# Style check for Java you added or changed. The rules are in workflow/docs/conventions/android-java.md.
 # It reports and exits 1 when it finds something; a person or an AI decides what to do about each line.
 #
 #   sh workflow/scripts/check-java-style.sh                  lines added compared with main (committed, uncommitted, new files)
 #   sh workflow/scripts/check-java-style.sh --base <ref>     compare with another ref
 #   sh workflow/scripts/check-java-style.sh --files <file>   every line of the given files
 #
-# Only added lines are checked in the first two modes, so old code is never a finding (AGENTS.md R3).
+# Only added lines are checked in the first two modes, so old code is never a finding (old code is not rewritten for style).
 set -eu
 
 mode=diff
@@ -62,14 +62,14 @@ check() {
         if (is_comment && file == last_file && number == last_number + 1 && last_was_comment) run++
         else if (is_comment) run = 1
         else run = 0
-        if (run == 3) report("long-comment", "comment longer than 2 lines; keep the why in one or two lines, put lasting knowledge in workflow/memory/code/")
+        if (run == 3) report("long-comment", "comment longer than 2 lines; keep the why in one or two lines, put lasting knowledge in workflow/docs/")
         last_file = file; last_number = number; last_was_comment = is_comment
 
         if (is_comment) {
             if (trimmed ~ /^\/\/.*[;{}][ \t]*$/) report("commented-code", "commented-out code; delete it, git keeps the history")
             if (trimmed ~ /^\/\/[ \t]*[-=*#~][-=*#~][-=*#~][-=*#~]+/ || trimmed ~ /^\/\*[ \t]*[-=*#~][-=*#~][-=*#~][-=*#~]+/) report("banner-comment", "decorative comment line")
             if (trimmed ~ /@author|Created by|Created on|Modified by/) report("history-comment", "author or date comment; git has it")
-            if (trimmed ~ /(TODO|FIXME|XXX|HACK)/) report("todo", "open an issue or write it in workflow/memory/code/ instead of leaving a marker")
+            if (trimmed ~ /(TODO|FIXME|XXX|HACK)/) report("todo", "open an issue instead of leaving a marker")
             next
         }
 
@@ -86,12 +86,12 @@ check() {
         if (code ~ /instanceof[ \t]+[A-Za-z_.<>?]+[ \t]+[a-z][A-Za-z0-9_]*[ \t]*(\)|&&|\|\|)/) report("instanceof-pattern", "pattern variable; cast on the next line")
         if (code ~ /System\.(out|err)\.print|printStackTrace\(/) report("debug-output", "console output; use Log or show the error to the user")
         if (code ~ /catch[ \t]*\([^)]*\)[ \t]*\{[ \t]*\}/) report("empty-catch", "empty catch swallows an error")
-        if (text ~ /(TODO|FIXME|XXX|HACK)/) report("todo", "open an issue or write it in workflow/memory/code/ instead of leaving a marker")
+        if (text ~ /(TODO|FIXME|XXX|HACK)/) report("todo", "open an issue instead of leaving a marker")
         if (length(text) > 120) report("long-line", "line longer than 120 characters")
     }
     END {
         if (found > 0) {
-            printf "\n%d finding(s). Fix them, or say why a line is better as it is. Rules: .agents/skills/pubg-code/SKILL.md\n", found
+            printf "\n%d finding(s). Fix them, or say why a line is better as it is. Rules: workflow/docs/conventions/android-java.md\n", found
             exit 1
         }
     }

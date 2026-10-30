@@ -138,8 +138,6 @@ expect "claude noreply co-author"      some check_commit_row aaaaaaaa8 PmSubin P
 Co-authored-by: Claude <noreply@anthropic.com>")"
 
 T="feat(listing): add x"
-expect "decisions rewrite"             some check_files_row workflow/memory/decisions.md modified 3 - "$T" ""
-expect "decisions append"              none check_files_row workflow/memory/decisions.md modified 0 - "$T" ""
 expect "delete app file, no issue"     some check_files_row PUBGApp/app/src/main/java/x/Y.java removed 40 - "$T" "Closes #1"
 expect "rename app file, no issue"     some check_files_row PUBGApp/app/src/main/java/x/Z.java renamed 0 PUBGApp/app/src/main/java/x/Y.java "$T" "Closes #1"
 expect "plain edit"                    none check_files_row PUBGApp/app/src/main/java/x/Y.java modified 40 - "$T" "Closes #1"
@@ -179,11 +177,10 @@ git config user.name "Tran Duc Phat"
 git config user.email "human@example.com"
 git config core.hooksPath "$root/.githooks"
 git config commit.gpgsign false
-mkdir -p workflow/memory
-printf '# Decisions\n\n## 2026-09-25 - First\n' >workflow/memory/decisions.md
-git add workflow/memory/decisions.md
+printf '# Notes\n' >README.md
+git add README.md
 
-ok "clean commit passes the hooks"    git commit -q -m "chore(docs): add the decision ledger"
+ok "clean commit passes the hooks"    git commit -q -m "chore(docs): add the readme"
 git commit -q --allow-empty -m "feat: x
 
 Co-Authored-By: Claude <noreply@anthropic.com>" >/dev/null 2>&1 && { failed=$((failed + 1)); echo "FAIL: hook accepted a Claude trailer"; } || pass=$((pass + 1))
@@ -196,13 +193,6 @@ git commit -q -m "chore: add local properties" >/dev/null 2>&1 && { failed=$((fa
 git reset -q
 rm -f local.properties
 
-printf '# Decisions\n\n## 2026-09-25 - Rewritten\n' >workflow/memory/decisions.md
-git add workflow/memory/decisions.md
-no "rewriting the ledger is refused" sh "$root/workflow/scripts/check-decisions.sh"
-printf '# Decisions\n\n## 2026-09-25 - First\n\n## 2026-09-26 - Second\n' >workflow/memory/decisions.md
-git add workflow/memory/decisions.md
-ok "appending to the ledger is allowed" sh "$root/workflow/scripts/check-decisions.sh"
-git reset -q --hard
 
 sha=$(git rev-parse HEAD)
 no "push to main is refused"      sh -c "printf 'refs/heads/main $sha refs/heads/main 0000000000000000000000000000000000000000\n' | sh '$root/.githooks/pre-push' origin url"
