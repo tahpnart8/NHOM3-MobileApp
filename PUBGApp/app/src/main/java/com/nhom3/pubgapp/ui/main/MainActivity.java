@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.OnApplyWindowInsetsListener;
 import androidx.core.view.ViewCompat;
@@ -32,6 +33,7 @@ import com.nhom3.pubgapp.model.AppNotification;
 import com.nhom3.pubgapp.model.User;
 import com.nhom3.pubgapp.ui.common.AvatarBinder;
 import com.nhom3.pubgapp.ui.notification.InAppNotifier;
+import com.nhom3.pubgapp.util.AirplaneModeReceiver;
 import com.nhom3.pubgapp.util.SessionManager;
 import com.nhom3.pubgapp.viewmodel.AuthViewModel;
 import com.nhom3.pubgapp.viewmodel.DealViewModel;
@@ -60,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private int pendingTabId;
     private InAppNotifier inAppNotifier;
     private ActivityResultLauncher<String> notificationPermissionLauncher;
+    private AirplaneModeReceiver airplaneModeReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +82,30 @@ public class MainActivity extends AppCompatActivity {
         setUpNavigation();
         setUpTopBar();
         startSession();
+    }
+
+    // Listens only while the screen is visible, so a hidden activity is never told and never leaks.
+    @Override
+    protected void onStart() {
+        super.onStart();
+        airplaneModeReceiver = new AirplaneModeReceiver(new AirplaneModeReceiver.Listener() {
+            @Override
+            public void onAirplaneModeChanged(boolean on) {
+                showAirplaneModeMessage(on);
+            }
+        });
+        // The broadcast comes from the system, so the receiver must be exported to hear it.
+        ContextCompat.registerReceiver(this, airplaneModeReceiver, AirplaneModeReceiver.createFilter(),
+                ContextCompat.RECEIVER_EXPORTED);
+    }
+
+    @Override
+    protected void onStop() {
+        if (airplaneModeReceiver != null) {
+            unregisterReceiver(airplaneModeReceiver);
+            airplaneModeReceiver = null;
+        }
+        super.onStop();
     }
 
     @Override
@@ -233,6 +260,16 @@ public class MainActivity extends AppCompatActivity {
         }
         Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_LONG).show();
         restoreViewModel.clearError();
+    }
+
+    // Sits above the bottom bar when it shows, so the tabs stay visible during the demo.
+    private void showAirplaneModeMessage(boolean on) {
+        Snackbar snackbar = Snackbar.make(binding.getRoot(), AirplaneModeReceiver.messageFor(on),
+                Snackbar.LENGTH_LONG);
+        if (binding.bottomNavigation.getVisibility() == View.VISIBLE) {
+            snackbar.setAnchorView(binding.bottomNavigation);
+        }
+        snackbar.show();
     }
 
     private int getCurrentDestinationId() {
